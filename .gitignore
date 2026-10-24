@@ -1,0 +1,22 @@
+# Build output
+/build/
+
+# ESP-IDF generated files
+/firmware/sdkconfig
+/firmware/sdkconfig.old
+/firmware/managed_components/
+/firmware/dependencies.lock
+
+# Local tools (fonts are fetched, not vendored)
+/tools/fonts/node_modules/
+/tools/fonts/cache/
+/tools/fonts/package-lock.json
+
+# Logs and simulator intermediate images
+/reports/logs/*.log
+/reports/screenshots/*.bmp
+
+# Never commit firmware images, dumps or private material
+*.bin
+*.elf
+*.map
