@@ -13,70 +13,91 @@
 #include "lw_app_state.h"
 #include "win_display.h"
 
-typedef enum { STEP_WAIT, STEP_CLICK, STEP_CLICK_TEXT, STEP_SHOT, STEP_EXPECT_APP } step_kind_t;
+typedef enum { STEP_WAIT, STEP_CLICK, STEP_SWIPE, STEP_CLICK_TEXT, STEP_SHOT, STEP_EXPECT_APP } step_kind_t;
 
 typedef struct {
     step_kind_t kind;
     int a;
     int b;
+    int c;
+    int d;
     int ms;
     const char *text;
 } step_t;
 
 static const step_t s_steps[] = {
-    {STEP_WAIT, 0, 0, 900, NULL},
-    {STEP_SHOT, 0, 0, 0, "01-home"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "去陪陪它"},
-    {STEP_WAIT, 0, 0, 900, NULL},
-    {STEP_SHOT, 0, 0, 0, "02-pet"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "喂食"},
-    {STEP_WAIT, 0, 0, 500, NULL},
-    {STEP_SHOT, 0, 0, 0, "03-pet-fed"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "玩耍"},
-    {STEP_WAIT, 0, 0, 500, NULL},
-    {STEP_SHOT, 0, 0, 0, "04-pet-playing"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "首页"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_CLICK_TEXT, 0, 0, 0, "回忆"},
-    {STEP_WAIT, 0, 0, 900, NULL},
-    {STEP_SHOT, 0, 0, 0, "05-anniversary"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "时间线"},
-    {STEP_WAIT, 0, 0, 600, NULL},
-    {STEP_SHOT, 0, 0, 0, "06-timeline"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "惊喜盒子"},
-    {STEP_WAIT, 0, 0, 600, NULL},
-    {STEP_SHOT, 0, 0, 0, "07-surprise"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "打开盒子"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_SHOT, 0, 0, 0, "08-surprise-open"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "小地图"},
-    {STEP_WAIT, 0, 0, 600, NULL},
-    {STEP_SHOT, 0, 0, 0, "09-map"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "家"},
-    {STEP_WAIT, 0, 0, 600, NULL},
-    {STEP_SHOT, 0, 0, 0, "10-place"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "返回"},
-    {STEP_WAIT, 0, 0, 400, NULL},
-    {STEP_CLICK_TEXT, 0, 0, 0, "相册"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_SHOT, 0, 0, 0, "11-album"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "音乐"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_SHOT, 0, 0, 0, "12-music"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "游戏"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_SHOT, 0, 0, 0, "13-arcade"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "2048"},
-    {STEP_WAIT, 0, 0, 700, NULL},
-    {STEP_SHOT, 0, 0, 0, "14-2048"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "返回游戏中心"},
-    {STEP_WAIT, 0, 0, 500, NULL},
-    {STEP_CLICK_TEXT, 0, 0, 0, "设置"},
-    {STEP_WAIT, 0, 0, 800, NULL},
-    {STEP_SHOT, 0, 0, 0, "15-settings"},
-    {STEP_CLICK_TEXT, 0, 0, 0, "首页"},
-    {STEP_WAIT, 0, 0, 600, NULL},
-    {STEP_SHOT, 0, 0, 0, "16-home-again"},
+    {STEP_WAIT, 0, 0, 0, 0, 900, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "01-home"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "去陪陪它"},
+    {STEP_WAIT, 0, 0, 0, 0, 900, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "02-pet"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "喂食"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "03-pet-fed"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "玩耍"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "04-pet-playing"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "首页"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "回忆"},
+    {STEP_WAIT, 0, 0, 0, 0, 900, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "05-anniversary"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "时间线"},
+    {STEP_WAIT, 0, 0, 0, 0, 600, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "06-timeline"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "惊喜盒子"},
+    {STEP_WAIT, 0, 0, 0, 0, 600, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "07-surprise"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "打开盒子"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "08-surprise-open"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "小地图"},
+    {STEP_WAIT, 0, 0, 0, 0, 600, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "09-map"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "家"},
+    {STEP_WAIT, 0, 0, 0, 0, 600, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "10-place"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "返回"},
+    {STEP_WAIT, 0, 0, 0, 0, 400, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "相册"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "11-album"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "音乐"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "12-music"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "游戏"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "13-arcade"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "2048"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "14-2048"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "返回游戏中心"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "设置"},
+    {STEP_WAIT, 0, 0, 0, 0, 800, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "15-settings"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "首页"},
+    {STEP_WAIT, 0, 0, 0, 0, 600, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "16-home-again"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "游戏"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "贪吃蛇"},
+    {STEP_WAIT, 0, 0, 0, 0, 400, NULL},
+    {STEP_SWIPE, 512, 430, 512, 240, 0, NULL},
+    {STEP_WAIT, 0, 0, 0, 0, 150, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "17-snake"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "返回游戏中心"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "打砖块"},
+    {STEP_WAIT, 0, 0, 0, 0, 700, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "18-breakout-ready"},
+    {STEP_CLICK, 512, 400, 0, 0, 0, NULL},
+    {STEP_WAIT, 0, 0, 0, 0, 1400, NULL},
+    {STEP_SHOT, 0, 0, 0, 0, 0, "19-breakout-playing"},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "返回游戏中心"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
+    {STEP_CLICK_TEXT, 0, 0, 0, 0, 0, "首页"},
+    {STEP_WAIT, 0, 0, 0, 0, 500, NULL},
 };
 
 static void pump(int ms)
@@ -114,6 +135,22 @@ static void click_at(int x, int y)
     pump(120);
     pointer->pressed = 0;
     pump(180);
+}
+
+static void swipe(int x1, int y1, int x2, int y2)
+{
+    lw_host_pointer_t *pointer = lw_host_pointer();
+    pointer->x = x1;
+    pointer->y = y1;
+    pointer->pressed = 1;
+    pump(90);
+    for (int step = 1; step <= 4; step++) {
+        pointer->x = x1 + (x2 - x1) * step / 4;
+        pointer->y = y1 + (y2 - y1) * step / 4;
+        pump(40);
+    }
+    pointer->pressed = 0;
+    pump(260);
 }
 
 static int click_text(const char *text)
@@ -155,6 +192,9 @@ int lw_auto_run(const char *output_dir)
         case STEP_CLICK:
             click_at(step->a, step->b);
             break;
+        case STEP_SWIPE:
+            swipe(step->a, step->b, step->c, step->d);
+            break;
         case STEP_CLICK_TEXT:
             if (!click_text(step->text)) {
                 missing++;
@@ -187,7 +227,7 @@ int lw_auto_run(const char *output_dir)
         pump(400);
     }
     int after = count_objects(lv_screen_active());
-    snprintf(path, sizeof(path), "%s\\17-after-cycles.bmp", output_dir);
+    snprintf(path, sizeof(path), "%s\\20-after-cycles.bmp", output_dir);
     lw_host_screenshot_bmp(path);
     printf("objects: %d -> %d\n", before, after);
     if (before != after) {

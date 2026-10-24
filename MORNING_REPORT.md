@@ -17,10 +17,10 @@
 | 设置 | **通过** | 音效/动画开关、主题切换、诊断信息、清空存档 |
 | 相册 | **部分完成** | 数据模型 + 6 张 DEMO 占位图 + 大图浮层；真实照片解码未做 |
 | 音乐播放器 | **部分完成** | 播放列表、播放/暂停、进度、音量（持久化）；**没有音频输出** |
-| Arcade 接入 | **部分完成** | 游戏中心 + 2048 可玩（复用 arcade_core）；贪吃蛇/打砖块标记“移植中” |
+| Arcade 接入 | **通过** | 游戏中心 + 2048 / 贪吃蛇 / 打砖块 三款全屏可玩，可重开、可回游戏中心 |
 | Windows 演示程序 | **通过** | 真实窗口、鼠标即触摸、F12 截图；无头 `--auto` 回归模式 |
 | 自动测试 | **通过** | 142 项核心单元测试；17 张截图的交互回归，10 次往返对象数 84→84 |
-| ESP-IDF 固件编译 | **通过** | esp32p4 / rev3_x / 32 MB；app 1,178,160 B，镜像头 v3.0–v3.99 |
+| ESP-IDF 固件编译 | **通过** | esp32p4 / rev3_x / 32 MB；app 1,198,512 B，镜像头 v3.0–v3.99 |
 | 实板运行 / 触摸 / 帧率 / NVS | **未开始** | 今晚没有连接开发板，按你的要求完全没碰设备 |
 
 ---
@@ -60,8 +60,12 @@
 |---|---|
 | ![settings](reports/screenshots/15-settings.png) | ![2048](reports/screenshots/14-2048.png) |
 
+| 贪吃蛇（滑动手势） | 打砖块（拖动挡板） |
+|---|---|
+| ![snake](reports/screenshots/17-snake.png) | ![breakout](reports/screenshots/19-breakout-playing.png) |
+
 其余：`03-pet-fed`、`04-pet-playing`、`07-surprise`、`10-place`（地点详情）、`11-album`、`12-music`、
-`13-arcade`、`16-home-again`、`17-after-cycles`。
+`13-arcade`、`16-home-again`、`18-breakout-ready`、`20-after-cycles`。
 
 ---
 
@@ -84,7 +88,7 @@ HOST TESTS PASSED
 ```
 build\host\LittleWorld.exe --auto reports\screenshots
 AUTO RUN: PASSED (0 failure(s))
-objects: 84 -> 84
+objects: 84 -> 84 (20 screenshots)
 ```
 
 自动走完：首页 → 宠物（喂食、玩耍）→ 首页 → 纪念日 → 时间线 → 惊喜盒子（打开）→ 小地图 → 地点详情
@@ -94,7 +98,7 @@ LVGL 对象数不变（84 → 84）。
 ### 4.3 固件编译与镜像
 
 ```
-little_world.bin        1,178,160 B   sha256 10951420...62d315
+little_world.bin        1,198,512 B   sha256 76c28217...cf1bc5c
 bootloader.bin             22,016 B   sha256 276f331b...9e3ae8
 partition-table.bin         3,072 B   sha256 84040236...828fc6
 
@@ -107,7 +111,7 @@ partition: nvs 0x9000/0x6000, phy_init 0xF000/0x1000, factory 0x10000/0x600000, 
 
 ### 4.4 已知 Bug / 限制
 
-1. 贪吃蛇、打砖块只有规则和入口，UI 还没移植（游戏中心里明确写“移植中”，不是点了没反应的按钮）。
+1. 小游戏三款都已接入（2048 / 贪吃蛇 / 打砖块），但难度与手感还没调过，也没有暂停键（只能返回游戏中心）。
 2. 相册、音乐是 DEMO：没有真实图片解码、没有音频输出；“音效”开关只持久化偏好。
 3. 固件端存储已接 NVS（设置、宠物、纪念日都会持久化）；但板子**没有 RTC**，`get_time` 仍返回 false，
    所以固件会用 DEMO 时钟（界面右上角标 `DEMO 时间`）。接 Wi-Fi 校时或 RTC 是下一步。
@@ -135,8 +139,8 @@ partition: nvs 0x9000/0x6000, phy_init 0xF000/0x1000, factory 0x10000/0x600000, 
 
 1. **上板验证**：刷入 `build/little_world.bin`（需要你明确授权；出厂固件备份在
    `D:\Espressif\LittleWorld\private\backups\LittleWorld\20261025-005021`，已验证）。
-2. 固件端接 NVS + 时间源（哪怕先用 demo 时钟 + 手动设置），让存档真正跨重启。
-3. 移植贪吃蛇/打砖块 UI（照 2048 的全屏 overlay 模式，定时器与输入已有现成写法）。
+2. 固件端接时间源（Wi-Fi 校时或 RTC），让日期不再是 DEMO 值；存储已经走 NVS。
+3. 给三款小游戏加暂停键与难度曲线，并把最高分写进游戏中心卡片。
 4. 相册接 SD 卡与图片解码；音乐接板载 ES8311（BSP 已提供 codec 接口）。
 5. 让“页面动画”开关真正控制 `lw_theme_enter_anim`。
 
