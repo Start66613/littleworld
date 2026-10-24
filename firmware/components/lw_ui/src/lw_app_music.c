@@ -119,8 +119,31 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_t *art = lw_soft_card(player, 32, 128, 180, 180);
     lv_obj_set_style_radius(art, 26, 0);
     lv_obj_set_style_bg_color(art, lv_color_hex(palette->lav), 0);
-    lv_obj_t *note = lw_text(art, "♪", &lw_font_44, 0xFFFFFF, 0, 0);
-    lv_obj_center(note);
+    /* music note drawn from primitives (no glyph dependency) */
+    lv_obj_t *note_head = lv_obj_create(art);
+    lv_obj_remove_style_all(note_head);
+    lv_obj_set_size(note_head, 46, 40);
+    lv_obj_set_pos(note_head, 56, 104);
+    lv_obj_set_style_radius(note_head, 20, 0);
+    lv_obj_set_style_bg_color(note_head, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_bg_opa(note_head, LV_OPA_90, 0);
+    lv_obj_remove_flag(note_head, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *note_stem = lv_obj_create(art);
+    lv_obj_remove_style_all(note_stem);
+    lv_obj_set_size(note_stem, 8, 62);
+    lv_obj_set_pos(note_stem, 94, 46);
+    lv_obj_set_style_radius(note_stem, 4, 0);
+    lv_obj_set_style_bg_color(note_stem, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_bg_opa(note_stem, LV_OPA_90, 0);
+    lv_obj_remove_flag(note_stem, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *note_flag = lv_obj_create(art);
+    lv_obj_remove_style_all(note_flag);
+    lv_obj_set_size(note_flag, 26, 10);
+    lv_obj_set_pos(note_flag, 94, 46);
+    lv_obj_set_style_radius(note_flag, 5, 0);
+    lv_obj_set_style_bg_color(note_flag, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_bg_opa(note_flag, LV_OPA_90, 0);
+    lv_obj_remove_flag(note_flag, LV_OBJ_FLAG_CLICKABLE);
 
     s_progress = lw_bar(player, 236, 168, 200, 10, palette->accent);
     s_time_label = lw_text(player, "", &lw_font_18, palette->dim, 236, 188);
@@ -152,7 +175,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
         lv_obj_t *sub = lw_text(row, s_track_artist[i], &lw_font_18, palette->dim, 20, 38);
         (void)sub;
     }
-    lw_text(list, "DEMO：播放器逻辑与进度可用，板载扬声器音频驱动尚未接入。", &lw_font_18, palette->dim, 28, 340);
+    lw_text_wrap(list, "DEMO：播放器逻辑与进度可用，板载扬声器音频驱动尚未接入。", &lw_font_18, palette->dim, 28, 340, 400);
 
     lv_obj_add_event_cb(play, play_toggle, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(next, next_track, LV_EVENT_CLICKED, NULL);

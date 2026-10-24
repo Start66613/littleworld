@@ -1,0 +1,73 @@
+[
+  {
+    "path": "D:\\LittleWorld-Main-DSH\\build\\little_world.bin",
+    "name": "little_world.bin",
+    "size": 1178160,
+    "sha256": "1095142054748aac831645f2d8b5ecdc2744d9b5f3e74639c9f7ab62d402d315",
+    "magic": 233,
+    "segments": 9,
+    "chip_id": 18,
+    "chip": "esp32p4",
+    "min_chip_rev_full": 300,
+    "max_chip_rev_full": 399,
+    "flash_mode_field": 2,
+    "flash_mode": "DIO",
+    "flash_size_field": 5,
+    "flash_size": "32MB",
+    "flash_freq_field": 15,
+    "entry_point": "0x4ff403d2"
+  },
+  {
+    "path": "D:\\LittleWorld-Main-DSH\\build\\bootloader\\bootloader.bin",
+    "name": "bootloader.bin",
+    "size": 22016,
+    "sha256": "276f331b6ca8eff6ac17e3b892729dd55859fc380a0ce3226b70adbf809e3ae8",
+    "magic": 233,
+    "segments": 3,
+    "chip_id": 18,
+    "chip": "esp32p4",
+    "min_chip_rev_full": 300,
+    "max_chip_rev_full": 399,
+    "flash_mode_field": 2,
+    "flash_mode": "DIO",
+    "flash_size_field": 5,
+    "flash_size": "32MB",
+    "flash_freq_field": 15,
+    "entry_point": "0x4ffac2c0"
+  },
+  {
+    "name": "partition-table.bin",
+    "kind": "partition_table",
+    "entries": [
+      {
+        "name": "nvs",
+        "type": 1,
+        "subtype": 2,
+        "offset": 36864,
+        "size": 24576
+      },
+      {
+        "name": "phy_init",
+        "type": 1,
+        "subtype": 1,
+        "offset": 61440,
+        "size": 4096
+      },
+      {
+        "name": "factory",
+        "type": 0,
+        "subtype": 0,
+        "offset": 65536,
+        "size": 6291456
+      },
+      {
+        "name": "storage",
+        "type": 1,
+        "subtype": 130,
+        "offset": 6356992,
+        "size": 4194304
+      }
+    ],
+    "sha256": "8404023636b162d4c94c1911a9ba1f152968769e86a683bbe2134e4fcf828fc6"
+  }
+]
