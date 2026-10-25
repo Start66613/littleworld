@@ -1,0 +1,14 @@
+{
+  "job": "job_c7484cd69b324e76a7a84ca7576fac52",
+  "translation_all_frames": [
+    0,
+    0
+  ],
+  "per_frame_recentering": false,
+  "anchor": [
+    128,
+    226
+  ],
+  "timing": "16x100ms to match unchanged greet core; all frames kept",
+  "review": "rose, bow, braid, dress and face remain consistent; natural happy eye closure; original idle is preserved unchanged"
+}

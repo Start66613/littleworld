@@ -248,7 +248,7 @@ static void memory_clicked(lv_event_t *event)
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
     lv_obj_center(card);
-    lw_os_motion(card,LW_MOVE_DIALOG);
+    lw_os_motion(card,LW_MOVE_CARD);
 
     lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, 32, 28);
     lv_label_set_text_fmt(date, "%04d-%02d-%02d", memory->date.year, memory->date.month, memory->date.day);

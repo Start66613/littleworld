@@ -1,0 +1,11 @@
+{
+  "job": "job_f8c64c1f9a0842a09933adf436e65af7",
+  "translation_all_frames": [
+    0,
+    -1
+  ],
+  "per_frame_recentering": false,
+  "timing": "16x125ms retimed to 16x100ms to match the unchanged 1600ms greet core contract",
+  "all_frames_retained": true,
+  "face_and_clothing": "reviewed all 16 frames; identity consistent; happy closed eyes are the blink reaction"
+}

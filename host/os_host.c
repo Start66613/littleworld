@@ -4,6 +4,7 @@
 #include "lw_shell.h"
 #include "lw_app_state.h"
 #include "lw_os_design.h"
+#include "lw_visual_assets.h"
 #include "lw_ui_content.h"
 #include "win_display.h"
 #include <stdio.h>
@@ -184,19 +185,67 @@ static void experience_tests(lw_system_t *system,const char *out)
     lw_os_motion_mode(LW_MOTION_FULL); lw_app_state()->settings.animations=true;
     desktop_objects=objects(lw_os_root()); desktop_timers=timers();
 }
+static void capture_now(const char *out,const char *name)
+{ char path[600]; snprintf(path,sizeof(path),"%s/%s.bmp",out,name); lv_refr_now(NULL); CHECK("V4 real animation framebuffer",lw_host_screenshot_bmp(path)==0); }
+static void motion_v4_tests(const char *out,bool characters)
+{
+    lw_os_open(OS_DESKTOP); advance(600); unsigned base=objects(lw_os_root()); int timer_base=timers();
+    if (lw_visual_assets_available()) CHECK("resource path cannot be replaced under live widgets",!lw_visual_assets_configure("untrusted-change"));
+    lw_os_boot(); CHECK("boot timeline actually starts",lw_os_boot_active());
+    for (unsigned i=0;i<7;i++) { char name[64]; snprintf(name,sizeof(name),"v4-boot-%02u",i); capture_now(out,name); advance(200); }
+    CHECK("boot ends and releases its overlay",!lw_os_boot_active() && objects(lw_os_root())==base && timers()==timer_base);
+    lw_host_pointer_t *p=lw_host_pointer(); p->x=900; p->y=20; p->pressed=1; advance(60);
+    int last=-600;
+    for (unsigned i=0;i<4;i++) { p->y=70+(int)i*90; advance(40); lv_obj_t *panel=lw_os_control_panel(); CHECK("top pull creates a real panel during the press",panel!=NULL); if (panel) { int y=lv_obj_get_style_translate_y(panel,0); CHECK("control center follows increasing pointer position",y>last && y<0); last=y; } char name[64]; snprintf(name,sizeof(name),"v4-pull-%02u",i); capture_now(out,name); }
+    p->pressed=0; advance(500); CHECK("released pull snaps fully open",lw_os_overlay()==OS_OVER_CONTROL && lw_os_control_panel() && lv_obj_get_style_translate_y(lw_os_control_panel(),0)==0); capture_now(out,"v4-pull-open");
+    p->x=650; p->y=116; p->pressed=1; advance(60); p->y=72; advance(60); capture_now(out,"v4-push-mid"); p->y=20; advance(80); p->pressed=0; advance(500); CHECK("upward header gesture closes panel",lw_os_overlay()==OS_OVER_NONE); capture_now(out,"v4-push-closed");
+    swipe_points(900,20,900,78); advance(400); CHECK("short top pull cancels without a stuck overlay",lw_os_overlay()==OS_OVER_NONE);
+    for (unsigned theme=0;theme<3;theme++) {
+        lw_os_open(OS_THEMES); tap((lw_os_control_t)(OC_THEME0+theme)); tap(OC_APPLY); lw_os_open(OS_DESKTOP); advance(600); char name[64]; snprintf(name,sizeof(name),"v4-theme-%u",theme); capture_now(out,name);
+    }
+    lw_os_show(OS_OVER_LETTER); for (unsigned i=0;i<5;i++) { char name[64]; snprintf(name,sizeof(name),"v4-letter-%02u",i); capture_now(out,name); advance(160); } tap(OC_CLOSE); advance(400);
+    if (characters) {
+        CHECK("male idle is the Codex art provider",lw_assets_find("male.idle")!=NULL);
+        CHECK("male blink has its own reviewed frame clip",lw_assets_find("male.blink")!=NULL);
+        bool saw_blink=false; for (unsigned n=0;n<260;n++) { advance(20); const char *clip=lw_os_actor_clip(0); if (clip && strstr(clip,".blink")) saw_blink=true; }
+        CHECK("desktop idle really schedules eye blinking",saw_blink);
+        CHECK("both reviewed wave resources are available",lw_assets_find("male.wave") && lw_assets_find("qianqian.wave"));
+        lw_os_open(OS_WORLD); advance(400); tap(OC_GREET); unsigned wait=0;
+        while (lw_os_duo_state()->phase!=LW_DUO_ACT && wait<6000) { advance(40); wait+=40; }
+        CHECK("duo approaches and enters greeting",lw_os_duo_state()->phase==LW_DUO_ACT);
+        CHECK("both actors actually select wave clips",lw_os_actor_clip(0) && strstr(lw_os_actor_clip(0),".wave") && lw_os_actor_clip(1) && strstr(lw_os_actor_clip(1),".wave"));
+        for (unsigned i=0;i<8;i++) { char name[64]; snprintf(name,sizeof(name),"v4-greet-%02u",i); capture_now(out,name); advance(160); }
+        advance(800); CHECK("greeting naturally returns to idle clips",lw_os_duo_state()->phase==LW_DUO_FREE && lw_os_actor_clip(0) && strstr(lw_os_actor_clip(0),".idle"));
+    }
+    lw_os_open(OS_DESKTOP); advance(600);
+    for (unsigned mode=0;mode<3;mode++) {
+        lw_app_state()->settings.animations=mode!=LW_MOTION_OFF; lw_os_motion_mode((lw_motion_mode_t)mode); lw_os_open(OS_DESKTOP); advance(600); base=objects(lw_os_root()); timer_base=timers(); bool stable=true;
+        for (unsigned n=0;n<20;n++) { lw_os_boot(); advance(1500); lw_os_show(OS_OVER_CONTROL); advance(120); lw_os_show(OS_OVER_LOCK); advance(120); tap(OC_UNLOCK); advance(500); if (objects(lw_os_root())!=base || timers()!=timer_base || lw_os_boot_active()) stable=false; }
+        CHECK("boot/lock/control lifecycle stays bounded in each motion mode",stable);
+        if (mode==LW_MOTION_OFF) { CHECK("off mode creates no decorative animations",lv_anim_count_running()==0); if (characters) { uint16_t frame=lw_os_actor_frame(0); advance(700); CHECK("idle stays still when motion is disabled",lw_os_actor_frame(0)==frame); } }
+    }
+    lw_app_state()->settings.animations=true; lw_os_motion_mode(LW_MOTION_FULL); lw_os_open(OS_DESKTOP); advance(600);
+    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("only one full room and bounded thumbnails are resident",visual.peak_bytes<=1228800+3*76800); if (lw_visual_assets_available()) CHECK("full scene is reused rather than decoded on every page",visual.hits>visual.reads);
+    desktop_objects=objects(lw_os_root()); desktop_timers=timers();
+}
 int lw_os_host_run(const char *pack_path,const char *out)
 {
+    const char *visual_path=getenv("LW_VISUAL_ASSETS"); lw_visual_assets_configure(visual_path ? visual_path : "assets/visual-v4/runtime");
     setvbuf(stdout,NULL,_IONBF,0); snprintf(settings_path,sizeof(settings_path),"%s\\os-settings.dat",host_platform_dir());
     snprintf(rpg_path,sizeof(rpg_path),"%s\\rpg-save.dat",host_platform_dir()); if (out) DeleteFileA(rpg_path);
     lw_rpg_view_host_t rpg_host={NULL,rpg_load,rpg_save,rpg_reward}; lw_os_rpg_storage(&rpg_host);
     lw_system_backend_t backend={0}; backend.simulated=true; backend.network_available=true; backend.brightness=brightness; backend.volume=volume; backend.load=out ? NULL : load; backend.store=store;
     lw_system_t system; lw_system_init(&system,&backend);
     lw_pixel_pack_t *pack=lw_pixel_pack_open(pack_path); if (!pack) fprintf(stderr,"Character pack unavailable: running complete OS with labelled no-art fallback.\n");
+    if (pack) { const char *male=getenv("LW_MALE_PACK"); if (!male) male="assets/visual-v4/runtime/male.lwp"; FILE *f=fopen(male,"rb"); if (f) { fclose(f); if (!lw_pixel_pack_attach_male(pack,male)) fprintf(stderr,"Male pack rejected; labelled fallback retained.\n"); } }
+    if (pack) { const char *extra="assets/visual-v4/runtime/qianqian-wave.lwp"; FILE *f=fopen(extra,"rb"); if (f) { fclose(f); if (!lw_pixel_pack_attach_qianqian_clips(pack,extra)) fprintf(stderr,"Qianqian extra clips rejected; original motions retained.\n"); } }
+    bool real_male=pack && !lw_pixel_pack_art(pack)[0].placeholder;
     unsigned expected_leases=pack ? 2 : 0;
     int base_timers=timers(); size_t base_bytes=lw_assets_stats().live_bytes;
     if (out) { clock_ms=lv_tick_get(); lv_tick_set_cb(fake_clock); }
     if (out) { advance(400); legacy_anim_baseline=lv_anim_count_running(); }
     if (!lw_os_start(&system,lw_pixel_pack_art(pack))) { lw_pixel_pack_close(pack); return 2; }
+    if (out) advance(1500);
     if (!out) { printf("Little World OS V2 ready: Windows simulated services; --legacy restores the stable desktop.\n"); int result=lw_host_run_window(); lw_os_stop(); return lw_pixel_pack_close(pack) ? result : 2; }
     LARGE_INTEGER begin,end,freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&begin); double cpu_start=cpu_ms();
     shot(out,"01-desktop"); CHECK("OS desktop active",lw_os_page()==OS_DESKTOP);
@@ -251,6 +300,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     rpg_tile(3,3); tap_text("查看身边物品"); tap_text("下一句"); CHECK("quest completes with one reward",lw_rpg_quest_is_complete(lw_os_rpg_state()) && reward_calls==1); shot(out,"20-rpg-reward"); tap_text("收好奖励");
     tap(OC_HOME); tap(OC_WORLD); tap(OC_RPG); CHECK("RPG progress reloads from separate save",lw_rpg_quest_progress(lw_os_rpg_state())==3 && reward_calls==1); tap(OC_HOME);
     experience_tests(&system,out);
+    motion_v4_tests(out,pack!=NULL);
     unsigned before=objects(lw_os_root()); int timer_before=timers(); bool clean=true;
     for (int i=0;i<100;i++) { lw_os_show(OS_OVER_CONTROL); advance(60); lw_os_show(OS_OVER_WIFI); advance(60); lw_os_show(OS_OVER_NONE); advance(60); if (objects(lw_os_root())!=before || timers()!=timer_before || lw_assets_stats().live_leases!=expected_leases) clean=false; }
     CHECK("100 overlay cycles preserve page objects timers and leases",clean);
@@ -268,6 +318,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     uint8_t encoded[LW_SYS_PREF_BYTES]; lw_system_encode(&system.prefs,encoded); encoded[5]^=1; lw_preferences_t invalid; CHECK("corrupt preferences rejected",!lw_system_decode(&invalid,encoded));
     size_t peak=lw_assets_stats().peak_bytes; lw_os_stop(); CHECK("OS stop releases frame memory",lw_assets_stats().live_bytes==base_bytes && lw_assets_stats().live_leases==0); CHECK("OS stop releases timers",timers()==base_timers); CHECK("stable shell restored",lw_shell_current() && !strcmp(lw_shell_current()->id,"home"));
     CHECK("wallpaper animation context released",lw_os_scene_live_bytes()==0); CHECK("photo source released at OS stop",photo_live==0);
+    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("all visual scene references and bytes released",visual.refs==0 && visual.live_bytes==0);
     advance(400); CHECK("animation count returns to the restored legacy breathing baseline",lv_anim_count_running()==legacy_anim_baseline);
     lw_file_cache_stats_t cache=lw_pixel_pack_cache_stats(pack);
     CHECK("real frame file cache stays bounded",cache.peak_bytes<=cache.budget_bytes);
@@ -275,11 +326,12 @@ int lw_os_host_run(const char *pack_path,const char *out)
     CHECK("pack release joins read-ahead worker",lw_pixel_pack_close(pack));
     QueryPerformanceCounter(&end); PROCESS_MEMORY_COUNTERS memory={0}; memory.cb=sizeof(memory); GetProcessMemoryInfo(GetCurrentProcess(),&memory,sizeof(memory));
     char report[600]; snprintf(report,sizeof(report),"%s\\runtime.json",out); FILE *f=fopen(report,"wb");
-    if (f) { fprintf(f,"{\n\"checks\":%u,\n\"failures\":%u,\n\"overlay_cycles\":100,\n\"page_cycles\":100,\n\"pixel_peak_bytes\":%zu,\n\"working_set_peak_bytes\":%zu,\n\"wall_ms\":%.3f,\n\"process_cpu_ms\":%.3f,\n\"virtual_clock_unthrottled\":true,\n\"network\":\"Windows mock, no actual host or C6 network access\",\n\"art\":\"%s\",\n\"board_tested\":false\n}\n",checks,failures,peak,(size_t)memory.PeakWorkingSetSize,(double)(end.QuadPart-begin.QuadPart)*1000/(double)freq.QuadPart,cpu_ms()-cpu_start,expected_leases ? "original qianqian and TEST A; final male pending" : "no character pack; labelled fallback"); fclose(f); } else failures++;
+    if (f) { fprintf(f,"{\n\"checks\":%u,\n\"failures\":%u,\n\"overlay_cycles\":100,\n\"page_cycles\":100,\n\"pixel_peak_bytes\":%zu,\n\"working_set_peak_bytes\":%zu,\n\"wall_ms\":%.3f,\n\"process_cpu_ms\":%.3f,\n\"virtual_clock_unthrottled\":true,\n\"network\":\"Windows mock, no actual host or C6 network access\",\n\"art\":\"%s\",\n\"board_tested\":false\n}\n",checks,failures,peak,(size_t)memory.PeakWorkingSetSize,(double)(end.QuadPart-begin.QuadPart)*1000/(double)freq.QuadPart,cpu_ms()-cpu_start,expected_leases ? (real_male ? "original qianqian + Codex male; reviewed breathing blink and wave frames" : "original qianqian and TEST A fallback") : "no character pack; labelled fallback"); fclose(f); } else failures++;
     snprintf(report,sizeof(report),"%s\\storage.json",out); f=fopen(report,"wb");
     if (f) { fprintf(f,"{\"implementation\":\"actual Windows filesystem and worker thread\",\"budget_bytes\":%zu,\"peak_cache_bytes\":%zu,\"metadata_bytes\":%zu,\"hits\":%u,\"misses\":%u,\"file_reads\":%u,\"prefetched\":%u,\"evictions\":%u,\"read_failures\":%u,\"lvgl_pixel_peak_bytes\":%zu,\"tf_hardware_tested\":false}\n",cache.budget_bytes,cache.peak_bytes,cache.metadata_bytes,cache.hits,cache.misses,cache.reads,cache.prefetched,cache.evictions,cache.failures,peak); fclose(f); } else failures++;
     snprintf(report,sizeof(report),"%s\\experience.json",out); f=fopen(report,"wb");
     if (f) { fprintf(f,"{\"desktop_objects\":%u,\"OS_active_timers\":%d,\"restored_legacy_animation_baseline\":%u,\"animations_after_stop\":%u,\"photo_peak_live\":%u,\"photo_live_after_stop\":%u,\"photo_fixture_bytes\":12288,\"scene_context_live_bytes_after_stop\":%zu,\"lock_reuse_cycles\":100,\"rapid_overlay_cycles\":100,\"page_cycles_per_motion_mode\":20,\"media_is_technical_fixture\":true}\n",desktop_objects,desktop_timers,legacy_anim_baseline,lv_anim_count_running(),photo_peak,photo_live,lw_os_scene_live_bytes()); fclose(f); } else failures++;
+    snprintf(report,sizeof(report),"%s/visual.json",out); f=fopen(report,"wb"); if (f) { fprintf(f,"{\"live_bytes_after_stop\":%zu,\"peak_scene_bytes\":%zu,\"refs_after_stop\":%u,\"reads\":%u,\"cache_hits\":%u,\"load_failures\":%u,\"full_scene_limit\":1,\"thumbnail_limit\":3,\"hardware_tested\":false}\n",visual.live_bytes,visual.peak_bytes,visual.refs,visual.reads,visual.hits,visual.failures); fclose(f); }
     printf("OS V2: %u checks, %u failures; 100 overlay cycles; peak pixels %zu B.\n",checks,failures,peak);
     printf("File cache: peak %zu / %zu B; hits %u; prefetched %u; evictions %u.\n",cache.peak_bytes,cache.budget_bytes,cache.hits,cache.prefetched,cache.evictions);
     return failures ? 1 : 0;

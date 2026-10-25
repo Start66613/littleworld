@@ -50,7 +50,7 @@ static void update_view(void)
             lw_os_label(stage,"文件可能缺失或格式不支持。可重试，也可以继续翻页。",&lw_font_18,200,232,560,c->dim);
         }
     }
-    lw_os_motion(stage,LW_MOVE_PAGE);
+    lw_os_motion(stage,LW_MOVE_PHOTO);
 }
 static void next(lv_event_t *e) { (void)e; if (count()) { current=(current+1)%count(); update_view(); } }
 static void previous(lv_event_t *e) { (void)e; if (count()) { current=(current+count()-1)%count(); update_view(); } }

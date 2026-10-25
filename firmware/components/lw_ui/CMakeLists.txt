@@ -8,6 +8,8 @@ idf_component_register(
         "src/lw_duo_view.c"
         "src/lw_os.c"
         "src/lw_os_design.c"
+        "src/lw_visual_assets.c"
+        "src/lw_motion.c"
         "src/lw_rpg_view.c"
         "src/lw_ui.c"
         "src/lw_theme.c"

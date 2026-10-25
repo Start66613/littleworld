@@ -1,0 +1,24 @@
+{
+  "source": "Meowa idle body frames 4..7 + closed eye pixels from accepted wave frame 7",
+  "eye_rectangles": [
+    [
+      98,
+      79,
+      125,
+      95
+    ],
+    [
+      132,
+      79,
+      158,
+      95
+    ]
+  ],
+  "paid_calls": 0,
+  "body_translation": [
+    0,
+    0
+  ],
+  "anchor_unchanged": true,
+  "timing": "4x125ms, once per 5000ms idle period; eye patch follows existing head breathing only"
+}

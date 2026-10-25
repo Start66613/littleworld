@@ -46,6 +46,8 @@ __pycache__/
 /reports/ui-v2/os-v3-fallback/
 /reports/ui-v2/os-v3-legacy/
 /reports/os-v2/screens/
+/reports/ui-v2/v4-*/
+/assets/visual-v4/generated/
 /build_os.log
 /build_other.log/build_other*.log
 /build_*.log
