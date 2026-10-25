@@ -1,0 +1,2 @@
+# Generated font files must be reproducible across Windows worktrees.
+firmware/components/lw_ui/fonts/*.c text eol=lf

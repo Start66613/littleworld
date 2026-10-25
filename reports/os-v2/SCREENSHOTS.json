@@ -1,0 +1,147 @@
+{
+  "local_directory": "D:\\LittleWorld-Codex\\reports\\ui-v2\\os-v2",
+  "publication_authorized": false,
+  "count": 20,
+  "screens": [
+    {
+      "name": "01-desktop.png",
+      "sha256": "39d204a17ecc31affd25792e0dc7f66465bd09bf3e4b30755ee2fc28d7073399",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "02-control-center.png",
+      "sha256": "d385d5f50b6fd49cfbcb4dacb2f9ba3e223b3ff2986964b49ef07f4ec2eb5fd7",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "03-wifi-list.png",
+      "sha256": "ba8ea1d0b8cd0a1c4ebc9bfba1dac669304e3be6ef30ebafd73f6557d6e72bc0",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "04-settings.png",
+      "sha256": "b6cd6e082a2bbce5997ec09108410f9369c62f20b729e3c208290bc578444556",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "05-themes.png",
+      "sha256": "5a538ac85260cf8ec0001129b83eea7b5b6a2ea8f48120d0dc2333cfcb94ff6e",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "06-lockscreen.png",
+      "sha256": "4b55ce98f449990ef5c4da7bfefd40600b110e2670717442f720968069bb9a0b",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "07-pixel-world.png",
+      "sha256": "6bbcd6a18543e571034d83afb94dfc9a94b1fefd620de95f1a6edd4fd4fff8b2",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "08-wifi-password.png",
+      "sha256": "f962f7cc477f9d36280f380dec29108f1a7987737be431bf7019471d3e26654a",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "09-moonlight-desktop.png",
+      "sha256": "7a714cc98a8d288e88681cd95bcaeaa40a91fd7547a1a4df44dcc773dd5a07a3",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "10-envelope.png",
+      "sha256": "4d2c26acf8e5625c0f76723169c3c0598bcc13eadc2b3f23aa858e343cc16a27",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "11-pet-idle.png",
+      "sha256": "58abe8f37217b44fc122e0e87c2bce2e25bc8f879971e6fe4807b97413fda58d",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "12-pet-interaction.png",
+      "sha256": "dfa9b33479084a3f93b890585f41164f4a15c9f5200d9d1a0a307c24285816b3",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "13-album-viewer.png",
+      "sha256": "7556d2705c84b2731b84cdfb59fa05eca80b7695be948d445416cfe9f57600a6",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "14-music.png",
+      "sha256": "c7c6791cf82ad6fb3ae02295b50691000dc8386632eb7beead071658888c246b",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "15-anniversary.png",
+      "sha256": "f4606bd0c0699862f8e9bfe937cce5dd96030e7dd5ad63bf15c53e238c29d9fc",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "16-2048.png",
+      "sha256": "9ce57cbb26e359876a3557501643757e7c146d5c1b555c1b03475ceea2aceef5",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "17-rpg-room.png",
+      "sha256": "06a772d3a580f3d948a73755da576304d1fd50b6f2128e5f7338d432ac15d0dc",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "18-rpg-journal.png",
+      "sha256": "d1bd0f812944baf36738ff2bb7972bdd07e214f79f1eec3436cd2b68e6aae8af",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "19-rpg-dialogue.png",
+      "sha256": "80096808e6ec2bb9f9ff05da6b14f1e0725b08d69c5cd890a4d83a006a10f90e",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    },
+    {
+      "name": "20-rpg-reward.png",
+      "sha256": "3d70f0b139d1a0702b2b7da87a33e46b24096b1fe509941367dc3305a409af56",
+      "width": 1024,
+      "height": 600,
+      "source": "actual LVGL framebuffer BMP losslessly converted to PNG"
+    }
+  ]
+}

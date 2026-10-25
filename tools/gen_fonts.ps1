@@ -64,6 +64,11 @@ $lvFontConvJs = Join-Path $fontDir 'node_modules/lv_font_conv/lv_font_conv.js'
 if (-not (Test-Path -LiteralPath $lvFontConvJs)) { throw "lv_font_conv is not installed in $fontDir" }
 
 $stale = @()
+function Test-FontContent([string]$Path,[string]$Expected) {
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    $actual=[System.IO.File]::ReadAllText($Path).Replace("`r`n","`n")
+    return $actual -ceq $Expected
+}
 $generatedDir=Join-Path $projectRoot 'build/fontgen'
 New-Item -ItemType Directory -Force -Path $generatedDir | Out-Null
 foreach ($job in $jobs) {
@@ -80,7 +85,7 @@ foreach ($job in $jobs) {
         if ($LASTEXITCODE -ne 0) { throw "lv_font_conv failed for $($job.Name)" }
         $generated=[System.IO.File]::ReadAllText($target).Replace($target,('firmware/components/lw_ui/fonts/'+$job.Name+'.c')).Replace($job.Font,[IO.Path]::GetFileName($job.Font)).TrimEnd() + [char]10
         [System.IO.File]::WriteAllText($target,$generated,[System.Text.UTF8Encoding]::new($false))
-        if (-not (Test-Path $out) -or (Get-FileHash $out).Hash -ne (Get-FileHash $target).Hash) { $stale += $job.Name }
+        if (-not (Test-FontContent $out $generated)) { $stale += $job.Name }
         continue
     }
 
@@ -89,7 +94,7 @@ foreach ($job in $jobs) {
     if ($LASTEXITCODE -ne 0) { throw "lv_font_conv failed for $($job.Name)" }
     $generated=[System.IO.File]::ReadAllText($target).Replace($target,('firmware/components/lw_ui/fonts/'+$job.Name+'.c')).Replace($job.Font,[IO.Path]::GetFileName($job.Font)).TrimEnd() + [char]10
     [System.IO.File]::WriteAllText($target,$generated,[System.Text.UTF8Encoding]::new($false))
-    if (-not (Test-Path -LiteralPath $out) -or (Get-FileHash $out).Hash -ne (Get-FileHash $target).Hash) {
+    if (-not (Test-FontContent $out $generated)) {
         Copy-Item -LiteralPath $target -Destination $out -Force
     }
     Write-Output ("  -> {0} ({1:N0} bytes)" -f $out, (Get-Item -LiteralPath $out).Length)

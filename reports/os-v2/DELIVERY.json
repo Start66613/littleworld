@@ -1,0 +1,58 @@
+{
+  "source_commit": "2764c1bb4e10d9f30c53455d66d9bef27a48a675",
+  "idf_project_version": "2764c1b",
+  "windows_exe": {
+    "path": "D:\\LittleWorld-Codex\\build\\host\\LittleWorld.exe",
+    "bytes": 1312256,
+    "sha256": "c8739acccde7247ee4b781ee158c549809d39a6c318365982f0a3c9212c3164d"
+  },
+  "firmware": {
+    "path": "D:\\build\\firmware-v2\\little_world.bin",
+    "bytes": 1323152,
+    "sha256": "43c5182b8ccb983630491a01891dd1003885b906f081ecc0f0ce29dfa8cd96f6",
+    "idf": "v5.5.5",
+    "target": "esp32p4",
+    "minimum_revision": 300,
+    "flash": "32MB",
+    "bsp": "3.0.1",
+    "esp_lvgl_adapter": "0.6.4",
+    "lvgl": "9.5.0",
+    "sd_auto_format_enabled": false,
+    "stable_entry_preserved": true,
+    "full_os_linked": false,
+    "board_tested": false
+  },
+  "checks": {
+    "system_model": 22,
+    "duo_model": 82,
+    "rpg_core": 85,
+    "storage": 33,
+    "os_with_art": 174,
+    "os_without_art": 174,
+    "core": 142,
+    "lvgl_resources": 94,
+    "python": 18,
+    "font_check": "passed",
+    "legacy_ui": "passed, objects 84 -> 84",
+    "failures": 0
+  },
+  "pixel_and_cache": {
+    "implementation": "actual Windows filesystem and worker thread",
+    "budget_bytes": 786432,
+    "peak_cache_bytes": 786432,
+    "metadata_bytes": 2592,
+    "hits": 920,
+    "misses": 738,
+    "file_reads": 738,
+    "prefetched": 653,
+    "evictions": 734,
+    "read_failures": 0,
+    "lvgl_pixel_peak_bytes": 589824,
+    "tf_hardware_tested": false
+  },
+  "policy": {
+    "new_qianqian_images_public": false,
+    "hardware_commands_executed": false,
+    "private_images_included": false
+  }
+}

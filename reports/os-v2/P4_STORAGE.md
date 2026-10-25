@@ -1,6 +1,6 @@
 # P4：实际文件读取与缓存
 
-Windows真实实现：lw_storage的文件slice、LRU上限、单后台worker预读、按代失效与退出join；已接host/pixel_pack.c读取原版角色帧。不是只写接口，也没有用Mock内容替代文件读取。ESP-IDF组件提供同源FreeRTOS/PSRAM实现和禁止自动格式化的官方BSP挂载适配；未运行硬件。
+Windows真实实现：lw_storage的文件slice、LRU上限、单后台worker预读、按代失效与退出join；已接host/pixel_pack.c读取原版角色帧。不是只写接口，也没有用Mock内容替代文件读取。ESP-IDF组件提供同源FreeRTOS/PSRAM实现和禁止自动格式化的官方BSP挂载适配；最终离线编译通过，未运行硬件。最终StorageTests句柄73→73，先前77→77同样是通过记录。
 
 33项StorageTests通过，含真实二进制内容/offset、命中避免I/O、后台预读命中、LRU保留近期帧、超预算旁路、缺文件、截断、路径/offset边界、改文件后失效、并发失效、100次立即关闭在途worker。Windows进程句柄77→77。首轮/WX发现worker局部key可能未初始化，已显式初始化。还修正pending统计覆盖已出队但未开始读的任务，避免把短暂空隙当作worker空闲。
 
