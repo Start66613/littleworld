@@ -1,5 +1,9 @@
 # Build output
 /build/
+/firmware/build/
+/build_v3.log
+/windows_regression.log
+/tools/*.log
 
 # ESP-IDF generated files
 /firmware/sdkconfig

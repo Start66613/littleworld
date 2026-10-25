@@ -24,6 +24,8 @@
 #define LW_WIFI_SCAN_TIMEOUT_MS 10000u
 #define LW_WIFI_CONNECT_TIMEOUT_MS 15000u
 #define LW_WIFI_BACKOFF_MS 2000u
+/* Bounded automatic reconnects after a link that was already up drops. */
+#define LW_WIFI_MAX_RECONNECTS 3
 
 typedef enum {
     LW_WIFI_ST_UNSUPPORTED = 0, /* no radio backend compiled or the C6 link is absent */
@@ -89,6 +91,7 @@ typedef struct {
     uint32_t generation;   /* bumped on every connect attempt or cancellation */
     uint32_t scan_generation;
     unsigned attempts;     /* reconnect attempts used for the current target */
+    unsigned reconnects;   /* automatic link-loss reconnects used for this target */
     uint32_t started_ms;   /* start of the current SCANNING/CONNECTING phase */
     uint32_t retry_at_ms;  /* non-zero while waiting for the reconnect backoff */
     char target[LW_WIFI_SSID_MAX];
@@ -106,6 +109,9 @@ void lw_wifi_init(lw_wifi_t *wifi, bool supported);
 void lw_wifi_set_supported(lw_wifi_t *wifi, bool supported);
 bool lw_wifi_supported(const lw_wifi_t *wifi);
 lw_wifi_state_t lw_wifi_state(const lw_wifi_t *wifi);
+/* Captured by the adapter when a request starts; feed it back with the result. */
+uint32_t lw_wifi_generation(const lw_wifi_t *wifi);
+uint32_t lw_wifi_scan_generation(const lw_wifi_t *wifi);
 lw_wifi_error_t lw_wifi_error(const lw_wifi_t *wifi);
 const char *lw_wifi_error_name(lw_wifi_error_t error);
 const char *lw_wifi_state_name(lw_wifi_state_t state);

@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "esp_event.h"
+#include "esp_timer.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
@@ -42,6 +43,16 @@
 static const char *TAG = "lw_net_wifi";
 static struct lw_services *s_services;
 static bool s_started;
+/* Generation captured when the request was issued. The event handler returns
+ * it with the result so the model can drop results of a superseded request. */
+static uint32_t s_request_generation;
+static uint32_t s_scan_generation;
+static bool s_link_up;
+
+static uint32_t now_ms_from_timer(void)
+{
+    return (uint32_t)(esp_timer_get_time() / 1000);
+}
 
 static lw_wifi_error_t map_reason(uint8_t reason)
 {
@@ -78,18 +89,27 @@ static void wifi_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
                 aps[i].rssi = records[i].rssi;
                 aps[i].secured = records[i].authmode != WIFI_AUTH_OPEN;
             }
-            lw_services_wifi_report_scan(s_services, aps, count, true);
+            lw_services_wifi_report_scan(s_services, s_scan_generation, aps, count, true);
         } else {
-            lw_services_wifi_report_scan(s_services, NULL, 0, false);
+            lw_services_wifi_report_scan(s_services, s_scan_generation, NULL, 0, false);
         }
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
         const wifi_event_sta_disconnected_t *info = (const wifi_event_sta_disconnected_t *)data;
-        lw_services_wifi_report_failed(s_services, map_reason(info->reason), (uint32_t)(esp_log_timestamp()));
+        const bool was_up = s_link_up;
+        s_link_up = false;
+        const uint32_t now = now_ms_from_timer();
+        if (was_up) {
+            /* The association was established: this is a link loss, not a failed attempt. */
+            lw_services_wifi_report_lost(s_services, s_request_generation, now);
+        } else {
+            lw_services_wifi_report_failed(s_services, s_request_generation, map_reason(info->reason), now);
+        }
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         const ip_event_got_ip_t *info = (const ip_event_got_ip_t *)data;
         char ip[16];
         snprintf(ip, sizeof(ip), IPSTR, IP2STR(&info->ip_info.ip));
-        lw_services_wifi_report_connected(s_services, ip, (uint32_t)esp_log_timestamp());
+        s_link_up = true;
+        lw_services_wifi_report_connected(s_services, s_request_generation, ip, now_ms_from_timer());
     }
 }
 
@@ -137,6 +157,7 @@ bool lw_net_esp_wifi_start_scan(void)
     if (!s_started) {
         return false;
     }
+    s_scan_generation = lw_services_scan_generation(s_services);
     wifi_scan_config_t scan = {0};
     return esp_wifi_scan_start(&scan, false) == ESP_OK;
 }
@@ -155,6 +176,8 @@ bool lw_net_esp_wifi_start_connect(const char *ssid, const char *password)
     if (esp_wifi_set_config(WIFI_IF_STA, &config) != ESP_OK) {
         return false;
     }
+    s_request_generation = lw_services_wifi_generation(s_services);
+    s_link_up = false;
     return esp_wifi_connect() == ESP_OK;
 }
 
@@ -199,6 +222,9 @@ void lw_net_esp_wifi_stop(void)
 
 #include <time.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include "esp_netif_sntp.h"
 
 static const char *TAG_SNTP = "lw_net_sntp";
@@ -225,15 +251,45 @@ void lw_net_esp_time_attach(struct lw_services *services)
     s_time_started = true;
 }
 
+/* Runs off the caller's stack: esp_netif_sntp_sync_wait blocks on a semaphore,
+ * so the LVGL timer must not wait for the server. Only the wait result decides
+ * whether the clock is trusted; the system clock is never sampled as proof. */
+static void sntp_wait_task(void *arg)
+{
+    (void)arg;
+    esp_err_t err = esp_netif_sntp_sync_wait(pdMS_TO_TICKS(LW_NET_SNTP_TIMEOUT_MS));
+    bool ok = false;
+    int64_t utc = 0;
+    if (err == ESP_OK) {
+        time_t now = 0;
+        time(&now);
+        utc = (int64_t)now;
+        ok = utc > 1700000000LL; /* the server answered; reject a clock that is still unset */
+        if (!ok) {
+            ESP_LOGW(TAG_SNTP, "sync returned but the clock is still unset");
+        }
+    } else {
+        ESP_LOGW(TAG_SNTP, "sync wait failed: %s", esp_err_to_name(err));
+    }
+    if (s_time_services != NULL) {
+        lw_services_time_report_sync(s_time_services, utc, ok, sntp_now_ms());
+    }
+    s_time_waiting = false;
+    vTaskDelete(NULL);
+}
+
 void lw_net_esp_time_request(void)
 {
-    if (!s_time_started) {
+    if (!s_time_started || s_time_waiting) {
         return;
     }
-    time_t now = 0;
-    time(&now);
-    if (now > 1700000000) {
-        lw_services_time_report_sync(s_time_services, (int64_t)now, true, (uint32_t)esp_log_timestamp());
+    s_time_waiting = true;
+    if (xTaskCreate(sntp_wait_task, "lw_sntp", 4096, NULL, 4, NULL) != pdPASS) {
+        s_time_waiting = false;
+        ESP_LOGW(TAG_SNTP, "cannot start the sync task");
+        if (s_time_services != NULL) {
+            lw_services_time_report_sync(s_time_services, 0, false, sntp_now_ms());
+        }
     }
 }
 

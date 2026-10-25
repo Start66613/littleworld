@@ -5,6 +5,8 @@
  * real persistence adapters. UI internals stay in lw_ui.
  *
  * SPDX-License-Identifier: MIT */
+#include <string.h>
+
 #include "sdkconfig.h"
 
 #include "esp_err.h"
@@ -21,6 +23,7 @@
 
 #if CONFIG_LW_BOOT_MODE_OS_V2
 #include "lw_diag.h"
+#include "lvgl.h"
 #include "lw_os.h"
 #include "lw_store.h"
 #endif
@@ -198,6 +201,52 @@ static void start_connectivity(uint32_t now_ms, bool codec)
     }
 }
 
+/* ------------------------------------------------- UI capability bridge -- */
+
+/* The OS asks what the hardware can actually do. Only this file knows: the
+ * board support package reports the panel/codec, the service layer reports the
+ * radio. The UI must never infer a capability from a failed call, so the values
+ * are pushed explicitly, and only from the LVGL task (or before the UI exists). */
+static lw_hw_caps_t s_hw_caps;
+static lw_os_capabilities_t s_published_caps;
+static bool s_caps_published;
+
+static lw_os_capabilities_t build_capabilities(void)
+{
+    lw_os_capabilities_t caps;
+    caps.brightness = s_hw_caps.brightness ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
+    caps.volume = s_hw_caps.audio ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
+    caps.wifi = s_services.caps.wifi_backend ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
+    caps.audio = LW_SERVICE_UNAVAILABLE;   /* no PCM source or decoder in this round */
+    caps.storage = LW_SERVICE_UNAVAILABLE; /* the TF card is out of scope */
+    return caps;
+}
+
+static bool caps_differ(const lw_os_capabilities_t *a, const lw_os_capabilities_t *b)
+{
+    return memcmp(a, b, sizeof(*a)) != 0;
+}
+
+/* LVGL task boundary: the timer below is the only place that publishes a change
+ * after the UI is running. */
+static void publish_capabilities(void)
+{
+    lw_os_capabilities_t caps = build_capabilities();
+    if (s_caps_published && !caps_differ(&caps, &s_published_caps)) {
+        return;
+    }
+    s_published_caps = caps;
+    s_caps_published = true;
+    lw_os_capabilities(&caps);
+    ESP_LOGI(TAG, "capabilities: brightness=%d volume=%d wifi=%d audio=%d storage=%d", (int)caps.brightness,
+             (int)caps.volume, (int)caps.wifi, (int)caps.audio, (int)caps.storage);
+}
+
+static void caps_timer_cb(lv_timer_t *timer)
+{
+    (void)timer;
+    publish_capabilities();
+}
 static bool hw_brightness(void *context, unsigned value)
 {
     (void)context;
@@ -221,6 +270,7 @@ static void start_os(void)
     const bool want_audio = false;
 #endif
     lw_hw_caps_t caps = lw_hw_begin(want_audio);
+    s_hw_caps = caps;
 
     lw_system_backend_t backend = {0};
     backend.simulated = false;
@@ -251,9 +301,13 @@ static void start_os(void)
 
     /* The TF card is not part of this round, so no character pack is available.
      * Passing NULL selects the labelled no-art fallback instead of failing. */
+    publish_capabilities();
     if (!lw_os_start(&s_system, NULL)) {
         ESP_LOGE(TAG, "lw_os_start failed; falling back to the legacy shell");
         lw_ui_start();
+    } else {
+        /* Later capability changes are applied from the LVGL task only. */
+        lv_timer_create(caps_timer_cb, 1000, NULL);
     }
 }
 

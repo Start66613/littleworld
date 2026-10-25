@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lw_audio.h"
+#include "lw_services.h"
 #include "lw_time_svc.h"
 #include "lw_wifi.h"
 
@@ -419,6 +420,167 @@ static void test_audio_limits(void)
     check(lw_audio_volume(&audio) == 100u, "volume clamped");
 }
 
+/* --------------------------------------------------------------- services -- */
+
+static void test_services_requests(void)
+{
+    begin("services/requests");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    check(!svc.caps.wifi_backend, "no radio on the host stub");
+    lw_services_start(&svc, 0);
+    check(!lw_services_scan(&svc, 10), "scan refused without a backend");
+    check(!lw_services_connect(&svc, "home", "pw", 10), "connect refused without a backend");
+    check(!lw_services_request_time_sync(&svc, 10), "sync refused without SNTP");
+    check(svc.caps.time_backend == false, "time backend reports unavailable");
+}
+
+static void test_services_events(void)
+{
+    begin("services/events");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    lw_services_start(&svc, 0);
+
+    /* Take the stub out of the picture: the events are what is under test. */
+    lw_wifi_init(&svc.wifi, true);
+    check(lw_wifi_enable(&svc.wifi, true, 0), "radio enabled");
+    check(lw_services_scan(&svc, 10), "scan accepted");
+
+    lw_wifi_ap_t aps[1];
+    memset(aps, 0, sizeof(aps));
+    strncpy(aps[0].ssid, "home", sizeof(aps[0].ssid) - 1);
+    aps[0].rssi = -48;
+    aps[0].secured = true;
+
+    uint32_t scan_gen = lw_services_scan_generation(&svc);
+    check(lw_services_wifi_report_scan(&svc, scan_gen, aps, 1, true), "scan event queued");
+    check(lw_wifi_scan_count(&svc.wifi) == 0, "nothing applied before the drain");
+    check(lw_services_drain(&svc, 20) == 1, "one event applied");
+    check(lw_wifi_scan_count(&svc.wifi) == 1, "scan applied by the drain");
+    check(lw_wifi_scan_at(&svc.wifi, 0) != NULL, "access point visible");
+
+    /* A result from an older request must not overwrite the current one. */
+    check(lw_services_scan(&svc, 30), "second scan accepted");
+    uint32_t second = lw_services_scan_generation(&svc);
+    lw_services_wifi_report_scan(&svc, scan_gen, aps, 1, false);
+    lw_services_drain(&svc, 40);
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_SCANNING, "stale scan result ignored");
+    lw_services_wifi_report_scan(&svc, second, aps, 1, true);
+    lw_services_drain(&svc, 50);
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_IDLE, "current scan result applied");
+
+    check(lw_services_connect(&svc, "home", "secret", 60), "connect accepted");
+    uint32_t gen = lw_services_wifi_generation(&svc);
+    lw_services_wifi_report_connected(&svc, gen, "10.0.0.5", 70);
+    lw_services_drain(&svc, 70);
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_CONNECTED, "connected after the drain");
+    check_str(lw_wifi_ip(&svc.wifi), "10.0.0.5", "ip stored");
+
+    /* A stale failure for a superseded attempt must not kill the live link. */
+    lw_services_wifi_report_failed(&svc, gen - 1u, LW_WIFI_ERR_TIMEOUT, 80);
+    lw_services_drain(&svc, 80);
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_CONNECTED, "stale failure ignored while connected");
+
+    /* A drop reported as a failure while the link is up is a link loss. */
+    lw_services_wifi_report_failed(&svc, gen, LW_WIFI_ERR_INTERNAL, 90);
+    lw_services_drain(&svc, 90);
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_IDLE, "drop while connected leaves the link");
+    check(lw_wifi_error(&svc.wifi) == LW_WIFI_ERR_LINK_LOST, "drop reported as link lost");
+}
+
+static void test_services_queue(void)
+{
+    begin("services/queue");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    lw_services_start(&svc, 0);
+
+    lw_net_event_t event;
+    memset(&event, 0, sizeof(event));
+    event.kind = LW_NET_EV_SCAN_DONE;
+    for (unsigned i = 0; i < LW_NET_EVENT_QUEUE; i++) {
+        check(lw_services_push_event(&svc, &event), "queue accepts up to its capacity");
+    }
+    check(!lw_services_push_event(&svc, &event), "a full queue refuses the event");
+    check(svc.events.dropped == 1u, "the drop is counted");
+    check(lw_services_drain(&svc, 10) == LW_NET_EVENT_QUEUE, "every queued event is applied");
+    check(lw_services_drain(&svc, 20) == 0u, "an empty queue applies nothing");
+}
+
+static void test_services_time_downgrade(void)
+{
+    begin("services/time-downgrade");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    lw_services_start(&svc, 0);
+    lw_time_service_request_sync(&svc.time, 10);
+    lw_time_service_on_sync_ok(&svc.time, 1761300000LL, 20);
+    check(lw_time_state(&svc.time) == LW_TIME_SYNCED, "clock synced");
+
+    /* Not connected: the poll loses the network and the clock becomes stale. */
+    lw_services_poll(&svc, 30);
+    check(lw_time_state(&svc.time) == LW_TIME_STALE, "clock downgraded to stale without a link");
+    check(lw_time_service_utc(&svc.time, 40, NULL), "stale wall time is still usable");
+}
+static void test_wifi_reconnect_policy(void)
+{
+    begin("wifi/reconnect-policy");
+    lw_wifi_t wifi;
+    lw_wifi_init(&wifi, true);
+    lw_wifi_enable(&wifi, true, 0);
+    lw_wifi_connect(&wifi, "home", "good", 1000);
+    lw_wifi_on_connected(&wifi, wifi.generation, "192.168.1.9", 1100);
+    lw_wifi_event_t ev;
+    while (lw_wifi_next_event(&wifi, &ev)) {
+    }
+
+    /* The first drop after a real link schedules one reconnect, not an instant one. */
+    lw_wifi_on_disconnected(&wifi, wifi.generation, LW_WIFI_ERR_LINK_LOST, 2000);
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "idle after link loss");
+    check(wifi.reconnects == 1, "one reconnect budgeted");
+    lw_wifi_tick(&wifi, 2000 + LW_WIFI_BACKOFF_MS - 1u);
+    check(lw_wifi_take_action(&wifi, NULL, NULL) == LW_WIFI_ACTION_NONE, "no reconnect before backoff");
+    uint32_t gen = wifi.generation;
+    lw_wifi_tick(&wifi, 2000 + LW_WIFI_BACKOFF_MS);
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "reconnect attempt started");
+    check(wifi.generation != gen, "generation bumped for the reconnect");
+    char ssid[LW_WIFI_SSID_MAX];
+    const char *pw = NULL;
+    check(lw_wifi_take_action(&wifi, ssid, &pw) == LW_WIFI_ACTION_CONNECT, "reconnect action issued");
+    check_str(ssid, "home", "same target retried");
+    check_str(pw, "good", "stored credentials reused");
+
+    /* A success resets the budget so a later drop gets a fresh set of attempts. */
+    lw_wifi_on_connected(&wifi, wifi.generation, "192.168.1.10", 5000);
+    check(wifi.reconnects == 0, "budget reset on success");
+
+    /* Burning the whole budget ends in FAILED instead of retrying forever. */
+    for (unsigned i = 1; i <= LW_WIFI_MAX_RECONNECTS; i++) {
+        gen = wifi.generation;
+        lw_wifi_on_disconnected(&wifi, gen, LW_WIFI_ERR_LINK_LOST, 6000u);
+        check(wifi.reconnects == i, "reconnect counted");
+        lw_wifi_tick(&wifi, wifi.retry_at_ms);
+        check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "retry attempt in flight");
+    }
+    gen = wifi.generation;
+    lw_wifi_on_disconnected(&wifi, gen, LW_WIFI_ERR_LINK_LOST, 9000);
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_FAILED, "failed once the budget is spent");
+    check(lw_wifi_error(&wifi) == LW_WIFI_ERR_RETRIES_EXHAUSTED, "retries exhausted reported");
+    check(!lw_wifi_credentials_held(&wifi), "password wiped after giving up");
+    check(wifi.retry_at_ms == 0, "no further reconnect scheduled");
+
+    /* With the radio switched off a drop must not schedule anything. */
+    lw_wifi_enable(&wifi, true, 10000);
+    lw_wifi_connect(&wifi, "home", "good", 10100);
+    lw_wifi_on_connected(&wifi, wifi.generation, "192.168.1.12", 10200);
+    lw_wifi_enable(&wifi, false, 10300);
+    gen = wifi.generation;
+    lw_wifi_on_disconnected(&wifi, gen, LW_WIFI_ERR_LINK_LOST, 10400);
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_OFF, "off stays off");
+    check(wifi.retry_at_ms == 0, "no reconnect while disabled");
+}
+
 int main(void)
 {
     test_wifi_unsupported();
@@ -428,6 +590,7 @@ int main(void)
     test_wifi_timeouts();
     test_wifi_events_overflow();
     test_wifi_disable();
+    test_wifi_reconnect_policy();
 
     test_time_demo();
     test_time_sync();
@@ -438,6 +601,11 @@ int main(void)
     test_audio_unavailable();
     test_audio_pipeline();
     test_audio_limits();
+
+    test_services_requests();
+    test_services_events();
+    test_services_queue();
+    test_services_time_downgrade();
 
     printf("\n%d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

@@ -89,3 +89,44 @@ recording because they are invisible in the default configuration:
   described in `docs/DSH_TO_CODEX_SERVICES.md`.
 - `now_ms` is a `uint32` throughout the models; `esp_timer_get_time()/1000`
   wraps after ~49.7 days.
+
+## OS V3 combined build (integration/os-v3-p4-combined)
+
+Measured on 2026-10-25 in `D:\LittleWorld-V3`, merge commit `337f7f1` plus the
+concurrency and reconnect fixes.
+
+Host backend tests (MSVC `/W4 /WX`): **188 checks, 0 failures**
+(store 29 + system 22 + services 137). The services suite grew from 131 to 137
+with `wifi/reconnect-policy`: budget counting, backoff boundary, credentials
+reused from RAM, budget reset on success, `RETRIES_EXHAUSTED` after three
+losses, and "switch the radio off and nothing is scheduled".
+
+Windows regression: `WINDOWS REGRESSION OK` — system 22, duo 82, RPG 85,
+storage 33, OS V2 340 checks, 0 failures, 31 real LVGL screenshots
+(`reports/ui-v2/os-v2/`, local only because that path is gitignored).
+
+| Configuration | Image | Size | SHA-256 | Header check |
+| --- | --- | --- | --- | --- |
+| `build/os` | `little_world.bin` | 1,598,656 B | `0750cf158fa6f09f312a61300a1dab23ef0de496de14af1ac0dbc5017a674993` | PASS (rev 3.0-3.99) |
+| `build/legacy` | `little_world.bin` | 1,349,008 B | `7e4d2bc5a4beee907e62ee328f1435646d0618edfa2eb1c7cd3cbfc5df1c8adb` | PASS (rev 3.0-3.99) |
+| `build/noaudio` | `little_world.bin` | 1,598,656 B | `c78aa70adc5884199c7dd6706e96b2398a7c8fc0606af46b32bb2e98acdbdfdf` | PASS (rev 3.0-3.99) |
+
+Partition fit: `factory` app at `0x10000`, size 6,291,456 B (6M); the `os` image
+uses 25.4 % of it, so all three configurations fit without touching
+`partitions.csv` (unchanged since the merge base).
+
+Linkage evidence (`tools/v3_evidence.ps1`, `riscv32-esp-elf-nm` on
+`little_world.elf`):
+
+| Symbol | os | noaudio | legacy |
+| --- | --- | --- | --- |
+| `lw_os_start`, `lw_os_capabilities`, `lw_ui_start` | linked | linked | `lw_ui_start` only |
+| `lw_services_poll`, `lw_services_status` | linked | linked | absent |
+| `lw_wifi_init`, `lw_time_service_init`, `lw_audio_init`, `lw_net_esp_wifi_attach` | linked | linked | absent |
+| `lw_boot_start`, `lw_store_load` | linked | linked | `lw_boot_start` |
+| `lw_rpg_init`, `lw_pet_tick` | linked | linked | `lw_pet_tick` |
+
+The legacy image links no OS or service code on purpose: `CONFIG_LW_BOOT_MODE_LEGACY`
+starts the pre-OS shell, nothing references the services, and `--gc-sections`
+removes them. That is the fallback being smaller (249,648 B less), not the
+backend being broken.

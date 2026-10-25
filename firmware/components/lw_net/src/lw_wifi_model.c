@@ -231,6 +231,7 @@ bool lw_wifi_enable(lw_wifi_t *wifi, bool enabled, uint32_t now_ms)
     wifi->generation++;
     wifi->retry_at_ms = 0;
     wifi->attempts = 0;
+    wifi->reconnects = 0;
     if (!enabled) {
         wifi->state = LW_WIFI_ST_OFF;
         wifi->error = LW_WIFI_ERR_NONE;
@@ -291,6 +292,7 @@ bool lw_wifi_connect(lw_wifi_t *wifi, const char *ssid, const char *password, ui
     /* A new request always invalidates whatever was in flight. */
     wifi->generation++;
     wifi->attempts = 0;
+    wifi->reconnects = 0;
     wifi->retry_at_ms = 0;
     copy_str(wifi->target, sizeof(wifi->target), ssid);
     if (password != NULL && password[0] != '\0') {
@@ -319,6 +321,7 @@ bool lw_wifi_disconnect(lw_wifi_t *wifi, uint32_t now_ms)
     wifi->generation++;
     wifi->retry_at_ms = 0;
     wifi->attempts = 0;
+    wifi->reconnects = 0;
     wifi->ip[0] = '\0';
     wifi->error = was_active ? LW_WIFI_ERR_CANCELLED : LW_WIFI_ERR_NONE;
     wifi->state = wifi->enabled ? LW_WIFI_ST_IDLE : LW_WIFI_ST_OFF;
@@ -369,6 +372,7 @@ void lw_wifi_on_connected(lw_wifi_t *wifi, uint32_t generation, const char *ip, 
     wifi->state = LW_WIFI_ST_CONNECTED;
     wifi->error = LW_WIFI_ERR_NONE;
     wifi->attempts = 0;
+    wifi->reconnects = 0;
     wifi->retry_at_ms = 0;
     wifi->action = LW_WIFI_ACTION_NONE;
     copy_str(wifi->ip, sizeof(wifi->ip), ip);
@@ -420,17 +424,39 @@ void lw_wifi_on_disconnected(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error
         wipe_password(wifi);
         return;
     }
-    /* The link dropped after being up: report it and go idle, the user (or the
-     * reconnect policy for a live attempt) decides what to do next. */
+    /* The link dropped after being up. The reconnect policy is bounded: while
+     * the radio is on, credentials are still in RAM and the budget is not spent,
+     * schedule one more attempt; otherwise stop and report it. */
     wifi->state = LW_WIFI_ST_IDLE;
     wifi->error = error == LW_WIFI_ERR_NONE ? LW_WIFI_ERR_LINK_LOST : error;
     emit_simple(wifi, LW_WIFI_EV_DISCONNECTED, wifi->error);
+    if (!wifi->enabled || !wifi->credentials_held) {
+        return;
+    }
+    if (wifi->reconnects >= LW_WIFI_MAX_RECONNECTS) {
+        wifi->error = LW_WIFI_ERR_RETRIES_EXHAUSTED;
+        set_failed(wifi, LW_WIFI_ERR_RETRIES_EXHAUSTED);
+        wipe_password(wifi);
+        return;
+    }
+    wifi->reconnects++;
+    wifi->retry_at_ms = now_ms + LW_WIFI_BACKOFF_MS * wifi->reconnects;
 }
 
 void lw_wifi_tick(lw_wifi_t *wifi, uint32_t now_ms)
 {
     if (wifi->state == LW_WIFI_ST_SCANNING && now_ms - wifi->started_ms >= LW_WIFI_SCAN_TIMEOUT_MS) {
         lw_wifi_on_scan_done(wifi, wifi->scan_generation, NULL, 0, false);
+        return;
+    }
+    /* A scheduled reconnect after a link loss starts from IDLE. */
+    if (wifi->state == LW_WIFI_ST_IDLE && wifi->retry_at_ms != 0 && now_ms >= wifi->retry_at_ms) {
+        wifi->retry_at_ms = 0;
+        wifi->generation++;
+        wifi->state = LW_WIFI_ST_CONNECTING;
+        wifi->error = LW_WIFI_ERR_NONE;
+        wifi->started_ms = now_ms;
+        wifi->action = LW_WIFI_ACTION_CONNECT;
         return;
     }
     if (wifi->state == LW_WIFI_ST_CONNECTING) {
@@ -476,4 +502,14 @@ bool lw_wifi_next_event(lw_wifi_t *wifi, lw_wifi_event_t *out)
 unsigned lw_wifi_dropped_events(const lw_wifi_t *wifi)
 {
     return wifi->dropped_events;
+}
+
+uint32_t lw_wifi_generation(const lw_wifi_t *wifi)
+{
+    return wifi != NULL ? wifi->generation : 0u;
+}
+
+uint32_t lw_wifi_scan_generation(const lw_wifi_t *wifi)
+{
+    return wifi != NULL ? wifi->scan_generation : 0u;
 }

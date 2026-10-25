@@ -14,6 +14,11 @@
 extern "C" {
 #endif
 
+/* How long a single SNTP wait may block before the service reports a failure. */
+#ifndef LW_NET_SNTP_TIMEOUT_MS
+#define LW_NET_SNTP_TIMEOUT_MS 15000
+#endif
+
 struct lw_services;
 
 bool lw_net_esp_wifi_available(void);
