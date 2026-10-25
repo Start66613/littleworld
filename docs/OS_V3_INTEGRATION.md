@@ -4,11 +4,15 @@ Short English summary of `docs/p4/OS_V3_INTEGRATION.md`.
 
 ## Merge
 
-- Base A (frontend): `agent/os-v2-experience-v3` at `17c1545` (Codex OS V3).
+- Base A (frontend): `agent/os-v2-experience-v3` at `7f1a170` (Codex OS V3;
+  that tip only adds docs and the user-authorized screenshots to `17c1545`).
 - Base B (backend): `integration/p4-connectivity-services` at `904d7bc` (DSH services).
-- Merge commit `337f7f1`, **zero conflicts**: the two sides touch disjoint file sets.
+- Merge commits `337f7f1` (first, from `17c1545`) and `e7cd6af` (docs/screenshots
+  tip), **zero conflicts**: the two sides touch disjoint file sets.
   The only shared file was `firmware/main/CMakeLists.txt`; the result keeps
   `lw_ui`, `lw_system`, `lw_backend` and `lw_net` in `REQUIRES`.
+- `git diff 17c1545..7f1a170 -- firmware host tools tests` is empty, so the
+  images built for this report are the same for both merge bases.
 - `firmware/sdkconfig.os` is now tracked on purpose: the OS V3 default
   configuration must be reproducible.
 

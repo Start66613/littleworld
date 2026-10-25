@@ -1,0 +1,4 @@
+docs(os-v3): record the second merge base (7f1a170, docs and screenshots only)
+
+No firmware, host, tools or test file changes between 17c1545 and
+7f1a170, so the measured images still describe this tree.

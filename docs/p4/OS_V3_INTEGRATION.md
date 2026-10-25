@@ -7,12 +7,19 @@
 
 | 侧 | 分支 | 提交 |
 | --- | --- | --- |
-| 前端（Codex OS V3） | `agent/os-v2-experience-v3` | `17c1545` |
+| 前端（Codex OS V3） | `agent/os-v2-experience-v3` | `7f1a170`（`17c1545` + 仅文档/截图的一提交） |
 | 后端（DSH 连接服务） | `integration/p4-connectivity-services` | `904d7bc` |
 
-`git merge --no-ff` 的合并提交是 `337f7f1`，**零冲突**。原因是两侧改动的文件集合
-几乎不相交：Codex 侧只动 `firmware/components/lw_ui/*`、`host/os_host.c`、
-`reports/os-v3/*` 与 `tools/{export_os_evidence.py,run_os_v2.ps1}`；DSH 侧只动
+第一次合并用的是 `17c1545`，对应的合并提交是 `337f7f1`。之后 Codex 又推了
+`7f1a170`，`git diff 17c1545..7f1a170 -- firmware host tools tests` 为空——它只
+改了 `AGENTS.md`、`TASKS.md`、`docs/STATUS.md` 和 `reports/os-v3/*`，并把这轮
+用户授权的 31 张 LVGL 截图放进了仓库。因此第二次合并（`e7cd6af`）不改变任何
+镜像内容，只把证据纳入进来。
+
+`git merge --no-ff` 的合并提交是 `337f7f1`，**零冲突**（第二次 `e7cd6af` 同样
+零冲突）。原因是两侧改动的文件集合几乎不相交：Codex 侧只动
+`firmware/components/lw_ui/*`、`host/os_host.c`、`reports/os-v3/*` 与
+`tools/{export_os_evidence.py,run_os_v2.ps1}`；DSH 侧只动
 `firmware/components/lw_net/*`、`firmware/main/*`、`tests/host/*`、`tools/*.ps1`。
 唯一需要人工判断的是 `firmware/main/CMakeLists.txt`：合并后 `REQUIRES` 同时保留
 `lw_ui lw_system lw_backend lw_net`，`SRCS` 保留两侧的源文件。
