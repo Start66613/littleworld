@@ -1,0 +1,49 @@
+{
+  "contract_version": "1.0.0",
+  "technical_status": "fail",
+  "visual_status": "not_reviewed",
+  "accepted_for_integration": false,
+  "assets": [
+    {
+      "id": null,
+      "errors": [
+        "invalid or duplicate id"
+      ],
+      "frames": []
+    },
+    {
+      "id": null,
+      "errors": [
+        "invalid or duplicate id"
+      ],
+      "frames": []
+    },
+    {
+      "id": null,
+      "errors": [
+        "invalid or duplicate id"
+      ],
+      "frames": []
+    },
+    {
+      "id": null,
+      "errors": [
+        "invalid or duplicate id"
+      ],
+      "frames": []
+    },
+    {
+      "id": null,
+      "errors": [
+        "invalid or duplicate id"
+      ],
+      "frames": []
+    }
+  ],
+  "errors": [
+    "Expected littleworld.assets/2 and contract_version 1.0.0",
+    "asset_version and producer are required"
+  ],
+  "note": "Technical checks do not prove character consistency, jitter, edge quality or visual approval.",
+  "all_frames_raw_storage_bytes": 0
+}

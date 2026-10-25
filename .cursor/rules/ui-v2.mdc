@@ -1,0 +1,11 @@
+---
+description: Little World 2.0 ownership, evidence and device safety
+alwaysApply: true
+---
+Follow AGENTS.md. Work only in D:\LittleWorld-Codex on agent/ui-v2.
+Codex owns the three docs/*CONTRACT.md / UI_V2_DESIGN.md contracts; DSH owns generated art and its manifest.
+Use file handoffs, never silently overwrite either agent's contract or production assets.
+No device connection, flash, erase, partitions, C6 or eFuse operations.
+Keep business logic and the stable UI. Run real Windows LVGL screenshots after major changes.
+Technical fixture images are not final art. User direction approval and asset acceptance precede default-page integration.
+Keep new downloads, temp files, saves, builds and reports on D:. Never upload private material.

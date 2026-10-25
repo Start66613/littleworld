@@ -8,7 +8,8 @@
 [CmdletBinding()]
 param(
     [switch]$Run,
-    [switch]$Reconfigure
+    [switch]$Reconfigure,
+    [string]$LvglDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,14 +30,18 @@ foreach ($line in $setup) {
 }
 
 # cmake/ninja come from the ESP-IDF tools already installed on this machine.
-. (Join-Path $root '../LittleWorld-Arcade/tools/activate_env.ps1') | Out-Null
-
-if ($Reconfigure -and (Test-Path (Join-Path $buildDir 'build.ninja'))) {
-    Remove-Item -LiteralPath $buildDir -Recurse -Force
+. (Join-Path $PSScriptRoot 'activate_env.ps1') | Out-Null
+if (-not $LvglDir) {
+    $LvglDir = Join-Path $root 'firmware/managed_components/lvgl__lvgl'
+    if (-not (Test-Path -LiteralPath (Join-Path $LvglDir 'lvgl.h'))) {
+        $LvglDir = 'D:\Espressif\LittleWorld\sources\waveshare-7b\examples\esp-idf\09_lvgl_demo_v9\managed_components\lvgl__lvgl'
+    }
 }
-if (-not (Test-Path (Join-Path $buildDir 'build.ninja'))) {
+if (-not (Test-Path -LiteralPath (Join-Path $LvglDir 'lvgl.h'))) { throw 'LVGL 9.5.0 sources missing; pass -LvglDir explicitly.' }
+
+if ($Reconfigure -or -not (Test-Path (Join-Path $buildDir 'build.ninja'))) {
     Write-Host 'configuring...'
-    & cmake -S $hostDir -B $buildDir -G Ninja -DCMAKE_BUILD_TYPE=Release | Out-Null
+    & cmake -S $hostDir -B $buildDir -G Ninja -DCMAKE_BUILD_TYPE=Release "-DLVGL_DIR=$LvglDir" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "cmake configure failed ($LASTEXITCODE)" }
 }
 

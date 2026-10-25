@@ -20,3 +20,15 @@
 *.bin
 *.elf
 *.map
+
+# Local-only state, credentials and art production material
+/private/
+/secrets/
+.env
+.env.*
+!.env.example
+**/.state/
+**/LittleWorld-data/
+/reports/ui-v2/**/*.bmp
+/build-ui-v2/
+__pycache__/

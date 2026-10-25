@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <windows.h>
@@ -72,13 +73,27 @@ static const lw_platform_t s_platform = {
 
 void host_platform_init(void)
 {
-    const char *appdata = getenv("LOCALAPPDATA");
-    if (appdata != NULL && appdata[0] != '\0') {
-        snprintf(s_base_dir, sizeof(s_base_dir), "%s\\LittleWorld", appdata);
+    const char *override=getenv("LW_DATA_DIR");
+    char requested[MAX_PATH];
+    if (override && override[0]) {
+        if (snprintf(requested,sizeof(requested),"%s",override)>=(int)sizeof(requested)) exit(2);
     } else {
-        snprintf(s_base_dir, sizeof(s_base_dir), ".");
+        DWORD n=GetModuleFileNameA(NULL,requested,sizeof(requested));
+        if (!n || n>=sizeof(requested)) exit(2);
+        char *slash=strrchr(requested,'\\'); if (!slash) exit(2);
+        *slash='\0';
+        size_t len=strlen(requested);
+        if (len+sizeof("\\LittleWorld-data")>sizeof(requested)) exit(2);
+        strcat(requested,"\\LittleWorld-data");
     }
-    CreateDirectoryA(s_base_dir, NULL);
+    DWORD n=GetFullPathNameA(requested,sizeof(s_base_dir),s_base_dir,NULL);
+    if (!n || n>=sizeof(s_base_dir) || !((s_base_dir[0]=='D'||s_base_dir[0]=='d') && s_base_dir[1]==':' && s_base_dir[2]=='\\')) {
+        fprintf(stderr,"Simulator data must be stored on D:. Set LW_DATA_DIR to an existing-parent D-drive directory.\n");
+        exit(2);
+    }
+    if (!CreateDirectoryA(s_base_dir,NULL) && GetLastError()!=ERROR_ALREADY_EXISTS) {
+        fprintf(stderr,"Cannot create isolated simulator data directory.\n"); exit(2);
+    }
     lw_platform_set(&s_platform);
 }
 

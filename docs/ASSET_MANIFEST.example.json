@@ -1,0 +1,26 @@
+{
+  "schema": "littleworld.assets/2",
+  "asset_version": "batch-001",
+  "contract_version": "1.0.0",
+  "producer": "DSH",
+  "assets": [
+    {
+      "id": "pet.idle",
+      "kind": "sprite",
+      "status": "ready",
+      "width": 256,
+      "height": 256,
+      "alpha": "straight",
+      "anchor": [128, 236],
+      "fps": 8,
+      "loop": true,
+      "files": [
+        {"path": "animations/batch-001/pet_idle/frame_000.png", "sha256": "REPLACE_WITH_ACTUAL_SHA256", "duration_ms": 125},
+        {"path": "animations/batch-001/pet_idle/frame_001.png", "sha256": "REPLACE_WITH_ACTUAL_SHA256", "duration_ms": 125}
+      ],
+      "sheet": {"path": "animations/batch-001/pet_idle/sheet.png", "sha256": "REPLACE_WITH_ACTUAL_SHA256", "columns": 4, "rows": 1, "frame_count": 2},
+      "provenance": "original Meowa generation; job reference in producer report",
+      "license": "record verified usage rights in ASSET_REPORT.md"
+    }
+  ]
+}

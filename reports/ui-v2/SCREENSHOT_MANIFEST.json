@@ -1,0 +1,299 @@
+[
+  {
+    "path": "reports/ui-v2/baseline/01-home.png",
+    "sha256": "fa553aa986cc7824d9da43f07ab50a6e99edbfe65cd28606c0edc6e4ab090400",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/02-pet.png",
+    "sha256": "bd7789676717ff59dfe6c66db93e58d05ff71db651f4e083d667acf58106ebf1",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/03-pet-fed.png",
+    "sha256": "f7f518a9821ffd3ea14a84be58fc0a39d5a1f76253f1a5203add4b03ab5db5af",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/04-pet-playing.png",
+    "sha256": "642659c8c236d29d9e94d7f51dd9f2776729073cac2a0187762ec166c843774b",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/05-anniversary.png",
+    "sha256": "7a72d68ff941f2747ff87148428a2921533720fc9abd151ccef31ffd731fc0e8",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/06-timeline.png",
+    "sha256": "408b249ae287604f4952d05dbf9a34d8bddc9b29ad1a5f3b28d1829387a64245",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/07-surprise.png",
+    "sha256": "a6381a3cc8b7afce0f6d4301c8d269a91980cc4de252796c342efb20e613003c",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/08-surprise-open.png",
+    "sha256": "8db36d4973be89765f57867a25859aa6168d7b5d1d4206b1dacf7e6e60dd657c",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/09-map.png",
+    "sha256": "927f272eeeaa0ff2ec0de6cad422a68e5ff83e54e047f7eb5ac28a5f683ca67c",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/10-place.png",
+    "sha256": "cc42af7e93670815d1310f3d7470ebfbb3e5d1c6676a0e2d81c165ca134b61e5",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/11-album.png",
+    "sha256": "e28469ce9f472a37c834d6b2ebb8c1959a89cafeffe595cf96098b44cd856f68",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/12-music.png",
+    "sha256": "7ad7504768ec376f8c2ee23727ace8199f4b05e2f32ee0b6376bc4ea035fcd78",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/13-arcade.png",
+    "sha256": "55d2e3e6af1a6b84e67d1e1e1349500b933cc8592704d046dfd831274e7da68a",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/14-2048.png",
+    "sha256": "9ce57cbb26e359876a3557501643757e7c146d5c1b555c1b03475ceea2aceef5",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/15-settings.png",
+    "sha256": "f7179442e7034578b7fa7b5fe7948c89d0bf0bc5ef6294636f0c88b40f333442",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/16-home-again.png",
+    "sha256": "510cbf22040166e47e96a36e80977628a2e40efef6a88401a267e50d4968beaf",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/17-snake.png",
+    "sha256": "3f3f3ca6f69f5ff5930ddb0615a5143a2deebfe20a43d10e1533bc84751e4ace",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/18-breakout-ready.png",
+    "sha256": "74980a0ade1344830d25135492db9a8f86d7ee5e1c34dd3807f38f870e49932e",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/19-breakout-playing.png",
+    "sha256": "39016880b3ccb6602ccf6adedd8409b5b04abf8fb26bb0f2a9acd6c15fcceda6",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/20-after-cycles.png",
+    "sha256": "510cbf22040166e47e96a36e80977628a2e40efef6a88401a267e50d4968beaf",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/21-settings-anim-off.png",
+    "sha256": "1bc8e742557891b4cf0863709738557501cf107b54a55af586a86835962c1bba",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/22-album-viewer.png",
+    "sha256": "6f454b8080d512a7aeb3a07dffea3bde388d3047bfdc0cabfe981257082f181a",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/23-album-next.png",
+    "sha256": "608cd4c50a8d00231c94318d70b2e8d71087f1c2041b2388216a65c351b85bf7",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/24-album-closed.png",
+    "sha256": "e28469ce9f472a37c834d6b2ebb8c1959a89cafeffe595cf96098b44cd856f68",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/25-music-next.png",
+    "sha256": "7ad7504768ec376f8c2ee23727ace8199f4b05e2f32ee0b6376bc4ea035fcd78",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/26-music-row.png",
+    "sha256": "df2df203ab37a8fd0598cd7784b51f9d445cbb5d4e016c38504059ae6c9e95e7",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/27-music-playing.png",
+    "sha256": "2a183e7a8a270c6e9ea6ad376a4d5450a0fb7eccf64ebfce3b4fa3164b173013",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/28-date-plus.png",
+    "sha256": "ddbcbe5a7aaa1c40a3c2248468cc9ca115e4ee11bb1023377cad134b45754379",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/baseline/29-date-persisted.png",
+    "sha256": "ddbcbe5a7aaa1c40a3c2248468cc9ca115e4ee11bb1023377cad134b45754379",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "baseline",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/technical/01-sprite-alpha.png",
+    "sha256": "480e60b7478912618fa633d7f0b2c4ead0a983e36bb68f7924b4ad032944a4dc",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "technical",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/technical/02-scene-layers.png",
+    "sha256": "42d87e65a28dadeb5d5dd492e6f35710b82f8864042a5d9dc8ef4b08282f4c5e",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "technical",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/technical/03-home-blueprint.png",
+    "sha256": "b76190cc3030c3b2fe3839e1efcd483b07dae364c29c07e5a0e988b09db47ea6",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "technical",
+    "final_artwork": false
+  },
+  {
+    "path": "reports/ui-v2/technical/04-pet-blueprint.png",
+    "sha256": "02a5c01a290c7a4b3e30bc55169b4ed0415a8bd909e8644ce3a375aaf4fbc067",
+    "width": 1024,
+    "height": 600,
+    "source": "real Windows LVGL framebuffer",
+    "classification": "technical",
+    "final_artwork": false
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "scope": "real Windows LVGL technical fixtures, not final art or board tests",
+  "checks": 94,
+  "failures": 0,
+  "cycles": 50,
+  "production_pixel_peak_bytes": 1622016,
+  "live_leases": 0,
+  "live_bytes": 0
+}
