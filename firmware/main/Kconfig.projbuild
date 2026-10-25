@@ -22,3 +22,24 @@ menu "Little World startup"
             stored preference and the UI must not claim real audio output.
 
 endmenu
+menu "Little World connectivity"
+
+    config LW_NET_WIFI_ENABLE
+        bool "Enable the ESP32-C6 Wi-Fi backend"
+        default n
+        help
+            Compile the real Wi-Fi adapter (lw_net_wifi_esp.c) and pull in
+            esp_wifi. Requires the esp_hosted and esp_wifi_remote managed
+            components and a working SDIO link to the C6. When disabled the
+            firmware reports the radio as unsupported instead of pretending
+            to scan.
+
+    config LW_NET_SNTP_ENABLE
+        bool "Enable SNTP time synchronisation"
+        default n
+        depends on LW_NET_WIFI_ENABLE
+        help
+            Synchronise the wall clock from pool.ntp.org once Wi-Fi is up.
+            Without it the time service stays on the DEMO clock.
+
+endmenu

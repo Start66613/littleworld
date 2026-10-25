@@ -159,6 +159,42 @@ static void rpg_reward(void *context, uint32_t id)
 /* --------------------------------------------------------- services ----- */
 
 static lw_system_t s_system;
+static lw_services_t s_services;
+static esp_timer_handle_t s_net_timer;
+
+/* Connectivity poll: runs off the LVGL thread so a slow scan can never stall a
+ * frame. The models are lock-free by construction (the UI only reads a
+ * snapshot), so this stays a plain timer callback. */
+static void net_poll(void *arg)
+{
+    (void)arg;
+    uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+    lw_services_poll(&s_services, now_ms);
+}
+
+static void start_connectivity(uint32_t now_ms)
+{
+    lw_services_init(&s_services);
+    lw_services_start(&s_services, now_ms);
+
+    lw_net_status_t status;
+    lw_services_status(&s_services, now_ms, &status);
+    ESP_LOGI(TAG, "connectivity: wifi=%s time=%s audio=%s",
+             status.wifi_backend ? "backend" : "no-backend",
+             lw_time_state_name(status.time_state),
+             status.audio_backend ? "codec" : "no-codec");
+
+    if (s_net_timer != NULL) {
+        return;
+    }
+    const esp_timer_create_args_t args = {
+        .callback = net_poll,
+        .name = "lw_net_poll",
+    };
+    if (esp_timer_create(&args, &s_net_timer) == ESP_OK) {
+        esp_timer_start_periodic(s_net_timer, 500000);
+    }
+}
 
 static bool hw_brightness(void *context, unsigned value)
 {
@@ -187,6 +223,8 @@ static void start_os(void)
     backend.load = prefs_load;
     backend.store = prefs_store;
     lw_system_init(&s_system, &backend);
+
+    start_connectivity((uint32_t)(esp_timer_get_time() / 1000));
 
     if (!caps.brightness) {
         ESP_LOGW(TAG, "brightness: %s", "backend reports Unsupported");

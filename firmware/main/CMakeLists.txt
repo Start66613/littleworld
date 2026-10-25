@@ -1,7 +1,7 @@
 idf_component_register(
     SRCS "app_main.c" "lw_boot.c"
     INCLUDE_DIRS "."
-    REQUIRES esp32_p4_wifi6_touch_lcd_7b lvgl__lvgl lw_ui lw_system lw_backend nvs_flash esp_timer
+    REQUIRES esp32_p4_wifi6_touch_lcd_7b lvgl__lvgl lw_ui lw_system lw_backend lw_net nvs_flash esp_timer
 )
 
 idf_component_get_property(LVGL_LIB lvgl__lvgl COMPONENT_LIB)
