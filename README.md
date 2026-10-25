@@ -1,3 +1,9 @@
+# Little World OS 2.0 当前开发入口
+
+当前工作在 `agent/littleworld-os-v2`；系统设计见 [SYSTEM_DESIGN.md](docs/design/SYSTEM_DESIGN.md)，本轮进度见 [STATUS.md](reports/os-v2/STATUS.md)。`pwsh -NoProfile -File tools/run_os_v2.ps1` 自动构建并打开可操作的 Windows LVGL 原型；加 `-Test` 自动运行检查与截图。网络/亮度/声音为 Windows Mock，真实硬件适配状态独立记录。所有新数据在 D 盘，稳定固件入口保留。
+
+本地真实截图位于 `reports/ui-v2/os-v2`（包含角色，已忽略，不公开）。男方仍使用明确标注 TEST A；DSH 候选尚待返工和用户形象确认。新 Meowa 付费任务需要另行批次预算。
+
 # Little World
 
 > **2026-10-25 · Codex 像素双角色开发分支**：当前工作区 `D:\LittleWorld-Codex`，分支 `agent/pixel-duo`；稳定 DSH 主线与 `art/batch-1` 保留。女方复用 DesktopPet 的 qianqian，男方尚待 DSH/用户确认，当前只用 TEST A 占位。见 [当前状态](docs/PIXEL_DUO_STATUS.md)、[像素契约](docs/PIXEL_CHARACTER_CONTRACT.md)、[架构](docs/PIXEL_DUO_ARCHITECTURE.md)。默认旧版应用未替换，不涉及刷机。

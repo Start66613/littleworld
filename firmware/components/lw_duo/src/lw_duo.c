@@ -39,10 +39,17 @@ void lw_duo_init(lw_duo_t *d,uint32_t seed)
 {
     if (!d) return;
     memset(d,0,sizeof(*d)); d->random=seed ? seed : 1; d->autonomous=true; d->next_joint_ms=9000;
+    d->min_x=168; d->max_x=856; d->min_y=336; d->max_y=466;
     for (unsigned i=0;i<2;i++) {
         d->actors[i].x=i ? 678.0f : 342.0f; d->actors[i].y=i ? 434.0f : 414.0f;
         d->actors[i].facing=LW_FACE_DOWN; settle(&d->actors[i]); d->actors[i].wait_ms=1800+i*1100;
     }
+}
+bool lw_duo_set_bounds(lw_duo_t *d,float min_x,float max_x,float min_y,float max_y)
+{
+    if (!d || !isfinite(min_x)||!isfinite(max_x)||!isfinite(min_y)||!isfinite(max_y)||min_x<0 || max_x>1024 || min_y<0 || max_y>600 || max_x-min_x<300 || max_y<=min_y || d->phase!=LW_DUO_FREE) return false;
+    for (unsigned i=0;i<2;i++) if (d->actors[i].x<min_x || d->actors[i].x>max_x || d->actors[i].y<min_y || d->actors[i].y>max_y) return false;
+    d->min_x=min_x; d->max_x=max_x; d->min_y=min_y; d->max_y=max_y; return true;
 }
 static void release_reservation(lw_duo_t *d)
 {
@@ -58,20 +65,20 @@ void lw_duo_cancel(lw_duo_t *d)
 bool lw_duo_move(lw_duo_t *d,unsigned index,float x,float y)
 {
     if (!d || index>=2 || d->phase!=LW_DUO_FREE || d->actors[index].sleeping || !isfinite(x) || !isfinite(y)) return false;
-    lw_actor_t *a=&d->actors[index]; a->target_x=clamp(x,168,856); a->target_y=clamp(y,336,466);
+    lw_actor_t *a=&d->actors[index]; a->target_x=clamp(x,d->min_x,d->max_x); a->target_y=clamp(y,d->min_y,d->max_y);
     if (!arrived(a)) { a->motion=LW_ACTOR_WALK; a->animation_ms=0; a->pose_ms=6000; }
     return true;
 }
 bool lw_duo_request(lw_duo_t *d,lw_interaction_t kind)
 {
     if (!d || !lw_duo_interaction(kind) || d->phase!=LW_DUO_FREE || d->actors[0].sleeping || d->actors[1].sleeping || d->actors[0].wants_sleep || d->actors[1].wants_sleep) return false;
-    float center=clamp((d->actors[0].x+d->actors[1].x)*0.5f,280,744);
-    float y=kind==LW_DUO_WINDOW ? 350.0f : clamp((d->actors[0].y+d->actors[1].y)*0.5f,360,448);
+    float center=clamp((d->actors[0].x+d->actors[1].x)*0.5f,d->min_x+130,d->max_x-130);
+    float y=kind==LW_DUO_WINDOW ? d->min_y+14 : clamp((d->actors[0].y+d->actors[1].y)*0.5f,d->min_y,d->max_y);
     unsigned left=d->actors[0].x<=d->actors[1].x ? 0 : 1;
     for (unsigned i=0;i<2;i++) {
         float half_gap=kind==LW_DUO_REST ? 130.0f : 76.0f;
         lw_actor_t *a=&d->actors[i]; a->target_x=center+(i==left ? -half_gap : half_gap); a->target_y=y;
-        a->target_x=clamp(a->target_x,168,856);
+        a->target_x=clamp(a->target_x,d->min_x,d->max_x);
         a->motion=arrived(a) ? LW_ACTOR_IDLE : LW_ACTOR_WALK; a->animation_ms=0; a->pose_ms=0;
     }
     d->interaction=kind; d->phase=LW_DUO_APPROACH; d->phase_ms=0; d->interaction_ms=0;
@@ -86,7 +93,7 @@ void lw_duo_sleep(lw_duo_t *d,unsigned i,bool asleep)
     if (asleep && distance2(a->x,a->y,other->x,other->y)<(112.0f+radius(other))*(112.0f+radius(other))) {
         /* Walk to a wider spot first; never move or wake the other actor. */
         a->wants_sleep=true;
-        (void)lw_duo_move(d,i,a->x<other->x ? 168.0f : 856.0f,a->y);
+        (void)lw_duo_move(d,i,a->x<other->x ? d->min_x : d->max_x,a->y);
     } else { a->sleeping=asleep; settle(a); a->wait_ms=2200; }
 }
 void lw_duo_touch(lw_duo_t *d,unsigned i)
@@ -152,7 +159,7 @@ static void step(lw_duo_t *d,uint32_t ms)
         } else if (d->autonomous) {
             a->wait_ms=subtract(a->wait_ms,ms);
             if (!a->wait_ms) {
-                float x=200.0f+(float)(random_next(d)%625),y=350.0f+(float)(random_next(d)%105);
+                float x=d->min_x+(float)(random_next(d)%(uint32_t)(d->max_x-d->min_x)),y=d->min_y+(float)(random_next(d)%(uint32_t)fmaxf(1,d->max_y-d->min_y));
                 if (distance2(x,y,d->actors[1-i].x,d->actors[1-i].y)>=160.0f*160.0f) (void)lw_duo_move(d,i,x,y);
                 a->wait_ms=1600+random_next(d)%2200;
             }

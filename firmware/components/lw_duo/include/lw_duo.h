@@ -32,9 +32,11 @@ typedef struct {
     lw_interaction_t interaction;
     uint32_t random,phase_ms,interaction_ms,next_joint_ms,completed,cancelled;
     bool autonomous;
+    float min_x,max_x,min_y,max_y;
 } lw_duo_t;
 
 void lw_duo_init(lw_duo_t *duo,uint32_t seed);
+bool lw_duo_set_bounds(lw_duo_t *,float,float,float,float);
 void lw_duo_tick(lw_duo_t *duo,uint32_t dt_ms);
 bool lw_duo_move(lw_duo_t *duo,unsigned actor,float x,float y);
 bool lw_duo_request(lw_duo_t *duo,lw_interaction_t interaction);

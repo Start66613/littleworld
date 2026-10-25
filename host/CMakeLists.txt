@@ -34,6 +34,8 @@ add_executable(LittleWorld
     ui_v2_test.c
     pixel_pack.c
     pixel_duo_host.c
+    os_host.c
+    ../firmware/components/lw_system/src/lw_system.c
     win_display.c
     host_platform.c
     ${LW_UI_SOURCES}
@@ -50,6 +52,7 @@ target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/include"
+    "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_system/include"
     "${LVGL_DIR}")
 
 target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
@@ -64,4 +67,9 @@ add_executable(PixelDuoModelTests ../tests/host/test_lw_duo.c ${LW_DUO_SOURCES})
 target_include_directories(PixelDuoModelTests PRIVATE ../firmware/components/lw_duo/include)
 if(MSVC)
     target_compile_options(PixelDuoModelTests PRIVATE /W4 /WX /utf-8)
+endif()
+add_executable(SystemModelTests ../tests/host/test_lw_system.c ../firmware/components/lw_system/src/lw_system.c ${LW_CORE_SOURCES})
+target_include_directories(SystemModelTests PRIVATE ../firmware/components/lw_system/include ../firmware/components/lw_core/include)
+if(MSVC)
+    target_compile_options(SystemModelTests PRIVATE /W4 /WX /utf-8 /D_CRT_SECURE_NO_WARNINGS)
 endif()

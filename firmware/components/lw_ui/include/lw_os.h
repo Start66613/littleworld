@@ -1,0 +1,23 @@
+/* Independent OS prototype entry; stable shell stays available. SPDX-License-Identifier: MIT */
+#pragma once
+#include "lw_system.h"
+#include "lw_duo_view.h"
+typedef enum { OS_DESKTOP,OS_WORLD,OS_SETTINGS,OS_THEMES,OS_ALBUM,OS_MEMORIES,OS_MUSIC,OS_GAMES } lw_os_page_t;
+typedef enum { OS_OVER_NONE,OS_OVER_CONTROL,OS_OVER_WIFI,OS_OVER_PASSWORD,OS_OVER_LOCK,OS_OVER_LETTER,OS_OVER_EDIT } lw_os_overlay_t;
+typedef enum {
+    OC_HOME,OC_WORLD,OC_ALBUM,OC_MEMORIES,OC_MUSIC,OC_GAMES,OC_SETTINGS,OC_CONTROL,OC_CLOSE,OC_BACK,
+    OC_WIFI,OC_WIFI_TOGGLE,OC_SCAN,OC_AP0,OC_AP1,OC_AP2,OC_PASSWORD,OC_CONNECT,OC_DISCONNECT,OC_FORGET,
+    OC_BRIGHTNESS,OC_VOLUME,OC_MUTE,OC_DND,OC_THEMES,OC_THEME0,OC_THEME1,OC_THEME2,OC_APPLY,OC_CANCEL,
+    OC_LOCK,OC_UNLOCK,OC_EDITOR,OC_ENVELOPE,OC_WIDGETS,OC_WALLPAPER,OC_PLAY,OC_SCREEN_OFF,
+    OC_NETWORK,OC_DISPLAY,OC_SOUND,OC_PERSONAL,OC_TIME,OC_STORAGE,OC_ABOUT,OC_DEVELOPER,
+    OC_GREET,OC_LETTER,OC_REST,OC_BRIGHT_VALUE,OC_VOLUME_VALUE,OC_WIFI_STATUS,OC_KEYBOARD,OC_COUNT
+} lw_os_control_t;
+bool lw_os_start(lw_system_t *,const lw_actor_art_t [2]);
+void lw_os_stop(void);
+void lw_os_open(lw_os_page_t);
+void lw_os_show(lw_os_overlay_t);
+lv_obj_t *lw_os_control(lw_os_control_t);
+lv_obj_t *lw_os_root(void);
+lw_os_page_t lw_os_page(void);
+lw_os_overlay_t lw_os_overlay(void);
+void lw_os_notify(const char *);

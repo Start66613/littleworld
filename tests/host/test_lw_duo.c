@@ -78,6 +78,11 @@ int main(void)
     lw_duo_init(&a,1); (void)lw_duo_request(&a,LW_DUO_LETTER); run(&a,400);
     lw_duo_touch(&a,0); CHECK("touch cancels both-person reservation safely",a.phase==LW_DUO_FREE && a.cancelled==1 && a.actors[0].motion==LW_ACTOR_TOUCH);
     lw_duo_sleep(&a,1,true); CHECK("only selected actor sleeps",!a.actors[0].sleeping && a.actors[1].sleeping);
+    lw_duo_init(&a,99); CHECK("bounds cannot teleport actors",!lw_duo_set_bounds(&a,510,894,380,460));
+    CHECK("invalid huge scene rejected",!lw_duo_set_bounds(&a,0,1e30f,0,600));
+    CHECK("valid custom bounds accepted",lw_duo_set_bounds(&a,300,800,350,460));
+    bool custom=true; for (unsigned i=0;i<6000;i++) { lw_duo_tick(&a,20); for (unsigned j=0;j<2;j++) if (a.actors[j].x<300 || a.actors[j].x>800 || a.actors[j].y<350 || a.actors[j].y>460) custom=false; }
+    CHECK("custom bounds contain autonomous actors",custom);
     printf("Duo model: %u checks, %u failures\n",checks,failures);
     return failures ? 1 : 0;
 }

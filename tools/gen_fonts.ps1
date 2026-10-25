@@ -17,6 +17,10 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $fontDir = Join-Path $projectRoot 'tools/fonts'
+if (-not (Test-Path -LiteralPath (Join-Path $fontDir 'cache/NotoSansSC-Regular.otf'))) {
+    # Reuse the existing D-drive font toolchain read-only, without installing again.
+    $fontDir='D:\LittleWorld-Main-DSH\tools\fonts'
+}
 $outDir = Join-Path $projectRoot 'firmware/components/lw_ui/fonts'
 $regular = Join-Path $fontDir 'cache/NotoSansSC-Regular.otf'
 $bold = Join-Path $fontDir 'cache/NotoSansSC-Bold.otf'
@@ -51,7 +55,8 @@ $jobs = @(
     @{ Name = 'lw_font_18'; Size = 18; Font = $regular; Symbols = $unique },
     @{ Name = 'lw_font_22'; Size = 22; Font = $regular; Symbols = $unique },
     @{ Name = 'lw_font_28'; Size = 28; Font = $bold; Symbols = $unique },
-    @{ Name = 'lw_font_44'; Size = 44; Font = $bold; Symbols = '' }
+    @{ Name = 'lw_font_44'; Size = 44; Font = $bold; Symbols = '' },
+    @{ Name = 'lw_font_88'; Size = 88; Font = $regular; Symbols = '' }
 )
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -59,10 +64,11 @@ $lvFontConvJs = Join-Path $fontDir 'node_modules/lv_font_conv/lv_font_conv.js'
 if (-not (Test-Path -LiteralPath $lvFontConvJs)) { throw "lv_font_conv is not installed in $fontDir" }
 
 $stale = @()
+$generatedDir=Join-Path $projectRoot 'build/fontgen'
+New-Item -ItemType Directory -Force -Path $generatedDir | Out-Null
 foreach ($job in $jobs) {
     $out = Join-Path $outDir ($job.Name + '.c')
-    $target = $out
-    if ($Check) { $target = Join-Path ([System.IO.Path]::GetTempPath()) ($job.Name + '.check.c') }
+    $target = Join-Path $generatedDir ($job.Name + '.c')
 
     $fontArgs = @($lvFontConvJs, '--font', $job.Font, '--range', '0x20-0x7E')
     if ($job.Symbols -ne '') { $fontArgs += @('--symbols', $job.Symbols) }
@@ -72,14 +78,20 @@ foreach ($job in $jobs) {
     if ($Check) {
         & node @fontArgs
         if ($LASTEXITCODE -ne 0) { throw "lv_font_conv failed for $($job.Name)" }
+        $generated=[System.IO.File]::ReadAllText($target).Replace($target,$out).TrimEnd() + [char]10
+        [System.IO.File]::WriteAllText($target,$generated,[System.Text.UTF8Encoding]::new($false))
         if (-not (Test-Path $out) -or (Get-FileHash $out).Hash -ne (Get-FileHash $target).Hash) { $stale += $job.Name }
-        Remove-Item -LiteralPath $target -Force
         continue
     }
 
     Write-Output ("generating {0} ({1}px)..." -f $job.Name, $job.Size)
     & node @fontArgs
     if ($LASTEXITCODE -ne 0) { throw "lv_font_conv failed for $($job.Name)" }
+    $generated=[System.IO.File]::ReadAllText($target).Replace($target,$out).TrimEnd() + [char]10
+    [System.IO.File]::WriteAllText($target,$generated,[System.Text.UTF8Encoding]::new($false))
+    if (-not (Test-Path -LiteralPath $out) -or (Get-FileHash $out).Hash -ne (Get-FileHash $target).Hash) {
+        Copy-Item -LiteralPath $target -Destination $out -Force
+    }
     Write-Output ("  -> {0} ({1:N0} bytes)" -f $out, (Get-Item -LiteralPath $out).Length)
 }
 

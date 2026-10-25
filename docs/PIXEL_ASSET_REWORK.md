@@ -1,5 +1,7 @@
 # 像素素材交接与待补项
 
+更新：后续已收到 DSH 的 handoff/PIXEL_MANIFEST.json batch2 和男方 P1 正面候选。当前审查与明确修改目标见 docs/handoff/DSH_ART_TASKS.md；以下保留此前交接时的缺项记录，不再代表“尚未到货”。既有 codex-pixel-v1.0.1 是不可变历史快照。
+
 2026-10-25；Codex。当前男方像素候选尚未交付，未作通过或不通过判定。不能将“生成成功”、旧 schema/1 的 accepted=true 或 TEST A 占位视作正式验收。
 
 ## 已核验的实际文件
