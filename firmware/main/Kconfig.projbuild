@@ -1,0 +1,45 @@
+menu "Little World startup"
+
+    choice LW_BOOT_MODE
+        prompt "Startup mode"
+        default LW_BOOT_MODE_OS_V2
+        help
+            Selects which UI the firmware starts after board bring-up.
+            OS V2 is the integrated desktop; Legacy keeps the pre-OS shell.
+
+        config LW_BOOT_MODE_OS_V2
+            bool "OS V2 desktop (lw_os_start)"
+        config LW_BOOT_MODE_LEGACY
+            bool "Legacy application shell (lw_ui_start)"
+    endchoice
+
+    config LW_ENABLE_AUDIO
+        bool "Probe the ES8311 speaker path at boot"
+        default y
+        help
+            Opens the BSP speaker codec so volume changes can reach the
+            hardware. When the codec is absent the OS keeps the volume as a
+            stored preference and the UI must not claim real audio output.
+
+endmenu
+menu "Little World connectivity"
+
+    config LW_NET_WIFI_ENABLE
+        bool "Enable the ESP32-C6 Wi-Fi backend"
+        default n
+        help
+            Compile the real Wi-Fi adapter (lw_net_wifi_esp.c) and pull in
+            esp_wifi. Requires the esp_hosted and esp_wifi_remote managed
+            components and a working SDIO link to the C6. When disabled the
+            firmware reports the radio as unsupported instead of pretending
+            to scan.
+
+    config LW_NET_SNTP_ENABLE
+        bool "Enable SNTP time synchronisation"
+        default n
+        depends on LW_NET_WIFI_ENABLE
+        help
+            Synchronise the wall clock from pool.ntp.org once Wi-Fi is up.
+            Without it the time service stays on the DEMO clock.
+
+endmenu

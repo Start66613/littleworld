@@ -4,6 +4,8 @@
 # ESP-IDF generated files
 /firmware/sdkconfig
 /firmware/sdkconfig.old
+/firmware/sdkconfig.legacy
+/firmware/sdkconfig.noaudio
 /firmware/managed_components/
 /firmware/dependencies.lock
 
