@@ -275,7 +275,19 @@ void lw_services_start(lw_services_t *services, uint32_t now_ms)
     s_now_ms = now_ms;
     if (services->caps.wifi_backend) {
         lw_net_esp_wifi_attach(services);
-        lw_wifi_enable(&services->wifi, true, now_ms);
+        /* Attaching the adapter is what actually proves the radio is usable:
+         * a build can have CONFIG_LW_NET_WIFI_ENABLE=y and still fail here
+         * (no C6 answering on SDIO, hosted slave missing, wrong pinout). Ask
+         * the adapter again, so "compiled in" never gets reported as "ready". */
+        services->caps.wifi_backend = lw_net_esp_wifi_available();
+        lw_wifi_set_supported(&services->wifi, services->caps.wifi_backend);
+        if (services->caps.wifi_backend) {
+            lw_wifi_enable(&services->wifi, true, now_ms);
+            /* A hosted slave can come up already associated with the network of
+             * a previous boot. Recording that link now means the first poll
+             * publishes a real SSID instead of leaving the UI on "未连接". */
+            lw_net_esp_wifi_probe_connected();
+        }
     }
     if (services->caps.time_backend) {
         lw_net_esp_time_attach(services);

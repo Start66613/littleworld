@@ -1,0 +1,5 @@
+# Diagnostic C: minimal display load.
+#   - backlight fixed at 30%, no runtime duty writes
+#   - sprite frame clock stopped, actors frozen, OS tick does not refresh
+CONFIG_LW_BACKLIGHT_MINIMAL=y
+CONFIG_LW_DIAG_STATIC_UI=y

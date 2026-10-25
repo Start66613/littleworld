@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 bool lw_net_esp_wifi_available(void) { return false; }
+void lw_net_esp_wifi_probe_connected(void) { }
 bool lw_net_esp_time_available(void) { return false; }
 bool lw_net_esp_audio_available(void) { return false; }
 
@@ -28,3 +29,11 @@ bool lw_net_esp_wifi_start_connect(const char *ssid, const char *password)
 
 void lw_net_esp_wifi_stop(void) {}
 void lw_net_esp_time_request(void) {}
+
+void lw_net_esp_wifi_describe(char *buf, size_t len)
+{
+    if (buf != NULL && len > 0) {
+        buf[0] = '\0';
+    }
+}
+

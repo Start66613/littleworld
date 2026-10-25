@@ -1,0 +1,32 @@
+﻿[
+    {
+        "config":  "os-offline",
+        "dir":  "build/os",
+        "bytes":  2248992,
+        "sha256":  "b60158420a85d001c9170599afc0e0e554d65721b36982497711db0a3461c7ea"
+    },
+    {
+        "config":  "diag-a",
+        "dir":  "build/diag-a",
+        "bytes":  2248992,
+        "sha256":  "8af55911024b9adf459d8e72e4ebb56f4726cf7f0f8a087d3715543ebbf99d69"
+    },
+    {
+        "config":  "diag-b",
+        "dir":  "build/diag-b",
+        "bytes":  2249072,
+        "sha256":  "1e3d20640908a5a3ad4a00ece1706f97c34148653e5e42cef7520caa7e524b97"
+    },
+    {
+        "config":  "diag-c",
+        "dir":  "build/diag-c",
+        "bytes":  2245472,
+        "sha256":  "f5e7ef859345b52f5b4ad4012151b87494754c3acebb1d59e6e78b32e28ee771"
+    },
+    {
+        "config":  "os-wifi-experimental",
+        "dir":  "build/wifi",
+        "bytes":  2558064,
+        "sha256":  "d25afda0f4b87c9d8ce9700e46bf9448ece8b4ba502de69ce859f84892de7bab"
+    }
+]

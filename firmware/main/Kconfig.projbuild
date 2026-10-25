@@ -43,3 +43,43 @@ menu "Little World connectivity"
             Without it the time service stays on the DEMO clock.
 
 endmenu
+
+menu "Little World diagnostics (build-time only)"
+
+    # Backlight diagnostics for the panel-flicker comparison builds. The choice
+    # is compile-time on purpose: a runtime switch would leave the LEDC timer
+    # configured and make some of the runs indistinguishable.
+    choice LW_BACKLIGHT_MODE
+        prompt "Backlight control (diagnostic)"
+        default LW_BACKLIGHT_RUNTIME
+
+        config LW_BACKLIGHT_RUNTIME
+            bool "Standard: LEDC duty follows the brightness slider"
+            help
+                The shipping behaviour: the BSP LEDC channel is rewritten every
+                time the brightness preference changes.
+
+        config LW_BACKLIGHT_FIXED
+            bool "Fixed duty: write once at boot, never again"
+            help
+                Diagnostic B. The brightness slider becomes a stored preference
+                that never reaches the LEDC channel. If the flicker stops, the
+                runtime duty writes are the cause.
+
+        config LW_BACKLIGHT_MINIMAL
+            bool "Minimal load: fixed duty at 30%, no runtime writes"
+            help
+                Diagnostic C. Fixed duty at a low level, so the LCD boost and
+                charge pump run at their smallest load.
+    endchoice
+
+    config LW_DIAG_STATIC_UI
+        bool "Diagnostic C: static UI, no animation or per-frame updates"
+        default n
+        help
+            Freeze the desktop: the sprite frame clock never runs, actors stop
+            moving, and the 20 ms OS tick stops refreshing labels. Used only to
+            separate "the animation/render load flickers the panel" from "the
+            display path itself flickers". Never ship a build with this on.
+
+endmenu

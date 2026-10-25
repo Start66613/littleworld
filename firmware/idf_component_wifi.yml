@@ -1,0 +1,14 @@
+## Little World — EXPERIMENTAL Wi-Fi manifest overlay
+##
+## tools/setup_wifi_components.ps1 appends these entries to
+## firmware/main/idf_component.yml for the os-wifi configuration only, then
+## restores the offline manifest afterwards. Never commit this into the offline
+## manifest: the default build must not depend on the ESP32-C6 hosted stack.
+##
+## Pairing rationale: esp_wifi_remote 1.2.5 is the last 1.2.x that depends on
+## esp_hosted 1.4.*, which is the pair the Waveshare 05_wifistation example uses
+## on this board (ESP32-P4 + ESP32-C6 over SDIO).
+  espressif/esp_wifi_remote:
+    version: "==1.2.5"
+  espressif/esp_hosted:
+    version: "==1.4.*"

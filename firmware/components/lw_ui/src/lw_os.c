@@ -202,6 +202,13 @@ static void actors(void)
 static void update_actors(uint32_t dt)
 {
     if (!s->art || !s->sprites[0] || !s->sprites[1]) return;
+#ifdef CONFIG_LW_DIAG_STATIC_UI
+    /* Diagnostic build C: no actor motion, no sprite seek, no per-frame image
+     * buffer swap. The desktop stays a still frame so a comparison run can
+     * attribute the flicker to the render/refresh path instead of the content. */
+    (void)dt;
+    return;
+#else
     if (!s->system->locked) lw_duo_tick(&s->duo,dt);
     static const char *const dirs[]={"down","down_left","left","up_left","up","up_right","right","down_right"};
     for (unsigned i=0;i<2;i++) {
@@ -220,6 +227,7 @@ static void update_actors(uint32_t dt)
     unsigned near=s->duo.actors[0].y>s->duo.actors[1].y ? 0 : 1;
     if (s->front_actor!=near) { lv_obj_move_to_index(lw_sprite_object(s->sprites[1-near]),-1); lv_obj_move_to_index(lw_sprite_object(s->sprites[near]),-1); s->front_actor=near; }
     if (s->foreground) lv_obj_move_foreground(s->foreground);
+#endif /* CONFIG_LW_DIAG_STATIC_UI */
 }
 static void build_desktop(bool world)
 {
@@ -570,6 +578,16 @@ static void tick(lv_timer_t *timer)
     if (s->navigation>=0) { if (s->navigation_ms>dt) s->navigation_ms-=dt; else { int page=s->navigation; lw_os_open((lw_os_page_t)page); } }
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt); update_actors(dt);
+#ifdef CONFIG_LW_DIAG_STATIC_UI
+    /* Diagnostic build C: one render, then silence. No clock label update, no
+     * toast animation, no Wi-Fi spinner, no sprite seek - a still frame. Any
+     * flicker that survives this is produced by the display/backlight path. */
+    {
+        static bool diag_rendered;
+        if (!diag_rendered) { diag_rendered=true; render(); refresh(); }
+    }
+    return;
+#endif
     s->last_clock+=dt; if (s->last_clock>=1000) { s->last_clock=0; refresh(); }
     if (s->last_wifi!=s->system->wifi) {
         lw_wifi_status_t prior=s->last_wifi; s->last_wifi=s->system->wifi;

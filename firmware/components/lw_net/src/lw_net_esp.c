@@ -5,7 +5,7 @@
  *   - otherwise                               -> stubs that report "unavailable"
  *
  * The stub keeps the P4 firmware honest: without the C6 hosted components the
- * UI must show "Wi-Fi 未接线" instead of pretending to scan.
+ * UI must show "Wi-Fi 鏈帴绾? instead of pretending to scan.
  *
  * SPDX-License-Identifier: MIT */
 #include "lw_net_esp.h"
@@ -15,6 +15,7 @@
 
 #include "esp_log.h"
 #include "sdkconfig.h"
+#include <stdio.h>
 
 #if CONFIG_LW_NET_WIFI_ENABLE
 #if __has_include("esp_wifi.h")
@@ -31,6 +32,7 @@
 
 #ifdef LW_NET_HAVE_WIFI
 
+#include <stdio.h>
 #include <string.h>
 
 #include "esp_event.h"
@@ -113,12 +115,35 @@ static void wifi_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
     }
 }
 
+/* The transport line is built at run time from the hosted Kconfig values, which
+ * keeps the pinout visible in the boot log even though every value is a compile
+ * constant. It is inlined on purpose: with -ffunction-sections the linker
+ * garbage-collects a standalone describe() before the log call can reference it,
+ * because the call arguments are constant and GCC folds them away. */
+static void log_transport(void)
+{
+    char line[128];
+#if CONFIG_ESP_HOSTED_ENABLED
+    snprintf(line, sizeof(line),
+             "hosted esp32c6 sdio clk=%d cmd=%d d0=%d d1=%d d2=%d d3=%d rst=%d %dMHz",
+             (int)CONFIG_ESP_HOSTED_SDIO_PIN_CLK, (int)CONFIG_ESP_HOSTED_SDIO_PIN_CMD,
+             (int)CONFIG_ESP_HOSTED_SDIO_PIN_D0, (int)CONFIG_ESP_HOSTED_SDIO_PIN_D1,
+             (int)CONFIG_ESP_HOSTED_SDIO_PIN_D2, (int)CONFIG_ESP_HOSTED_SDIO_PIN_D3,
+             (int)CONFIG_ESP_HOSTED_SDIO_GPIO_RESET_SLAVE,
+             (int)(CONFIG_ESP_HOSTED_SDIO_CLOCK_FREQ_KHZ / 1000));
+#else
+    snprintf(line, sizeof(line), "esp_wifi enabled without ESP-Hosted");
+#endif
+    ESP_LOGI(TAG, "transport: %s", line);
+}
+
 void lw_net_esp_wifi_attach(struct lw_services *services)
 {
     s_services = services;
     if (s_started) {
         return;
     }
+    log_transport();
     if (esp_netif_init() != ESP_OK) {
         ESP_LOGE(TAG, "esp_netif_init failed");
         return;
@@ -134,7 +159,7 @@ void lw_net_esp_wifi_attach(struct lw_services *services)
     }
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     if (esp_wifi_init(&cfg) != ESP_OK) {
-        ESP_LOGE(TAG, "esp_wifi_init failed");
+        ESP_LOGE(TAG, "esp_wifi_init failed (no ESP32-C6 responder on SDIO?)");
         return;
     }
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
@@ -147,9 +172,68 @@ void lw_net_esp_wifi_attach(struct lw_services *services)
     ESP_LOGI(TAG, "station ready");
 }
 
+/* The station can already be associated right here, without waiting for the
+ * user to press a button: the ESP32-C6 hosted slave may hold the credential of
+ * a previous boot. Reporting it as an unsolicited link keeps the UI honest (it
+ * shows the real network) and costs nothing when there is none. A build with
+ * the station up but the slave silent stays IDLE, which is the accurate state. */
+void lw_net_esp_wifi_probe_connected(void)
+{
+#if CONFIG_ESP_HOSTED_ENABLED
+    if (!s_started) {
+        return;
+    }
+    wifi_ap_record_t ap;
+    memset(&ap, 0, sizeof(ap));
+    if (esp_wifi_sta_get_ap_info(&ap) == ESP_OK && ap.ssid[0] != '\0') {
+        /* ap.ssid is a 32-byte field that may be exactly full, so it is not
+         * guaranteed to be NUL terminated. Copy at most 31 bytes and terminate
+         * explicitly; strncpy() trips -Wstringop-truncation with -Werror. */
+        char ssid[LW_WIFI_SSID_MAX];
+        unsigned n = 0;
+        while (n + 1u < (unsigned)sizeof(ssid) && n + 1u < (unsigned)sizeof(ap.ssid) && ap.ssid[n] != '\0') {
+            ssid[n] = (char)ap.ssid[n];
+            n++;
+        }
+        ssid[n] = '\0';
+        s_link_up = true;
+        lw_services_wifi_report_connected(s_services, s_request_generation, ssid, 0);
+        ESP_LOGW(TAG, "hosted slave already associated with '%s'", ssid);
+    }
+#endif
+}
+
+/* Availability is only claimed once the station really came up. A host built
+ * with CONFIG_LW_NET_WIFI_ENABLE but failing esp_wifi_init() (no C6, wrong
+ * SDIO pinout, hosted slave missing) would otherwise be reported as "Wi-Fi
+ * ready" and the UI would sit on a scanning animation forever. lw_boot.c
+ * publishes the capabilities AFTER lw_net_esp_wifi_attach(), so this flag is
+ * the honest answer at that moment. */
 bool lw_net_esp_wifi_available(void)
 {
-    return true;
+    return s_started;
+}
+
+/* Slot pins must match the P4<->C6 SDIO wiring of the board, not another P4
+ * board: esp_hosted's ESP32-P4 defaults are CLK 18 / CMD 19 / D0 14 / D1 15 /
+ * D2 16 / D3 17 / RESET 54. They are printed at boot so a wrong pinout is
+ * visible in the log instead of looking like a hanging connect. */
+void lw_net_esp_wifi_describe(char *buf, size_t len)
+{
+    if (buf == NULL || len == 0) {
+        return;
+    }
+#if CONFIG_ESP_HOSTED_ENABLED
+    snprintf(buf, len,
+             "hosted esp32c6 sdio clk=%d cmd=%d d0=%d d1=%d d2=%d d3=%d rst=%d %dMHz",
+             CONFIG_ESP_HOSTED_SDIO_PIN_CLK, CONFIG_ESP_HOSTED_SDIO_PIN_CMD,
+             CONFIG_ESP_HOSTED_SDIO_PIN_D0, CONFIG_ESP_HOSTED_SDIO_PIN_D1,
+             CONFIG_ESP_HOSTED_SDIO_PIN_D2, CONFIG_ESP_HOSTED_SDIO_PIN_D3,
+             CONFIG_ESP_HOSTED_SDIO_GPIO_RESET_SLAVE,
+             CONFIG_ESP_HOSTED_SDIO_CLOCK_FREQ_KHZ / 1000);
+#else
+    snprintf(buf, len, "esp_wifi enabled without ESP-Hosted");
+#endif
 }
 
 bool lw_net_esp_wifi_start_scan(void)
@@ -195,6 +279,17 @@ bool lw_net_esp_wifi_available(void)
     return false;
 }
 
+void lw_net_esp_wifi_probe_connected(void)
+{
+}
+
+void lw_net_esp_wifi_describe(char *buf, size_t len)
+{
+    if (buf != NULL && len > 0) {
+        snprintf(buf, len, "CONFIG_LW_NET_WIFI_ENABLE is off in this build");
+    }
+}
+
 void lw_net_esp_wifi_attach(struct lw_services *services)
 {
     (void)services;
@@ -222,6 +317,7 @@ void lw_net_esp_wifi_stop(void)
 
 #include <time.h>
 
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -230,6 +326,13 @@ void lw_net_esp_wifi_stop(void)
 static const char *TAG_SNTP = "lw_net_sntp";
 static struct lw_services *s_time_services;
 static bool s_time_started;
+/* One sync task at a time: it is the only writer of this flag. */
+static bool s_time_waiting;
+
+static uint32_t sntp_now_ms(void)
+{
+    return now_ms_from_timer();
+}
 
 bool lw_net_esp_time_available(void)
 {
@@ -242,13 +345,16 @@ void lw_net_esp_time_attach(struct lw_services *services)
     if (s_time_started) {
         return;
     }
+    /* start=false: syncing begins only after lw_net_esp_time_request(), i.e.
+     * after the station really has an IP address. */
     esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
-    config.start = true;
+    config.start = false;
     if (esp_netif_sntp_init(&config) != ESP_OK) {
         ESP_LOGW(TAG_SNTP, "sntp init failed");
         return;
     }
     s_time_started = true;
+    ESP_LOGI(TAG_SNTP, "service ready (idle until the link is up)");
 }
 
 /* Runs off the caller's stack: esp_netif_sntp_sync_wait blocks on a semaphore,

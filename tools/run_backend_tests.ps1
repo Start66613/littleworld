@@ -53,7 +53,8 @@ $common = @(
 $suites = @(
     @{ name = 'store'; source = (Join-Path $root 'tests/host/test_lw_store.c') },
     @{ name = 'system'; source = (Join-Path $root 'tests/host/test_lw_system.c') },
-    @{ name = 'net'; source = (Join-Path $root 'tests/host/test_lw_net.c') }
+    @{ name = 'net'; source = (Join-Path $root 'tests/host/test_lw_net.c') },
+    @{ name = 'stress'; source = (Join-Path $root 'tests/host/test_lw_stress.c') }
 )
 
 $failed = $false

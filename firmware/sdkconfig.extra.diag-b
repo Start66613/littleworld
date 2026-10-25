@@ -1,0 +1,2 @@
+# Diagnostic B: backlight duty written once at boot, never again.
+CONFIG_LW_BACKLIGHT_FIXED=y

@@ -30,6 +30,6 @@ idf_component_register(
         "fonts/lw_font_44.c"
         "fonts/lw_font_88.c"
     INCLUDE_DIRS "include"
-    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg
+    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg log
     PRIV_REQUIRES esp32_p4_wifi6_touch_lcd_7b
 )

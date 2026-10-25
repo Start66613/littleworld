@@ -1,0 +1,22 @@
+﻿Executing action: reconfigure
+Running cmake in directory D:\LittleWorld-V32-Wifi\firmware\build\wifi2
+Executing "cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=D:\Espressif\LittleWorld\idf-tools\python_env\idf5.5_py3.12_env\Scripts\python.exe -DESP_PLATFORM=1 -DSDKCONFIG=build/wifi2/sdkconfig -DSDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.wifi -DCCACHE_ENABLE=1 D:\LittleWorld-V32-Wifi\firmware"...
+-- IDF_TARGET is not set, guessed 'esp32p4' from sdkconfig 'D:/LittleWorld-V32-Wifi/firmware/sdkconfig.defaults'
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.54.0.windows.1")
+-- Component directory D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_blockdev does not contain a CMakeLists.txt file. No component will be added
+-- Minimal build - OFF
+-- ccache will be used for faster recompilation
+-- The C compiler identification is GNU 14.2.0
+-- The CXX compiler identification is GNU 14.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done

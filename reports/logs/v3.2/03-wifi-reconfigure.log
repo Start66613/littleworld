@@ -1,0 +1,148 @@
+﻿Executing action: reconfigure
+Running cmake in directory D:\LittleWorld-V32-Wifi\firmware\build\wifi
+Executing "cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=D:\Espressif\LittleWorld\idf-tools\python_env\idf5.5_py3.12_env\Scripts\python.exe -DESP_PLATFORM=1 -DSDKCONFIG=build/wifi/sdkconfig -DSDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.wifi -DCCACHE_ENABLE=1 D:\LittleWorld-V32-Wifi\firmware"...
+-- IDF_TARGET is not set, guessed 'esp32p4' from sdkconfig 'D:/LittleWorld-V32-Wifi/firmware/sdkconfig.defaults'
+-- Found Git: C:/Program Files/Git/cmd/git.exe (found version "2.54.0.windows.1")
+-- Component directory D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_blockdev does not contain a CMakeLists.txt file. No component will be added
+-- Minimal build - OFF
+-- ccache will be used for faster recompilation
+-- The C compiler identification is GNU 14.2.0
+-- The CXX compiler identification is GNU 14.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Espressif/LittleWorld/idf-tools/tools/riscv32-esp-elf/esp-14.2.0_20260121/riscv32-esp-elf/bin/riscv32-esp-elf-g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Building ESP-IDF components for target esp32p4
+NOTICE: Dependencies lock doesn't exist, solving dependencies.
+
+............NOTICE: Skipping optional dependency: espressif/usb
+
+.................................NOTICE: Updating lock file at D:\LittleWorld-V32-Wifi\firmware\dependencies.lock
+
+NOTICE: Processing 23 dependencies:
+
+NOTICE: [1/23] espressif/button (4.2.2)
+
+NOTICE: [2/23] espressif/cmake_utilities (0.5.3)
+
+NOTICE: [3/23] espressif/eppp_link (1.1.6)
+
+NOTICE: [4/23] espressif/esp_codec_dev (1.5.11)
+
+NOTICE: [5/23] espressif/esp_hosted (1.4.7)
+
+NOTICE: [6/23] espressif/esp_lcd_ek79007 (2.0.2~1)
+
+NOTICE: [7/23] espressif/esp_lcd_touch (1.2.1)
+
+NOTICE: [8/23] espressif/esp_lcd_touch_gt911 (1.2.1)
+
+NOTICE: [9/23] espressif/esp_lv_decoder (0.4.3)
+
+NOTICE: [10/23] espressif/esp_lv_fs (1.0.1)
+
+NOTICE: [11/23] espressif/esp_lvgl_adapter (0.6.4)
+
+NOTICE: [12/23] espressif/esp_mmap_assets (2.0.1)
+
+NOTICE: [13/23] espressif/esp_new_jpeg (1.0.2)
+
+NOTICE: [14/23] espressif/esp_serial_slave_link (1.1.2)
+
+NOTICE: [15/23] espressif/esp_wifi_remote (1.2.5)
+
+NOTICE: [16/23] espressif/freetype (2.14.3~1)
+
+NOTICE: [17/23] espressif/knob (1.1.0)
+
+NOTICE: [18/23] espressif/libpng (1.6.59)
+
+NOTICE: [19/23] espressif/wifi_remote_over_eppp (0.3.3)
+
+NOTICE: [20/23] espressif/zlib (1.3.2~2)
+
+NOTICE: [21/23] lvgl/lvgl (9.5.0)
+
+NOTICE: [22/23] waveshare/esp32_p4_wifi6_touch_lcd_7b (3.0.1)
+
+NOTICE: [23/23] idf (5.5.5)
+
+-- ESP-TEE is currently supported only on the esp32c6;esp32h2;esp32c5 SoCs
+NOTICE: Skipping optional dependency: espressif/usb
+
+-- Project sdkconfig file D:/LittleWorld-V32-Wifi/firmware/build/wifi/sdkconfig
+Loading defaults file D:/LittleWorld-V32-Wifi/firmware/sdkconfig.defaults...
+
+Loading defaults file D:/LittleWorld-V32-Wifi/firmware/sdkconfig.defaults.rev3_x...
+
+Loading defaults file D:/LittleWorld-V32-Wifi/firmware/sdkconfig.os...
+
+Loading defaults file D:/LittleWorld-V32-Wifi/firmware/sdkconfig.extra.wifi...
+
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/riscv/ld/rom.api.ld
+-- Found Python3: D:/Espressif/LittleWorld/idf-tools/python_env/idf5.5_py3.12_env/Scripts/python.exe (found version "3.12.14") found components: Interpreter
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS - Success
+-- USING O3
+-- App "little_world" version: d95b806-dirty
+-- Adding linker script D:/LittleWorld-V32-Wifi/firmware/build/wifi/esp-idf/esp_system/ld/memory.ld
+-- Adding linker script D:/LittleWorld-V32-Wifi/firmware/build/wifi/esp-idf/esp_system/ld/sections.ld.in
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.eco5.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.api.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.eco5.rvfp.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.wdt.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.systimer.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.version.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.eco5.libc.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/esp_rom/esp32p4/ld/esp32p4.rom.eco5.newlib.ld
+-- Adding linker script D:/Espressif/LittleWorld/esp-idf-v5.5.5/components/soc/esp32p4/ld/esp32p4.peripherals.ld
+-- BUTTON: 4.2.2
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of off64_t
+-- Check size of off64_t - failed
+-- Looking for fseeko
+-- Looking for fseeko - found
+-- Looking for stdarg.h
+-- Looking for stdarg.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Performing Test HAVE___ATTR__VIS_HIDDEN
+-- Performing Test HAVE___ATTR__VIS_HIDDEN - Failed
+-- Building for target architecture: 
+-- Found ZLIB: idf::espressif__zlib (found version "1.3.2")
+-- Using standard libconf header: D:/LittleWorld-V32-Wifi/firmware/managed_components/espressif__libpng/libpng/scripts/pnglibconf.h.prebuilt
+-- LVGL version: 9.5.0
+-- ESP_MMAP_ASSETS: 2.0.1
+-- ESP_LV_FS: 1.0.1
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Found PNG: idf::espressif__libpng (found version "1.6.59")
+-- KNOB: 1.1.0
+-- ESP_LCD_EK79007: 2.0.2

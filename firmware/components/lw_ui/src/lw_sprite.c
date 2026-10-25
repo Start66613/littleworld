@@ -86,6 +86,12 @@ lw_sprite_t *lw_sprite_create(lv_obj_t *parent, int x, int y, uint16_t scale)
     s->timer=lv_timer_create(tick,20,s);
     if (!s->timer) { lv_obj_delete(s->image); lv_free(s); return NULL; }
     lv_timer_pause(s->timer);
+#if CONFIG_LW_DIAG_STATIC_UI
+    /* Diagnostic build C: lw_sprite_play() re-pauses the timer, so the panel
+     * keeps showing frame 0 and never sees a new image buffer. Comparing this
+     * build with the normal one separates "the animation load hurts the display"
+     * from "the display path flickers on its own". */
+#endif
     lv_obj_add_event_cb(s->image,deleted,LV_EVENT_DELETE,s);
     return s;
 }
@@ -96,6 +102,9 @@ bool lw_sprite_play(lw_sprite_t *s, const lw_clip_t *clip)
     if (!s || !total || !present(s,clip,clip->sequence[0])) return false;
     s->clip=clip; s->total=total; s->elapsed=0; s->epoch=lv_tick_get(); s->finished=false; s->paused=false;
     if (s->enabled && !s->external) lv_timer_resume(s->timer); else lv_timer_pause(s->timer);
+#if CONFIG_LW_DIAG_STATIC_UI
+    lv_timer_pause(s->timer);   /* diagnostic C: keep the first frame */
+#endif
     return true;
 }
 void lw_sprite_pause(lw_sprite_t *s)

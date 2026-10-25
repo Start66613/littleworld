@@ -1,4 +1,11 @@
 ## Little World component manifest (pinned to the verified Arcade baseline)
+##
+## The ESP32-C6 Wi-Fi stack stays OPTIONAL on purpose: the default offline build
+## (os-offline) must not depend on it. The hosted packages are declared in
+## firmware/idf_component_wifi.yml and are copied into this file only for the
+## experimental os-wifi configuration (tools/setup_wifi_components.ps1), because
+## declaring them here unconditionally forces every offline build to solve a
+## hosted stack it never uses.
 dependencies:
   idf: ">=5.5"
   waveshare/esp32_p4_wifi6_touch_lcd_7b:

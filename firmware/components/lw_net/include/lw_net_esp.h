@@ -9,6 +9,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +26,19 @@ bool lw_net_esp_wifi_available(void);
 bool lw_net_esp_time_available(void);
 bool lw_net_esp_audio_available(void);
 
+/* Writes a one-line description of the transport actually compiled in (or why
+ * Wi-Fi is missing). Used by the boot log and by the readiness report, so a
+ * build that claims Wi-Fi but has no usable host can be told apart from a
+ * working one without a scope. Never returns a null terminator-free string. */
+void lw_net_esp_wifi_describe(char *buf, size_t len);
+
 void lw_net_esp_wifi_attach(struct lw_services *services);
+
+/* Asks the station whether it is already associated (a hosted slave can keep a
+ * credential across reboots). Reports the link as an unsolicited event, so the
+ * service layer and the UI never show "not connected" while traffic flows.
+ * A build without a Wi-Fi stack implements it as a no-op. */
+void lw_net_esp_wifi_probe_connected(void);
 void lw_net_esp_time_attach(struct lw_services *services);
 
 bool lw_net_esp_wifi_start_scan(void);
