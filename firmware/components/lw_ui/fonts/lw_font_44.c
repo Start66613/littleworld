@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 44 px
  * Bpp: 4
- * Opts: --font D:\LittleWorld-Main-DSH\tools\fonts\cache\NotoSansSC-Bold.otf --range 0x20-0x7E --size 44 --bpp 4 --format lvgl --no-compress --lv-include lvgl.h --output D:\LittleWorld-Codex-Integration\firmware\components\lw_ui\fonts\lw_font_44.c
+ * Opts: --font NotoSansSC-Bold.otf --range 0x20-0x7E --size 44 --bpp 4 --format lvgl --no-compress --lv-include lvgl.h --output firmware/components/lw_ui/fonts/lw_font_44.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
