@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 88 px
  * Bpp: 4
- * Opts: --font D:\LittleWorld-Main-DSH\tools\fonts\cache\NotoSansSC-Regular.otf --range 0x20-0x7E --size 88 --bpp 4 --format lvgl --no-compress --lv-include lvgl.h --output D:\LittleWorld-Codex\firmware\components\lw_ui\fonts\lw_font_88.c
+ * Opts: --font D:\LittleWorld-Main-DSH\tools\fonts\cache\NotoSansSC-Regular.otf --range 0x20-0x7E --size 88 --bpp 4 --format lvgl --no-compress --lv-include lvgl.h --output D:\LittleWorld-Codex-Integration\firmware\components\lw_ui\fonts\lw_font_88.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE

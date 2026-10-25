@@ -16,12 +16,16 @@ typedef struct {
     lv_obj_t *base_controls[OC_COUNT],*over_controls[OC_COUNT];
     lw_duo_t duo; lw_sprite_t *sprites[2]; const lw_clip_t *clips[2]; lv_obj_t *shadows[2];
     const lw_app_t *legacy;
+    lw_rpg_view_t *rpg;
     lw_os_page_t page; lw_os_overlay_t overlay;
     lv_timer_t *timer; uint32_t last_tick,last_revision,toast_ms,last_clock; lw_wifi_status_t last_wifi;
     unsigned preview_theme,preview_wallpaper,selected_ap,section;
     int pending; bool building_overlay; uint8_t last_legacy_volume; unsigned front_actor;
 } os_t;
 static os_t *s;
+static lw_rpg_view_host_t rpg_storage;
+void lw_os_rpg_storage(const lw_rpg_view_host_t *host) { if (!s) { memset(&rpg_storage,0,sizeof(rpg_storage)); if (host) rpg_storage=*host; } }
+const lw_rpg_state_t *lw_os_rpg_state(void) { return s ? lw_rpg_view_state(s->rpg) : NULL; }
 static const char *const section_names[]={"网络","显示与亮度","声音","个性化","日期与时间","存储","关于设备"};
 static const lw_os_palette_t *palette(void) { return lw_os_palette(s->page==OS_THEMES ? s->preview_theme : s->system->prefs.theme); }
 static void render(void); static void show_overlay(lw_os_overlay_t); static void refresh(void);
@@ -73,6 +77,7 @@ static void clear_overlay(void)
 {
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
+    lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
 static void fade(void *object,int32_t value) { lv_obj_set_style_opa(object,(lv_opa_t)value,0); }
@@ -83,6 +88,7 @@ static void dismiss_overlay(void)
     lv_anim_t anim; lv_anim_init(&anim); lv_anim_set_var(&anim,s->over); lv_anim_set_exec_cb(&anim,fade);
     lv_anim_set_values(&anim,255,0); lv_anim_set_duration(&anim,180); lv_anim_set_completed_cb(&anim,faded); lv_anim_start(&anim);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
+    lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
 {
@@ -192,7 +198,7 @@ static void build_desktop(bool world)
     }
     if (world) {
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
-        button(s->content,"照顾宠物",48,398,232,50,OC_PET,false);
+        button(s->content,"照顾宠物",48,398,110,50,OC_PET,false); button(s->content,"小冒险",172,398,108,50,OC_RPG,true);
     }
     lw_os_label(s->content,s->art ? "男方形象待定 · 当前为 TEST A" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
     actors();
@@ -266,7 +272,7 @@ static void build_legacy(void)
 static void render(void)
 {
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
-    s->legacy=NULL; s->mount=NULL;
+    s->legacy=NULL; s->mount=NULL; s->rpg=NULL;
     s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2;
     lv_obj_clean(s->root); memset(s->base_controls,0,sizeof(s->base_controls)); memset(s->over_controls,0,sizeof(s->over_controls)); s->over=NULL; s->overlay=OS_OVER_NONE;
     unsigned wallpaper=s->page==OS_THEMES ? s->preview_wallpaper : s->system->prefs.wallpaper;
@@ -275,7 +281,9 @@ static void render(void)
     if (s->page==OS_DESKTOP || s->page==OS_WORLD) build_desktop(s->page==OS_WORLD);
     else {
         lw_os_box(s->content,0,48,1024,446,palette()->bg,0,252);
-        if (s->page==OS_SETTINGS) build_settings(); else if (s->page==OS_THEMES) build_themes(); else build_legacy();
+        if (s->page==OS_SETTINGS) build_settings(); else if (s->page==OS_THEMES) build_themes();
+        else if (s->page==OS_RPG) { s->rpg=lw_rpg_view_create(s->content,&rpg_storage,s->system->prefs.theme); if (!s->rpg) lw_os_notify("冒险房间暂不可用"); }
+        else build_legacy();
     }
     build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,700,2,44,OC_HOME);
     refresh(); update_actors(0); lw_os_animate(s->content,10,240);
@@ -357,6 +365,7 @@ static void show_overlay(lw_os_overlay_t kind)
 {
     clear_overlay(); if (kind==OS_OVER_NONE) return;
     s->overlay=kind; s->building_overlay=true;
+    lw_rpg_view_suspend(s->rpg,true);
     s->over=lw_os_box(s->root,0,0,1024,600,0x282335,0,105); lv_obj_add_flag(s->over,LV_OBJ_FLAG_CLICKABLE);
     if (kind==OS_OVER_CONTROL) build_control(); else if (kind==OS_OVER_WIFI) build_wifi(); else if (kind==OS_OVER_PASSWORD) build_password(); else if (kind==OS_OVER_LOCK) build_lock();
     else {
@@ -397,7 +406,7 @@ static void refresh(void)
 }
 void lw_os_open(lw_os_page_t page)
 {
-    if (!s || page>OS_PET || page<OS_DESKTOP || s->system->locked) return;
+    if (!s || page>OS_RPG || page<OS_DESKTOP || s->system->locked) return;
     if (s->page==OS_THEMES && page!=OS_THEMES) { s->preview_theme=s->system->prefs.theme; s->preview_wallpaper=s->system->prefs.wallpaper; }
     s->page=page; if (page==OS_THEMES) { s->preview_theme=s->system->prefs.theme; s->preview_wallpaper=s->system->prefs.wallpaper; }
     s->duo.autonomous=page==OS_WORLD;
@@ -415,6 +424,7 @@ static void act(int id)
     case OC_MUSIC:lw_os_open(OS_MUSIC);break;
     case OC_GAMES:lw_os_open(OS_GAMES);break;
     case OC_PET:lw_os_open(OS_PET);break;
+    case OC_RPG:lw_os_open(OS_RPG);break;
     case OC_REFRESH:render();break;
     case OC_SETTINGS:lw_os_open(OS_SETTINGS);break;
     case OC_CONTROL:show_overlay(OS_OVER_CONTROL);break;

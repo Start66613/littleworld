@@ -11,6 +11,16 @@
 #include <psapi.h>
 const char *host_platform_dir(void);
 static char settings_path[512]; static uint32_t clock_ms; static unsigned checks,failures;
+static char rpg_path[512]; static unsigned reward_calls;
+static bool rpg_load(void *ctx,uint8_t bytes[LW_RPG_SAVE_BYTES])
+{ (void)ctx; FILE *f=fopen(rpg_path,"rb"); if (!f) return false; size_t n=fread(bytes,1,LW_RPG_SAVE_BYTES,f); bool extra=fgetc(f)!=EOF; fclose(f); return n==LW_RPG_SAVE_BYTES && !extra; }
+static bool rpg_save(void *ctx,const uint8_t bytes[LW_RPG_SAVE_BYTES])
+{
+    (void)ctx; char temp[540]; snprintf(temp,sizeof(temp),"%s.tmp",rpg_path); FILE *f=fopen(temp,"wb"); if (!f) return false;
+    bool ok=fwrite(bytes,1,LW_RPG_SAVE_BYTES,f)==LW_RPG_SAVE_BYTES; if (fclose(f)) ok=false;
+    return ok && MoveFileExA(temp,rpg_path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)!=0;
+}
+static void rpg_reward(void *ctx,uint32_t id) { (void)ctx; if (id==9001) reward_calls++; }
 static uint32_t fake_clock(void) { return clock_ms; }
 static double cpu_ms(void)
 {
@@ -77,9 +87,16 @@ static unsigned text_count(lv_obj_t *o,const char *text)
 }
 static bool disjoint(lv_obj_t *a,lv_obj_t *b)
 { lv_area_t x,y; if (!a || !b) return false; lv_obj_get_coords(a,&x); lv_obj_get_coords(b,&y); return x.y2<y.y1 || y.y2<x.y1 || x.x2<y.x1 || y.x2<x.x1; }
+static void rpg_tile(int x,int y)
+{
+    lw_host_pointer_t *p=lw_host_pointer(); p->x=32+x*44+22; p->y=104+y*44+22;
+    p->pressed=1; advance(80); p->pressed=0; advance(2600);
+}
 int lw_os_host_run(const char *pack_path,const char *out)
 {
     setvbuf(stdout,NULL,_IONBF,0); snprintf(settings_path,sizeof(settings_path),"%s\\os-settings.dat",host_platform_dir());
+    snprintf(rpg_path,sizeof(rpg_path),"%s\\rpg-save.dat",host_platform_dir()); if (out) DeleteFileA(rpg_path);
+    lw_rpg_view_host_t rpg_host={NULL,rpg_load,rpg_save,rpg_reward}; lw_os_rpg_storage(&rpg_host);
     lw_system_backend_t backend={0}; backend.simulated=true; backend.network_available=true; backend.brightness=brightness; backend.volume=volume; backend.load=out ? NULL : load; backend.store=store;
     lw_system_t system; lw_system_init(&system,&backend);
     lw_pixel_pack_t *pack=lw_pixel_pack_open(pack_path); if (!pack) fprintf(stderr,"Character pack unavailable: running complete OS with labelled no-art fallback.\n");
@@ -129,12 +146,23 @@ int lw_os_host_run(const char *pack_path,const char *out)
     tap(OC_GAMES); tap_text("2048"); CHECK("2048 enters inside OS",text_object(lw_os_root(),"返回游戏中心")!=NULL); shot(out,"16-2048"); tap_text("返回游戏中心");
     tap_text("贪吃蛇"); tap_text("返回游戏中心"); tap_text("打砖块"); tap_text("返回游戏中心");
     lw_shell_open("pet"); advance(400); CHECK("legacy route delegated to active OS",lw_os_page()==OS_PET && lw_shell_content()!=NULL); lw_shell_home(); advance(400); CHECK("legacy home returns OS desktop",lw_os_page()==OS_DESKTOP);
+    tap(OC_WORLD); tap(OC_RPG); CHECK("RPG enters from real OS",lw_os_page()==OS_RPG && lw_os_rpg_state()!=NULL); shot(out,"17-rpg-room");
+    tap_text("打开任务本"); shot(out,"18-rpg-journal"); tap_text("回到房间");
+    rpg_tile(2,2); CHECK("blocked furniture rejects touch move",lw_os_rpg_state()->actors[0].pos.x==6 && lw_os_rpg_state()->actors[0].pos.y==5);
+    rpg_tile(5,3); CHECK("touch path arrives at photo hotspot",lw_os_rpg_state()->actors[0].pos.x==5 && lw_os_rpg_state()->actors[0].pos.y==3);
+    tap_text("查看身边物品"); CHECK("real dialogue opens",lw_os_rpg_state()->dialogue_active); shot(out,"19-rpg-dialogue");
+    unsigned tick_before=lw_os_rpg_state()->tick_ms; advance(1000); CHECK("dialogue suspends game clock",lw_os_rpg_state()->tick_ms==tick_before);
+    tap_text("下一句"); tap_text("下一句"); CHECK("photo dialogue commits quest item",lw_rpg_quest_progress(lw_os_rpg_state())==1);
+    tap(OC_CONTROL); tick_before=lw_os_rpg_state()->tick_ms; advance(1000); CHECK("OS overlay suspends RPG",lw_os_rpg_state()->tick_ms==tick_before); tap(OC_CLOSE);
+    rpg_tile(9,4); tap_text("查看身边物品"); tap_text("下一句"); tap_text("下一句"); CHECK("second quest item",lw_rpg_quest_progress(lw_os_rpg_state())==2);
+    rpg_tile(3,3); tap_text("查看身边物品"); tap_text("下一句"); CHECK("quest completes with one reward",lw_rpg_quest_is_complete(lw_os_rpg_state()) && reward_calls==1); shot(out,"20-rpg-reward"); tap_text("收好奖励");
+    tap(OC_HOME); tap(OC_WORLD); tap(OC_RPG); CHECK("RPG progress reloads from separate save",lw_rpg_quest_progress(lw_os_rpg_state())==3 && reward_calls==1); tap(OC_HOME);
     unsigned before=objects(lw_os_root()); int timer_before=timers(); bool clean=true;
     for (int i=0;i<100;i++) { lw_os_show(OS_OVER_CONTROL); advance(60); lw_os_show(OS_OVER_WIFI); advance(60); lw_os_show(OS_OVER_NONE); advance(60); if (objects(lw_os_root())!=before || timers()!=timer_before || lw_assets_stats().live_leases!=expected_leases) clean=false; }
     CHECK("100 overlay cycles preserve page objects timers and leases",clean);
     clean=true;
     for (int i=0;i<100;i++) {
-        static const lw_os_page_t pages[]={OS_SETTINGS,OS_WORLD,OS_ALBUM,OS_MEMORIES,OS_MUSIC,OS_GAMES,OS_PET};
+        static const lw_os_page_t pages[]={OS_SETTINGS,OS_WORLD,OS_ALBUM,OS_MEMORIES,OS_MUSIC,OS_GAMES,OS_PET,OS_RPG};
         for (unsigned j=0;j<sizeof(pages)/sizeof(pages[0]);j++) { lw_os_open(pages[j]); advance(80); }
         lw_os_open(OS_DESKTOP); advance(300);
         if (timers()!=timer_before || objects(lw_os_root())!=before || lw_assets_stats().live_leases!=expected_leases) clean=false;

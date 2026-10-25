@@ -31,7 +31,7 @@ foreach ($p in @($regular, $bold)) {
 
 $chars = New-Object System.Text.StringBuilder
 $sources = @()
-foreach ($dir in @('firmware/components/lw_ui', 'firmware/components/lw_core', 'firmware/main', 'host')) {
+foreach ($dir in @('firmware/components/lw_ui', 'firmware/components/lw_core', 'firmware/main', 'host', 'rpg')) {
     $full = Join-Path $projectRoot $dir
     if (Test-Path $full) {
         $sources += Get-ChildItem -Path $full -Recurse -File -Include *.c, *.h |

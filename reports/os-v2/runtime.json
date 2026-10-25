@@ -1,12 +1,12 @@
 {
-  "checks": 128,
+  "checks": 172,
   "failures": 0,
   "overlay_cycles": 100,
   "page_cycles": 100,
   "pixel_peak_bytes": 589824,
-  "working_set_peak_bytes": 7819264,
-  "wall_ms": 8945.534,
-  "process_cpu_ms": 1531.25,
+  "working_set_peak_bytes": 8032256,
+  "wall_ms": 12168.15,
+  "process_cpu_ms": 2953.125,
   "virtual_clock_unthrottled": true,
   "network": "Windows mock, no actual host or C6 network access",
   "art": "original qianqian and TEST A, final male pending",
@@ -27,7 +27,11 @@
     "13-album-viewer.png",
     "14-music.png",
     "15-anniversary.png",
-    "16-2048.png"
+    "16-2048.png",
+    "17-rpg-room.png",
+    "18-rpg-journal.png",
+    "19-rpg-dialogue.png",
+    "20-rpg-reward.png"
   ],
   "character_art_publication_authorized": false
 }

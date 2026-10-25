@@ -24,6 +24,8 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) {throw 'System service tests failed'}
     & "$root/build/host/PixelDuoModelTests.exe"
     if ($LASTEXITCODE -ne 0) {throw 'Character model regression failed'}
+    & "$root/build/host/RPGModelTests.exe"
+    if ($LASTEXITCODE -ne 0) {throw 'Frozen RPG core tests failed'}
     & "$root/build/host/LittleWorld.exe" --os-v2-test $pack $out
     $result=$LASTEXITCODE
     & $python tools/export_os_evidence.py --root $root

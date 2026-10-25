@@ -7,6 +7,7 @@ idf_component_register(
         "src/lw_duo_view.c"
         "src/lw_os.c"
         "src/lw_os_design.c"
+        "src/lw_rpg_view.c"
         "src/lw_ui.c"
         "src/lw_theme.c"
         "src/lw_widgets.c"
@@ -28,6 +29,6 @@ idf_component_register(
         "fonts/lw_font_44.c"
         "fonts/lw_font_88.c"
     INCLUDE_DIRS "include"
-    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system
+    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg
     PRIV_REQUIRES esp32_p4_wifi6_touch_lcd_7b
 )

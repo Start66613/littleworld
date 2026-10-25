@@ -27,6 +27,7 @@ file(GLOB LW_UI_FONTS "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/fo
 file(GLOB LW_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/src/*.c")
 file(GLOB ARCADE_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/src/*.c")
 file(GLOB LW_DUO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/src/*.c")
+set(LW_RPG_SOURCES ../rpg/src/lw_rpg.c ../rpg/src/lw_rpg_save.c ../rpg/data/lw_rpg_home.c)
 
 add_executable(LittleWorld
     main_host.c
@@ -42,6 +43,7 @@ add_executable(LittleWorld
     ${LW_UI_ARCADE_SOURCES}
     ${LW_UI_FONTS}
     ${LW_CORE_SOURCES}
+    ${LW_RPG_SOURCES}
     ${ARCADE_CORE_SOURCES}
     ${LW_DUO_SOURCES})
 
@@ -53,12 +55,19 @@ target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_system/include"
+    "${CMAKE_CURRENT_LIST_DIR}/../rpg/include"
+    "${CMAKE_CURRENT_LIST_DIR}/../rpg/data"
     "${LVGL_DIR}")
 
 target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
 
 if(MSVC)
     target_compile_options(LittleWorld PRIVATE /utf-8)
+endif()
+add_executable(RPGModelTests ../tests/host/test_rpg.c ${LW_RPG_SOURCES})
+target_include_directories(RPGModelTests PRIVATE ../rpg/include ../rpg/data)
+if(MSVC)
+    target_compile_options(RPGModelTests PRIVATE /W4 /WX /utf-8 /D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 target_link_libraries(LittleWorld PRIVATE lvgl user32 gdi32 psapi)
