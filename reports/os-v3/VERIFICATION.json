@@ -1,0 +1,128 @@
+{
+  "verified_at": "2026-10-25T22:55:44.493855+08:00",
+  "baseline_commit": "31dba23d8f14e414b95dad46c8426cd3e61583c8",
+  "tested_code_commit": "bc9f2b59d672bec63beacca4c7ced9570746c58d",
+  "branch": "agent/os-v2-experience-v3",
+  "logs": [
+    {
+      "local_log": "reports/logs/p5-final-host.log",
+      "sha256": "3c843370723efa4ec8d1786900ab0e3d0a5b4b71f703cadad051d9b0784960e4",
+      "expected_results": [
+        "System model: 22 checks, 0 failures",
+        "Duo model: 82 checks, 0 failures",
+        "85 checks, 0 failure(s)",
+        "Storage: 33 checks, 0 failures",
+        "OS V2: 340 checks, 0 failures"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-fallback.log",
+      "sha256": "7476c8545fb390fa0415b0e54a59b1dd53ea939b9dcf5b60f82e1899766f0964",
+      "expected_results": [
+        "OS V2: 340 checks, 0 failures",
+        "peak pixels 0 B"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-resource.log",
+      "sha256": "8289730d405fb97644bb84c5cafa0ce58a0bb76eb48a3a36a330d5f3bf2ae7e0",
+      "expected_results": [
+        "94 checks, 0 failures",
+        "live pixels 0"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-legacy.log",
+      "sha256": "66dd782d2d9933f15960c76cadef948b75eccadf81dba3a793bc448e8412fa58",
+      "expected_results": [
+        "objects: 84 -> 84",
+        "AUTO RUN: PASSED (0 failure(s))"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-core.log",
+      "sha256": "62272179f2060d436b81204249fab0f2890a97fc492260a0e97f398bfa088796",
+      "expected_results": [
+        "142 checks, 0 failure(s)",
+        "HOST TESTS PASSED"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-python.log",
+      "sha256": "c43bbd41ae9d74f25d0b62eeaff81512e38bfe1b4bc6c8fb32a0441bc67931e0",
+      "expected_results": [
+        "Ran 18 tests",
+        "OK"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-font-check.log",
+      "sha256": "c60b110202b3d458a48b0887970f01716fa402afbf566956678b99876318c227",
+      "expected_results": [
+        "570 non-ASCII characters",
+        "font outputs are up to date"
+      ]
+    },
+    {
+      "local_log": "reports/logs/p5-final-idf.log",
+      "sha256": "18c12e6dea4a9c8370f4670442cea285e60f87b736a9f8bc6f92614fc0c09549",
+      "expected_results": [
+        "Project build complete.",
+        "0x149520 bytes"
+      ]
+    }
+  ],
+  "protected_paths_unchanged": [
+    "firmware/main",
+    "firmware/components/lw_core",
+    "firmware/components/arcade_core",
+    "firmware/components/lw_system",
+    "firmware/components/lw_storage",
+    "rpg",
+    "tests/host/test_rpg.c",
+    "firmware/partitions.csv"
+  ],
+  "artifacts": [
+    {
+      "local_path": "D:/LittleWorld-Codex/build/host/LittleWorld.exe",
+      "bytes": 1355776,
+      "sha256": "3681f8b171f61b82f3bb0df09bc0f76c025ca6ce5996e0c96d41285ba662683b",
+      "uploaded": false
+    },
+    {
+      "local_path": "D:/build/firmware-v2/little_world.bin",
+      "bytes": 1348896,
+      "sha256": "24cf5bd90a86cce2fdf5dea9277053c36becd18458c738a0582ea55d77fc9ec2",
+      "uploaded": false
+    }
+  ],
+  "firmware": {
+    "idf": "5.5.5",
+    "bsp": "3.0.1",
+    "lvgl": "9.5.0",
+    "esp_lvgl_adapter": "0.6.4",
+    "target": "esp32p4",
+    "project_version": "bc9f2b5",
+    "min_rev": "300",
+    "defaults": "D:/LittleWorld-Codex/firmware/sdkconfig.defaults;D:/LittleWorld-Codex/firmware/sdkconfig.defaults.rev3_x",
+    "entry": "unchanged stable firmware entry; DSH backend entry not integrated",
+    "board_tested": false
+  },
+  "screenshots": {
+    "count": 31,
+    "dimensions": [
+      1024,
+      600
+    ],
+    "png_matches_original_framebuffer": true,
+    "local_only": true
+  },
+  "meowa_paid_calls": 0,
+  "hardware_operations": 0,
+  "legacy_regression": {
+    "passed": true,
+    "objects_before": 84,
+    "objects_after": 84
+  },
+  "memory_notes": "Host measurements are not ESP32 PSRAM or real-time FPS measurements. Separate cache/pixel counters are not total RAM."
+}

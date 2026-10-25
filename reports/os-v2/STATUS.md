@@ -1,5 +1,7 @@
 # OS 本轮状态
 
+当前已推进P5：独立agent/os-v2-experience-v3的体验与回归报告位于../os-v3/DELIVERY.md、VERIFICATION.json。以下为31dba23基线历史，不代表本轮最新检查数量或硬件范围。P5无Meowa调用，新截图仍仅本地。
+
 2026-10-25最终更新：本轮四项已真实执行，详见DELIVERY.md/DELIVERY.json。
 
 - 独立Meowa一次：image-edit-run，job_466dffc77e5647cfa02ea58434e8070c；余额2704→2694，净减10，未追加付费。男方候选待审美验收，Qianqian不替换。

@@ -1,0 +1,288 @@
+{
+  "source_commit": "bc9f2b59d672bec63beacca4c7ced9570746c58d",
+  "local_only": true,
+  "public_images_authorized": false,
+  "directory": "D:/LittleWorld-Codex/reports/ui-v2/os-v3",
+  "source": "Actual LVGL framebuffer BMP, lossless PNG conversion",
+  "images": [
+    {
+      "file": "01-desktop.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 60356,
+      "sha256": "89dfc4c2a03b7acfe4183ec7f39be850dfb49e95c2b66eb6b31c6dc355b361a2",
+      "source_bmp_sha256": "3d4b5b6f419e911b0f932629252bb67184baf1b26c3e2416c71d1ee2af7b679b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "02-control-center.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 60983,
+      "sha256": "0365d1350a705821bfb252784315748baf0777473f92aa033b983d9a3e6f7593",
+      "source_bmp_sha256": "940d6bd4aa692bbb1e51c790647c11b3153fc75ac130c904ae8bbdb2497bd863",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "03-wifi-list.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 72980,
+      "sha256": "c24cb7ed24ae6a0511fc31748285cdbe527936572fe5b7facb74f250bdf87451",
+      "source_bmp_sha256": "3e7b47a954529577c21c2bf55cd3dfb4346c3d17e4ed3b3cfe3f33ffcb0f924f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "04-settings.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 48435,
+      "sha256": "934bb623690fc23a7a7807286b351bc3b86c0291db93af4a8b6e3ef1160589bb",
+      "source_bmp_sha256": "04622e077220b798cd04b90769ee76448879d67d3ccd9d5c7ff9027fd199fbee",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "05-themes.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 55776,
+      "sha256": "b0c775e2ad5ba098ff8129444d0fceb797e04261b4c83ff9d96db22ead1b3143",
+      "source_bmp_sha256": "ca70e09f70dba7c2bcf5a240d6dbe35ba921581b2d151615ea657abd9b10e15c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "06-lockscreen.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 25962,
+      "sha256": "8f6ff658697220539aabf799c09d4efbb3c2e82968d9b45d56f4937cc2e807de",
+      "source_bmp_sha256": "fa5a162057a8201a5af49e495f9619f1377984308381dfce1b470feb7c41568e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "07-pixel-world.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 57111,
+      "sha256": "3a6426c31a406968b996162c0a045c94e39718d954c4b4b7825e71ae5e74d990",
+      "source_bmp_sha256": "f6c154b000bbfd6bfe8de49c5a30d8b3e4422e2b4bd4c03f2b2e52e6db9375d4",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "08-wifi-password.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 59866,
+      "sha256": "06a006418a165b4cfd0730ec5ed051480fb4cae02d650c2f4dd116e8ad521211",
+      "source_bmp_sha256": "29550044a90032881f0fe3f37e9d1ec576c5b4d4cdd4333f2d34486bd19282fc",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "09-moonlight-desktop.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 62838,
+      "sha256": "2692c5875748e7777af3aa0b1fb2a7bc999f2fdacf4b608501473a404db95794",
+      "source_bmp_sha256": "8e30c38ac57437bbd9c76898268e88130585970630c1b10d2b678e8459b64046",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "10-envelope.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 69136,
+      "sha256": "4494a78eda4375039d3fd018793ca9905a0ceb497f25bf2f831443dd3612aea6",
+      "source_bmp_sha256": "265b9ab826cbf9bbc39a758f136e5aeea9bc006bfcd2b5844e1f52c65a93a9ed",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "11-pet-idle.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 38077,
+      "sha256": "8233dd256916e53675b84dbed712a5947b03cecb0ca8fac917d7adf10c3084b7",
+      "source_bmp_sha256": "d447369bc73db521032245d6a21ff5851bc42c2dbb064e57fa8f7688b85b67dc",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "12-pet-interaction.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 40921,
+      "sha256": "aab026d9f2d70d089653bcb0345d28c6d6858db3d36de10c80522398c4ec6e22",
+      "source_bmp_sha256": "63680eb21ebb0a8a043dd76dbdb71dc3a22613decdb2c70817301088b5435b0e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "13-album-viewer.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 16944,
+      "sha256": "6d7435a2975ff87470fdb08b5780a02b12cdd4da3fa7e671e8df0944bf3e326d",
+      "source_bmp_sha256": "7f30efe041ca84b12d200f6f7d053ce84ea965914274ee42c033e746793d8013",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "14-music.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 63599,
+      "sha256": "1b08bf23de874dfc1f0478b38994e7520d1ba463521ac017ebc8327d03b786e6",
+      "source_bmp_sha256": "050a689c730087fae365f37ec330258ea5356cd0d3c01caab2b7047882ac831b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "15-anniversary.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 56370,
+      "sha256": "4278d5f412ef31b05924ed8905d75e35b43450edd60a3f1003eca98c3811804e",
+      "source_bmp_sha256": "4d321b6579c36ef08fe941c70688577a19c121d9dba351fe1d301dc1080263a7",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "16-2048.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 12708,
+      "sha256": "00bdbd79082ce7b0e767a8563dad2a6a04239f4afd01e8e1d05e43c2c3e0ec21",
+      "source_bmp_sha256": "34dd93066836824dc08c8a06eebf1d435b21e2116e61bf1d6c656f20cf00aac9",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "17-rpg-room.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 46824,
+      "sha256": "4b3fc6ffc4b9ada2805342f330acaf9cae88cbb2d713e673a5dd56528ac8de92",
+      "source_bmp_sha256": "b44b3d7d60f4cf02c5ba8c5d3bc43becdee9b768658d03123e95d7cf32b4dd3f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "18-rpg-journal.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 48639,
+      "sha256": "711876bce2430b1b9a5608012b9118cd4eb43ba9d333e25a96e0e9f9dcfd5c35",
+      "source_bmp_sha256": "d07cbbb369f6f9d80a65e6f852f795e714c2dcde476d7e65e656fdc5e079d04b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "19-rpg-dialogue.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 38379,
+      "sha256": "69ef7de4d313dc3b5a032e9dd7d2469d3c7dfb6056caed6b433ba2d957a75258",
+      "source_bmp_sha256": "61eaedb71f40239bc306856bb6b757f52491525c04ecde4afc39ff656c5c4c98",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "20-rpg-reward.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 43539,
+      "sha256": "a174c2be4a1ea88bb1176ab08691f03d471db23028942e6c1596e3284e8bede8",
+      "source_bmp_sha256": "4248393652eb4205bc42bb431b8bf2c92adafe5de34734b4756def0486309b5d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "21-album-empty.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 41609,
+      "sha256": "bf1878f2598c59d2a8400e2c2ff8c074aa89c896b0a556a9d9b498f3fdbf3cb3",
+      "source_bmp_sha256": "ad4b922594e93f94df5928633658bc3d48dbbc8032d6fff059922b9647028810",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "22-dock-pressed.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 60934,
+      "sha256": "69e8b157598cf4b470fd255079ccb73afd32e35326c095730ed4ba1989c5cdcd",
+      "source_bmp_sha256": "4349c7ff0605833b41cfd5551e7963b7a8ff7db97b59c1c248dba3cf4eb37251",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "23-services-unavailable.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 61266,
+      "sha256": "86b658523ec549438ac94dedbc4e8c3218e160aacc8865519e07bac55fbf5499",
+      "source_bmp_sha256": "51b55b0f69f66febc619a3e3acbaf9a96ec6e3a4039e5e8d377a0a997edfff84",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "24-dnd.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 61599,
+      "sha256": "4f7e8acf03ed56817cba08eea86e749a4d01007799e9ca4e19825854a97379ba",
+      "source_bmp_sha256": "9d911075f2e59e777b8426e59caf610a171fdbabd86c5c1750b36d0b94de442c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "25-motion-settings.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 51581,
+      "sha256": "fa3602f349f542c143adf12ee2cc62f7c3e8649fd6ad81748eba63fb263e086d",
+      "source_bmp_sha256": "92f95f1e52add2a34d82bce96467e3d52dcee51e5580ad61be4584dcb24f5a69",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "26-album-local-photo.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 12969,
+      "sha256": "312d7916192d51b5de560d0cf31d761b8447496fe52b50f64a44da9143bfbe12",
+      "source_bmp_sha256": "b4afb5de40bb749db3c32a14218bcd995bd68e779104a0c605bddb550935f5cd",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "27-album-load-error.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 21441,
+      "sha256": "0a3294fdc5416854a84038199541d7e07a634099b56824431a4366e752bd3d56",
+      "source_bmp_sha256": "7010d52ad37958582daa26c5af95a10c919d4ed1dd0d7be4298c95528e411b9c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "28-story-detail.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 44739,
+      "sha256": "c71a77b7ee86966899807164a3a760585b9f6e9f530d5de48e45307a9f582007",
+      "source_bmp_sha256": "3ef53e9a91f8bfa5a90d3c74c4db1bdd891341f419a3d0b2f41f7fe633d3ef97",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "29-music-simulated.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 63947,
+      "sha256": "0088f0acaa7179a9348df8a53537399d792955665bc79384d7a975000dc8fcc5",
+      "source_bmp_sha256": "ffbfd3d7a7f0616c73385ecc6be74121d3c897b0b68e6f641033903cbea40694",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "30-game-pause.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 28238,
+      "sha256": "ad7e7c10145ebe54994e0b6e7b184ec22a97b5ddcfc8e177417d2bbcfbe0fde7",
+      "source_bmp_sha256": "6d4ebaa01d4e908742eb4f2d3dd766d17677e2050eb8dcd1fb3b32aab5130c68",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "31-rpg-move-feedback.png",
+      "width": 1024,
+      "height": 600,
+      "bytes": 45539,
+      "sha256": "00a9f6a4ca3c451bf470c04dc4204575fa0c3bbd3badae7a3ab23b89a14dd9c1",
+      "source_bmp_sha256": "b6dde220a13fc7a53c3cd6224cdba58cca08ee30ecbf060dbad8549919f017ca",
+      "matches_framebuffer": true
+    }
+  ]
+}
