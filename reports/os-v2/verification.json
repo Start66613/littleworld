@@ -1,0 +1,72 @@
+{
+  "checked_at": "2026-10-25T16:30:58.468863+08:00",
+  "source_commit": "4e9fe1d35274e10d65263fc33647a58dc57326c9",
+  "branch": "agent/littleworld-os-v2",
+  "workspace": "D:\\LittleWorld-Codex",
+  "base_commit": "afa3233",
+  "stable_commit": "8af0637",
+  "desktop_pet_commit": "b00a7005f4889644737092dbc7379e2a9b011315",
+  "official_board_commit": "9fcd49a8c927a00f5583c22d568b3448addbe51c",
+  "tests": {
+    "system_model": 22,
+    "duo_model": 82,
+    "real_lvgl_os": 73,
+    "overlay_cycles": 100,
+    "page_cycles": 100,
+    "legacy_core": 142,
+    "generic_resources": 94,
+    "python": 18,
+    "legacy_auto_objects": [
+      84,
+      84
+    ],
+    "legacy_auto_passed": true,
+    "font_check_passed": true,
+    "firmware_compile_passed": true
+  },
+  "firmware": {
+    "idf": "5.5.5",
+    "target": "esp32p4",
+    "min_revision": 300,
+    "flash": "32MB",
+    "bsp": "3.0.1",
+    "lvgl": "9.5.0",
+    "adapter": "0.6.4",
+    "appdesc_version": "4e9fe1d",
+    "bin_bytes": 1303424,
+    "sha256": "263aaddb78476c51d78b8eb3942c8fb7665ba2b6e4f03babc55beff84d05faec",
+    "app_partition_bytes": 6291456,
+    "free_app_bytes": 4988032,
+    "stable_entry_preserved": true,
+    "os_installed_on_board": false,
+    "full_duo_resources_included": false,
+    "runtime_psram_measured": false,
+    "elf_sections_are_not_total_runtime_ram": true
+  },
+  "meowa": {
+    "official_skill_commit": "33578ab708c1b4dfcd83fe79dffdbd47ff4083b2",
+    "cli_version": "2026.10.23.2",
+    "authenticated_balance_read": 2904,
+    "this_batch_jobs": 0,
+    "this_batch_spent": 0,
+    "new_paid_budget_approved": 0
+  },
+  "handoff": {
+    "directory": "D:\\LittleWorld-Meowa\\handoff\\codex-os-v1",
+    "hashes_verified": true,
+    "dsh_read_acknowledgment_observed": false,
+    "male_candidate_reviewed": true,
+    "male_visually_accepted": false
+  },
+  "guards": {
+    "dsh_tree_clean": true,
+    "desktop_pet_tree_clean": true,
+    "core_arcade_main_partition_unchanged": true,
+    "all_character_screenshots_ignored": true,
+    "photos_read": false,
+    "photo_uploads": false,
+    "remote_push": false,
+    "device_operations": false,
+    "character_publication_authorized": false
+  }
+}

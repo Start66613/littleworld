@@ -1,0 +1,26 @@
+{
+  "checks": 73,
+  "failures": 0,
+  "overlay_cycles": 100,
+  "page_cycles": 100,
+  "pixel_peak_bytes": 589824,
+  "working_set_peak_bytes": 7720960,
+  "wall_ms": 4616.07,
+  "process_cpu_ms": 312.5,
+  "virtual_clock_unthrottled": true,
+  "network": "Windows mock, no actual host or C6 network access",
+  "art": "original qianqian and TEST A, final male pending",
+  "board_tested": false,
+  "local_screenshots": [
+    "01-desktop.png",
+    "02-control-center.png",
+    "03-wifi-list.png",
+    "04-settings.png",
+    "05-themes.png",
+    "06-lockscreen.png",
+    "07-pixel-world.png",
+    "08-wifi-password.png",
+    "09-moonlight-desktop.png"
+  ],
+  "character_art_publication_authorized": false
+}
