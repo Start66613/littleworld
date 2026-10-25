@@ -78,9 +78,11 @@ lw> status      # 堆、PSRAM、显示尺寸、上一张快照尺寸
 
 | 配置 | 大小 | sha256 | app 分区占用 |
 |---|---|---|---|
-| os（默认，OS V3 桌面） | 2,248,768 B（2,196.1 KiB） | `72651da76ff55a51d6af757c069a941a0172e201024b2f1f1eab6fd4e6ff2c22` | 35.7% |
-| legacy（旧 shell 回退） | 1,420,160 B（1,386.9 KiB） | `9df9b9c4419f4358a5ec25a195975f0a185496c20aa50e427f4f947aabd9578d` | 22.6% |
-| noaudio（无音频编译） | 2,248,768 B（2,196.1 KiB） | `d91f84b0fc0b9c7f42c1f8bcddc3f450de063353054f1fb1f5571ee8739b76d5` | 35.7% |
+| os（默认，OS V3 桌面） | 2,249,088 B（2,196.4 KiB） | `ef5202c965bc23db2cf2d870ed60f29abfa056f2b0f597c5e1aa94ab4cc66be2` | 35.7% |
+| legacy（旧 shell 回退）※ | 1,420,160 B（1,386.9 KiB） | `9df9b9c4419f4358a5ec25a195975f0a185496c20aa50e427f4f947aabd9578d` | 22.6% |
+| noaudio（无音频编译）※ | 2,248,768 B（2,196.1 KiB） | `d91f84b0fc0b9c7f42c1f8bcddc3f450de063353054f1fb1f5571ee8739b76d5` | 35.7% |
+
+※ `legacy` / `noaudio` 两行是加入板端修复（`7fbf877`）**之前**的构建结果，本轮未重跑，重建后哈希会变化。
 
 三个镜像都通过 `tools/check_v3_images.ps1`（esp32p4 / rev 3.0-3.99 / 32MB / DIO，0 failure）。
 app 分区 6 MiB = 6,291,456 B，os 与 noaudio 的镜像大小相同（音频代码被编译掉的部分被段对齐吸收），
