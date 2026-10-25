@@ -9,7 +9,7 @@
 
 - 正式工程没有被修改：DSH 只读取了它的文档、复用了 `D:\Espressif\LittleWorld` 里的工具链。
 - 小游戏工程没有被修改：DSH 复制了它的 `arcade_core`（MIT，自己写的）到本工程 `firmware/components/arcade_core`。
-- 本工程有完整的本地 Git 历史（无远程、未公开）。合适的时候把提交 cherry-pick 或整目录合并回正式工程即可。
+- 本工程有完整的 Git 历史，并已推送到 https://github.com/Start66613/littleworld （public，`main`）。合适的时候把提交 cherry-pick 或整目录合并回正式工程即可。
 
 ## 2. 架构入口
 

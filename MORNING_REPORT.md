@@ -126,7 +126,7 @@ partition: nvs 0x9000/0x6000, phy_init 0xF000/0x1000, factory 0x10000/0x600000, 
 
 ## 5. Git 提交
 
-仓库：`D:\LittleWorld-Main-DSH`（本地，无远程，未公开）。
+仓库：`D:\LittleWorld-Main-DSH`，已推送到 **https://github.com/Start66613/littleworld**（public，`main` 分支）。
 
 ```
 6ee9185  feat(shell): Little World desktop shell with dock, theme and app registry
