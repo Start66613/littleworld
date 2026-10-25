@@ -1,75 +1,132 @@
 {
     "schema":  "littleworld.pixel-assets/1",
     "contract_version":  "1.0.1",
-    "delivered_at":  "2026-10-25T16:56:53",
+    "batch":  3,
+    "delivered_at":  "2026-10-25T17:39:35",
     "deliverer":  "DSH (Meowa agent)",
     "branch":  "rpg/meowa-v3",
-    "summary":  "Static male candidates only. None pass the 1.0.1 contract yet; see ASSET_REPORT.md for the measured gap and the fix plan.",
+    "budget":  {
+                   "approved":  160,
+                   "spent":  140,
+                   "balance_after":  2764,
+                   "unit_price":  20
+               },
+    "summary":  "Route B first pass: 3 male directions, 2 qianqian remakes. All native-1px, feet aligned, none yet contract-height.",
     "assets":  [
                    {
-                       "character_id":  "male_candidate_base",
+                       "character_id":  "male_A_sunny",
                        "status":  "candidate",
-                       "contract_compliant":  false,
-                       "path":  "assets/rpg/characters/boy_front_base.png",
-                       "sha256":  "474fe2cb8cc136ddfdeb2a3f5a253a3af11cd34968b509285828ead3617c3d55",
+                       "use":  "阳光呆萌 A：开怀笑 + 挥手",
+                       "path":  "assets/rpg/characters/v2/male_A_sunny.png",
+                       "sha256":  "17c7bedec152037fc1b8be8f1933d97c43518d36e8df172a8abb0c6288be2aaf",
+                       "bytes":  14748,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "visible_height_px":  215,
-                       "feet_y":  225,
-                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
-                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
-                       "note":  "Batch2 P1, aligned feet 225"
+                       "feet_y":  226,
+                       "centre_x":  128,
+                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "contract_compliant":  false,
+                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
+                       "provenance":  {
+                                          "credits":  20,
+                                          "model":  "nano-banana",
+                                          "tool":  "meowa custom-size-pixel-gen-run",
+                                          "post":  "light background flood-cut, feet aligned to y=226"
+                                      }
                    },
                    {
-                       "character_id":  "male_candidate_A_sunny",
+                       "character_id":  "male_B_gentle",
                        "status":  "candidate",
-                       "contract_compliant":  false,
-                       "path":  "assets/rpg/characters/variants/A_sunny.png",
-                       "sha256":  "225007c2b36b35263a8e937415c4c0cde8ca6e5aa1415e7c149a64acbacd1a4d",
+                       "use":  "温柔软萌 B：浅笑 + 腮红",
+                       "path":  "assets/rpg/characters/v2/male_B_gentle.png",
+                       "sha256":  "23c423b9abe2296e3b279503e57c8b84a4dc1762273e27fe51c077f3cc0742d3",
+                       "bytes":  15550,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "visible_height_px":  215,
-                       "feet_y":  225,
-                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
-                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
-                       "note":  "free local face edit"
+                       "feet_y":  226,
+                       "centre_x":  128,
+                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "contract_compliant":  false,
+                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
+                       "provenance":  {
+                                          "credits":  20,
+                                          "model":  "nano-banana",
+                                          "tool":  "meowa custom-size-pixel-gen-run",
+                                          "post":  "light background flood-cut, feet aligned to y=226"
+                                      }
                    },
                    {
-                       "character_id":  "male_candidate_B_gentle",
+                       "character_id":  "male_C_playful",
                        "status":  "candidate",
-                       "contract_compliant":  false,
-                       "path":  "assets/rpg/characters/variants/B_gentle.png",
-                       "sha256":  "d5acfcc4b9d2905eff245d778a985d7504f3ff0f709d9a684abbde68037ab33c",
+                       "use":  "搞怪可爱 C：眨眼 + 张嘴",
+                       "path":  "assets/rpg/characters/v2/male_C_playful.png",
+                       "sha256":  "120b1feaa53b469174d9ee8b1a54bc9d042ad43b278af85fd91064f0ba9c24ec",
+                       "bytes":  12881,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "visible_height_px":  215,
-                       "feet_y":  225,
-                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
-                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
-                       "note":  "free local face edit"
+                       "feet_y":  226,
+                       "centre_x":  128,
+                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "contract_compliant":  false,
+                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
+                       "provenance":  {
+                                          "credits":  20,
+                                          "model":  "nano-banana",
+                                          "tool":  "meowa custom-size-pixel-gen-run",
+                                          "post":  "light background flood-cut, feet aligned to y=226"
+                                      }
                    },
                    {
-                       "character_id":  "male_candidate_C_playful",
+                       "character_id":  "qianqian_v2_a",
                        "status":  "candidate",
-                       "contract_compliant":  false,
-                       "path":  "assets/rpg/characters/variants/C_playful.png",
-                       "sha256":  "9bd39bc845dcfd7e0f477b46e106d5cd1a6758b2b61bd3d8bd44d2ee533c2d5b",
+                       "use":  "新版 qianqian A：原 DNA 重制，微笑",
+                       "path":  "assets/rpg/characters/v2/qianqian_v2_a.png",
+                       "sha256":  "503197c5e6ecef7b4894ddd9a6419be15a64768394e9685d6c22d1f80fc2cfcb",
+                       "bytes":  19141,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "visible_height_px":  215,
-                       "feet_y":  225,
-                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
-                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
-                       "note":  "free local face edit"
+                       "feet_y":  226,
+                       "centre_x":  128,
+                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "contract_compliant":  false,
+                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
+                       "provenance":  {
+                                          "credits":  20,
+                                          "model":  "nano-banana",
+                                          "tool":  "meowa custom-size-pixel-gen-run",
+                                          "post":  "light background flood-cut, feet aligned to y=226"
+                                      }
+                   },
+                   {
+                       "character_id":  "qianqian_v2_b",
+                       "status":  "candidate",
+                       "use":  "新版 qianqian B：好奇歪头",
+                       "path":  "assets/rpg/characters/v2/qianqian_v2_b.png",
+                       "sha256":  "aec695523097db97d2b1fca8082cee3e90f30e12837ee3339a68e68144ca1eae",
+                       "bytes":  21734,
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "feet_y":  226,
+                       "centre_x":  128,
+                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "contract_compliant":  false,
+                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
+                       "provenance":  {
+                                          "credits":  20,
+                                          "model":  "nano-banana",
+                                          "tool":  "meowa custom-size-pixel-gen-run",
+                                          "post":  "light background flood-cut, feet aligned to y=226"
+                                      }
                    }
-               ],
-    "qianqian_reference":  "assets/batch-2/female/qianqian_idle_01.png (from DesktopPet b00a700, already published in art-assets by user request)"
+               ]
 }
