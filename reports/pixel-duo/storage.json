@@ -1,0 +1,14 @@
+{
+  "source_commit": "58d7d431e5b1e98240db4f0c60a2a8efe55f0d85",
+  "idf_project_version": "58d7d43",
+  "NormalizedPngFrames": 113,
+  "NormalizedPngBytes": 1491122,
+  "RawPackBytes": 22218124,
+  "FirmwareBinBytes": 1199920,
+  "FirmwareBinSha256": "644f9bd95efe7133dc87fb24d19f111203ae02515ae8df4513c50a7a15cfcbc3",
+  "ApplicationPartitionBytes": 6291456,
+  "ApplicationPartitionFreeBytes": 5091536,
+  "StoragePartitionBytes": 4194304,
+  "FullDuoResourcesIncluded": false,
+  "BoardTested": false
+}

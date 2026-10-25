@@ -1,0 +1,25 @@
+{
+  "scope": "Windows real LVGL P1; qianqian source art and explicit male fixture; not final art or board validation",
+  "checks": 27,
+  "failures": 0,
+  "scene_switches": 100,
+  "pixel_peak_bytes": 589824,
+  "loaded_frames": 1194,
+  "live_leases_after_exit": 0,
+  "wall_ms": 1398.649,
+  "process_cpu_ms": 156.25,
+  "process_peak_working_set_bytes": 6889472,
+  "unthrottled_test": true,
+  "missing_joint_poses_are_explicit_fallbacks": true,
+  "screenshots_local_only": [
+    "01-duo-idle.png",
+    "02-independent-A.png",
+    "03-qianqian-walk.png",
+    "04-meet-and-wave-fallback.png",
+    "05-letter-pose-pending.png",
+    "06-independent-sleep.png",
+    "07-character-menu.png"
+  ],
+  "screenshot_directory": "private/pixel-duo/screenshots",
+  "publication_authorized": false
+}

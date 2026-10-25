@@ -1,0 +1,75 @@
+{
+  "checked_at": "2026-10-25T14:54:44.618455+08:00",
+  "source_commit": "58d7d431e5b1e98240db4f0c60a2a8efe55f0d85",
+  "workspace": "D:\\LittleWorld-Codex",
+  "branch": "agent/pixel-duo",
+  "stable_baseline": "8af0637c3ce72844e9dfec828ea1eb1bd9e194bb",
+  "desktop_pet_source": "b00a7005f4889644737092dbc7379e2a9b011315",
+  "tools": {
+    "ESP-IDF": "5.5.5",
+    "idf_commit": "b774170ff46c393eeb5e495ea37936038d3f4f4f",
+    "Python": "3.12.14",
+    "Pillow": "13.0.0",
+    "CMake": "3.30.2",
+    "Ninja": "1.12.1",
+    "MSVC": "19.51.36248.0",
+    "LVGL": "9.5.0",
+    "waveshare_bsp": "3.0.1",
+    "esp_lvgl_adapter": "0.6.4"
+  },
+  "target": {
+    "id": "esp32p4",
+    "min_revision_full": 300,
+    "configured_flash": "32MB",
+    "psram_xip": true,
+    "runtime_psram_not_measured": true
+  },
+  "tests": {
+    "model": {
+      "checks": 78,
+      "failures": 0
+    },
+    "pixel_lvgl": {
+      "checks": 27,
+      "failures": 0,
+      "scene_cycles": 100
+    },
+    "generic_resource_lvgl": {
+      "checks": 94,
+      "failures": 0
+    },
+    "core": {
+      "checks": 142,
+      "failures": 0
+    },
+    "python": {
+      "checks": 18,
+      "failures": 0
+    },
+    "legacy_auto_ui": {
+      "failures": 0,
+      "objects_before": 84,
+      "objects_after": 84
+    },
+    "firmware_offline_build": "passed",
+    "powershell_parse": "passed"
+  },
+  "handoff": {
+    "version": "1.0.1",
+    "directory": "D:\\LittleWorld-Meowa\\handoff\\codex-pixel-v1.0.1",
+    "snapshot_hashes_match": true,
+    "dsh_acknowledgment_observed": false,
+    "pixel_manifest_present": false,
+    "pixel_report_present": false
+  },
+  "guards": {
+    "protected_core_main_partitions_unchanged": true,
+    "dsh_tree_clean": true,
+    "source_tree_clean": true,
+    "character_art_ignored": true,
+    "character_publication_authorized": false,
+    "remote_push_performed": false,
+    "device_operation_performed": false,
+    "paid_generation_performed": false
+  }
+}
