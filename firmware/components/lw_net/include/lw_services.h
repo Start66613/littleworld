@@ -60,6 +60,9 @@ typedef struct lw_services {
 
 /** Reads the adapters' capabilities and initialises the models. */
 void lw_services_init(lw_services_t *services);
+/** Overrides the audio capability. The codec is owned by the board support
+ *  package, not by this component, so the boot code reports what it probed. */
+void lw_services_set_audio_backend(lw_services_t *services, bool present);
 /** Starts the adapters that are available. Safe to call once. */
 void lw_services_start(lw_services_t *services, uint32_t now_ms);
 void lw_services_poll(lw_services_t *services, uint32_t now_ms);

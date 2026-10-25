@@ -15,6 +15,7 @@
 
 #include "lw/lw_platform.h"
 #include "lw_hw.h"
+#include "lw_services.h"
 #include "lw_store_nvs.h"
 #include "lw_ui.h"
 
@@ -172,10 +173,11 @@ static void net_poll(void *arg)
     lw_services_poll(&s_services, now_ms);
 }
 
-static void start_connectivity(uint32_t now_ms)
+static void start_connectivity(uint32_t now_ms, bool codec)
 {
     lw_services_init(&s_services);
     lw_services_start(&s_services, now_ms);
+    lw_services_set_audio_backend(&s_services, codec);
 
     lw_net_status_t status;
     lw_services_status(&s_services, now_ms, &status);
@@ -213,7 +215,12 @@ static void start_os(void)
     s_prefs_io = *lw_store_nvs_io(&s_prefs_key);
     s_rpg_io = *lw_store_nvs_io(&s_rpg_key);
 
-    lw_hw_caps_t caps = lw_hw_begin(CONFIG_LW_ENABLE_AUDIO);
+#ifdef CONFIG_LW_ENABLE_AUDIO
+    const bool want_audio = true;
+#else
+    const bool want_audio = false;
+#endif
+    lw_hw_caps_t caps = lw_hw_begin(want_audio);
 
     lw_system_backend_t backend = {0};
     backend.simulated = false;
@@ -224,7 +231,7 @@ static void start_os(void)
     backend.store = prefs_store;
     lw_system_init(&s_system, &backend);
 
-    start_connectivity((uint32_t)(esp_timer_get_time() / 1000));
+    start_connectivity((uint32_t)(esp_timer_get_time() / 1000), caps.audio);
 
     if (!caps.brightness) {
         ESP_LOGW(TAG, "brightness: %s", "backend reports Unsupported");

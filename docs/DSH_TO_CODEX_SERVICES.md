@@ -24,8 +24,10 @@ firmware/main/lw_boot.c     starts the services and a 500 ms esp_timer poll
 firmware/main/Kconfig.projbuild  LW_NET_WIFI_ENABLE / LW_NET_SNTP_ENABLE (default n)
 firmware/main/CMakeLists.txt     requires lw_net
 tests/host/test_lw_net.c    131 checks
-tools/run_net_tests.ps1     builds and runs them with MSVC
+tests/host/lw_net_esp_stub.c  adapter stubs so the glue links on the host
+tools/run_backend_tests.ps1 extended with the net suite (182 checks in total)
 docs/WIFI_BACKEND.md, TIME_SERVICE.md, AUDIO_BACKEND.md, INTEGRATION_TESTS.md
+docs/p4/                    中文详解版（同一批内容的深度说明）
 ```
 
 ## What Codex can rely on

@@ -41,7 +41,7 @@ static void test_wifi_unsupported(void)
     begin("wifi/unsupported");
     lw_wifi_t wifi;
     lw_wifi_init(&wifi, false);
-    check(lw_wifi_state(&wifi) == LW_WIFI_UNSUPPORTED, "starts unsupported");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_UNSUPPORTED, "starts unsupported");
     check(lw_wifi_error(&wifi) == LW_WIFI_ERR_NOT_SUPPORTED, "error set");
     check(!lw_wifi_enable(&wifi, true, 0), "enable refused");
     check(!lw_wifi_scan(&wifi, 0), "scan refused");
@@ -54,11 +54,11 @@ static void test_wifi_scan(void)
     begin("wifi/scan");
     lw_wifi_t wifi;
     lw_wifi_init(&wifi, true);
-    check(lw_wifi_state(&wifi) == LW_WIFI_OFF, "starts off");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_OFF, "starts off");
     check(lw_wifi_enable(&wifi, true, 100), "enable ok");
-    check(lw_wifi_state(&wifi) == LW_WIFI_IDLE, "idle after enable");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "idle after enable");
     check(lw_wifi_scan(&wifi, 200), "scan accepted");
-    check(lw_wifi_state(&wifi) == LW_WIFI_SCANNING, "scanning");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_SCANNING, "scanning");
     check(!lw_wifi_scan(&wifi, 210), "second scan busy");
     char ssid[LW_WIFI_SSID_MAX];
     const char *pw = (const char *)1;
@@ -76,7 +76,7 @@ static void test_wifi_scan(void)
     aps[2].rssi = -60; /* duplicate, weaker: must not replace */
 
     lw_wifi_on_scan_done(&wifi, wifi.scan_generation, aps, 3, true);
-    check(lw_wifi_state(&wifi) == LW_WIFI_IDLE, "back to idle");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "back to idle");
     check(lw_wifi_scan_count(&wifi) == 2, "duplicates collapsed");
     check_str(lw_wifi_scan_at(&wifi, 0)->ssid, "strong", "sorted strongest first");
     check(lw_wifi_scan_at(&wifi, 0)->rssi == -40, "strongest rssi kept");
@@ -102,7 +102,7 @@ static void test_wifi_connect(void)
     check(!lw_wifi_connect(&wifi, "", "pw", 0), "empty ssid refused");
     check(lw_wifi_error(&wifi) == LW_WIFI_ERR_INVALID_ARGS, "invalid args reported");
     check(lw_wifi_connect(&wifi, "home", "secret", 1000), "connect accepted");
-    check(lw_wifi_state(&wifi) == LW_WIFI_CONNECTING, "connecting");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "connecting");
     char ssid[LW_WIFI_SSID_MAX];
     const char *pw = NULL;
     check(lw_wifi_take_action(&wifi, ssid, &pw) == LW_WIFI_ACTION_CONNECT, "action connect");
@@ -112,7 +112,7 @@ static void test_wifi_connect(void)
 
     uint32_t gen = wifi.generation;
     lw_wifi_on_connected(&wifi, gen, "192.168.1.23", 1500);
-    check(lw_wifi_state(&wifi) == LW_WIFI_CONNECTED, "connected");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTED, "connected");
     check_str(lw_wifi_ip(&wifi), "192.168.1.23", "ip stored");
     lw_wifi_event_t ev;
     check(lw_wifi_next_event(&wifi, &ev) && ev.type == LW_WIFI_EV_CONNECTED, "connected event");
@@ -122,7 +122,7 @@ static void test_wifi_connect(void)
     check_str(lw_wifi_ip(&wifi), "192.168.1.23", "stale connect ignored");
 
     check(lw_wifi_disconnect(&wifi, 1700), "disconnect ok");
-    check(lw_wifi_state(&wifi) == LW_WIFI_IDLE, "idle after disconnect");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "idle after disconnect");
     check(!lw_wifi_credentials_held(&wifi), "password wiped");
     check(lw_wifi_take_action(&wifi, NULL, NULL) == LW_WIFI_ACTION_DISCONNECT, "action disconnect");
 }
@@ -137,14 +137,14 @@ static void test_wifi_failures(void)
     /* Wrong password is terminal. */
     lw_wifi_connect(&wifi, "home", "bad", 1000);
     lw_wifi_on_connect_failed(&wifi, wifi.generation, LW_WIFI_ERR_AUTH_FAILED, 1200);
-    check(lw_wifi_state(&wifi) == LW_WIFI_FAILED, "auth failure is final");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_FAILED, "auth failure is final");
     check(lw_wifi_error(&wifi) == LW_WIFI_ERR_AUTH_FAILED, "auth error kept");
 
     /* A timeout retries with backoff, then gives up after three attempts. */
     lw_wifi_connect(&wifi, "home", "good", 2000);
     uint32_t gen = wifi.generation;
     lw_wifi_on_connect_failed(&wifi, gen, LW_WIFI_ERR_TIMEOUT, 2100);
-    check(lw_wifi_state(&wifi) == LW_WIFI_CONNECTING, "still connecting during backoff");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "still connecting during backoff");
     check(wifi.attempts == 1, "one attempt used");
     lw_wifi_tick(&wifi, 2500);
     check(lw_wifi_take_action(&wifi, NULL, NULL) == LW_WIFI_ACTION_NONE, "no retry before backoff");
@@ -157,7 +157,7 @@ static void test_wifi_failures(void)
     check(wifi.attempts == 2, "two attempts used");
     gen = wifi.generation;
     lw_wifi_on_connect_failed(&wifi, gen, LW_WIFI_ERR_TIMEOUT, 4300);
-    check(lw_wifi_state(&wifi) == LW_WIFI_FAILED, "failed after three attempts");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_FAILED, "failed after three attempts");
     check(lw_wifi_error(&wifi) == LW_WIFI_ERR_RETRIES_EXHAUSTED, "retries exhausted reported");
 
     /* Link loss after a good connection. */
@@ -167,7 +167,7 @@ static void test_wifi_failures(void)
         /* drain everything queued by the earlier attempts */
     }
     lw_wifi_on_disconnected(&wifi, wifi.generation, LW_WIFI_ERR_LINK_LOST, 5200);
-    check(lw_wifi_state(&wifi) == LW_WIFI_IDLE, "idle after link loss");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "idle after link loss");
     lw_wifi_event_t ev;
     check(lw_wifi_next_event(&wifi, &ev) && ev.type == LW_WIFI_EV_DISCONNECTED, "disconnected event");
     check_str(lw_wifi_ip(&wifi), "", "ip cleared");
@@ -181,15 +181,15 @@ static void test_wifi_timeouts(void)
     lw_wifi_enable(&wifi, true, 0);
     lw_wifi_scan(&wifi, 100);
     lw_wifi_tick(&wifi, 100 + LW_WIFI_SCAN_TIMEOUT_MS - 1u);
-    check(lw_wifi_state(&wifi) == LW_WIFI_SCANNING, "scan still running");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_SCANNING, "scan still running");
     lw_wifi_tick(&wifi, 100 + LW_WIFI_SCAN_TIMEOUT_MS);
-    check(lw_wifi_state(&wifi) == LW_WIFI_IDLE, "scan timed out");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_IDLE, "scan timed out");
     check(lw_wifi_error(&wifi) == LW_WIFI_ERR_SCAN_FAILED, "scan failure reported");
 
     lw_wifi_connect(&wifi, "home", "pw", 20000);
     lw_wifi_tick(&wifi, 20000 + LW_WIFI_CONNECT_TIMEOUT_MS);
     check(wifi.attempts >= 1, "connect timeout counted as an attempt");
-    check(lw_wifi_state(&wifi) == LW_WIFI_CONNECTING, "retrying after timeout");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "retrying after timeout");
 }
 
 static void test_wifi_events_overflow(void)
@@ -220,7 +220,7 @@ static void test_wifi_disable(void)
     lw_wifi_connect(&wifi, "home", "pw", 0);
     lw_wifi_on_connected(&wifi, wifi.generation, "192.168.1.5", 10);
     check(lw_wifi_enable(&wifi, false, 20), "disable ok");
-    check(lw_wifi_state(&wifi) == LW_WIFI_OFF, "off");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_OFF, "off");
     check_str(lw_wifi_ip(&wifi), "", "ip cleared on disable");
     check(!lw_wifi_credentials_held(&wifi), "credentials wiped on disable");
     check(lw_wifi_take_action(&wifi, NULL, NULL) == LW_WIFI_ACTION_DISCONNECT, "disconnect requested");

@@ -26,13 +26,13 @@
 #define LW_WIFI_BACKOFF_MS 2000u
 
 typedef enum {
-    LW_WIFI_UNSUPPORTED = 0, /* no radio backend compiled or the C6 link is absent */
-    LW_WIFI_OFF,
-    LW_WIFI_IDLE,
-    LW_WIFI_SCANNING,
-    LW_WIFI_CONNECTING,
-    LW_WIFI_CONNECTED,
-    LW_WIFI_FAILED
+    LW_WIFI_ST_UNSUPPORTED = 0, /* no radio backend compiled or the C6 link is absent */
+    LW_WIFI_ST_OFF,
+    LW_WIFI_ST_IDLE,
+    LW_WIFI_ST_SCANNING,
+    LW_WIFI_ST_CONNECTING,
+    LW_WIFI_ST_CONNECTED,
+    LW_WIFI_ST_FAILED
 } lw_wifi_state_t;
 
 typedef enum {

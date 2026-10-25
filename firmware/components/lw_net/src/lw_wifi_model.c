@@ -53,7 +53,7 @@ static void emit_simple(lw_wifi_t *wifi, lw_wifi_event_type_t type, lw_wifi_erro
 
 static void set_failed(lw_wifi_t *wifi, lw_wifi_error_t error)
 {
-    wifi->state = LW_WIFI_FAILED;
+    wifi->state = LW_WIFI_ST_FAILED;
     wifi->error = error;
     wifi->retry_at_ms = 0;
     wifi->action = LW_WIFI_ACTION_NONE; /* the attempt is over, nothing to run */
@@ -93,7 +93,7 @@ void lw_wifi_init(lw_wifi_t *wifi, bool supported)
 {
     memset(wifi, 0, sizeof(*wifi));
     wifi->supported = supported;
-    wifi->state = supported ? LW_WIFI_OFF : LW_WIFI_UNSUPPORTED;
+    wifi->state = supported ? LW_WIFI_ST_OFF : LW_WIFI_ST_UNSUPPORTED;
     wifi->error = supported ? LW_WIFI_ERR_NONE : LW_WIFI_ERR_NOT_SUPPORTED;
     wifi->generation = 1u;
     wifi->scan_generation = 1u;
@@ -107,15 +107,15 @@ void lw_wifi_set_supported(lw_wifi_t *wifi, bool supported)
     wifi->supported = supported;
     if (!supported) {
         wifi->enabled = false;
-        wifi->state = LW_WIFI_UNSUPPORTED;
+        wifi->state = LW_WIFI_ST_UNSUPPORTED;
         wifi->error = LW_WIFI_ERR_NOT_SUPPORTED;
         wifi->generation++;
         wifi->action = LW_WIFI_ACTION_NONE;
         wifi->ap_count = 0;
         wifi->ip[0] = '\0';
         wipe_password(wifi);
-    } else if (wifi->state == LW_WIFI_UNSUPPORTED) {
-        wifi->state = LW_WIFI_OFF;
+    } else if (wifi->state == LW_WIFI_ST_UNSUPPORTED) {
+        wifi->state = LW_WIFI_ST_OFF;
         wifi->error = LW_WIFI_ERR_NONE;
     }
 }
@@ -138,19 +138,19 @@ lw_wifi_error_t lw_wifi_error(const lw_wifi_t *wifi)
 const char *lw_wifi_state_name(lw_wifi_state_t state)
 {
     switch (state) {
-    case LW_WIFI_UNSUPPORTED:
+    case LW_WIFI_ST_UNSUPPORTED:
         return "unsupported";
-    case LW_WIFI_OFF:
+    case LW_WIFI_ST_OFF:
         return "off";
-    case LW_WIFI_IDLE:
+    case LW_WIFI_ST_IDLE:
         return "idle";
-    case LW_WIFI_SCANNING:
+    case LW_WIFI_ST_SCANNING:
         return "scanning";
-    case LW_WIFI_CONNECTING:
+    case LW_WIFI_ST_CONNECTING:
         return "connecting";
-    case LW_WIFI_CONNECTED:
+    case LW_WIFI_ST_CONNECTED:
         return "connected";
-    case LW_WIFI_FAILED:
+    case LW_WIFI_ST_FAILED:
         return "failed";
     }
     return "?";
@@ -232,14 +232,14 @@ bool lw_wifi_enable(lw_wifi_t *wifi, bool enabled, uint32_t now_ms)
     wifi->retry_at_ms = 0;
     wifi->attempts = 0;
     if (!enabled) {
-        wifi->state = LW_WIFI_OFF;
+        wifi->state = LW_WIFI_ST_OFF;
         wifi->error = LW_WIFI_ERR_NONE;
         wifi->ip[0] = '\0';
         wifi->action = LW_WIFI_ACTION_DISCONNECT;
         wipe_password(wifi);
         return true;
     }
-    wifi->state = LW_WIFI_IDLE;
+    wifi->state = LW_WIFI_ST_IDLE;
     wifi->error = LW_WIFI_ERR_NONE;
     return true;
 }
@@ -254,12 +254,12 @@ bool lw_wifi_scan(lw_wifi_t *wifi, uint32_t now_ms)
         wifi->error = LW_WIFI_ERR_BUSY;
         return false;
     }
-    if (wifi->state == LW_WIFI_SCANNING || wifi->state == LW_WIFI_CONNECTING) {
+    if (wifi->state == LW_WIFI_ST_SCANNING || wifi->state == LW_WIFI_ST_CONNECTING) {
         wifi->error = LW_WIFI_ERR_BUSY;
         return false;
     }
     wifi->scan_generation++;
-    wifi->state = LW_WIFI_SCANNING;
+    wifi->state = LW_WIFI_ST_SCANNING;
     wifi->error = LW_WIFI_ERR_NONE;
     wifi->started_ms = now_ms;
     wifi->action = LW_WIFI_ACTION_SCAN;
@@ -284,7 +284,7 @@ bool lw_wifi_connect(lw_wifi_t *wifi, const char *ssid, const char *password, ui
         wifi->error = LW_WIFI_ERR_INVALID_ARGS;
         return false;
     }
-    if (wifi->state == LW_WIFI_SCANNING) {
+    if (wifi->state == LW_WIFI_ST_SCANNING) {
         wifi->error = LW_WIFI_ERR_BUSY;
         return false;
     }
@@ -299,7 +299,7 @@ bool lw_wifi_connect(lw_wifi_t *wifi, const char *ssid, const char *password, ui
     } else {
         wipe_password(wifi);
     }
-    wifi->state = LW_WIFI_CONNECTING;
+    wifi->state = LW_WIFI_ST_CONNECTING;
     wifi->error = LW_WIFI_ERR_NONE;
     wifi->started_ms = now_ms;
     wifi->ip[0] = '\0';
@@ -314,14 +314,14 @@ bool lw_wifi_disconnect(lw_wifi_t *wifi, uint32_t now_ms)
         wifi->error = LW_WIFI_ERR_NOT_SUPPORTED;
         return false;
     }
-    bool was_active = wifi->state == LW_WIFI_CONNECTED || wifi->state == LW_WIFI_CONNECTING ||
-                      wifi->state == LW_WIFI_SCANNING || wifi->state == LW_WIFI_FAILED;
+    bool was_active = wifi->state == LW_WIFI_ST_CONNECTED || wifi->state == LW_WIFI_ST_CONNECTING ||
+                      wifi->state == LW_WIFI_ST_SCANNING || wifi->state == LW_WIFI_ST_FAILED;
     wifi->generation++;
     wifi->retry_at_ms = 0;
     wifi->attempts = 0;
     wifi->ip[0] = '\0';
     wifi->error = was_active ? LW_WIFI_ERR_CANCELLED : LW_WIFI_ERR_NONE;
-    wifi->state = wifi->enabled ? LW_WIFI_IDLE : LW_WIFI_OFF;
+    wifi->state = wifi->enabled ? LW_WIFI_ST_IDLE : LW_WIFI_ST_OFF;
     wifi->action = LW_WIFI_ACTION_DISCONNECT;
     wipe_password(wifi);
     return true;
@@ -335,7 +335,7 @@ void lw_wifi_forget_password(lw_wifi_t *wifi)
 void lw_wifi_on_scan_done(lw_wifi_t *wifi, uint32_t generation, const lw_wifi_ap_t *aps, unsigned count,
                           bool ok)
 {
-    if (generation != wifi->scan_generation || wifi->state != LW_WIFI_SCANNING) {
+    if (generation != wifi->scan_generation || wifi->state != LW_WIFI_ST_SCANNING) {
         return; /* stale or cancelled scan */
     }
     wifi->ap_count = 0;
@@ -347,7 +347,7 @@ void lw_wifi_on_scan_done(lw_wifi_t *wifi, uint32_t generation, const lw_wifi_ap
             add_ap(wifi, &aps[i]);
         }
     }
-    wifi->state = wifi->enabled ? LW_WIFI_IDLE : LW_WIFI_OFF;
+    wifi->state = wifi->enabled ? LW_WIFI_ST_IDLE : LW_WIFI_ST_OFF;
     wifi->error = ok ? LW_WIFI_ERR_NONE : LW_WIFI_ERR_SCAN_FAILED;
     {
         lw_wifi_event_t event;
@@ -363,10 +363,10 @@ void lw_wifi_on_scan_done(lw_wifi_t *wifi, uint32_t generation, const lw_wifi_ap
 void lw_wifi_on_connected(lw_wifi_t *wifi, uint32_t generation, const char *ip, uint32_t now_ms)
 {
     (void)now_ms;
-    if (generation != wifi->generation || wifi->state != LW_WIFI_CONNECTING) {
+    if (generation != wifi->generation || wifi->state != LW_WIFI_ST_CONNECTING) {
         return;
     }
-    wifi->state = LW_WIFI_CONNECTED;
+    wifi->state = LW_WIFI_ST_CONNECTED;
     wifi->error = LW_WIFI_ERR_NONE;
     wifi->attempts = 0;
     wifi->retry_at_ms = 0;
@@ -377,7 +377,7 @@ void lw_wifi_on_connected(lw_wifi_t *wifi, uint32_t generation, const char *ip, 
 
 void lw_wifi_on_connect_failed(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error_t error, uint32_t now_ms)
 {
-    if (generation != wifi->generation || wifi->state != LW_WIFI_CONNECTING) {
+    if (generation != wifi->generation || wifi->state != LW_WIFI_ST_CONNECTING) {
         return;
     }
     /* The attempt that produced this result is over: clear the pending action so
@@ -390,7 +390,7 @@ void lw_wifi_on_connect_failed(lw_wifi_t *wifi, uint32_t generation, lw_wifi_err
         wifi->attempts++;
         wifi->retry_at_ms = now_ms + LW_WIFI_BACKOFF_MS * wifi->attempts;
         wifi->error = error;
-        wifi->state = LW_WIFI_CONNECTING;
+        wifi->state = LW_WIFI_ST_CONNECTING;
         return;
     }
     if (retryable && wifi->attempts + 1u >= LW_WIFI_MAX_ATTEMPTS) {
@@ -410,30 +410,30 @@ void lw_wifi_on_disconnected(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error
     if (generation != wifi->generation) {
         return;
     }
-    if (wifi->state != LW_WIFI_CONNECTED && wifi->state != LW_WIFI_CONNECTING) {
+    if (wifi->state != LW_WIFI_ST_CONNECTED && wifi->state != LW_WIFI_ST_CONNECTING) {
         return;
     }
     wifi->ip[0] = '\0';
     if (!wifi->enabled) {
-        wifi->state = LW_WIFI_OFF;
+        wifi->state = LW_WIFI_ST_OFF;
         wifi->error = LW_WIFI_ERR_NONE;
         wipe_password(wifi);
         return;
     }
     /* The link dropped after being up: report it and go idle, the user (or the
      * reconnect policy for a live attempt) decides what to do next. */
-    wifi->state = LW_WIFI_IDLE;
+    wifi->state = LW_WIFI_ST_IDLE;
     wifi->error = error == LW_WIFI_ERR_NONE ? LW_WIFI_ERR_LINK_LOST : error;
     emit_simple(wifi, LW_WIFI_EV_DISCONNECTED, wifi->error);
 }
 
 void lw_wifi_tick(lw_wifi_t *wifi, uint32_t now_ms)
 {
-    if (wifi->state == LW_WIFI_SCANNING && now_ms - wifi->started_ms >= LW_WIFI_SCAN_TIMEOUT_MS) {
+    if (wifi->state == LW_WIFI_ST_SCANNING && now_ms - wifi->started_ms >= LW_WIFI_SCAN_TIMEOUT_MS) {
         lw_wifi_on_scan_done(wifi, wifi->scan_generation, NULL, 0, false);
         return;
     }
-    if (wifi->state == LW_WIFI_CONNECTING) {
+    if (wifi->state == LW_WIFI_ST_CONNECTING) {
         if (wifi->retry_at_ms != 0 && now_ms >= wifi->retry_at_ms) {
             wifi->retry_at_ms = 0;
             wifi->started_ms = now_ms;

@@ -33,6 +33,7 @@ $include = @(
     ('/I' + (Join-Path $root 'firmware/components/lw_core/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_backend/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_system/include')),
+    ('/I' + (Join-Path $root 'firmware/components/lw_net/include')),
     ('/I' + (Join-Path $root 'rpg/include'))
 )
 
@@ -41,12 +42,18 @@ $common = @(
     (Join-Path $root 'firmware/components/lw_core/src/lw_pet.c'),
     (Join-Path $root 'firmware/components/lw_core/src/lw_time.c'),
     (Join-Path $root 'firmware/components/lw_backend/src/lw_store.c'),
-    (Join-Path $root 'firmware/components/lw_system/src/lw_system.c')
+    (Join-Path $root 'firmware/components/lw_system/src/lw_system.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_wifi_model.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_time_service.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_audio.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_services.c'),
+    (Join-Path $root 'tests/host/lw_net_esp_stub.c')
 )
 
 $suites = @(
     @{ name = 'store'; source = (Join-Path $root 'tests/host/test_lw_store.c') },
-    @{ name = 'system'; source = (Join-Path $root 'tests/host/test_lw_system.c') }
+    @{ name = 'system'; source = (Join-Path $root 'tests/host/test_lw_system.c') },
+    @{ name = 'net'; source = (Join-Path $root 'tests/host/test_lw_net.c') }
 )
 
 $failed = $false

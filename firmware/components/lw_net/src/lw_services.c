@@ -30,6 +30,15 @@ void lw_services_init(lw_services_t *services)
     lw_audio_init(&services->audio, services->caps.audio_backend);
 }
 
+void lw_services_set_audio_backend(lw_services_t *services, bool present)
+{
+    if (services == NULL) {
+        return;
+    }
+    services->caps.audio_backend = present;
+    lw_audio_set_sink(&services->audio, present);
+}
+
 void lw_services_start(lw_services_t *services, uint32_t now_ms)
 {
     if (services->started) {
@@ -74,7 +83,7 @@ void lw_services_poll(lw_services_t *services, uint32_t now_ms)
     run_actions(services, now_ms);
 
     /* Once the link is up, ask for the wall clock; retry while it is missing. */
-    if (lw_wifi_state(&services->wifi) == LW_WIFI_CONNECTED && services->caps.time_backend) {
+    if (lw_wifi_state(&services->wifi) == LW_WIFI_ST_CONNECTED && services->caps.time_backend) {
         lw_time_state_t state = lw_time_state(&services->time);
         if (state == LW_TIME_DEMO || state == LW_TIME_FAILED) {
             if (services->sync_retry_at_ms == 0 || now_ms >= services->sync_retry_at_ms) {
@@ -84,7 +93,7 @@ void lw_services_poll(lw_services_t *services, uint32_t now_ms)
                 services->sync_retry_at_ms = now_ms + TIME_SYNC_RETRY_MS;
             }
         }
-    } else if (lw_wifi_state(&services->wifi) != LW_WIFI_CONNECTED) {
+    } else if (lw_wifi_state(&services->wifi) != LW_WIFI_ST_CONNECTED) {
         services->sync_retry_at_ms = 0;
         lw_time_service_on_network_lost(&services->time, now_ms);
     }
