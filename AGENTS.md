@@ -1,6 +1,6 @@
 # Little World 2.0 · Codex 工作区规则
 
-集成工作区 D:\LittleWorld-Codex-Integration / agent/os-v2-rpg-integration。rpg/ 与 tests/host/test_rpg.c 固定来源70484cfc1e585a70d403b23f93aae8802ab1fdbf，禁止修改；UI宿主、测试与文件缓存由Codex维护。
+集成副本 D:\LittleWorld-Codex-Integration / agent/os-v2-rpg-integration；验证后同步正式Codex工作区 D:\LittleWorld-Codex / agent/littleworld-os-v2。rpg/ 与 tests/host/test_rpg.c 固定来源70484cfc1e585a70d403b23f93aae8802ab1fdbf，禁止修改；UI宿主、测试与文件缓存由Codex维护。
 
 适用本工作区全部文件。本轮用户明确授权 P2 正式 Windows 系统入口、P3 RPG 集成、P4 文件资源基础设施及推送代码。以下旧 P0/P1 范围限制以此更新为准；固件稳定入口保留。
 - 本轮男方 Meowa 挑战已在独立 agent/codex-meowa-challenge 分支完成一次，禁止自动追加收费。代码和男方测试图可以公开；所有含 Qianqian 的新图留本地。已有历史不擅自重写。
