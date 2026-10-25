@@ -31,7 +31,8 @@ static double cpu_ms(void)
     return (double)(k+u)/10000.0;
 }
 static bool brightness(void *c,unsigned n) { (void)c; return n>=10 && n<=100; }
-static bool volume(void *c,unsigned n,bool muted) { (void)c; (void)muted; return n<=100; }
+static bool reject_volume;
+static bool volume(void *c,unsigned n,bool muted) { (void)c; (void)muted; return n<=100 && !reject_volume; }
 static bool load(void *c,uint8_t bytes[LW_SYS_PREF_BYTES])
 { (void)c; FILE *f=fopen(settings_path,"rb"); if (!f) return false; size_t n=fread(bytes,1,LW_SYS_PREF_BYTES,f); bool extra=fgetc(f)!=EOF; fclose(f); return n==LW_SYS_PREF_BYTES && !extra; }
 static bool store(void *c,const uint8_t bytes[LW_SYS_PREF_BYTES])
@@ -163,7 +164,7 @@ static void experience_tests(lw_system_t *system,const char *out)
     tap(OC_MUSIC); tap_text("播放"); CHECK("music explicitly identifies simulated playback",text_object(lw_os_root(),"模拟播放中 · 没有真实声音输出")!=NULL);
     lv_obj_t *seek=find_class(lw_os_root(),&lv_slider_class); CHECK("music has a real seek control",seek!=NULL);
     if (seek) { lv_obj_get_coords(seek,&a); p->x=a.x1+2; p->y=(a.y1+a.y2)/2; p->pressed=1; advance(60); p->x=a.x1+(a.x2-a.x1)*3/4; advance(100); p->pressed=0; advance(100); CHECK("pointer seek changes simulated track position",lv_slider_get_value(seek)>=70 && lv_slider_get_value(seek)<=80); }
-    shot(out,"29-music-simulated"); tap_text("暂停"); tap(OC_HOME);
+    shot(out,"29-music-simulated"); unsigned original_volume=system->prefs.volume; reject_volume=true; tap_text("+"); CHECK("backend failure rolls music preference back",system->prefs.volume==original_volume && lw_app_state()->music_volume==original_volume); reject_volume=false; tap_text("+"); CHECK("successful music volume is shared with OS",system->prefs.volume==lw_app_state()->music_volume && system->prefs.volume>original_volume); tap_text("暂停"); tap(OC_HOME);
     tap(OC_GAMES); static const char *const games[]={"2048","贪吃蛇","打砖块"};
     for (unsigned i=0;i<3;i++) {
         tap_text(games[i]); tap_text("暂停"); CHECK("game actually enters paused state",lw_arcade_is_paused()); uint32_t steps=lw_arcade_steps(); advance(1200); CHECK("paused game never advances its algorithm",lw_arcade_steps()==steps); if (i==1) shot(out,"30-game-pause"); tap_text("继续游戏"); CHECK("game resumes",!lw_arcade_is_paused()); tap_text("返回游戏中心");

@@ -578,10 +578,11 @@ static void tick(lv_timer_t *timer)
         else if (s->overlay==OS_OVER_PASSWORD && s->system->wifi==LW_WIFI_FAILED) lv_label_set_text(s->over_controls[OC_WIFI_STATUS],"连接失败，请重新输入密码。");
     }
     if (s->last_revision!=s->system->revision) {
-        s->last_revision=s->system->revision; lw_app_state()->music_volume=s->system->prefs.volume; s->last_legacy_volume=s->system->prefs.volume; refresh();
+        s->last_revision=s->system->revision; lw_app_state()->music_volume=s->system->prefs.volume; s->last_legacy_volume=s->system->prefs.volume; lw_music_shared_volume_changed(); refresh();
     } else if (s->legacy==&lw_app_music_def && lw_app_state()->music_volume!=s->last_legacy_volume) {
-        if (lw_os_volume_available()) { lw_system_volume(s->system,lw_app_state()->music_volume); lw_system_save(s->system); }
-        else lw_app_state()->music_volume=s->system->prefs.volume;
+        if (lw_os_volume_available() && lw_system_volume(s->system,lw_app_state()->music_volume)) lw_system_save(s->system);
+        else { lw_app_state()->music_volume=s->system->prefs.volume; lw_app_state_save(); lw_os_notify("音量调节未成功"); }
+        lw_music_shared_volume_changed();
         s->last_legacy_volume=s->system->prefs.volume;
     }
     if (s->toast) { s->toast_ms=s->toast_ms>dt ? s->toast_ms-dt : 0; if (!s->toast_ms) { lv_obj_delete(s->toast); s->toast=NULL; } }

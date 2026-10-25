@@ -17,3 +17,4 @@ bool lw_memories_set_source(const lw_memory_t *,unsigned);
 void lw_memories_open_tab(int);
 bool lw_arcade_is_paused(void);
 uint32_t lw_arcade_steps(void);
+void lw_music_shared_volume_changed(void);

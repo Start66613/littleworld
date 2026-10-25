@@ -33,6 +33,8 @@ static lv_obj_t *s_rows[TRACK_COUNT];
 static lv_obj_t *s_row_titles[TRACK_COUNT];
 static lv_obj_t *s_row_artists[TRACK_COUNT];
 static lv_timer_t *s_timer;
+void lw_music_shared_volume_changed(void)
+{ if (s_volume_label) lv_label_set_text_fmt(s_volume_label,"%u%%",(unsigned)lw_app_state()->music_volume); }
 
 static void refresh(void)
 {
