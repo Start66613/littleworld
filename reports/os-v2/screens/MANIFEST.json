@@ -1,0 +1,99 @@
+{
+    "schema":  "littleworld.os-evidence/1",
+    "captured_at":  "2026-10-25T17:26:55",
+    "captured_by":  "DSH, running Codex tools/run_os_v2.ps1 -Test -SkipBuild",
+    "checks":  {
+                   "os_v2":  73,
+                   "duo_model":  82,
+                   "system_model":  22,
+                   "failures":  0
+               },
+    "notes":  [
+                  "Characters shown are original qianqian (DesktopPet b00a700) and the TEST A placeholder; the male sprite is pending.",
+                  "Screenshots are the real LVGL framebuffer, not concept art.",
+                  "No board test: this is the Windows mock only."
+              ],
+    "screens":  [
+                    {
+                        "path":  "reports/os-v2/screens/01-desktop.png",
+                        "sha256":  "7a23d2cb78588a30362a46b8c25b5a9f19d6df59035bbf46c274d07b97679948",
+                        "bytes":  58749,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/02-control-center.png",
+                        "sha256":  "356e09117191de0242238871a75f73cbe028b1d5f7ae2daed0cc774228ee9668",
+                        "bytes":  57400,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/03-wifi-list.png",
+                        "sha256":  "47abc59aa13ef6a159c2c44a455a97b425982637b647bc9fe74897eca2665f21",
+                        "bytes":  71949,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/04-settings.png",
+                        "sha256":  "dd1e56f754711fb6170f15fb41b7b6b660a8e76c9469b161f8312e219ecca67b",
+                        "bytes":  50797,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/05-themes.png",
+                        "sha256":  "06d57877c630a62ab21903aedabb1ada4abc6048d850008de4c1a5db7265b3da",
+                        "bytes":  55453,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/06-lockscreen.png",
+                        "sha256":  "b88edd620629aa48cb37dce3607559ea8d9921512fc2f23d6329f97fc311da17",
+                        "bytes":  26795,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/07-pixel-world.png",
+                        "sha256":  "817d6005c1379bad2bca6ecbf5e113a5be9bd74239360c05ccb99efa3a3814b7",
+                        "bytes":  53108,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/08-wifi-password.png",
+                        "sha256":  "d00d8fb8a8da7ab9bcb397e1e3c0c6f83f979b805f4724b84d154c22863e3ad2",
+                        "bytes":  58874,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    },
+                    {
+                        "path":  "reports/os-v2/screens/09-moonlight-desktop.png",
+                        "sha256":  "133453e88729f1b79bf750936d0dc1dfa9ebb3437278ee270c0ae8294684b8fb",
+                        "bytes":  60546,
+                        "width":  1024,
+                        "height":  600,
+                        "source":  "real Windows LVGL framebuffer (LittleWorld.exe --os-v2-test)",
+                        "final_artwork":  false
+                    }
+                ]
+}
