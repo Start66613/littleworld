@@ -1,6 +1,8 @@
 # Little World 2.0 · Codex 工作区规则
 
-本轮P5用户授权优先：分支agent/os-v2-experience-v3，基线31dba23，工作区D:\LittleWorld-Codex。主要修改UI/Host测试/规范；禁止修改firmware/main、lw_system硬件服务、lw_storage、冻结rpg核心及其85项测试、lw_core/arcade_core算法。新能力仅定义UI契约和Host样例，不抢DSH后端实现。允许推送本分支代码/非敏感报告；含Qianqian的新截图仍本地。无Meowa收费、无设备连接、无刷写。旧P0/P1范围不阻塞本轮已授权应用体验升级。
+最新追加授权（2026-10-25）：用户要求将成功运行的新UI截图也推送GitHub。允许公开reports/os-v3/SCREENSHOTS.json明确列出的31张渲染后PNG（包括Qianqian画面），发布副本在reports/os-v3/screenshots；此条覆盖下方旧的截图仅本地限制，但不授权公开角色源文件、资源包、私照、密钥或存档。
+
+本轮P5用户授权优先：分支agent/os-v2-experience-v3，基线31dba23，工作区D:\LittleWorld-Codex。主要修改UI/Host测试/规范；禁止修改firmware/main、lw_system硬件服务、lw_storage、冻结rpg核心及其85项测试、lw_core/arcade_core算法。新能力仅定义UI契约和Host样例，不抢DSH后端实现。允许推送本分支代码/非敏感报告；本轮31张UI截图按上述追加授权公开。无Meowa收费、无设备连接、无刷写。旧P0/P1范围不阻塞本轮已授权应用体验升级。
 
 集成副本 D:\LittleWorld-Codex-Integration / agent/os-v2-rpg-integration；验证后同步正式Codex工作区 D:\LittleWorld-Codex / agent/littleworld-os-v2。rpg/ 与 tests/host/test_rpg.c 固定来源70484cfc1e585a70d403b23f93aae8802ab1fdbf，禁止修改；UI宿主、测试与文件缓存由Codex维护。
 

@@ -115,7 +115,9 @@
       600
     ],
     "png_matches_original_framebuffer": true,
-    "local_only": true
+    "local_only": false,
+    "public_images_authorized": true,
+    "directory": "reports/os-v3/screenshots"
   },
   "meowa_paid_calls": 0,
   "hardware_operations": 0,

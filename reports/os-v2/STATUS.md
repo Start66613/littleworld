@@ -1,6 +1,6 @@
 # OS 本轮状态
 
-当前已推进P5：独立agent/os-v2-experience-v3的体验与回归报告位于../os-v3/DELIVERY.md、VERIFICATION.json。以下为31dba23基线历史，不代表本轮最新检查数量或硬件范围。P5无Meowa调用，新截图仍仅本地。
+当前已推进P5：独立agent/os-v2-experience-v3的体验与回归报告位于../os-v3/DELIVERY.md、VERIFICATION.json。以下为31dba23基线历史，不代表本轮最新检查数量或硬件范围。P5无Meowa调用；用户随后追加授权公开P5的31张UI截图，见../os-v3/screenshots/README.md，以下历史截图限制不适用于这31张。
 
 2026-10-25最终更新：本轮四项已真实执行，详见DELIVERY.md/DELIVERY.json。
 
