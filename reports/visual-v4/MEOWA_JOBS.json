@@ -46,7 +46,14 @@
       "exit_code": 0,
       "finished": "2026-10-26T02:27:09.433263+08:00",
       "balance_after": 2669,
-      "observed_balance_decrease": 35
+      "observed_balance_decrease": 35,
+      "cumulative_actual_credits": 35,
+      "published_outputs": [
+        "assets/visual-v4/characters/male/idle-original.webp",
+        "assets/visual-v4/characters/male/idle.json",
+        "assets/visual-v4/characters/male/idle.gif"
+      ],
+      "user_visual_approval": "pending"
     },
     {
       "name": "sakura-morning",
@@ -79,7 +86,10 @@
       "finished": "2026-10-26T02:28:47.256488+08:00",
       "balance_after": 2669,
       "observed_balance_decrease": 0,
-      "quoted_upper_bound": 22
+      "quoted_upper_bound": 22,
+      "cumulative_actual_credits": 35,
+      "published_outputs": [],
+      "user_visual_approval": "not applicable"
     },
     {
       "name": "sakura-morning-retry1",
@@ -107,11 +117,18 @@
       "balance_before": 2669,
       "status": "downloaded",
       "job_id": "job_ddaea059d1274b868e193d5af17084a4",
-      "acceptance": "pending visual inspection",
+      "acceptance": "Master and real LVGL placement visually reviewed: matching furniture/camera; cherry morning sky and natural left light; lamp off; no people or lettering; accepted for this integration candidate.",
       "exit_code": 0,
       "finished": "2026-10-26T02:33:15.763468+08:00",
       "balance_after": 2647,
-      "observed_balance_decrease": 22
+      "observed_balance_decrease": 22,
+      "cumulative_actual_credits": 57,
+      "published_outputs": [
+        "assets/visual-v4/scenes/sakura-morning-master.png",
+        "assets/visual-v4/scenes/sakura-morning.png",
+        "assets/visual-v4/runtime/scene-0.lwr"
+      ],
+      "user_visual_approval": "pending"
     },
     {
       "name": "moonlight-dream",
@@ -139,12 +156,19 @@
       "balance_before": 2647,
       "status": "downloaded",
       "job_id": "job_9786e2bc1b33426e951822c844dc375e",
-      "acceptance": "pending visual inspection",
+      "acceptance": "Master and real LVGL placement visually reviewed: matching furniture/camera; blue-purple window, moon/stars and warm lamp; static light strings, no flashing; accepted for this integration candidate.",
       "exit_code": 0,
       "finished": "2026-10-26T02:37:23.911135+08:00",
       "official_credit_cost": 22,
       "balance_after": 2625,
-      "observed_balance_decrease": 22
+      "observed_balance_decrease": 22,
+      "cumulative_actual_credits": 79,
+      "published_outputs": [
+        "assets/visual-v4/scenes/moonlight-dream-master.png",
+        "assets/visual-v4/scenes/moonlight-dream.png",
+        "assets/visual-v4/runtime/scene-1.lwr"
+      ],
+      "user_visual_approval": "pending"
     },
     {
       "name": "male-wave",
@@ -182,11 +206,18 @@
       "balance_before": 2625,
       "status": "downloaded",
       "job_id": "job_f8c64c1f9a0842a09933adf436e65af7",
-      "acceptance": "pending visual inspection",
+      "acceptance": "All 16 frames visually inspected: fixed Codex face, fluffy hair, white shirt and dark shorts retained; stable planted feet and happy eye closure; global y=-1px only, retimed 100ms/frame; accepted for this integration candidate.",
       "exit_code": 0,
       "finished": "2026-10-26T02:45:30.572850+08:00",
       "balance_after": 2580,
-      "observed_balance_decrease": 45
+      "observed_balance_decrease": 45,
+      "cumulative_actual_credits": 124,
+      "published_outputs": [
+        "assets/visual-v4/characters/male/wave-generation-original.webp",
+        "assets/visual-v4/characters/male/wave.json",
+        "assets/visual-v4/characters/male/wave.gif"
+      ],
+      "user_visual_approval": "pending"
     },
     {
       "name": "qianqian-wave",
@@ -228,7 +259,14 @@
       "exit_code": 0,
       "finished": "2026-10-26T02:52:24.718945+08:00",
       "balance_after": 2535,
-      "observed_balance_decrease": 45
+      "observed_balance_decrease": 45,
+      "cumulative_actual_credits": 169,
+      "published_outputs": [
+        "assets/visual-v4/characters/qianqian/wave-generation-original.webp",
+        "assets/visual-v4/characters/qianqian/wave.json",
+        "assets/visual-v4/characters/qianqian/wave.gif"
+      ],
+      "user_visual_approval": "pending"
     }
   ],
   "actual_credits_spent": 169,

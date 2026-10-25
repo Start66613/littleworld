@@ -1,4 +1,10 @@
-# Little World OS 2.0 当前开发入口
+# Little World V4 · 当前开发入口
+
+本分支 `agent/visual-v4-meowa-motion` 在稳定版上集成三套像素小屋、固定身份双角色动画和可操作的原生LVGL动效。**[点击看三主题与真实运行动态预览](reports/visual-v4/README.md)**；[最终报告与未完成事项](reports/visual-v4/FINAL_REPORT.md)。工作区 `D:\LittleWorld-V4-Visual`，双击 **Start-Visual-V4.bat** 自动构建并运行 Windows 模拟器；完整回归入口 `tools/verify_visual_v4.ps1`。
+
+最终Windows正常489/缺角色472/缺场景487项零失败，ESP-IDF5.5.5离线编译通过；尚未把新大资源接到硬件启动入口，未板测、未刷写。本轮素材/运行截图按V4用户授权公开，角色包、私照、认证和存档不公开。以下为历史开发入口说明。
+
+# Little World OS 2.0 历史开发入口
 
 当前工作在 `agent/littleworld-os-v2`；系统设计见 [SYSTEM_DESIGN.md](docs/design/SYSTEM_DESIGN.md)，本轮进度见 [STATUS.md](reports/os-v2/STATUS.md)。`pwsh -NoProfile -File tools/run_os_v2.ps1` 自动构建并打开可操作的 Windows LVGL 原型；加 `-Test` 自动运行检查与截图。网络/亮度/声音为 Windows Mock，真实硬件适配状态独立记录。所有新数据在 D 盘，稳定固件入口保留。
 
