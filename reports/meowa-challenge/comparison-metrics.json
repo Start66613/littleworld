@@ -1,0 +1,374 @@
+[
+  {
+    "name": "原版 Qianqian",
+    "source": "D:\\Espressif\\LittleWorld\\sources\\DesktopPet\\assets\\sprites\\idle\\idle_01.png",
+    "metrics": {
+      "canvas": [
+        256,
+        256
+      ],
+      "solid_bbox": [
+        78,
+        28,
+        176,
+        226
+      ],
+      "visible_size": [
+        98,
+        198
+      ],
+      "solid_colors": 716,
+      "partial_alpha": 0,
+      "top_colors": [
+        {
+          "rgb": [
+            57,
+            56,
+            52
+          ],
+          "pixels": 3130
+        },
+        {
+          "rgb": [
+            252,
+            245,
+            241
+          ],
+          "pixels": 1641
+        },
+        {
+          "rgb": [
+            252,
+            227,
+            210
+          ],
+          "pixels": 1314
+        },
+        {
+          "rgb": [
+            244,
+            178,
+            176
+          ],
+          "pixels": 743
+        },
+        {
+          "rgb": [
+            35,
+            34,
+            31
+          ],
+          "pixels": 527
+        },
+        {
+          "rgb": [
+            80,
+            79,
+            76
+          ],
+          "pixels": 416
+        },
+        {
+          "rgb": [
+            241,
+            214,
+            209
+          ],
+          "pixels": 361
+        },
+        {
+          "rgb": [
+            238,
+            174,
+            152
+          ],
+          "pixels": 258
+        }
+      ]
+    },
+    "translation": [
+      1,
+      0
+    ],
+    "scale": 1
+  },
+  {
+    "name": "DSH A",
+    "source": "D:\\LittleWorld-Meowa\\characters\\v3a_pair\\sprite_00.png",
+    "metrics": {
+      "canvas": [
+        256,
+        256
+      ],
+      "solid_bbox": [
+        71,
+        18,
+        184,
+        238
+      ],
+      "visible_size": [
+        113,
+        220
+      ],
+      "solid_colors": 478,
+      "partial_alpha": 1287,
+      "top_colors": [
+        {
+          "rgb": [
+            51,
+            51,
+            58
+          ],
+          "pixels": 2724
+        },
+        {
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "pixels": 2285
+        },
+        {
+          "rgb": [
+            34,
+            32,
+            44
+          ],
+          "pixels": 862
+        },
+        {
+          "rgb": [
+            254,
+            218,
+            193
+          ],
+          "pixels": 740
+        },
+        {
+          "rgb": [
+            30,
+            28,
+            42
+          ],
+          "pixels": 583
+        },
+        {
+          "rgb": [
+            254,
+            221,
+            198
+          ],
+          "pixels": 572
+        },
+        {
+          "rgb": [
+            91,
+            91,
+            100
+          ],
+          "pixels": 448
+        },
+        {
+          "rgb": [
+            47,
+            46,
+            57
+          ],
+          "pixels": 419
+        }
+      ]
+    },
+    "translation": [
+      1,
+      -12
+    ],
+    "scale": 1
+  },
+  {
+    "name": "DSH B",
+    "source": "D:\\LittleWorld-Meowa\\characters\\v3b_pair\\sprite_00.png",
+    "metrics": {
+      "canvas": [
+        256,
+        256
+      ],
+      "solid_bbox": [
+        67,
+        18,
+        187,
+        239
+      ],
+      "visible_size": [
+        120,
+        221
+      ],
+      "solid_colors": 338,
+      "partial_alpha": 1330,
+      "top_colors": [
+        {
+          "rgb": [
+            48,
+            47,
+            53
+          ],
+          "pixels": 1634
+        },
+        {
+          "rgb": [
+            50,
+            50,
+            56
+          ],
+          "pixels": 1594
+        },
+        {
+          "rgb": [
+            249,
+            254,
+            255
+          ],
+          "pixels": 1276
+        },
+        {
+          "rgb": [
+            32,
+            30,
+            41
+          ],
+          "pixels": 957
+        },
+        {
+          "rgb": [
+            254,
+            216,
+            192
+          ],
+          "pixels": 857
+        },
+        {
+          "rgb": [
+            28,
+            26,
+            38
+          ],
+          "pixels": 724
+        },
+        {
+          "rgb": [
+            65,
+            65,
+            71
+          ],
+          "pixels": 474
+        },
+        {
+          "rgb": [
+            254,
+            211,
+            186
+          ],
+          "pixels": 453
+        }
+      ]
+    },
+    "translation": [
+      1,
+      -13
+    ],
+    "scale": 1
+  },
+  {
+    "name": "Codex 单次",
+    "source": "D:\\LittleWorld-Codex-Challenge\\assets\\meowa-challenge\\male-native.png",
+    "metrics": {
+      "canvas": [
+        256,
+        256
+      ],
+      "solid_bbox": [
+        75,
+        24,
+        179,
+        232
+      ],
+      "visible_size": [
+        104,
+        208
+      ],
+      "solid_colors": 4889,
+      "partial_alpha": 0,
+      "top_colors": [
+        {
+          "rgb": [
+            56,
+            57,
+            52
+          ],
+          "pixels": 1285
+        },
+        {
+          "rgb": [
+            253,
+            243,
+            241
+          ],
+          "pixels": 947
+        },
+        {
+          "rgb": [
+            55,
+            56,
+            51
+          ],
+          "pixels": 415
+        },
+        {
+          "rgb": [
+            253,
+            245,
+            242
+          ],
+          "pixels": 203
+        },
+        {
+          "rgb": [
+            56,
+            57,
+            51
+          ],
+          "pixels": 155
+        },
+        {
+          "rgb": [
+            55,
+            56,
+            50
+          ],
+          "pixels": 115
+        },
+        {
+          "rgb": [
+            59,
+            60,
+            55
+          ],
+          "pixels": 98
+        },
+        {
+          "rgb": [
+            252,
+            225,
+            206
+          ],
+          "pixels": 95
+        }
+      ]
+    },
+    "translation": [
+      1,
+      -6
+    ],
+    "scale": 1
+  }
+]
