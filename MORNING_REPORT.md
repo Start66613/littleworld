@@ -178,3 +178,38 @@ partition: nvs 0x9000/0x6000, phy_init 0xF000/0x1000, factory 0x10000/0x600000, 
   `arcade_core`，MIT）。
 - 今晚**没有**打开串口、没有刷机、没有读写 Flash、没有动 eFuse/C6。
 - 所有“通过”都对应真实执行过的命令与产物；未执行的项目在表中写的是“未开始/部分完成”。
+---
+
+## 7. 实板验证（2026-10-25 11:20 起，开发板已连接）
+
+刷机：`esptool --chip esp32p4 -p COM5 -b 460800 write_flash 0x10000 little_world.bin`，写入 1,199,920 B，**Hash of data verified**。
+
+启动日志（串口 115200，节选）：
+
+```
+I (906) app_init: Project name:     little_world
+I (936) efuse_init: Min chip rev:     v3.0
+I (940) efuse_init: Max chip rev:     v3.99
+I (940) efuse_init: Chip rev:         v3.2
+I (1066) ESP32_P4_EV: Install EK79007 LCD control panel
+I (1244) ESP32_P4_EV: Display initialized
+I (1260) ESP32_P4_EV: Touch 0x5d found
+I (1296) esp_lvgl:adapter: LVGL task started successfully
+I (1301) ESP32_P4_EV: Setting LCD backlight: 100%
+I (1339) littleworld: boot: Little World ready, free heap 29017551 B
+```
+
+结论：
+
+| 项目 | 结果 |
+|---|---|
+| 启动 / 分区 / 镜像头 | 正常，chip rev v3.2 落在 [3.0, 3.99] |
+| 显示 | 正常，1024×600，方向正确，能看到 Little World 首页 |
+| 触摸 | **初版反向**：`mirror_x=1, mirror_y=1` 导致点左响应右、点上响应下；改成 `0/0` 后"指哪打哪" |
+| 背光 | 亮；但日志有 `W ledc: GPIO 32 is not usable`，亮度调节（PWM）大概率不可用，暂按"常亮 100%"记 |
+| 运行稳定性 | 连续 60 秒串口无 panic / 无重启 / 无 LVGL 报错 |
+
+已知硬件侧限制：
+
+1. `ledc` 无法占用 GPIO 32（BSP 定义的背光脚），因此 `bsp_display_brightness_set()` 不生效；屏幕保持常亮。
+2. GT911 触摸在 IRQ 模式下未启用（BSP 默认轮询），单点触摸可用。

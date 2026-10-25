@@ -99,8 +99,8 @@ void app_main(void)
         .tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_PARTIAL,
         .touch_flags = {
             .swap_xy = 0,
-            .mirror_x = 1,
-            .mirror_y = 1,
+            .mirror_x = 0,
+            .mirror_y = 0,
         },
     };
 
