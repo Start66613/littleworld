@@ -32,3 +32,5 @@
 /reports/ui-v2/**/*.bmp
 /build-ui-v2/
 __pycache__/
+*.lwpx
+*.rgb565a8

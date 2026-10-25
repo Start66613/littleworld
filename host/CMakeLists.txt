@@ -7,6 +7,12 @@ set(LVGL_DIR "${CMAKE_CURRENT_LIST_DIR}/../firmware/managed_components/lvgl__lvg
 if(NOT EXISTS "${LVGL_DIR}/lvgl.h")
     message(FATAL_ERROR "LVGL not found at ${LVGL_DIR}; build the firmware once so the component manager fetches it")
 endif()
+file(READ "${LVGL_DIR}/lv_version.h" LVGL_VERSION_HEADER)
+if(NOT LVGL_VERSION_HEADER MATCHES "LVGL_VERSION_MAJOR 9" OR
+   NOT LVGL_VERSION_HEADER MATCHES "LVGL_VERSION_MINOR 5" OR
+   NOT LVGL_VERSION_HEADER MATCHES "LVGL_VERSION_PATCH 0")
+    message(FATAL_ERROR "Little World requires pinned LVGL 9.5.0")
+endif()
 
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 set(CONFIG_LV_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
@@ -20,18 +26,22 @@ file(GLOB LW_UI_ARCADE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components
 file(GLOB LW_UI_FONTS "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/fonts/*.c")
 file(GLOB LW_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/src/*.c")
 file(GLOB ARCADE_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/src/*.c")
+file(GLOB LW_DUO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/src/*.c")
 
 add_executable(LittleWorld
     main_host.c
     auto_host.c
     ui_v2_test.c
+    pixel_pack.c
+    pixel_duo_host.c
     win_display.c
     host_platform.c
     ${LW_UI_SOURCES}
     ${LW_UI_ARCADE_SOURCES}
     ${LW_UI_FONTS}
     ${LW_CORE_SOURCES}
-    ${ARCADE_CORE_SOURCES})
+    ${ARCADE_CORE_SOURCES}
+    ${LW_DUO_SOURCES})
 
 target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}"
@@ -39,6 +49,7 @@ target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/src"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/include"
+    "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/include"
     "${LVGL_DIR}")
 
 target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
@@ -47,4 +58,10 @@ if(MSVC)
     target_compile_options(LittleWorld PRIVATE /utf-8)
 endif()
 
-target_link_libraries(LittleWorld PRIVATE lvgl user32 gdi32)
+target_link_libraries(LittleWorld PRIVATE lvgl user32 gdi32 psapi)
+
+add_executable(PixelDuoModelTests ../tests/host/test_lw_duo.c ${LW_DUO_SOURCES})
+target_include_directories(PixelDuoModelTests PRIVATE ../firmware/components/lw_duo/include)
+if(MSVC)
+    target_compile_options(PixelDuoModelTests PRIVATE /W4 /WX /utf-8)
+endif()

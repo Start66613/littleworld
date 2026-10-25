@@ -1,5 +1,16 @@
 # Little World
 
+> **2026-10-25 · Codex 像素双角色开发分支**：当前工作区 `D:\LittleWorld-Codex`，分支 `agent/pixel-duo`；稳定 DSH 主线与 `art/batch-1` 保留。女方复用 DesktopPet 的 qianqian，男方尚待 DSH/用户确认，当前只用 TEST A 占位。见 [当前状态](docs/PIXEL_DUO_STATUS.md)、[像素契约](docs/PIXEL_CHARACTER_CONTRACT.md)、[架构](docs/PIXEL_DUO_ARCHITECTURE.md)。默认旧版应用未替换，不涉及刷机。
+
+```powershell
+# 自动导出原角色、构建并打开 Windows 真实 LVGL 双角色技术预览
+pwsh -NoProfile -File D:\LittleWorld-Codex\tools\run_pixel_duo.ps1
+# 同一入口执行模型/双角色生命周期与真实截图验证
+pwsh -NoProfile -File D:\LittleWorld-Codex\tools\run_pixel_duo.ps1 -Test
+```
+
+角色参考图集与实际运行截图位于本地忽略的 `private/pixel-duo/`；未经用户确认与另行授权公开不提交公共仓库。下文为稳定基线的原说明，早期 C 盘路径仅作历史记录，当前新增内容一律使用 D 盘。
+
 送给她的两周年礼物：一台能长期长大的小世界。
 
 硬件是 **Waveshare ESP32-P4-WIFI6-Touch-LCD-7B**（7 英寸 1024×600 触摸屏，ESP32-P4 v3.2，32 MB Flash），

@@ -46,7 +46,7 @@ if ($Reconfigure -or -not (Test-Path (Join-Path $buildDir 'build.ninja'))) {
 }
 
 Write-Host 'building...'
-& ninja -C $buildDir
+& ninja -j 2 -C $buildDir
 if ($LASTEXITCODE -ne 0) { throw "build failed ($LASTEXITCODE)" }
 
 $exe = Join-Path $buildDir 'LittleWorld.exe'

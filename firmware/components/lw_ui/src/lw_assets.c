@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "lw_assets.h"
+#include "src/misc/cache/instance/lv_image_cache.h"
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
