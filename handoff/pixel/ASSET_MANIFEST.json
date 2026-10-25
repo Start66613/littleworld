@@ -1,0 +1,75 @@
+{
+    "schema":  "littleworld.pixel-assets/1",
+    "contract_version":  "1.0.1",
+    "delivered_at":  "2026-10-25T16:56:53",
+    "deliverer":  "DSH (Meowa agent)",
+    "branch":  "rpg/meowa-v3",
+    "summary":  "Static male candidates only. None pass the 1.0.1 contract yet; see ASSET_REPORT.md for the measured gap and the fix plan.",
+    "assets":  [
+                   {
+                       "character_id":  "male_candidate_base",
+                       "status":  "candidate",
+                       "contract_compliant":  false,
+                       "path":  "assets/rpg/characters/boy_front_base.png",
+                       "sha256":  "474fe2cb8cc136ddfdeb2a3f5a253a3af11cd34968b509285828ead3617c3d55",
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "visible_height_px":  215,
+                       "feet_y":  225,
+                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
+                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
+                       "note":  "Batch2 P1, aligned feet 225"
+                   },
+                   {
+                       "character_id":  "male_candidate_A_sunny",
+                       "status":  "candidate",
+                       "contract_compliant":  false,
+                       "path":  "assets/rpg/characters/variants/A_sunny.png",
+                       "sha256":  "225007c2b36b35263a8e937415c4c0cde8ca6e5aa1415e7c149a64acbacd1a4d",
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "visible_height_px":  215,
+                       "feet_y":  225,
+                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
+                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
+                       "note":  "free local face edit"
+                   },
+                   {
+                       "character_id":  "male_candidate_B_gentle",
+                       "status":  "candidate",
+                       "contract_compliant":  false,
+                       "path":  "assets/rpg/characters/variants/B_gentle.png",
+                       "sha256":  "d5acfcc4b9d2905eff245d778a985d7504f3ff0f709d9a684abbde68037ab33c",
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "visible_height_px":  215,
+                       "feet_y":  225,
+                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
+                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
+                       "note":  "free local face edit"
+                   },
+                   {
+                       "character_id":  "male_candidate_C_playful",
+                       "status":  "candidate",
+                       "contract_compliant":  false,
+                       "path":  "assets/rpg/characters/variants/C_playful.png",
+                       "sha256":  "9bd39bc845dcfd7e0f477b46e106d5cd1a6758b2b61bd3d8bd44d2ee533c2d5b",
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "visible_height_px":  215,
+                       "feet_y":  225,
+                       "grid":  "2x upscaled (row diff ratio 0.19, column diff ratio 9.0)",
+                       "verdict":  "rejected_for_contract: height must be 192-204 and the grid must be native 1px",
+                       "note":  "free local face edit"
+                   }
+               ],
+    "qianqian_reference":  "assets/batch-2/female/qianqian_idle_01.png (from DesktopPet b00a700, already published in art-assets by user request)"
+}

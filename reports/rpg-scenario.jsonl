@@ -1,0 +1,11 @@
+﻿{"tag":"spawn","px":6,"py":5,"qx":9,"qy":5,"moving":0,"progress":0,"total":3,"complete":0,"dialogue":0,"line":0,"speaker":"","text":""}
+{"tag":"walking","px":5,"py":4,"qx":8,"qy":5,"moving":1,"progress":0,"total":3,"complete":0,"dialogue":0,"line":0,"speaker":"","text":""}
+{"tag":"at_photo","px":5,"py":3,"qx":5,"qy":5,"moving":0,"progress":0,"total":3,"complete":0,"dialogue":0,"line":0,"speaker":"","text":""}
+{"tag":"dialogue_photo","px":5,"py":3,"qx":5,"qy":5,"moving":0,"progress":0,"total":3,"complete":0,"dialogue":1,"line":0,"speaker":"男方","text":"照片盒里有一叠空白的相纸。"}
+{"tag":"dialogue_photo_line2","px":5,"py":3,"qx":5,"qy":5,"moving":0,"progress":0,"total":3,"complete":0,"dialogue":1,"line":1,"speaker":"qianqian","text":"（示例）先把它们放进第一页吧。"}
+{"tag":"photo_done","px":5,"py":3,"qx":5,"qy":5,"moving":0,"progress":1,"total":3,"complete":0,"dialogue":0,"line":1,"speaker":"","text":""}
+{"tag":"dialogue_letter","px":9,"py":4,"qx":7,"qy":4,"moving":0,"progress":1,"total":3,"complete":0,"dialogue":1,"line":0,"speaker":"男方","text":"桌上有一封还没写地址的信。"}
+{"tag":"letter_done","px":9,"py":4,"qx":7,"qy":4,"moving":0,"progress":2,"total":3,"complete":0,"dialogue":0,"line":1,"speaker":"","text":""}
+{"tag":"dialogue_plant","px":3,"py":3,"qx":4,"qy":4,"moving":0,"progress":2,"total":3,"complete":0,"dialogue":1,"line":0,"speaker":"qianqian","text":"（示例）小盆栽今天也长高了一点点。"}
+{"tag":"quest_complete","px":3,"py":3,"qx":4,"qy":4,"moving":0,"progress":3,"total":3,"complete":1,"dialogue":0,"line":0,"speaker":"","text":""}
+{"tag":"save_check","bytes":40,"decode":0,"progress":3,"complete":1}
