@@ -1,0 +1,215 @@
+{
+  "job_id": "job_466dffc77e5647cfa02ea58434e8070c",
+  "command": "image-edit-run",
+  "model": "nano-banana",
+  "resolution": "1K",
+  "mode": "pixel",
+  "strict": true,
+  "paid_submissions": 1,
+  "budget_cap": 40,
+  "quoted_conservative_estimate": 12,
+  "balance_before": 2704,
+  "balance_after": 2694,
+  "observed_balance_decrease": 10,
+  "job_response_has_itemized_credit_cost": false,
+  "refund_reported": 0,
+  "cost_note": "Observed account net decrease; no per-job invoice field returned. Concurrent account activity is not attributed to this job.",
+  "qianqian": {
+    "canvas": [
+      256,
+      256
+    ],
+    "solid_bbox": [
+      78,
+      28,
+      176,
+      226
+    ],
+    "visible_size": [
+      98,
+      198
+    ],
+    "solid_colors": 716,
+    "partial_alpha": 0,
+    "top_colors": [
+      {
+        "rgb": [
+          57,
+          56,
+          52
+        ],
+        "pixels": 3130
+      },
+      {
+        "rgb": [
+          252,
+          245,
+          241
+        ],
+        "pixels": 1641
+      },
+      {
+        "rgb": [
+          252,
+          227,
+          210
+        ],
+        "pixels": 1314
+      },
+      {
+        "rgb": [
+          244,
+          178,
+          176
+        ],
+        "pixels": 743
+      },
+      {
+        "rgb": [
+          35,
+          34,
+          31
+        ],
+        "pixels": 527
+      },
+      {
+        "rgb": [
+          80,
+          79,
+          76
+        ],
+        "pixels": 416
+      },
+      {
+        "rgb": [
+          241,
+          214,
+          209
+        ],
+        "pixels": 361
+      },
+      {
+        "rgb": [
+          238,
+          174,
+          152
+        ],
+        "pixels": 258
+      }
+    ]
+  },
+  "male": {
+    "canvas": [
+      256,
+      256
+    ],
+    "solid_bbox": [
+      75,
+      24,
+      179,
+      232
+    ],
+    "visible_size": [
+      104,
+      208
+    ],
+    "solid_colors": 4889,
+    "partial_alpha": 0,
+    "top_colors": [
+      {
+        "rgb": [
+          56,
+          57,
+          52
+        ],
+        "pixels": 1285
+      },
+      {
+        "rgb": [
+          253,
+          243,
+          241
+        ],
+        "pixels": 947
+      },
+      {
+        "rgb": [
+          55,
+          56,
+          51
+        ],
+        "pixels": 415
+      },
+      {
+        "rgb": [
+          253,
+          245,
+          242
+        ],
+        "pixels": 203
+      },
+      {
+        "rgb": [
+          56,
+          57,
+          51
+        ],
+        "pixels": 155
+      },
+      {
+        "rgb": [
+          55,
+          56,
+          50
+        ],
+        "pixels": 115
+      },
+      {
+        "rgb": [
+          59,
+          60,
+          55
+        ],
+        "pixels": 98
+      },
+      {
+        "rgb": [
+          252,
+          225,
+          206
+        ],
+        "pixels": 95
+      }
+    ]
+  },
+  "anchor_aligned": {
+    "translation_pixels": [
+      1,
+      -6
+    ],
+    "scale": 1,
+    "anchor": [
+      128,
+      226
+    ]
+  },
+  "visible_height_difference_px": 10,
+  "source_qianqian_sha256": "cd42b3a8d6bf7cb25acec14a2a6869bd3551a28102f325b76e313a6d27607c56",
+  "public_files": [
+    {
+      "path": "assets/meowa-challenge/male-anchor-aligned.png",
+      "sha256": "b1c7903067ad2b978e3d82289f0624e924a003b01aa3ccc68219ac0e24a1fae7"
+    },
+    {
+      "path": "assets/meowa-challenge/male-native.png",
+      "sha256": "3c054d089831773a98a0df3bd1c95f730815ad723a798b765eb412f9617670d8"
+    },
+    {
+      "path": "assets/meowa-challenge/male-original.png",
+      "sha256": "b040452f9d9bd41983bc9fbc1c9613741cafc574ba397b36348d7926e4538061"
+    }
+  ],
+  "qianqian_composites_publication_authorized": false,
+  "real_photo_uploaded": false,
+  "aesthetic_accepted": false
+}

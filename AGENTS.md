@@ -1,5 +1,7 @@
 # Little World 2.0 · Codex 工作区规则
 
+本工作树为本轮独立美术实验 D:\LittleWorld-Codex-Challenge / agent/codex-meowa-challenge，覆盖下方旧P0/P1范围规则。用户已授权一次独立生成、预算硬上限40积分及代码/男方测试图公开推送。含原版Qianqian的图片仍仅本地，真人照片不上传。首次生成前不读取DSH本轮最终提示词/结果；不改变或覆盖DSH资产。只调用官方已安装CLI，锁文件存在时禁止再次付费提交，只可轮询原job。系统开发在另一个工作树后续推进。
+
 适用本工作区全部文件。当前任务是 Little World OS 的 P0/P1：优先读 docs/design/SYSTEM_DESIGN.md 和 reports/os-v2/STATUS.md；像素契约和已测控制器继续复用。
 - 工作区 D:\LittleWorld-Codex，当前分支 agent/littleworld-os-v2；双角色基线 afa3233 保留于 agent/pixel-duo，稳定基线 8af0637，绘本探索归档于 agent/ui-v2。不得修改 DSH 的 D:\LittleWorld-Main-DSH 源码或覆盖其工作。
 - 所有新增工程文件、资源、缓存、临时文件、模拟器存档、报告与构建均放 D 盘；不清理用户其他文件。
