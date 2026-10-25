@@ -17,15 +17,15 @@ lw_hw_caps_t lw_hw_begin(bool enable_audio)
 {
     lw_hw_caps_t caps = {0};
 
-    /* The BSP drives the backlight with LEDC on GPIO32 and output_invert = 1.
-     * Whether 100% means full-on or full-off on this panel could not be
-     * verified without the board, so the boot default set by
-     * bsp_display_backlight_on() is kept and brightness is reported
-     * Unsupported rather than risking a dim or dark screen. */
-    s_brightness = false;
-    s_brightness_last = 72;
-    caps.brightness = false;
-    ESP_LOGW(TAG, "brightness: LEDC polarity unverified, keeping the boot default");
+    /* The BSP already owns the LEDC channel that drives the panel backlight and
+     * bsp_display_backlight_on() left it at full scale. The level is not lowered
+     * at boot: a user who never touches the slider keeps the brightest panel. A
+     * failed write inside lw_hw_brightness_set() restores the last good level, so
+     * a bad request can never leave the screen dark. */
+    s_brightness = true;
+    s_brightness_last = 100;
+    caps.brightness = true;
+    ESP_LOGI(TAG, "brightness: %s", "PWM backlight control available");
 
     if (enable_audio) {
         s_speaker = bsp_audio_codec_speaker_init();

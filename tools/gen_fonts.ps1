@@ -51,17 +51,36 @@ $unique = ($chars.ToString().ToCharArray() | Sort-Object -Unique) -join ''
 $unique = ($unique.ToCharArray() | Where-Object { [int]$_ -ge 0x7F -and [int]$_ -le 0xFFFF }) -join ''
 Write-Output ("glyph set: {0} non-ASCII characters" -f $unique.Length)
 
+# Windows PowerShell encodes command-line arguments in the ANSI code page, so
+# passing CJK text to node mangled every glyph (the font then contained wrong
+# code points and the panel showed boxes). The charset travels as a UTF-8 file.
+$genDir = Join-Path $projectRoot 'build/fontgen'
+New-Item -ItemType Directory -Force -Path $genDir | Out-Null
+$charsetFile = Join-Path $genDir 'charset.txt'
+$charsetEmpty = Join-Path $genDir 'charset-empty.txt'
+# 44/88 px are the numeric display sizes: printable ASCII plus the unit
+# symbols the UI can put next to a big value. lv_font_conv's default range
+# stops at 0x7E, which dropped U+00B7 (middle dot) and U+00D7 (times).
+$symbols = -join ((32..126) | ForEach-Object { [char]$_ })
+$symbols += [char]0x00B7 + [char]0x00D7 + [char]0x00B0 + [char]0x2103 + [char]0x2026
+$charsetSymbols = Join-Path $genDir 'charset-symbols.txt'
+[System.IO.File]::WriteAllText($charsetSymbols, $symbols, (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($charsetFile, $unique, (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($charsetEmpty, '', (New-Object System.Text.UTF8Encoding($false)))
+
 $jobs = @(
-    @{ Name = 'lw_font_18'; Size = 18; Font = $regular; Symbols = $unique },
-    @{ Name = 'lw_font_22'; Size = 22; Font = $regular; Symbols = $unique },
-    @{ Name = 'lw_font_28'; Size = 28; Font = $bold; Symbols = $unique },
-    @{ Name = 'lw_font_44'; Size = 44; Font = $bold; Symbols = '' },
-    @{ Name = 'lw_font_88'; Size = 88; Font = $regular; Symbols = '' }
+    @{ Name = 'lw_font_18'; Size = 18; Font = $regular; Charset = $charsetFile },
+    @{ Name = 'lw_font_22'; Size = 22; Font = $regular; Charset = $charsetFile },
+    @{ Name = 'lw_font_28'; Size = 28; Font = $bold; Charset = $charsetFile },
+    @{ Name = 'lw_font_44'; Size = 44; Font = $bold; Charset = $charsetSymbols },
+    @{ Name = 'lw_font_88'; Size = 88; Font = $regular; Charset = $charsetSymbols }
 )
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-$lvFontConvJs = Join-Path $fontDir 'node_modules/lv_font_conv/lv_font_conv.js'
+$genFontsJs = Join-Path $projectRoot 'tools/gen_fonts.js'
+$lvFontConvJs = Join-Path $fontDir 'node_modules/lv_font_conv/lib/cli.js'
 if (-not (Test-Path -LiteralPath $lvFontConvJs)) { throw "lv_font_conv is not installed in $fontDir" }
+if (-not (Test-Path -LiteralPath $genFontsJs)) { throw "tools/gen_fonts.js is missing" }
 
 $stale = @()
 function Test-FontContent([string]$Path,[string]$Expected) {
@@ -75,10 +94,9 @@ foreach ($job in $jobs) {
     $out = Join-Path $outDir ($job.Name + '.c')
     $target = Join-Path $generatedDir ($job.Name + '.c')
 
-    $fontArgs = @($lvFontConvJs, '--font', $job.Font, '--range', '0x20-0x7E')
-    if ($job.Symbols -ne '') { $fontArgs += @('--symbols', $job.Symbols) }
-    $fontArgs += @('--size', $job.Size, '--bpp', 4, '--format', 'lvgl', '--no-compress',
-        '--lv-include', 'lvgl.h', '--output', $target)
+    $fontArgs = @($genFontsJs, '--font', $job.Font, '--charset', $job.Charset,
+        '--size', $job.Size, '--output', $target)
+
 
     if ($Check) {
         & node @fontArgs

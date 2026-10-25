@@ -1,0 +1,66 @@
+{
+  "schema": "littleworld.character-pack/1",
+  "pack": "firmware/main/art/characters.lwfa",
+  "bytes": 572960,
+  "sha256": "05499d0cf82b918df8f05b1c3815d5a674d2f332cc39601b81eb93e33174b118",
+  "clip_count": 2,
+  "crop_pad": 2,
+  "characters": [
+    {
+      "name": "male",
+      "frames": 1,
+      "w": 108,
+      "h": 212,
+      "anchor_x": 54,
+      "anchor_y": 209,
+      "loop": true,
+      "box": [
+        74,
+        16,
+        182,
+        228
+      ],
+      "union": [
+        76,
+        18,
+        180,
+        226
+      ],
+      "bytes": 68688
+    },
+    {
+      "name": "qianqian",
+      "frames": 8,
+      "w": 104,
+      "h": 202,
+      "anchor_x": 51,
+      "anchor_y": 199,
+      "loop": true,
+      "box": [
+        75,
+        26,
+        179,
+        228
+      ],
+      "union": [
+        77,
+        28,
+        177,
+        226
+      ],
+      "bytes": 504192
+    }
+  ],
+  "sources": {
+    "male": {
+      "path": "assets/characters/male/male-anchor-aligned.png",
+      "sha256": "b1c7903067ad2b978e3d82289f0624e924a003b01aa3ccc68219ac0e24a1fae7",
+      "origin": "origin/agent/codex-meowa-challenge assets/meowa-challenge/male-anchor-aligned.png"
+    },
+    "qianqian": {
+      "path": "private/pixel-duo/qianqian/frames/idle",
+      "frames": 8,
+      "origin": "original DesktopPet qianqian idle frames, RGB565+A8"
+    }
+  }
+}

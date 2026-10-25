@@ -14,6 +14,7 @@
 #include "lvgl.h"
 
 void lw_boot_start(void);
+#include "lw_capture.h"
 
 static const char *TAG = "littleworld";
 
@@ -50,6 +51,13 @@ void app_main(void)
     lw_boot_start();
 
     bsp_display_unlock();
+
+    bsp_display_lock(0);
+    lw_capture_attach_input();
+    bsp_display_unlock();
+
+    /* Serial REPL on UART0: shot / tap / status (acceptance evidence). */
+    lw_capture_console_start();
 
     ESP_LOGI(TAG, "boot: Little World ready, free heap %u B", (unsigned)esp_get_free_heap_size());
 }

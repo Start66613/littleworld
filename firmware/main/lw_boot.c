@@ -25,12 +25,16 @@
 #include "lw_diag.h"
 #include "lvgl.h"
 #include "lw_os.h"
+#include "lw_char_pack.h"
 #include "lw_store.h"
 #endif
 
 static const char *TAG = "littleworld";
 
 /* ------------------------------------------------------------ platform --- */
+
+extern const uint8_t characters_lwfa_start[] asm("_binary_characters_lwfa_start");
+extern const uint8_t characters_lwfa_end[] asm("_binary_characters_lwfa_end");
 
 static bool platform_get_time(struct tm *out)
 {
@@ -299,10 +303,18 @@ static void start_os(void)
 
     lw_diag_log_boot();
 
-    /* The TF card is not part of this round, so no character pack is available.
-     * Passing NULL selects the labelled no-art fallback instead of failing. */
+    /* Real character art is linked into the image (firmware/main/art). A
+     * rejected pack is reported instead of silently painting a placeholder. */
+    const lw_char_pack_blob_t art_blob = {
+        characters_lwfa_start,
+        (size_t)(characters_lwfa_end - characters_lwfa_start),
+    };
+    const bool art_ok = lw_char_pack_register(&art_blob);
+    if (!art_ok) {
+        ESP_LOGW(TAG, "art: %s", "character pack rejected, using the labelled fallback");
+    }
     publish_capabilities();
-    if (!lw_os_start(&s_system, NULL)) {
+    if (!lw_os_start(&s_system, art_ok ? lw_char_pack_art() : NULL)) {
         ESP_LOGE(TAG, "lw_os_start failed; falling back to the legacy shell");
         lw_ui_start();
     } else {

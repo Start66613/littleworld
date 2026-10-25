@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS
         "src/lw_assets.c"
+        "src/lw_char_pack.c"
         "src/lw_sprite.c"
         "src/lw_scene.c"
         "src/lw_world.c"
