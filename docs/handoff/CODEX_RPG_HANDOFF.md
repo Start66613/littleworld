@@ -1,7 +1,25 @@
 # CODEX RPG HANDOFF — 无冲突合并指引
 
+> **Phase 2 更新（2026-10-25）**：角色路线已锁定，请按下面的路径接入。
+>
+> | 用途 | 资产 | 说明 |
+> |---|---|---|
+> | 男方默认立绘 | `assets/rpg/final/male_B_gentle_final.png` | 256² RGBA，高 209，脚底 226，中心 128 |
+> | qianqian 默认立绘 | `assets/rpg/final/qianqian_v2_a_final.png` | 256² RGBA，高 218，脚底 226，中心 128 |
+> | 房间背景 | `assets/rpg/room/room_pixel_1024x600.png` | 1024×600，无角色/无 UI/无文字，中央地毯留空 |
+>
+> **不要当默认角色用**（只是表情参考）：
+> `male_C_playful_expression.png`（搞怪/眨眼）、`qianqian_v2_b_expression.png`（好奇歪头）。
+>
+> - 两张正式立绘高度不在 192–204 区间（209 / 218），**已按用户"风格优先"的指示接受**；
+>   若你的集成需要严格 198，请等我下一批按 198 重出，不要自己缩放（会破坏像素）。
+> - 替换 TEST A 的合成预览在 `assets/rpg/previews/phase2/06_os_desktop_male_b.png`，
+>   但那是本地 mock，**不要直接当系统截图发**；系统里替换需要你走资源加载入口。
+> - 房间是 2048 母版 2× 降采样 + 顶部补墙，母版在 `assets/rpg/room/room_pixel_2048x1152_master.png`。
+ > - 本轮**没有**动画帧，idle/walk 需要下一批。
+
 版本 v0.1 · 2026-10-25 · DSH → Codex
-分支：`rpg/meowa-v3`（隔离 worktree `D:\LittleWorld-RPG`，基于 `art-assets`）
+分支：`rpg/meowa-v3-phase2`（隔离 worktree `D:\LittleWorld-RPG`，基于 `art-assets`）
 **没有改动任何 OS 文件，没有动 main，没有刷机。**
 
 ## 1. 本次新增的路径（全部是新增，无修改）

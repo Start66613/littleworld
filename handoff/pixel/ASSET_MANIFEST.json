@@ -1,132 +1,125 @@
 {
     "schema":  "littleworld.pixel-assets/1",
     "contract_version":  "1.0.1",
-    "batch":  3,
-    "delivered_at":  "2026-10-25T17:39:35",
+    "phase":  2,
+    "delivered_at":  "2026-10-25T18:22:41",
     "deliverer":  "DSH (Meowa agent)",
-    "branch":  "rpg/meowa-v3",
+    "branch":  "rpg/meowa-v3-phase2",
+    "locked_route":  {
+                         "male_expression":  "male_C_playful",
+                         "male_final":  "male_B_gentle",
+                         "female_expression":  "qianqian_v2_b",
+                         "female_final":  "qianqian_v2_a"
+                     },
     "budget":  {
+                   "balance_after":  2754,
                    "approved":  160,
-                   "spent":  140,
-                   "balance_after":  2764,
-                   "unit_price":  20
+                   "spent_total":  150,
+                   "this_phase":  10
                },
-    "summary":  "Route B first pass: 3 male directions, 2 qianqian remakes. All native-1px, feet aligned, none yet contract-height.",
     "assets":  [
                    {
-                       "character_id":  "male_A_sunny",
-                       "status":  "candidate",
-                       "use":  "阳光呆萌 A：开怀笑 + 挥手",
-                       "path":  "assets/rpg/characters/v2/male_A_sunny.png",
-                       "sha256":  "17c7bedec152037fc1b8be8f1933d97c43518d36e8df172a8abb0c6288be2aaf",
-                       "bytes":  14748,
-                       "canvas":  [
-                                      256,
-                                      256
-                                  ],
-                       "feet_y":  226,
-                       "centre_x":  128,
-                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
-                       "contract_compliant":  false,
-                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
-                       "provenance":  {
-                                          "credits":  20,
-                                          "model":  "nano-banana",
-                                          "tool":  "meowa custom-size-pixel-gen-run",
-                                          "post":  "light background flood-cut, feet aligned to y=226"
-                                      }
-                   },
-                   {
                        "character_id":  "male_B_gentle",
-                       "status":  "candidate",
-                       "use":  "温柔软萌 B：浅笑 + 腮红",
-                       "path":  "assets/rpg/characters/v2/male_B_gentle.png",
+                       "status":  "final",
+                       "use":  "男方正式默认立绘",
+                       "path":  "assets/rpg/final/male_B_gentle_final.png",
                        "sha256":  "23c423b9abe2296e3b279503e57c8b84a4dc1762273e27fe51c077f3cc0742d3",
                        "bytes":  15550,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "feet_y":  226,
-                       "centre_x":  128,
-                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "visible_height_px":  209,
+                       "feet_y":  128,
+                       "centre_x":  "height 209 exceeds the 192-204 contract range by 5px",
+                       "grid":  "native 1px",
                        "contract_compliant":  false,
-                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
-                       "provenance":  {
-                                          "credits":  20,
-                                          "model":  "nano-banana",
-                                          "tool":  "meowa custom-size-pixel-gen-run",
-                                          "post":  "light background flood-cut, feet aligned to y=226"
-                                      }
-                   },
-                   {
-                       "character_id":  "male_C_playful",
-                       "status":  "candidate",
-                       "use":  "搞怪可爱 C：眨眼 + 张嘴",
-                       "path":  "assets/rpg/characters/v2/male_C_playful.png",
-                       "sha256":  "120b1feaa53b469174d9ee8b1a54bc9d042ad43b278af85fd91064f0ba9c24ec",
-                       "bytes":  12881,
-                       "canvas":  [
-                                      256,
-                                      256
-                                  ],
-                       "feet_y":  226,
-                       "centre_x":  128,
-                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
-                       "contract_compliant":  false,
-                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
-                       "provenance":  {
-                                          "credits":  20,
-                                          "model":  "nano-banana",
-                                          "tool":  "meowa custom-size-pixel-gen-run",
-                                          "post":  "light background flood-cut, feet aligned to y=226"
-                                      }
+                       "known_limits":  null
                    },
                    {
                        "character_id":  "qianqian_v2_a",
-                       "status":  "candidate",
-                       "use":  "新版 qianqian A：原 DNA 重制，微笑",
-                       "path":  "assets/rpg/characters/v2/qianqian_v2_a.png",
+                       "status":  "final",
+                       "use":  "qianqian 正式默认立绘",
+                       "path":  "assets/rpg/final/qianqian_v2_a_final.png",
                        "sha256":  "503197c5e6ecef7b4894ddd9a6419be15a64768394e9685d6c22d1f80fc2cfcb",
                        "bytes":  19141,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "feet_y":  226,
-                       "centre_x":  128,
-                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "visible_height_px":  218,
+                       "feet_y":  128,
+                       "centre_x":  "height 218 exceeds the contract range by 14px",
+                       "grid":  "native 1px",
                        "contract_compliant":  false,
-                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
-                       "provenance":  {
-                                          "credits":  20,
-                                          "model":  "nano-banana",
-                                          "tool":  "meowa custom-size-pixel-gen-run",
-                                          "post":  "light background flood-cut, feet aligned to y=226"
-                                      }
+                       "known_limits":  null
+                   },
+                   {
+                       "character_id":  "male_C_playful",
+                       "status":  "expression-reference",
+                       "use":  "男方搞怪/眨眼表情参考，不得作为默认立绘",
+                       "path":  "assets/rpg/final/male_C_playful_expression.png",
+                       "sha256":  "120b1feaa53b469174d9ee8b1a54bc9d042ad43b278af85fd91064f0ba9c24ec",
+                       "bytes":  12881,
+                       "canvas":  [
+                                      256,
+                                      256
+                                  ],
+                       "visible_height_px":  188,
+                       "feet_y":  128,
+                       "centre_x":  "expression reference only",
+                       "grid":  "native 1px",
+                       "contract_compliant":  false,
+                       "known_limits":  null
                    },
                    {
                        "character_id":  "qianqian_v2_b",
-                       "status":  "candidate",
-                       "use":  "新版 qianqian B：好奇歪头",
-                       "path":  "assets/rpg/characters/v2/qianqian_v2_b.png",
+                       "status":  "expression-reference",
+                       "use":  "qianqian 好奇歪头表情参考，不得作为默认立绘",
+                       "path":  "assets/rpg/final/qianqian_v2_b_expression.png",
                        "sha256":  "aec695523097db97d2b1fca8082cee3e90f30e12837ee3339a68e68144ca1eae",
                        "bytes":  21734,
                        "canvas":  [
                                       256,
                                       256
                                   ],
-                       "feet_y":  226,
-                       "centre_x":  128,
-                       "grid":  "native 1px (row diff ratio 0.93-1.08)",
+                       "visible_height_px":  227,
+                       "feet_y":  128,
+                       "centre_x":  "expression reference only",
+                       "grid":  "native 1px",
                        "contract_compliant":  false,
-                       "note":  "height differs from 192-204 target; final animation set must be regenerated at exact height after the user picks a direction",
-                       "provenance":  {
-                                          "credits":  20,
-                                          "model":  "nano-banana",
-                                          "tool":  "meowa custom-size-pixel-gen-run",
-                                          "post":  "light background flood-cut, feet aligned to y=226"
-                                      }
+                       "known_limits":  null
                    }
-               ]
+               ],
+    "room":  {
+                 "asset_id":  "room_pixel_home",
+                 "status":  "final",
+                 "use":  "OS 首页大场景 / RPG 小屋视觉母版",
+                 "path":  "assets/rpg/room/room_pixel_1024x600.png",
+                 "sha256":  "06ac1852bc1b5e487aa5762718b67990709da170e4b5e9227cebecba1dc8e944",
+                 "bytes":  460533,
+                 "resolution":  [
+                                    1024,
+                                    600
+                                ],
+                 "master":  "assets/rpg/room/room_pixel_2048x1152_master.png",
+                 "no_characters":  true,
+                 "no_ui":  true,
+                 "no_text":  true,
+                 "character_floor_band":  "centre rug, y 380-560 free"
+             },
+    "previews":  [
+                     "assets/rpg/previews/phase2/01_pair_final_1x.png",
+                     "assets/rpg/previews/phase2/02_pair_final_2x.png",
+                     "assets/rpg/previews/phase2/03_final_and_expression_2x.png",
+                     "assets/rpg/previews/phase2/04_room_with_pair.png",
+                     "assets/rpg/previews/phase2/05_room_moonlight.png",
+                     "assets/rpg/previews/phase2/06_os_desktop_male_b.png"
+                 ],
+    "notes":  [
+                  "Heights are outside 192-204 but style and identity were prioritised per the user instruction.",
+                  "Room is a 2048 master downscaled 2x with 24px of wall added on top.",
+                  "06 is a local mock composite, not a real OS run.",
+                  "No animation frames in this phase."
+              ]
 }
