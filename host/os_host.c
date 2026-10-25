@@ -194,12 +194,15 @@ static void motion_v4_tests(const char *out,bool characters)
     lw_os_boot(); CHECK("boot timeline actually starts",lw_os_boot_active());
     for (unsigned i=0;i<7;i++) { char name[64]; snprintf(name,sizeof(name),"v4-boot-%02u",i); capture_now(out,name); advance(200); }
     CHECK("boot ends and releases its overlay",!lw_os_boot_active() && objects(lw_os_root())==base && timers()==timer_base);
+    tap(OC_SETTINGS); tap(OC_PERSONAL); tap(OC_WIDGETS); tap(OC_HOME); CHECK("hidden widgets really remove anniversary and letter targets",!lw_os_control(OC_ANNIVERSARY) && !lw_os_control(OC_ENVELOPE));
+    tap(OC_SETTINGS); tap(OC_PERSONAL); tap(OC_WIDGETS); tap(OC_HOME); CHECK("restored widgets are interactive again",lw_os_control(OC_ANNIVERSARY) && lw_os_control(OC_ENVELOPE));
     lw_host_pointer_t *p=lw_host_pointer(); p->x=900; p->y=20; p->pressed=1; advance(60);
     int last=-600;
     for (unsigned i=0;i<4;i++) { p->y=70+(int)i*90; advance(40); lv_obj_t *panel=lw_os_control_panel(); CHECK("top pull creates a real panel during the press",panel!=NULL); if (panel) { int y=lv_obj_get_style_translate_y(panel,0); CHECK("control center follows increasing pointer position",y>last && y<0); last=y; } char name[64]; snprintf(name,sizeof(name),"v4-pull-%02u",i); capture_now(out,name); }
     p->pressed=0; advance(500); CHECK("released pull snaps fully open",lw_os_overlay()==OS_OVER_CONTROL && lw_os_control_panel() && lv_obj_get_style_translate_y(lw_os_control_panel(),0)==0); capture_now(out,"v4-pull-open");
     p->x=650; p->y=116; p->pressed=1; advance(60); p->y=72; advance(60); capture_now(out,"v4-push-mid"); p->y=20; advance(80); p->pressed=0; advance(500); CHECK("upward header gesture closes panel",lw_os_overlay()==OS_OVER_NONE); capture_now(out,"v4-push-closed");
     swipe_points(900,20,900,78); advance(400); CHECK("short top pull cancels without a stuck overlay",lw_os_overlay()==OS_OVER_NONE);
+    p->x=310; p->y=462; p->pressed=1; advance(900); p->pressed=0; advance(300); CHECK("long press on room floor preserves desktop editing",lw_os_overlay()==OS_OVER_EDIT); tap(OC_CLOSE); advance(400);
     for (unsigned theme=0;theme<3;theme++) {
         lw_os_open(OS_THEMES); tap((lw_os_control_t)(OC_THEME0+theme)); tap(OC_APPLY); lw_os_open(OS_DESKTOP); advance(600); char name[64]; snprintf(name,sizeof(name),"v4-theme-%u",theme); capture_now(out,name);
     }
