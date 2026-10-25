@@ -16,7 +16,7 @@
     125
   ],
   "loop": false,
-  "source": "assets/visual-v4/characters/male/blink-reviewed.webp",
+  "source": "assets/visual-v4/characters/male/blink-original.webp",
   "source_sha256": "f6c37be92aea0844b34f1874cb2c0f2371374fe6fb69865969ec50d041a00537",
   "frames": [
     "blink/000.png",

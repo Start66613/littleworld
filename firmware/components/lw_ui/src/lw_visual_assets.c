@@ -34,7 +34,8 @@ static entry_t *acquire(unsigned theme,bool thumb)
     e->pixels=data; e->theme=theme; e->thumbnail=thumb; e->refs=1;
     e->image.header.magic=LV_IMAGE_HEADER_MAGIC; e->image.header.cf=LV_COLOR_FORMAT_RGB565; e->image.header.w=w; e->image.header.h=h; e->image.header.stride=w*2;
     e->image.data=data; e->image.data_size=bytes; stats.reads++; stats.refs++; stats.live_bytes+=bytes;
-    if (stats.live_bytes>stats.peak_bytes) stats.peak_bytes=stats.live_bytes; return e;
+    if (stats.live_bytes>stats.peak_bytes) { stats.peak_bytes=stats.live_bytes; }
+    return e;
 }
 static void deleted(lv_event_t *event) { entry_t *e=lv_event_get_user_data(event); e->refs--; stats.refs--; }
 lv_obj_t *lw_visual_scene_image(lv_obj_t *parent,unsigned theme,int w,int h,bool thumb)

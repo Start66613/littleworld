@@ -203,7 +203,7 @@ static void motion_v4_tests(const char *out,bool characters)
     for (unsigned theme=0;theme<3;theme++) {
         lw_os_open(OS_THEMES); tap((lw_os_control_t)(OC_THEME0+theme)); tap(OC_APPLY); lw_os_open(OS_DESKTOP); advance(600); char name[64]; snprintf(name,sizeof(name),"v4-theme-%u",theme); capture_now(out,name);
     }
-    lw_os_show(OS_OVER_LETTER); for (unsigned i=0;i<5;i++) { char name[64]; snprintf(name,sizeof(name),"v4-letter-%02u",i); capture_now(out,name); advance(160); } tap(OC_CLOSE); advance(400);
+    lw_os_show(OS_OVER_LETTER); for (unsigned i=0;i<5;i++) { char name[64]; snprintf(name,sizeof(name),"v4-letter-%02u",i); capture_now(out,name); advance(160); } tap(OC_CLOSE); advance(400); capture_now(out,"v4-letter-closed");
     if (characters) {
         CHECK("male idle is the Codex art provider",lw_assets_find("male.idle")!=NULL);
         CHECK("male blink has its own reviewed frame clip",lw_assets_find("male.blink")!=NULL);
@@ -216,7 +216,10 @@ static void motion_v4_tests(const char *out,bool characters)
         CHECK("both actors actually select wave clips",lw_os_actor_clip(0) && strstr(lw_os_actor_clip(0),".wave") && lw_os_actor_clip(1) && strstr(lw_os_actor_clip(1),".wave"));
         for (unsigned i=0;i<8;i++) { char name[64]; snprintf(name,sizeof(name),"v4-greet-%02u",i); capture_now(out,name); advance(160); }
         advance(800); CHECK("greeting naturally returns to idle clips",lw_os_duo_state()->phase==LW_DUO_FREE && lw_os_actor_clip(0) && strstr(lw_os_actor_clip(0),".idle"));
+        capture_now(out,"v4-greet-restored");
     }
+    tap(OC_CONTROL); tap(OC_LOCK); advance(400); capture_now(out,"v4-lock-00");
+    p->x=600; p->y=430; p->pressed=1; advance(60); p->y=340; advance(80); capture_now(out,"v4-unlock-00"); p->y=250; advance(80); p->pressed=0; advance(60); capture_now(out,"v4-unlock-01"); advance(400); capture_now(out,"v4-unlock-02"); CHECK("unlock reveals the working page",lw_os_overlay()==OS_OVER_NONE);
     lw_os_open(OS_DESKTOP); advance(600);
     for (unsigned mode=0;mode<3;mode++) {
         lw_app_state()->settings.animations=mode!=LW_MOTION_OFF; lw_os_motion_mode((lw_motion_mode_t)mode); lw_os_open(OS_DESKTOP); advance(600); base=objects(lw_os_root()); timer_base=timers(); bool stable=true;

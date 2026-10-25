@@ -28,7 +28,7 @@
     100
   ],
   "loop": false,
-  "source": "assets/visual-v4/characters/male/wave-reviewed.webp",
+  "source": "assets/visual-v4/characters/male/wave-original.webp",
   "source_sha256": "afe996ead75dcea7c8f8e3e7b777f0d5391c9b5d9df2284eb37c304b88d0cc10",
   "frames": [
     "wave/000.png",

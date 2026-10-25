@@ -12,7 +12,8 @@ def rgb565(im):
 def raw(im): return rgb565(im)+im.convert('RGBA').getchannel('A').tobytes()
 def scene(number,name,source):
     dest=ASSETS/'scenes'; dest.mkdir(parents=True,exist_ok=True)
-    master=dest/(name+'-master.png'); shutil.copyfile(source,master)
+    master=dest/(name+'-master.png')
+    if master.resolve()!=source.resolve(): shutil.copyfile(source,master)
     with Image.open(source) as image:
         assert image.size==(2048,1152),image.size
         half=image.convert('RGB').resize((1024,576),Image.Resampling.NEAREST)
@@ -24,7 +25,8 @@ def scene(number,name,source):
             im=final.resize((256,150),Image.Resampling.NEAREST) if thumb else final
             p=RUNTIME/f'scene-{number}{"-thumb" if thumb else ""}.lwr'
             p.write_bytes(struct.pack('<8sHHI',b'LWSR0001',im.width,im.height,0)+rgb565(im))
-    return {'theme':number,'name':name,'source':source.relative_to(ROOT).as_posix(),'source_sha256':digest(source),'master':master.relative_to(ROOT).as_posix(),'runtime_bytes':1228800,'thumbnail_bytes':76800,'conversion':'nearest 1/2, then edge-pad 12px top/bottom; no aspect stretch'}
+    upstream=['job_ddaea059d1274b868e193d5af17084a4','job_9786e2bc1b33426e951822c844dc375e','DSH git 364e985eba6d09020f20b669362d995b6ecf043c'][number]
+    return {'theme':number,'name':name,'source':master.relative_to(ROOT).as_posix(),'source_sha256':digest(source),'upstream':upstream,'master':master.relative_to(ROOT).as_posix(),'runtime_bytes':1228800,'thumbnail_bytes':76800,'conversion':'nearest 1/2, then edge-pad 12px top/bottom; no aspect stretch'}
 def write_pack(path,clips,anchor_y):
     records=bytearray(); payload=bytearray(); offset=16+108*len(clips)
     for name,frames,times,loop in clips:
@@ -42,22 +44,26 @@ def animation(name,source,character,loop=True):
     for i,frame in enumerate(frames): frame.save(dest/f'{i:03}.png')
     preview=dest.parent/(name+'.webp'); frames[0].save(preview,save_all=True,append_images=frames[1:],duration=times,loop=0,lossless=True,exact=True)
     frames[0].save(dest.parent/(name+'.gif'),save_all=True,append_images=frames[1:],duration=times,loop=0,disposal=2)
-    original=dest.parent/(name+'-original.webp'); shutil.copyfile(source,original)
-    metadata={'name':name,'character':character,'canvas':[256,256],'anchor':[128,225 if character=='male' else 226],'durations_ms':times,'loop':loop,'source':source.relative_to(ROOT).as_posix(),'source_sha256':digest(source),'frames':[f'{name}/{i:03}.png' for i in range(len(frames))],'bboxes':[f.getchannel('A').getbbox() for f in frames]}
+    original=dest.parent/(name+'-original.webp')
+    if original.resolve()!=source.resolve(): shutil.copyfile(source,original)
+    metadata={'name':name,'character':character,'canvas':[256,256],'anchor':[128,225 if character=='male' else 226],'durations_ms':times,'loop':loop,'source':original.relative_to(ROOT).as_posix(),'source_sha256':digest(source),'frames':[f'{name}/{i:03}.png' for i in range(len(frames))],'bboxes':[f.getchannel('A').getbbox() for f in frames]}
     (dest.parent/(name+'.json')).write_text(json.dumps(metadata,indent=2)+'\n',encoding='utf-8')
     return name,frames,times,loop
 def generated(name):
-    files=list((ASSETS/'generated'/name).rglob('result_images_0_url.png')); return files[0] if files else None
+    files=list((ASSETS/'generated'/name).rglob('result_images_0_url.png')); fallback=ASSETS/'scenes'/('sakura-morning-master.png' if name.startswith('sakura-morning') else name+'-master.png'); return files[0] if files else fallback if fallback.exists() else None
 def main():
     RUNTIME.mkdir(parents=True,exist_ok=True); refs=ROOT/'private/visual-v4/references'; scenes=[]
-    for number,name,source in [(0,'sakura-morning',generated('sakura-morning-retry1')),(1,'moonlight-dream',generated('moonlight-dream')),(2,'strawberry-sunset',refs/'room_pixel_2048x1152_master.png')]:
+    sunset=refs/'room_pixel_2048x1152_master.png'; sunset=sunset if sunset.exists() else ASSETS/'scenes/strawberry-sunset-master.png'
+    for number,name,source in [(0,'sakura-morning',generated('sakura-morning-retry1')),(1,'moonlight-dream',generated('moonlight-dream')),(2,'strawberry-sunset',sunset)]:
         if source and source.exists(): scenes.append(scene(number,name,source))
     (ASSETS/'SCENES.json').write_text(json.dumps(scenes,indent=2)+'\n',encoding='utf-8')
     idle=next((ASSETS/'generated/male-idle').rglob('result_output_url.bin'),None)
+    if idle is None and (ASSETS/'characters/male/idle-original.webp').exists(): idle=ASSETS/'characters/male/idle-original.webp'
     if idle:
         clips=[animation('idle',idle,'male')]
         with Image.open(idle) as im: idle_frames=[f.convert('RGBA') for f in ImageSequence.Iterator(im)]
         wave_source=next((ASSETS/'generated/male-wave').rglob('meowa_animation.webp'),None)
+        if wave_source is None and (ASSETS/'characters/male/wave-generation-original.webp').exists(): wave_source=ASSETS/'characters/male/wave-generation-original.webp'
         if wave_source:
             with Image.open(wave_source) as im: im.seek(7); expression=im.convert('RGBA')
             blink=[f.copy() for f in idle_frames[4:8]]

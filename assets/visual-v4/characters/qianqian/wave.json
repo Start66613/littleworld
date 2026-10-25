@@ -28,7 +28,7 @@
     100
   ],
   "loop": false,
-  "source": "assets/visual-v4/characters/qianqian/wave-reviewed.webp",
+  "source": "assets/visual-v4/characters/qianqian/wave-original.webp",
   "source_sha256": "fdaf5eef4afb0ddc7dc172cc1017f0d6252acb188a74038e432b62109b7cc153",
   "frames": [
     "wave/000.png",

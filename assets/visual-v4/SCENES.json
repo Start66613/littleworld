@@ -2,8 +2,9 @@
   {
     "theme": 0,
     "name": "sakura-morning",
-    "source": "assets/visual-v4/generated/sakura-morning-retry1/Create_Sakura_Morning_in_this_exact_cozy_pixel-art_living_room_Keep_the_camera_and_every_furniture_position_an_c92e7477/result_images_0_url.png",
+    "source": "assets/visual-v4/scenes/sakura-morning-master.png",
     "source_sha256": "61c43af792d7e3bae5ff18ef8425646d8fd500c5e19033ce16c14f4ac3847db4",
+    "upstream": "job_ddaea059d1274b868e193d5af17084a4",
     "master": "assets/visual-v4/scenes/sakura-morning-master.png",
     "runtime_bytes": 1228800,
     "thumbnail_bytes": 76800,
@@ -12,8 +13,9 @@
   {
     "theme": 1,
     "name": "moonlight-dream",
-    "source": "assets/visual-v4/generated/moonlight-dream/Moonlight_Dream_the_quiet_nighttime_version_of_this_exact_pixel-art_living_room_Preserve_the_fixed_camera_furn_7bb32fd2/result_images_0_url.png",
+    "source": "assets/visual-v4/scenes/moonlight-dream-master.png",
     "source_sha256": "1ea3caa44b44cdc6d18dae9b8d26aa91437e62dbef563964a5c05b67dcd7ff2a",
+    "upstream": "job_9786e2bc1b33426e951822c844dc375e",
     "master": "assets/visual-v4/scenes/moonlight-dream-master.png",
     "runtime_bytes": 1228800,
     "thumbnail_bytes": 76800,
@@ -22,8 +24,9 @@
   {
     "theme": 2,
     "name": "strawberry-sunset",
-    "source": "private/visual-v4/references/room_pixel_2048x1152_master.png",
+    "source": "assets/visual-v4/scenes/strawberry-sunset-master.png",
     "source_sha256": "ceab865d833f7f594bec3b0ef28430dcbc1039f12c31fd39056d4bf8da23ecd2",
+    "upstream": "DSH git 364e985eba6d09020f20b669362d995b6ecf043c",
     "master": "assets/visual-v4/scenes/strawberry-sunset-master.png",
     "runtime_bytes": 1228800,
     "thumbnail_bytes": 76800,
