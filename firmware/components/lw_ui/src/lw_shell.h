@@ -34,6 +34,17 @@ lv_obj_t *lw_shell_content(void);
 
 const lw_app_t *lw_shell_current(void);
 
+/* A new shell may host existing apps without changing their business logic.
+ * Requests must be deferred by the host until the originating event returns.
+ * NULL restores the original shell and its home page. Host owns the callbacks. */
+typedef struct {
+    void (*open)(const char *id);
+    void (*refresh)(void);
+    lv_obj_t *(*content)(void);
+    const lw_app_t *(*current)(void);
+} lw_shell_host_t;
+void lw_shell_bind_host(const lw_shell_host_t *host);
+
 #ifdef __cplusplus
 }
 #endif

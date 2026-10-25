@@ -35,3 +35,5 @@ __pycache__/
 *.lwpx
 *.rgb565a8
 /reports/ui-v2/os-v2/
+/reports/ui-v2/os-v2-fallback/
+/reports/os-v2/screens/

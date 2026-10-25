@@ -190,13 +190,13 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     s_progress = lw_bar(player, 236, 168, 200, 10, palette->accent);
     s_time_label = lw_text(player, "", &lw_font_18, palette->dim, 236, 188);
 
-    lv_obj_t *prev = lw_button(player, "上一首", 90, 46, palette->card_soft, palette->text, &lw_font_18);
+    lv_obj_t *prev = lw_button(player, "上一首", 64, 46, palette->card_soft, palette->text, &lw_font_18);
     lv_obj_set_pos(prev, 236, 226);
-    lv_obj_t *play = lw_button(player, "播放", 120, 46, palette->accent, 0xFFFFFF, &lw_font_18);
-    lv_obj_set_pos(play, 336, 226);
+    lv_obj_t *play = lw_button(player, "播放", 76, 46, palette->accent, 0xFFFFFF, &lw_font_18);
+    lv_obj_set_pos(play, 306, 226);
     s_play_label = lv_obj_get_child(play, 0);
-    lv_obj_t *next = lw_button(player, "下一首", 90, 46, palette->card_soft, palette->text, &lw_font_18);
-    lv_obj_set_pos(next, 466, 226);
+    lv_obj_t *next = lw_button(player, "下一首", 64, 46, palette->card_soft, palette->text, &lw_font_18);
+    lv_obj_set_pos(next, 390, 226);
 
     lw_text(player, "音量", &lw_font_18, palette->dim, 32, 330);
     s_volume_label = lw_text(player, "", &lw_font_18, palette->text, 132, 330);

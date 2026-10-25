@@ -3,6 +3,7 @@
 #include "lw_os_design.h"
 #include "lw_theme.h"
 #include "lw_apps.h"
+#include "lw_shell.h"
 #include "lw_app_state.h"
 #include <math.h>
 #include <stdint.h>
@@ -11,7 +12,7 @@
 LV_FONT_DECLARE(lw_font_88);
 typedef struct {
     lw_system_t *system; const lw_actor_art_t *art;
-    lv_obj_t *root,*previous,*content,*over,*toast,*clock,*net_icon,*volume_icon,*mute_badge;
+    lv_obj_t *root,*previous,*content,*mount,*over,*toast,*clock,*net_icon,*volume_icon,*mute_badge;
     lv_obj_t *base_controls[OC_COUNT],*over_controls[OC_COUNT];
     lw_duo_t duo; lw_sprite_t *sprites[2]; const lw_clip_t *clips[2]; lv_obj_t *shadows[2];
     const lw_app_t *legacy;
@@ -24,6 +25,17 @@ static os_t *s;
 static const char *const section_names[]={"网络","显示与亮度","声音","个性化","日期与时间","存储","关于设备"};
 static const lw_os_palette_t *palette(void) { return lw_os_palette(s->page==OS_THEMES ? s->preview_theme : s->system->prefs.theme); }
 static void render(void); static void show_overlay(lw_os_overlay_t); static void refresh(void);
+static void route_app(const char *id)
+{
+    static const char *const names[]={"home","pet","album","memories","music","arcade","settings"};
+    static const int routes[]={OC_HOME,OC_PET,OC_ALBUM,OC_MEMORIES,OC_MUSIC,OC_GAMES,OC_SETTINGS};
+    if (!s || !id) return;
+    for (unsigned i=0;i<sizeof(routes)/sizeof(routes[0]);i++) if (!strcmp(id,names[i])) { s->pending=routes[i]; return; }
+}
+static void route_refresh(void) { if (s) s->pending=OC_REFRESH; }
+static lv_obj_t *route_content(void) { return s ? s->mount : NULL; }
+static const lw_app_t *route_current(void) { return s ? s->legacy : NULL; }
+static const lw_shell_host_t shell_host={route_app,route_refresh,route_content,route_current};
 static void event_action(lv_event_t *event)
 { if (s) s->pending=(int)(intptr_t)lv_event_get_user_data(event); }
 static void register_control(lv_obj_t *o,lw_os_control_t id)
@@ -120,7 +132,7 @@ static void build_dock(void)
         lv_obj_t *item=button(dock,"",14+i*108,3,104,80,ids[i],false); lv_obj_set_style_bg_opa(item,0,0);
         lv_obj_t *tile=lw_os_box(item,30,4,44,44,fills[i],14,255); lw_os_icon(tile,icons[i],5,5,34,0x65505e);
         lw_os_label(item,names[i],&lw_font_18,0,52,104,c->text); lv_obj_set_style_text_align(lv_obj_get_child(item,-1),LV_TEXT_ALIGN_CENTER,0);
-        if ((s->page==OS_WORLD && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && (int)s->page-OS_ALBUM+1==i)) lw_os_box(item,49,75,6,3,c->accent,2,255);
+        if (((s->page==OS_WORLD || s->page==OS_PET) && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && s->page<=OS_GAMES && (int)s->page-OS_ALBUM+1==i)) lw_os_box(item,49,75,6,3,c->accent,2,255);
     }
 }
 static const lw_clip_t *art_clip(unsigned actor,const char *name)
@@ -180,8 +192,9 @@ static void build_desktop(bool world)
     }
     if (world) {
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
+        button(s->content,"照顾宠物",48,398,232,50,OC_PET,false);
     }
-    lw_os_label(s->content,"男方形象待定 · 当前为 TEST A",&lw_font_18,575,466,400,c->muted);
+    lw_os_label(s->content,s->art ? "男方形象待定 · 当前为 TEST A" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
     actors();
     lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL);
 }
@@ -246,14 +259,14 @@ static void build_themes(void)
 static void build_legacy(void)
 {
     static const char *const ids[]={"album","memories","music","arcade"};
-    const lw_app_t *app=lw_app_find(ids[s->page-OS_ALBUM]);
-    lv_obj_t *mount=lw_os_box(s->content,0,52,1024,440,palette()->bg,0,255);
-    if (app) { s->legacy=app; app->create(mount,app); }
+    const lw_app_t *app=lw_app_find(s->page==OS_PET ? "pet" : ids[s->page-OS_ALBUM]);
+    s->mount=lw_os_box(s->content,0,52,1024,440,palette()->bg,0,255);
+    if (app) { s->legacy=app; app->create(s->mount,app); }
 }
 static void render(void)
 {
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
-    s->legacy=NULL;
+    s->legacy=NULL; s->mount=NULL;
     s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2;
     lv_obj_clean(s->root); memset(s->base_controls,0,sizeof(s->base_controls)); memset(s->over_controls,0,sizeof(s->over_controls)); s->over=NULL; s->overlay=OS_OVER_NONE;
     unsigned wallpaper=s->page==OS_THEMES ? s->preview_wallpaper : s->system->prefs.wallpaper;
@@ -264,7 +277,7 @@ static void render(void)
         lw_os_box(s->content,0,48,1024,446,palette()->bg,0,252);
         if (s->page==OS_SETTINGS) build_settings(); else if (s->page==OS_THEMES) build_themes(); else build_legacy();
     }
-    build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,940,55,44,OC_HOME);
+    build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,700,2,44,OC_HOME);
     refresh(); update_actors(0); lw_os_animate(s->content,10,240);
 }
 static void build_control(void)
@@ -331,12 +344,14 @@ static void build_lock(void)
     lw_os_box(s->over,0,0,1024,600,s->system->screen_off ? 0x151822 : c->bg,0,s->system->screen_off ? 255 : 145);
     if (s->system->screen_off) { lw_os_icon(s->over,OS_I_MOON,482,198,60,0xd5c6dc); lw_os_label(s->over,"屏幕已熄灭 · Windows 模拟",&lw_font_22,310,292,600,0xe9dfea); button(s->over,"轻触唤醒",360,418,304,60,OC_UNLOCK,true); return; }
     uint32_t now=lw_now(); char clock[16]; snprintf(clock,sizeof(clock),"%02u:%02u",(unsigned)(now%86400/3600),(unsigned)(now%3600/60));
-    lv_obj_t *t=lw_os_label(s->over,clock,&lw_font_88,264,105,496,c->text); lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+    /* Reserve the left column for text; the room remains a quiet right vignette. */
+    lw_os_box(s->over,24,96,424,340,c->bg,28,245);
+    lv_obj_t *t=lw_os_label(s->over,clock,&lw_font_88,48,146,376,c->text); register_control(t,OC_LOCK_CLOCK);
     lw_date_t d=lw_today(); char date[80]; snprintf(date,sizeof(date),"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,lw_time_is_demo() ? " · 演示日期" : "");
-    t=lw_os_label(s->over,date,&lw_font_22,212,224,600,c->muted); lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+    t=lw_os_label(s->over,date,&lw_font_18,50,260,374,c->muted); register_control(t,OC_LOCK_DATE);
     int days=lw_days_between(lw_app_state()->anniversary,d)+1; char love[96]; snprintf(love,sizeof(love),"在一起的第 %d 天，晚安也想对你说。",days<1 ? 1 : days);
-    t=lw_os_label(s->over,love,&lw_font_22,162,340,700,c->text); lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
-    lw_os_icon(s->over,OS_I_LOCK,492,63,40,c->muted); button(s->over,"轻触，回到小世界",358,472,308,60,OC_UNLOCK,true);
+    t=lw_os_label(s->over,love,&lw_font_18,50,330,364,c->text); register_control(t,OC_LOCK_LOVE);
+    lw_os_icon(s->over,OS_I_LOCK,54,103,28,c->muted); button(s->over,"轻触，回到小世界",48,472,376,60,OC_UNLOCK,true);
 }
 static void show_overlay(lw_os_overlay_t kind)
 {
@@ -382,7 +397,7 @@ static void refresh(void)
 }
 void lw_os_open(lw_os_page_t page)
 {
-    if (!s || page>OS_GAMES) return;
+    if (!s || page>OS_PET || page<OS_DESKTOP || s->system->locked) return;
     if (s->page==OS_THEMES && page!=OS_THEMES) { s->preview_theme=s->system->prefs.theme; s->preview_wallpaper=s->system->prefs.wallpaper; }
     s->page=page; if (page==OS_THEMES) { s->preview_theme=s->system->prefs.theme; s->preview_wallpaper=s->system->prefs.wallpaper; }
     s->duo.autonomous=page==OS_WORLD;
@@ -399,6 +414,8 @@ static void act(int id)
     case OC_MEMORIES:lw_os_open(OS_MEMORIES);break;
     case OC_MUSIC:lw_os_open(OS_MUSIC);break;
     case OC_GAMES:lw_os_open(OS_GAMES);break;
+    case OC_PET:lw_os_open(OS_PET);break;
+    case OC_REFRESH:render();break;
     case OC_SETTINGS:lw_os_open(OS_SETTINGS);break;
     case OC_CONTROL:show_overlay(OS_OVER_CONTROL);break;
     case OC_CLOSE:dismiss_overlay();break;
@@ -461,6 +478,7 @@ bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
     if (s || !system) return false;
     s=lv_malloc_zeroed(sizeof(*s)); if (!s) return false;
     s->system=system; s->art=art; s->pending=-1; s->previous=lv_screen_active(); s->last_tick=lv_tick_get(); s->last_wifi=system->wifi;
+    lw_shell_bind_host(&shell_host);
     lw_duo_init(&s->duo,0x10252026); s->duo.autonomous=false;
     for (unsigned i=0;i<2;i++) { s->duo.actors[i].x=592.0f+i*224.0f; s->duo.actors[i].y=446.0f; s->duo.actors[i].target_x=s->duo.actors[i].x; s->duo.actors[i].target_y=446.0f; }
     (void)lw_duo_set_bounds(&s->duo,510,894,380,460);
@@ -473,7 +491,7 @@ void lw_os_stop(void)
     if (!s) return;
     if (s->timer) lv_timer_delete(s->timer);
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
-    lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL;
+    lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL; lw_shell_bind_host(NULL);
 }
 lv_obj_t *lw_os_control(lw_os_control_t id) { return !s || id>=OC_COUNT ? NULL : s->over_controls[id] ? s->over_controls[id] : s->base_controls[id]; }
 lv_obj_t *lw_os_root(void) { return s ? s->root : NULL; }

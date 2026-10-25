@@ -130,8 +130,10 @@ lv_obj_t *lw_os_wallpaper(lv_obj_t *p,unsigned theme,int x,int y,int w,int h)
     lv_obj_t *o=lw_os_box(p,x,y,w,h,0,0,0); lv_obj_add_event_cb(o,room_draw,LV_EVENT_DRAW_MAIN,(void *)(uintptr_t)theme); return o;
 }
 static void move(void *o,int32_t y) { lv_obj_set_style_translate_y(o,y,0); }
+static void appear(void *o,int32_t opacity) { lv_obj_set_style_opa(o,(lv_opa_t)opacity,0); }
 void lw_os_animate(lv_obj_t *o,int offset,uint32_t duration)
 {
     lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,o); lv_anim_set_exec_cb(&a,move); lv_anim_set_values(&a,offset,0);
     lv_anim_set_duration(&a,duration); lv_anim_set_path_cb(&a,lv_anim_path_ease_out); lv_anim_start(&a);
+    lv_anim_set_exec_cb(&a,appear); lv_anim_set_values(&a,0,255); lv_anim_start(&a);
 }

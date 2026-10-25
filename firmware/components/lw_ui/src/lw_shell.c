@@ -26,6 +26,7 @@ static const lw_app_t *s_current;
 static lv_timer_t *s_clock_timer;
 static lv_timer_t *s_state_timer;
 static uint32_t s_last_save;
+static const lw_shell_host_t *s_host;
 
 static const char *const s_weekdays[7] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
@@ -136,6 +137,7 @@ static void stop_current_app(void)
 
 void lw_shell_open(const char *id)
 {
+    if (s_host) { s_host->open(id); return; }
     const lw_app_t *app = lw_app_find(id);
     if (app == NULL || s_content == NULL) {
         return;
@@ -159,16 +161,19 @@ void lw_shell_home(void)
 
 lv_obj_t *lw_shell_content(void)
 {
+    if (s_host) return s_host->content();
     return s_content;
 }
 
 const lw_app_t *lw_shell_current(void)
 {
+    if (s_host) return s_host->current();
     return s_current;
 }
 
 void lw_shell_refresh_theme(void)
 {
+    if (s_host) { s_host->refresh(); return; }
     if (s_screen == NULL) {
         return;
     }
@@ -181,6 +186,17 @@ void lw_shell_refresh_theme(void)
         lw_shell_open(current->id);
     }
     update_dock_styles();
+}
+
+void lw_shell_bind_host(const lw_shell_host_t *host)
+{
+    if (!s_host && host) {
+        stop_current_app();
+        s_current=NULL;
+        if (s_content) lv_obj_clean(s_content);
+    }
+    s_host=host;
+    if (!host && s_content) lw_shell_home();
 }
 
 /* ------------------------------------------------------------------ timers */

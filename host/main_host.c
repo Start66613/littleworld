@@ -28,8 +28,10 @@ int main(int argc, char **argv)
     const char *v2_dir = NULL;
     const char *pixel_pack = NULL,*pixel_output = NULL;
     const char *os_pack=NULL,*os_output=NULL;
+    bool legacy=false;
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--auto") == 0 && i + 1 < argc) {
+        if (strcmp(argv[i], "--legacy") == 0) { legacy=true;
+        } else if (strcmp(argv[i], "--auto") == 0 && i + 1 < argc) {
             auto_dir = argv[i + 1];
             i++;
         } else if (strcmp(argv[i], "--ui-v2-test") == 0 && i + 1 < argc) {
@@ -43,11 +45,11 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i],"--os-v2-test")==0 && i+2<argc) {
             os_pack=argv[++i]; os_output=argv[++i];
         } else {
-            fprintf(stderr,"Usage: LittleWorld.exe [--auto DIR | --ui-v2-test DIR]\n"); return 2;
+            fprintf(stderr,"Usage: LittleWorld.exe [--legacy | --os-v2 PACK | --os-v2-test PACK DIR | --auto DIR | --ui-v2-test DIR]\n"); return 2;
         }
     }
 
-    if ((auto_dir && v2_dir) || (pixel_pack && (auto_dir || v2_dir)) || (os_pack && (pixel_pack || auto_dir || v2_dir))) return 2;
+    if ((auto_dir && v2_dir) || (pixel_pack && (auto_dir || v2_dir)) || (os_pack && (pixel_pack || auto_dir || v2_dir)) || (legacy && (os_pack || pixel_pack || auto_dir || v2_dir))) return 2;
     if (auto_dir || v2_dir || pixel_output || os_output) {
         char isolated[512];
         const char *directory=auto_dir ? auto_dir : v2_dir ? v2_dir : pixel_output ? pixel_output : os_output;
@@ -74,6 +76,12 @@ int main(int argc, char **argv)
     if (auto_dir != NULL) {
         printf("auto mode, screenshots -> %s\n", auto_dir);
         return lw_auto_run(auto_dir);
+    }
+
+    if (!legacy) {
+        os_pack=getenv("LW_PIXEL_PACK");
+        if (!os_pack || !*os_pack) os_pack="private/pixel-duo/qianqian/qianqian.lwpx";
+        return lw_os_host_run(os_pack,NULL);
     }
 
     printf("Little World desktop simulator ready (%dx%d). Esc quits.\n", LW_HOST_WIDTH, LW_HOST_HEIGHT);
