@@ -191,6 +191,7 @@ static void motion_v4_tests(const char *out,bool characters)
 {
     lw_os_open(OS_DESKTOP); advance(600); unsigned base=objects(lw_os_root()); int timer_base=timers();
     if (!characters) CHECK("missing role art has a visible explanation",text_object(lw_os_root(),"角色资源未安装 · 场景与应用可用")!=NULL);
+    CHECK("envelope and room photo have disjoint touch regions",disjoint(lw_os_control(OC_ENVELOPE),lw_os_control(OC_ROOM_PHOTO)));
     if (lw_visual_assets_available()) CHECK("resource path cannot be replaced under live widgets",!lw_visual_assets_configure("untrusted-change"));
     lw_os_boot(); CHECK("boot timeline actually starts",lw_os_boot_active());
     for (unsigned i=0;i<7;i++) { char name[64]; snprintf(name,sizeof(name),"v4-boot-%02u",i); capture_now(out,name); advance(200); }

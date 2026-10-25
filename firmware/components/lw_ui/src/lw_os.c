@@ -252,12 +252,12 @@ static void build_desktop(bool world)
         int days=lw_days_between(lw_app_state()->anniversary,lw_today())+1;
         lv_obj_t *card=button(paper,"",14,58,272,70,OC_ANNIVERSARY,false); lv_obj_set_style_bg_opa(card,85,0);
         lw_os_label(card,"在一起的",&lw_font_18,12,11,100,c->muted); char days_text[40]; snprintf(days_text,sizeof(days_text),"%d 天",days<1 ? 1 : days); lw_os_label(card,days_text,&lw_font_28,118,20,148,c->deep);
-        lv_obj_t *letter=button(s->content,"",722,66,240,62,OC_ENVELOPE,false); lv_obj_set_style_bg_opa(letter,235,0); lw_os_icon(letter,OS_I_MAIL,16,14,34,c->deep); lw_os_label(letter,"今日的小信封",&lw_font_18,62,20,168,c->text);
+        lv_obj_t *letter=button(s->content,"",888,66,96,80,OC_ENVELOPE,false); lv_obj_set_style_bg_opa(letter,235,0); lw_os_icon(letter,OS_I_MAIL,31,7,34,c->deep); lv_obj_t *letter_label=lw_os_label(letter,"今日信封",&lw_font_18,0,48,96,c->text); lv_obj_set_style_text_align(letter_label,LV_TEXT_ALIGN_CENTER,0);
         } else lw_os_label(s->content,world ? "两个人的日常" : "我们的小世界",&lw_font_28,390,80,320,c->text);
         if (world) { button(s->content,"见面打招呼",28,412,196,52,OC_GREET,true); button(s->content,"一起读封信",28,346,196,52,OC_LETTER,false); button(s->content,"一起休息",28,280,196,52,OC_REST,false); button(s->content,"照顾宠物",760,412,212,52,OC_PET,false); button(s->content,"小冒险",760,346,212,52,OC_RPG,true); }
         lv_obj_t *furniture=button(s->content,"",22,128,230,136,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
         furniture=button(s->content,"",20,281,260,166,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED); if (world) lv_obj_remove_flag(furniture,LV_OBJ_FLAG_CLICKABLE);
-        furniture=button(s->content,"",700,140,90,100,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
+        furniture=button(s->content,"",700,80,90,100,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
         actors();
         if (!s->art) { lv_obj_t *empty=surface(s->content,360,400,340,72,16); lw_os_label(empty,"角色资源未安装 · 场景与应用可用",&lw_font_18,16,12,308,c->text); }
         lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL); return;
