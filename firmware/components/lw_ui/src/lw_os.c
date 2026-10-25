@@ -293,7 +293,7 @@ static void build_settings(void)
             lv_obj_t *o=button(panel,names[i],28,132+(int)i*62,580,50,(lw_os_control_t)(OC_MOTION_FULL+i),lw_os_motion_get()==(lw_motion_mode_t)i);
             if (lw_os_motion_get()==(lw_motion_mode_t)i) lw_os_icon(o,OS_I_CHECK,528,10,28,0xffffff);
         }
-        lw_os_label(panel,"关闭沿用原有设置存档；减少动态当前仅本次会话。",&lw_font_18,28,337,580,c->muted);
+        lw_os_label(panel,"关闭动效会保存；减少动态仅本次生效。",&lw_font_18,28,337,580,c->muted);
     } else {
         lw_os_label(panel,s->section==6 ? "Little World OS 2.0" : "开发验证",&lw_font_28,28,100,580,c->text);
         lw_os_label(panel,s->section==6 ? "7 英寸 · 1024 × 600\nESP32-P4 / LVGL 9.5\nWindows 原型 · 硬件功能未在本次验证" : "所有网络与音量为 Windows Mock。\n真实硬件能力由服务适配层独立报告。\n无设备连接、无刷写、无付费生成。",&lw_font_18,28,165,580,c->muted);
