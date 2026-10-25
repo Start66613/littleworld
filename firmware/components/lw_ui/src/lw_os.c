@@ -174,7 +174,7 @@ static void build_dock(void)
         lv_obj_t *item=button(dock,"",14+i*108,3,104,80,ids[i],false); lv_obj_set_style_bg_opa(item,0,0);
         lv_obj_t *tile=lw_os_box(item,30,4,44,44,fills[i],14,255); lw_os_icon(tile,icons[i],5,5,34,0x65505e);
         lw_os_label(item,names[i],&lw_font_18,0,52,104,c->text); lv_obj_set_style_text_align(lv_obj_get_child(item,-1),LV_TEXT_ALIGN_CENTER,0);
-        if (((s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG) && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && s->page<=OS_GAMES && (int)s->page-OS_ALBUM+1==i)) { lw_os_box(item,44,75,16,3,c->accent,2,255); lv_obj_set_style_bg_color(tile,lv_color_hex(c->line),0); }
+        if (((s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG) && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && s->page<=OS_GAMES && (int)s->page-OS_ALBUM+1==i)) { lw_os_box(item,44,75,16,3,c->accent,2,255); lv_obj_set_style_border_width(tile,2,0); lv_obj_set_style_border_color(tile,lv_color_hex(c->accent),0); }
     }
 }
 static const lw_clip_t *art_clip(unsigned actor,const char *name)
