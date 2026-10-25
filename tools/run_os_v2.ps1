@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$Test,[switch]$SkipBuild,[string]$LvglDir,[string]$PackPath)
+param([switch]$Test,[switch]$SkipBuild,[string]$LvglDir,[string]$PackPath,[string]$OutputDir='reports/ui-v2/os-v2',[string]$ReportDir='reports/os-v2')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -20,8 +20,8 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE -ne 0) {throw 'Host build failed'}
 }
 if ($Test) {
-    $out="$root/reports/ui-v2/os-v2"
-    New-Item -ItemType Directory -Force -Path $out,"$root/reports/os-v2" | Out-Null
+    $out=Join-Path $root $OutputDir
+    New-Item -ItemType Directory -Force -Path $out,(Join-Path $root $ReportDir) | Out-Null
     & "$root/build/host/SystemModelTests.exe"
     if ($LASTEXITCODE -ne 0) {throw 'System service tests failed'}
     & "$root/build/host/PixelDuoModelTests.exe"
@@ -32,7 +32,7 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) {throw 'Real file cache tests failed'}
     & "$root/build/host/LittleWorld.exe" --os-v2-test $pack $out
     $result=$LASTEXITCODE
-    & $python tools/export_os_evidence.py --root $root
+    & $python tools/export_os_evidence.py --root $root --input $OutputDir --report-dir $ReportDir
     if ($result -ne 0 -or $LASTEXITCODE -ne 0) {throw 'OS prototype checks failed; see reports/logs and local screenshots'}
 } else {
     & "$root/build/host/LittleWorld.exe" --os-v2 $pack

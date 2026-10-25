@@ -27,6 +27,7 @@ static lv_timer_t *s_clock_timer;
 static lv_timer_t *s_state_timer;
 static uint32_t s_last_save;
 static const lw_shell_host_t *s_host;
+bool lw_shell_host_active(void) { return s_host!=NULL; }
 
 static const char *const s_weekdays[7] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 

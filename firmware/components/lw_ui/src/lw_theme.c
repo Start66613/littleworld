@@ -5,6 +5,7 @@
 
 static int s_variant;
 static int s_ready;
+static lw_palette_t s_session; static bool s_use_session;
 
 static const lw_palette_t s_variants[3] = {
     /* cream */
@@ -40,12 +41,21 @@ static void anim_opa_cb(void *var, int32_t value)
 
 const lw_palette_t *lw_palette(void)
 {
-    return &s_variants[s_variant];
+    return s_use_session ? &s_session : &s_variants[s_variant];
 }
 
 int lw_theme_variant(void)
 {
     return s_variant;
+}
+void lw_theme_session_palette(const lw_palette_t *palette)
+{
+    s_use_session=palette!=NULL; if (palette) s_session=*palette;
+    if (s_ready) {
+        const lw_palette_t *p=lw_palette(); lv_style_set_bg_color(&s_card,lv_color_hex(p->card));
+        lv_style_set_shadow_color(&s_card,lv_color_hex(p->shadow)); lv_style_set_text_color(&s_card,lv_color_hex(p->text));
+        lv_style_set_bg_color(&s_soft,lv_color_hex(p->card_soft));
+    }
 }
 
 void lw_theme_init(void)

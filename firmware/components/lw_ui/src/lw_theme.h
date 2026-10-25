@@ -42,6 +42,8 @@ typedef struct {
 } lw_palette_t;
 
 const lw_palette_t *lw_palette(void);
+/* UI-only session override. Does not change the legacy saved theme. */
+void lw_theme_session_palette(const lw_palette_t *);
 void lw_theme_init(void);
 /** 0 = cream (default), 1 = rose, 2 = lavender. Re-applies to the active screen. */
 void lw_theme_set_variant(int variant);

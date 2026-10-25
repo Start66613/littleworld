@@ -8,4 +8,17 @@ lv_obj_t *lw_os_box(lv_obj_t *,int,int,int,int,uint32_t,int,lv_opa_t);
 lv_obj_t *lw_os_label(lv_obj_t *,const char *,const lv_font_t *,int,int,int,uint32_t);
 lv_obj_t *lw_os_icon(lv_obj_t *,lw_os_icon_t,int,int,int,uint32_t);
 lv_obj_t *lw_os_wallpaper(lv_obj_t *,unsigned,int,int,int,int);
+void lw_os_wallpaper_change(lv_obj_t *,unsigned);
+size_t lw_os_scene_live_bytes(void);
 void lw_os_animate(lv_obj_t *,int,uint32_t);
+typedef enum { LW_MOTION_FULL,LW_MOTION_REDUCED,LW_MOTION_OFF } lw_motion_mode_t;
+typedef enum { LW_MOVE_PAGE,LW_MOVE_CONTROL,LW_MOVE_DIALOG,LW_MOVE_TOAST,LW_MOVE_REWARD,LW_MOVE_THEME } lw_motion_kind_t;
+void lw_os_motion_mode(lw_motion_mode_t);
+lw_motion_mode_t lw_os_motion_get(void);
+void lw_os_motion(lv_obj_t *,lw_motion_kind_t);
+void lw_os_motion_exit(lv_obj_t *);
+void lw_os_motion_touch(lv_obj_t *);
+void lw_os_motion_settle(lv_obj_t *);
+void lw_os_motion_step(lv_obj_t *,int,int,unsigned);
+/* Small foreground layer drawn after actors. Native coordinates, no image cache. */
+lv_obj_t *lw_os_foreground(lv_obj_t *,unsigned);

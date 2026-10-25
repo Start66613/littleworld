@@ -36,4 +36,7 @@ __pycache__/
 *.rgb565a8
 /reports/ui-v2/os-v2/
 /reports/ui-v2/os-v2-fallback/
+/reports/ui-v2/os-v3/
+/reports/ui-v2/os-v3-fallback/
+/reports/ui-v2/os-v3-legacy/
 /reports/os-v2/screens/

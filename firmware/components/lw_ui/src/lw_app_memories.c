@@ -11,6 +11,8 @@
 #include "lw_shell.h"
 #include "lw_theme.h"
 #include "lw_widgets.h"
+#include "lw_ui_content.h"
+#include "lw_os_design.h"
 #include "lw/lw_memories.h"
 #include "lw/lw_time.h"
 
@@ -25,6 +27,13 @@ static lv_obj_t *s_days_label;
 static lv_obj_t *s_days_unit;
 static lv_obj_t *s_next_label;
 static lv_obj_t *s_content;
+static const lw_memory_t *stories; static unsigned story_count;
+bool lw_memories_set_source(const lw_memory_t *items,unsigned count)
+{
+    if (s_page || count>32 || (count && !items)) return false;
+    for (unsigned i=0;i<count;i++) if (!items[i].title || !items[i].body || strlen(items[i].title)>128 || strlen(items[i].body)>4096 || !lw_date_valid(items[i].date)) return false;
+    stories=items; story_count=count; return true;
+}
 
 static void build_tabs(lv_obj_t *content);
 static void build_page(void);
@@ -34,6 +43,7 @@ static void close_overlay_cb(lv_event_t *event)
     lv_obj_t *overlay = (lv_obj_t *)lv_event_get_user_data(event);
     if (overlay != NULL) {
         lv_obj_delete(overlay);
+        if (s_detail_overlay==overlay) s_detail_overlay=NULL;
     }
 }
 
@@ -147,7 +157,7 @@ static void date_adjust_clicked(lv_event_t *event)
 static lv_obj_t *date_adjust_button(lv_obj_t *parent, int x, int y, int field, int delta)
 {
     const lw_palette_t *palette = lw_palette();
-    lv_obj_t *btn = lw_button(parent, delta > 0 ? "+" : "-", 34, 32, palette->card, palette->dim, &lw_font_18);
+    lv_obj_t *btn = lw_button(parent, delta > 0 ? "+" : "-", 44, 44, palette->card, palette->dim, &lw_font_18);
     lv_obj_set_pos(btn, x, y);
     lv_obj_add_event_cb(btn, date_adjust_clicked, LV_EVENT_CLICKED, (void *)(intptr_t)(field * 10 + delta + 5));
     return btn;
@@ -158,15 +168,16 @@ static void build_tab_today(lv_obj_t *page)
     const lw_palette_t *palette = lw_palette();
     lw_state_t *state = lw_app_state();
 
-    lv_obj_t *hero = lw_card(page, 32, 66, 470, 340);
+    lv_obj_t *hero = lw_card(page, 32, 16, 470, 340);
+    lw_os_icon(hero,OS_I_HEART,372,26,58,palette->accent);
     lw_text(hero, "我们在一起", &lw_font_18, palette->dim, 32, 30);
     s_days_label = lw_text(hero, "--", &lw_font_44, palette->accent_deep, 32, 62);
     s_days_unit = lw_text(hero, "天", &lw_font_28, palette->accent_deep, 0, 0);
     lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
     s_next_label = lw_text(hero, "", &lw_font_18, palette->dim, 32, 136);
-    lw_text_wrap(hero, lw_memories_welcome(), &lw_font_18, palette->text, 32, 186, 400);
+    lw_text_wrap(hero,"这张卡片记录一起走过的日子。\n真实故事可以慢慢补进来。",&lw_font_22,palette->text,32,200,400);
 
-    lv_obj_t *edit_card = lw_card(page, 522, 66, 470, 208);
+    lv_obj_t *edit_card = lw_card(page, 522, 16, 470, 208);
     lw_text(edit_card, "纪念日设置（DEMO 可改）", &lw_font_22, palette->text, 28, 18);
     lw_text(edit_card, "起始日期", &lw_font_18, palette->dim, 28, 58);
 
@@ -175,17 +186,14 @@ static void build_tab_today(lv_obj_t *page)
                           state->anniversary.day);
 
     /* one compact row: 年 - +   月 - +   日 - + */
-    lw_text(edit_card, "年", &lw_font_18, palette->dim, 28, 148);
-    date_adjust_button(edit_card, 58, 140, 0, -1);
-    date_adjust_button(edit_card, 96, 140, 0, 1);
-    lw_text(edit_card, "月", &lw_font_18, palette->dim, 158, 148);
-    date_adjust_button(edit_card, 188, 140, 1, -1);
-    date_adjust_button(edit_card, 226, 140, 1, 1);
-    lw_text(edit_card, "日", &lw_font_18, palette->dim, 288, 148);
-    date_adjust_button(edit_card, 318, 140, 2, -1);
-    date_adjust_button(edit_card, 356, 140, 2, 1);
+    lw_text(edit_card,"年",&lw_font_18,palette->dim,28,152);
+    date_adjust_button(edit_card,56,140,0,-1); date_adjust_button(edit_card,108,140,0,1);
+    lw_text(edit_card,"月",&lw_font_18,palette->dim,176,152);
+    date_adjust_button(edit_card,200,140,1,-1); date_adjust_button(edit_card,252,140,1,1);
+    lw_text(edit_card,"日",&lw_font_18,palette->dim,320,152);
+    date_adjust_button(edit_card,344,140,2,-1); date_adjust_button(edit_card,396,140,2,1);
 
-    lv_obj_t *story = lw_card(page, 522, 286, 470, 120);
+    lv_obj_t *story = lw_card(page, 522, 238, 470, 120);
     lv_obj_set_style_bg_color(story, lv_color_hex(palette->card_soft), 0);
     lw_text(story, "回忆时间线", &lw_font_22, palette->text, 28, 20);
     lw_text(story, "把一起走过的日子收好，慢慢翻。", &lw_font_18, palette->dim, 28, 54);
@@ -236,14 +244,17 @@ static void memory_clicked(lv_event_t *event)
     lv_obj_set_style_bg_opa(overlay, LV_OPA_50, 0);
     lv_obj_add_flag(overlay, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_move_foreground(overlay);
+    s_detail_overlay=overlay;
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
     lv_obj_center(card);
+    lw_os_motion(card,LW_MOVE_DIALOG);
 
     lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, 32, 28);
     lv_label_set_text_fmt(date, "%04d-%02d-%02d", memory->date.year, memory->date.month, memory->date.day);
-    lw_text(card, memory->title, &lw_font_28, palette->text, 32, 58);
-    lw_text_wrap(card, memory->body, &lw_font_22, palette->text, 32, 108, 496);
+    lv_obj_t *title=lw_text(card,memory->title,&lw_font_28,palette->text,32,58); lv_obj_set_size(title,496,44); lv_label_set_long_mode(title,LV_LABEL_LONG_MODE_DOTS);
+    lv_obj_t *body=lw_os_box(card,32,110,496,180,0,0,0); lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE); lv_obj_set_scroll_dir(body,LV_DIR_VER); lv_obj_set_scrollbar_mode(body,LV_SCROLLBAR_MODE_AUTO);
+    lw_text_wrap(body,memory->body,&lw_font_22,palette->text,0,0,476);
     lw_text(card, "照片位：以后放真实照片", &lw_font_18, palette->dim, 32, 300);
 
     lv_obj_t *close = lw_button(card, "收起", 130, 46, palette->accent, 0xFFFFFF, &lw_font_18);
@@ -257,21 +268,23 @@ static void build_tab_timeline(lv_obj_t *page)
 
     lv_obj_t *list = lv_obj_create(page);
     lv_obj_remove_style_all(list);
-    lv_obj_set_pos(list, 32, 66);
-    lv_obj_set_size(list, 960, 330);
+    lv_obj_set_pos(list, 32, 52);
+    lv_obj_set_size(list, 960, 322);
     lv_obj_set_flex_flow(list, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(list, 8, 0);
     lv_obj_set_style_pad_all(list, 0, 0);
     lv_obj_set_scroll_dir(list, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(list, LV_SCROLLBAR_MODE_AUTO);
 
-    int count = lw_memories_count();
+    lw_os_label(page,stories ? "我们的故事手账" : "示例时间线 · 等待导入真实故事",&lw_font_18,40,16,900,palette->dim);
+    int count = stories ? (int)story_count : lw_memories_count();
     for (int i = 0; i < count; i++) {
-        const lw_memory_t *memory = lw_memories_get(i);
-        lv_obj_t *row = lw_card(list, 0, 0, 940, 76);
+        const lw_memory_t *memory = stories ? &stories[i] : lw_memories_get(i);
+        lv_obj_t *row = lw_card(list, 0, 0, 940, 86);
         lv_obj_set_style_radius(row, 18, 0);
         lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(row, memory_clicked, LV_EVENT_CLICKED, (void *)memory);
+        lw_os_motion_touch(row); lw_os_box(row,84,13,3,60,palette->line,2,255); lw_os_box(row,79,26,13,13,palette->accent,7,255);
 
         lv_obj_t *date = lw_text(row, "", &lw_font_18, palette->dim, 22, 26);
         lv_label_set_text_fmt(date, "%02d-%02d", memory->date.month, memory->date.day);
@@ -301,7 +314,7 @@ static void build_tab_surprise(lv_obj_t *page)
     const lw_palette_t *palette = lw_palette();
     lw_state_t *state = lw_app_state();
 
-    lv_obj_t *card = lw_card(page, 32, 70, 470, 340);
+    lv_obj_t *card = lw_card(page, 32, 18, 470, 340);
     lv_obj_set_style_bg_color(card, lv_color_hex(palette->card_soft), 0);
 
     lv_obj_t *box = lw_icon_badge(card, 165, 40, 140, palette->accent, 30);
@@ -329,7 +342,7 @@ static void build_tab_surprise(lv_obj_t *page)
     lv_obj_set_pos(open, 140, 262);
     lv_obj_add_event_cb(open, gift_opened, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t *message = lw_card(page, 522, 70, 470, 340);
+    lv_obj_t *message = lw_card(page, 522, 18, 470, 340);
     lw_text(message, state->surprise_unlocked ? "里面的留言" : "还没打开", &lw_font_22, palette->text, 30, 24);
     if (state->surprise_unlocked) {
         lw_text_wrap(message, lw_surprise_message(), &lw_font_28, palette->accent_deep, 30, 80, 400);
@@ -362,6 +375,7 @@ static void place_clicked(lv_event_t *event)
     lv_obj_move_foreground(overlay);
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 520, 300);
+    s_detail_overlay=overlay;
     lv_obj_center(card);
     lw_text(card, place->name, &lw_font_28, palette->text, 32, 30);
     lw_text(card, place->subtitle, &lw_font_18, palette->dim, 32, 74);
@@ -380,7 +394,7 @@ static void build_tab_map(lv_obj_t *page)
         const lw_place_t *place = lw_places_get(i);
         int col = i % 3;
         int row = i / 3;
-        lv_obj_t *card = lw_card(page, 32 + col * 330, 72 + row * 166, 310, 150);
+        lv_obj_t *card = lw_card(page, 32 + col * 330, 18 + row * 166, 310, 150);
         lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(card, place_clicked, LV_EVENT_CLICKED, (void *)(intptr_t)i);
 
@@ -459,6 +473,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
 
 static void destroy(void)
 {
+    if (s_detail_overlay) { lv_obj_delete(s_detail_overlay); s_detail_overlay=NULL; }
     if (s_timer != NULL) {
         lv_timer_delete(s_timer);
         s_timer = NULL;
@@ -468,6 +483,7 @@ static void destroy(void)
     s_days_label = NULL;
     s_days_unit = NULL;
     s_next_label = NULL;
+    s_content = NULL;
 }
 
 const lw_app_t lw_app_memories_def = {

@@ -44,6 +44,7 @@ typedef struct {
     const lw_app_t *(*current)(void);
 } lw_shell_host_t;
 void lw_shell_bind_host(const lw_shell_host_t *host);
+bool lw_shell_host_active(void);
 
 #ifdef __cplusplus
 }

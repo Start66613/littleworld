@@ -1,6 +1,7 @@
 /* Hand-built room illustration and original line icons, drawn by LVGL. SPDX-License-Identifier: MIT */
 #include "lw_os_design.h"
 #include <stdint.h>
+#include "lw_app_state.h"
 static const lw_os_palette_t palettes[]={
     {0xfff7ee,0xf2e6e9,0xfffcf8,0xf3e8e8,0x51424a,0x81737c,0xe6d6d9,0xda879d,0x905668,0xd0ac8c,0xcde0dc,"Sakura"},
     {0x222940,0x3a3654,0x353c54,0x45465f,0xf7efe6,0xbeb8ce,0x55566c,0xbeafd9,0xd8bed8,0x8f7a85,0x374a6b,"Moonlight"},
@@ -19,10 +20,10 @@ lv_obj_t *lw_os_label(lv_obj_t *p,const char *value,const lv_font_t *font,int x,
     lv_obj_set_style_text_font(o,font,0); lv_obj_set_style_text_color(o,lv_color_hex(color),0);
     lv_obj_set_style_text_line_space(o,6,0); lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE); return o;
 }
-typedef struct { lv_layer_t *layer; lv_area_t area; float sx,sy; } painter_t;
+typedef struct { lv_layer_t *layer; lv_area_t area; float sx,sy; unsigned opacity; } painter_t;
 static void rect(painter_t *p,int x,int y,int w,int h,uint32_t color,int radius,int opa)
 {
-    lv_draw_rect_dsc_t d; lv_draw_rect_dsc_init(&d); d.bg_color=lv_color_hex(color); d.bg_opa=(lv_opa_t)opa; d.radius=(int)(radius*p->sx);
+    lv_draw_rect_dsc_t d; lv_draw_rect_dsc_init(&d); d.bg_color=lv_color_hex(color); d.bg_opa=(lv_opa_t)(opa*(p->opacity ? p->opacity : 255)/255); d.radius=(int)(radius*p->sx);
     lv_area_t a={p->area.x1+(int)(x*p->sx),p->area.y1+(int)(y*p->sy),p->area.x1+(int)((x+w)*p->sx)-1,p->area.y1+(int)((y+h)*p->sy)-1}; lv_draw_rect(p->layer,&d,&a);
 }
 static void line(painter_t *p,int x1,int y1,int x2,int y2,uint32_t color,int width)
@@ -64,7 +65,7 @@ static void icon_draw(lv_event_t *event)
     case OS_I_MAIL: rect(&p,6,12,36,26,c,4,255); line(&p,8,15,24,27,0xfffaf4,2); line(&p,24,27,40,15,0xfffaf4,2); break;
     case OS_I_PLAY: line(&p,18,10,36,24,c,stroke); line(&p,36,24,18,38,c,stroke); line(&p,18,38,18,10,c,stroke); break;
     case OS_I_CHECK: line(&p,11,24,21,34,c,stroke); line(&p,21,34,38,14,c,stroke); break;
-    case OS_I_LEAF: arc(&p,24,24,14,185,350,c,stroke); arc(&p,24,24,14,5,170,c,stroke); line(&p,14,35,33,16,c,stroke); break;
+    case OS_I_LEAF: line(&p,12,36,14,22,c,stroke); line(&p,14,22,24,12,c,stroke); line(&p,24,12,38,10,c,stroke); line(&p,38,10,36,24,c,stroke); line(&p,36,24,26,34,c,stroke); line(&p,26,34,12,36,c,stroke); line(&p,12,36,31,17,c,stroke); line(&p,20,28,20,21,c,2); line(&p,25,23,32,23,c,2); break;
     }
 }
 lv_obj_t *lw_os_icon(lv_obj_t *p,lw_os_icon_t id,int x,int y,int size,uint32_t c)
@@ -79,10 +80,11 @@ static void plant(painter_t *p,int x,int y,int scale)
     rect(p,x-19*scale,y-27*scale,18*scale,11*scale,0x8fa17b,4*scale,255); rect(p,x+2*scale,y-39*scale,17*scale,12*scale,0xaab88f,4*scale,255);
     rect(p,x-13*scale,y-45*scale,13*scale,12*scale,0x7f977a,4*scale,255);
 }
-static void room_draw(lv_event_t *event)
+static void paint_room(lv_obj_t *o,lv_layer_t *layer,unsigned theme,unsigned opacity)
 {
-    lv_obj_t *o=lv_event_get_target_obj(event); unsigned theme=(unsigned)(uintptr_t)lv_event_get_user_data(event); const lw_os_palette_t *c=lw_os_palette(theme);
-    painter_t p={0}; p.layer=lv_event_get_layer(event); lv_obj_get_coords(o,&p.area); p.sx=(float)lv_obj_get_width(o)/1024; p.sy=(float)lv_obj_get_height(o)/600;
+    if (!opacity) return;
+    const lw_os_palette_t *c=lw_os_palette(theme);
+    painter_t p={0}; p.layer=layer; p.opacity=opacity; lv_obj_get_coords(o,&p.area); p.sx=(float)lv_obj_get_width(o)/1024; p.sy=(float)lv_obj_get_height(o)/600;
     rect(&p,0,0,1024,600,c->bg,0,255);
     /* The room is an original code illustration. No character/UI is baked into it. */
     rect(&p,344,66,640,402,theme==1 ? 0x30374e : 0xf3e8dc,28,255);
@@ -107,6 +109,8 @@ static void room_draw(lv_event_t *event)
     for (int x=741;x<761;x+=6) rect(&p,x,94,2,198,theme==1 ? 0x8e859f : 0xd5a2ad,0,200);
     rect(&p,493,296,277,10,c->wood,2,255);
     /* Sofa upholstery, feet, folded blanket and a small side table. */
+    if (theme==1) rect(&p,404,172,76,108,0xf6d49c,38,20);
+    rect(&p,439,218,4,67,c->wood,1,255); rect(&p,420,202,42,23,theme==1 ? 0xf2d6ae : 0xe6cfb3,8,255);
     rect(&p,378,314,177,59,0x9a7d79,12,80); rect(&p,389,276,151,70,theme==1 ? 0x9a859c : theme==2 ? 0x94a68e : 0xccabb6,10,255);
     rect(&p,379,310,173,46,theme==1 ? 0x8e7a92 : theme==2 ? 0xa7b49b : 0xddbdc5,11,255); rect(&p,390,316,151,20,theme==1 ? 0xa794ab : theme==2 ? 0xbac6a6 : 0xebcfd2,7,255);
     rect(&p,389,354,8,19,c->wood,0,255); rect(&p,534,354,8,19,c->wood,0,255);
@@ -125,15 +129,93 @@ static void room_draw(lv_event_t *event)
     plant(&p,952,395,1);
     rect(&p,0,488,1024,112,c->lower,0,155);
 }
+static void room_draw(lv_event_t *e) { paint_room(lv_event_get_target_obj(e),lv_event_get_layer(e),(unsigned)(uintptr_t)lv_event_get_user_data(e),255); }
+typedef struct { unsigned theme,opacity; } scene_mix_t;
+static unsigned scene_mix_count;
+size_t lw_os_scene_live_bytes(void) { return scene_mix_count*sizeof(scene_mix_t); }
+static void old_scene(lv_event_t *e)
+{ scene_mix_t *mix=lv_event_get_user_data(e); paint_room(lv_event_get_target_obj(e),lv_event_get_layer(e),mix->theme,mix->opacity); }
+static void scene_delete(lv_event_t *e) { scene_mix_count--; lv_free(lv_event_get_user_data(e)); }
+static void scene_fade(void *object,int32_t opacity)
+{ scene_mix_t *mix=lv_obj_get_user_data(object); mix->opacity=(unsigned)opacity; lv_obj_invalidate(object); }
+void lw_os_wallpaper_change(lv_obj_t *o,unsigned from)
+{
+    if (lw_os_motion_get()!=LW_MOTION_FULL) return;
+    scene_mix_t *mix=lv_malloc_zeroed(sizeof(*mix)); if (!mix) return;
+    scene_mix_count++;
+    mix->theme=from; mix->opacity=255; lv_obj_set_user_data(o,mix);
+    lv_obj_add_event_cb(o,old_scene,LV_EVENT_DRAW_MAIN,mix); lv_obj_add_event_cb(o,scene_delete,LV_EVENT_DELETE,mix);
+    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,o); lv_anim_set_exec_cb(&a,scene_fade); lv_anim_set_values(&a,255,0); lv_anim_set_duration(&a,260); lv_anim_set_path_cb(&a,lv_anim_path_ease_out); lv_anim_start(&a);
+}
 lv_obj_t *lw_os_wallpaper(lv_obj_t *p,unsigned theme,int x,int y,int w,int h)
 {
     lv_obj_t *o=lw_os_box(p,x,y,w,h,0,0,0); lv_obj_add_event_cb(o,room_draw,LV_EVENT_DRAW_MAIN,(void *)(uintptr_t)theme); return o;
 }
+static lw_motion_mode_t motion_mode;
 static void move(void *o,int32_t y) { lv_obj_set_style_translate_y(o,y,0); }
+static void move_x(void *o,int32_t x) { lv_obj_set_style_translate_x(o,x,0); }
 static void appear(void *o,int32_t opacity) { lv_obj_set_style_opa(o,(lv_opa_t)opacity,0); }
+static void animate(lv_obj_t *o,lv_anim_exec_xcb_t exec,int from,int to,unsigned duration,bool spring)
+{
+    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,o); lv_anim_set_exec_cb(&a,exec); lv_anim_set_values(&a,from,to);
+    lv_anim_set_duration(&a,duration); lv_anim_set_path_cb(&a,spring ? lv_anim_path_overshoot : lv_anim_path_ease_out); lv_anim_start(&a);
+}
+lw_motion_mode_t lw_os_motion_get(void) { return !lw_app_state()->settings.animations ? LW_MOTION_OFF : motion_mode; }
+void lw_os_motion_mode(lw_motion_mode_t mode) { motion_mode=mode; }
+void lw_os_motion_settle(lv_obj_t *o)
+{
+    if (lv_anim_get(o,scene_fade)) { lv_anim_delete(o,scene_fade); scene_fade(o,0); }
+    lv_anim_delete(o,move); lv_anim_delete(o,move_x); lv_anim_delete(o,appear);
+    move(o,0); move_x(o,0); appear(o,255);
+    for (unsigned i=0;i<lv_obj_get_child_count(o);i++) lw_os_motion_settle(lv_obj_get_child(o,(int)i));
+}
+void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
+{
+    lw_motion_mode_t mode=lw_os_motion_get(); if (mode==LW_MOTION_OFF) return;
+    if (mode==LW_MOTION_REDUCED) { animate(o,appear,220,255,90,false); return; }
+    switch (kind) {
+    case LW_MOVE_PAGE:animate(o,move_x,22,0,220,false);break;
+    case LW_MOVE_CONTROL:animate(o,move_x,42,0,290,true);break;
+    case LW_MOVE_DIALOG:animate(o,move,20,0,240,true);break;
+    case LW_MOVE_TOAST:animate(o,move,-10,0,170,false);break;
+    case LW_MOVE_REWARD:animate(o,move,28,0,420,true);break;
+    case LW_MOVE_THEME:animate(o,appear,210,255,260,false);break;
+    }
+}
+void lw_os_motion_exit(lv_obj_t *o) { if (lw_os_motion_get()==LW_MOTION_FULL) animate(o,move_x,0,-14,70,false); }
+void lw_os_motion_step(lv_obj_t *o,int x,int y,unsigned duration)
+{
+    lv_obj_update_layout(o); int old_x=lv_obj_get_x(o),old_y=lv_obj_get_y(o);
+    lv_obj_set_pos(o,x,y);
+    if (lw_os_motion_get()==LW_MOTION_FULL) { animate(o,move_x,old_x-x,0,duration,false); animate(o,move,old_y-y,0,duration,false); }
+    else { lv_anim_delete(o,move); lv_anim_delete(o,move_x); move(o,0); move_x(o,0); }
+}
+static void touched(lv_event_t *e)
+{
+    lv_obj_t *o=lv_event_get_target_obj(e);
+    if (lv_obj_has_state(o,LV_STATE_DISABLED) || lw_os_motion_get()!=LW_MOTION_FULL) return;
+    lv_anim_delete(o,move);
+    if (lv_event_get_code(e)==LV_EVENT_PRESSED) move(o,2);
+    else animate(o,move,2,0,140,true);
+}
+void lw_os_motion_touch(lv_obj_t *o)
+{ lv_obj_add_event_cb(o,touched,LV_EVENT_PRESSED,NULL); lv_obj_add_event_cb(o,touched,LV_EVENT_RELEASED,NULL); lv_obj_add_event_cb(o,touched,LV_EVENT_PRESS_LOST,NULL); }
 void lw_os_animate(lv_obj_t *o,int offset,uint32_t duration)
 {
-    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,o); lv_anim_set_exec_cb(&a,move); lv_anim_set_values(&a,offset,0);
-    lv_anim_set_duration(&a,duration); lv_anim_set_path_cb(&a,lv_anim_path_ease_out); lv_anim_start(&a);
-    lv_anim_set_exec_cb(&a,appear); lv_anim_set_values(&a,0,255); lv_anim_start(&a);
+    if (lw_os_motion_get()==LW_MOTION_OFF) return;
+    if (lw_os_motion_get()==LW_MOTION_FULL) animate(o,move,offset,0,duration,false);
+    else animate(o,appear,220,255,90,false);
+}
+static void foreground_draw(lv_event_t *event)
+{
+    painter_t p={0}; lv_obj_t *o=lv_event_get_target_obj(event); p.layer=lv_event_get_layer(event); lv_obj_get_coords(o,&p.area); p.sx=1; p.sy=1;
+    unsigned theme=(unsigned)(uintptr_t)lv_event_get_user_data(event);
+    /* Low table and plant at the right/front; actor-safe area stops at x=878. */
+    uint32_t wood=lw_os_palette(theme)->wood;
+    rect(&p,874,428,105,8,wood,3,255); rect(&p,882,436,6,31,wood,1,255); rect(&p,965,436,6,31,wood,1,255);
+    plant(&p,942,414,1);
+}
+lv_obj_t *lw_os_foreground(lv_obj_t *parent,unsigned theme)
+{
+    lv_obj_t *o=lw_os_box(parent,0,0,1024,494,0,0,0); lv_obj_add_event_cb(o,foreground_draw,LV_EVENT_DRAW_MAIN,(void *)(uintptr_t)theme); return o;
 }

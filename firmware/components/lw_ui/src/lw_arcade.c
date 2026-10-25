@@ -9,18 +9,29 @@
 #include "lw_shell.h"
 #include "lw_theme.h"
 #include "lw_widgets.h"
+#include "lw_os_design.h"
+#include "lw_ui_content.h"
 #include "arcade/arcade_2048.h"
 #include "arcade/arcade_breakout.h"
 #include "arcade/arcade_snake.h"
 
 static lv_obj_t *s_overlay;
 static void (*s_game_teardown)(void);
+static lv_obj_t *s_pause_overlay;
+static lv_timer_t *s_game_timer;
+static bool s_paused,s_resume_timer; static int s_game_kind; static uint32_t s_steps;
+bool lw_arcade_is_paused(void) { return s_paused; }
+uint32_t lw_arcade_steps(void) { return s_steps; }
+static void resume_clock(void);
+static void commit_game_score(void);
 
 static void open_game_snake(lv_event_t *event);
 static void open_game_breakout(lv_event_t *event);
 
 static void close_overlay(void)
 {
+    if (s_overlay) commit_game_score();
+    s_pause_overlay=NULL; s_paused=false; s_game_timer=NULL;
     if (s_game_teardown != NULL) {
         s_game_teardown();
         s_game_teardown = NULL;
@@ -35,6 +46,28 @@ static void close_clicked(lv_event_t *event)
 {
     (void)event;
     close_overlay();
+}
+static void desktop(lv_event_t *event) { (void)event; close_overlay(); lw_shell_home(); }
+static void continue_game(lv_event_t *event)
+{
+    (void)event; if (s_pause_overlay) lv_obj_delete(s_pause_overlay); s_pause_overlay=NULL; s_paused=false;
+    resume_clock(); if (s_game_timer && s_resume_timer) lv_timer_resume(s_game_timer);
+}
+static void pause_game(lv_event_t *event)
+{
+    (void)event; if (!s_overlay || s_paused) return;
+    s_paused=true; s_resume_timer=s_game_timer && !lv_timer_get_paused(s_game_timer); if (s_game_timer) lv_timer_pause(s_game_timer);
+    const lw_palette_t *c=lw_palette(); s_pause_overlay=lw_os_box(s_overlay,0,0,1024,600,0x222533,0,140); lv_obj_add_flag(s_pause_overlay,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *p=lw_card(s_pause_overlay,292,154,440,300); lw_os_label(p,"休息一下",&lw_font_28,28,28,384,c->text);
+    lw_os_label(p,"本局已暂停。返回桌面会结束本局，\n最高分会保留。",&lw_font_18,28,86,384,c->dim);
+    lv_obj_t *b=lw_button(p,"继续游戏",184,52,c->accent,0xffffff,&lw_font_18); lv_obj_set_pos(b,28,208); lv_obj_add_event_cb(b,continue_game,LV_EVENT_CLICKED,NULL);
+    b=lw_button(p,"返回桌面",184,52,c->card_soft,c->text,&lw_font_18); lv_obj_set_pos(b,228,208); lv_obj_add_event_cb(b,desktop,LV_EVENT_CLICKED,NULL); lw_os_motion(p,LW_MOVE_DIALOG);
+}
+static void game_controls(void)
+{
+    s_paused=false; s_steps=0; s_game_timer=NULL;
+    const lw_palette_t *c=lw_palette(); lv_obj_t *b=lw_button(s_overlay,"暂停",112,48,c->card,c->text,&lw_font_18); lv_obj_set_pos(b,220,12); lv_obj_add_event_cb(b,pause_game,LV_EVENT_CLICKED,NULL);
+    b=lw_button(s_overlay,"返回桌面",144,48,c->card_soft,c->text,&lw_font_18); lv_obj_set_pos(b,348,12); lv_obj_add_event_cb(b,desktop,LV_EVENT_CLICKED,NULL);
 }
 
 /* 2048 ------------------------------------------------------------------- */
@@ -93,7 +126,7 @@ static void game_2048_refresh(void)
 
 static void game_2048_swipe(int dx, int dy)
 {
-    if (s_2048.model.over) {
+    if (s_2048.model.over || s_paused) {
         return;
     }
     int adx = dx < 0 ? -dx : dx;
@@ -156,6 +189,7 @@ static void open_game_2048(void)
     lv_obj_set_style_bg_opa(overlay, LV_OPA_COVER, 0);
     lv_obj_move_foreground(overlay);
     s_overlay = overlay;
+    s_game_kind=0; game_controls();
 
     lv_obj_t *back = lw_button(overlay, "返回游戏中心", 180, 48, palette->card, palette->text, &lw_font_18);
     lv_obj_set_pos(back, 24, 16);
@@ -233,6 +267,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
             lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_add_event_cb(card, cards[i].open, LV_EVENT_CLICKED, NULL);
         }
+        lw_os_motion_touch(card);
 
         lv_obj_t *badge = lw_icon_badge(card, 24, 24, 64, cards[i].accent, 20);
         lv_obj_t *dot = lv_obj_create(badge);
@@ -379,10 +414,10 @@ static void snake_result_panel(void)
 static void snake_tick_cb(lv_timer_t *timer)
 {
     (void)timer;
-    if (s_snake.over) {
+    if (s_snake.over || s_paused) {
         return;
     }
-    int events = arcade_snake_step(&s_snake.model, &s_snake.rng);
+    s_steps++; int events = arcade_snake_step(&s_snake.model, &s_snake.rng);
     if (events & ARCADE_SNAKE_EVENT_DIED) {
         s_snake.over = 1;
         if (s_snake.timer != NULL) {
@@ -468,6 +503,7 @@ static void open_game_snake(lv_event_t *event)
     lv_obj_move_foreground(overlay);
     s_overlay = overlay;
     s_game_teardown = snake_teardown;
+    s_game_kind=1; game_controls();
 
     lv_obj_t *back = lw_button(overlay, "返回游戏中心", 180, 46, palette->card, palette->text, &lw_font_18);
     lv_obj_set_pos(back, 20, 12);
@@ -501,6 +537,7 @@ static void open_game_snake(lv_event_t *event)
 
     snake_refresh();
     s_snake.timer = lv_timer_create(snake_tick_cb, arcade_snake_step_ms(&s_snake.model), NULL);
+    s_game_timer=s_snake.timer;
 
     lw_text(overlay, "滑动手势控制方向，撞墙或撞到自己就结束", &lw_font_18, palette->dim, 20, 548);
 }
@@ -611,7 +648,7 @@ static void breakout_result_panel(int won)
 static void breakout_tick_cb(lv_timer_t *timer)
 {
     (void)timer;
-    if (s_breakout.over || s_breakout.playfield == NULL) {
+    if (s_breakout.over || s_breakout.playfield == NULL || s_paused) {
         return;
     }
     uint32_t now = lv_tick_get();
@@ -626,6 +663,7 @@ static void breakout_tick_cb(lv_timer_t *timer)
     s_breakout.last_tick += steps * ARCADE_BREAKOUT_TICK_MS;
     for (uint32_t i = 0; i < steps; i++) {
         arcade_breakout_tick(&s_breakout.model);
+        s_steps++;
     }
     breakout_refresh();
 
@@ -685,6 +723,7 @@ static void open_game_breakout(lv_event_t *event)
     lv_obj_move_foreground(overlay);
     s_overlay = overlay;
     s_game_teardown = breakout_teardown;
+    s_game_kind=2; game_controls();
 
     lv_obj_t *back = lw_button(overlay, "返回游戏中心", 180, 46, palette->card, palette->text, &lw_font_18);
     lv_obj_set_pos(back, 20, 12);
@@ -747,6 +786,13 @@ static void open_game_breakout(lv_event_t *event)
 
     breakout_refresh();
     s_breakout.timer = lv_timer_create(breakout_tick_cb, ARCADE_BREAKOUT_TICK_MS / 2, NULL);
+    s_game_timer=s_breakout.timer;
 
     lw_text(overlay, "在屏幕上拖动挡板，轻触发球；掉球会损失一条命", &lw_font_18, palette->dim, 20, 548);
+}
+static void resume_clock(void) { if (s_game_kind==2) s_breakout.last_tick=lv_tick_get(); }
+static void commit_game_score(void)
+{
+    uint32_t score=s_game_kind==0 ? s_2048.model.score : s_game_kind==1 ? s_snake.model.score : s_breakout.model.score;
+    if (score>lw_app_state()->arcade_best[s_game_kind]) { lw_app_state()->arcade_best[s_game_kind]=score; lw_app_state_save(); }
 }

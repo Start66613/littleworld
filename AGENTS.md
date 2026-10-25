@@ -1,5 +1,7 @@
 # Little World 2.0 · Codex 工作区规则
 
+本轮P5用户授权优先：分支agent/os-v2-experience-v3，基线31dba23，工作区D:\LittleWorld-Codex。主要修改UI/Host测试/规范；禁止修改firmware/main、lw_system硬件服务、lw_storage、冻结rpg核心及其85项测试、lw_core/arcade_core算法。新能力仅定义UI契约和Host样例，不抢DSH后端实现。允许推送本分支代码/非敏感报告；含Qianqian的新截图仍本地。无Meowa收费、无设备连接、无刷写。旧P0/P1范围不阻塞本轮已授权应用体验升级。
+
 集成副本 D:\LittleWorld-Codex-Integration / agent/os-v2-rpg-integration；验证后同步正式Codex工作区 D:\LittleWorld-Codex / agent/littleworld-os-v2。rpg/ 与 tests/host/test_rpg.c 固定来源70484cfc1e585a70d403b23f93aae8802ab1fdbf，禁止修改；UI宿主、测试与文件缓存由Codex维护。
 
 适用本工作区全部文件。本轮用户明确授权 P2 正式 Windows 系统入口、P3 RPG 集成、P4 文件资源基础设施及推送代码。以下旧 P0/P1 范围限制以此更新为准；固件稳定入口保留。
