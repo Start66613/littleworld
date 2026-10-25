@@ -2,6 +2,7 @@
 import collections
 import hashlib
 import json
+import shutil
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
@@ -16,7 +17,7 @@ component=manifest['components'][0]
 raw=next((local/'generated').rglob('edited.png'))
 source=Image.open(raw).convert('RGBA')
 assert source.size==(256,256)
-source.save(public/'male-original.png')
+shutil.copyfile(raw,public/'male-original.png')
 crop=Image.open(local/'split'/component['file']).convert('RGBA')
 male=Image.new('RGBA',(256,256)); male.paste(crop,tuple(component['bbox'][:2]))
 male.save(public/'male-native.png')

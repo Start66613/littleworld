@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference='Stop'
+throw 'Completed one-off job_466dffc77e5647cfa02ea58434e8070c. Historical command below must not be replayed without a new user-approved budget.'
 $root=Split-Path $PSScriptRoot -Parent
 $private=Join-Path $root 'private/meowa-challenge'
 New-Item -ItemType Directory -Force -Path $private | Out-Null
