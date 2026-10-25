@@ -2,8 +2,8 @@
   {
     "path": "D:\\LittleWorld-Main-DSH\\build\\little_world.bin",
     "name": "little_world.bin",
-    "size": 1178160,
-    "sha256": "1095142054748aac831645f2d8b5ecdc2744d9b5f3e74639c9f7ab62d402d315",
+    "size": 1198512,
+    "sha256": "76c28217c646216ebc845adee4bc99a0ed8acbf153bce1ddeb27e01dbcf1bc5c",
     "magic": 233,
     "segments": 9,
     "chip_id": 18,
