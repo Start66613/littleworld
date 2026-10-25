@@ -213,3 +213,21 @@ I (1339) littleworld: boot: Little World ready, free heap 29017551 B
 
 1. `ledc` 无法占用 GPIO 32（BSP 定义的背光脚），因此 `bsp_display_brightness_set()` 不生效；屏幕保持常亮。
 2. GT911 触摸在 IRQ 模式下未启用（BSP 默认轮询），单点触摸可用。
+### 7.1 上板后才暴露的两个真 Bug（已修、已复刷）
+
+| # | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| 1 | 触摸左右上下全反，点左响应右 | `ROTATE_180` 已由适配器作用到触摸，代码里又加了 `mirror_x=1, mirror_y=1`，等于翻了两次 | 两个 mirror 改 0；复测"指哪打哪" |
+| 2 | 宠物一启动就饿到 0（饱腹/精力/好感全 0） | `lw_app_state_init()` 在无 RTC 时用 `1700000000`（2023-11）作默认时间，而 UI 用的是 2026-10-25 的 DEMO 基准，第一次 tick 算出约 2.9 年间隔，直接把数值衰减到 0 | 初始化改用同一个 `LW_DEMO_BASE`，并置 `demo_clock=1` |
+
+修复后重新刷机并擦除一次 NVS（仅我们的存档区 0x9000–0xF000），10 秒后的自动存档读回结果：
+
+```
+blob copies: 2   crc: OK
+sound=1 anim=1 theme=0 demo_clock=1
+pet: fullness=72 energy=68 affection=60 sleeping=0 mood=0
+last_update=1792956610  born_at=1792956600      (两者只差 10 秒，与 DEMO 基准一致)
+anniversary=2024-10-25  volume=60
+```
+
+结论：**设备端存档链路真实可用**（NVS 写入 → 72 字节 blob → CRC 校验通过 → 重启后由 `lw_save_decode` 读回）。

@@ -22,15 +22,23 @@ void lw_app_state_init(void)
     }
     s_loaded = true;
 
-    uint32_t now = 1700000000u;
+    /* When the board has no clock the UI runs on a demo clock anchored at
+     * LW_DEMO_BASE; the save record must use the same anchor, otherwise the
+     * first pet tick sees a multi-year gap and drains every stat to zero. */
+    uint32_t now = (uint32_t)LW_DEMO_BASE;
+    bool have_time = false;
     const lw_platform_t *platform = lw_platform_get();
     struct tm tm;
     if (platform != NULL && platform->get_time != NULL && platform->get_time(&tm)) {
         now = (uint32_t)(lw_days_from_civil(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday) * 86400 + tm.tm_hour * 3600 +
                          tm.tm_min * 60 + tm.tm_sec);
+        have_time = true;
     }
 
     lw_state_defaults(&s_state, now);
+    if (!have_time) {
+        s_state.settings.demo_clock = 1;
+    }
 
     uint8_t blob[LW_SAVE_BYTES];
     size_t length = sizeof(blob);
