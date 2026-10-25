@@ -1,0 +1,322 @@
+[
+  {
+    "name": "qianqian_original",
+    "file": "idle_01.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 98,
+      "h": 198
+    },
+    "anchor": {
+      "bottom_y": 225,
+      "center_x": 126
+    },
+    "grid_ratio": {
+      "row": 0.968,
+      "col": 1.013,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.399,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 716,
+      "top16_share": 0.775454045129334,
+      "mean_luma": 131.52164077364574,
+      "mean_saturation": 0.17980882434889162,
+      "dark_share": 0.5041276829939461,
+      "mid_share": 0.17910213067065023,
+      "light_share": 0.3167701863354037,
+      "top_colors": [
+        [
+          "#393834",
+          3130
+        ],
+        [
+          "#FCF5F1",
+          1641
+        ],
+        [
+          "#FCE3D2",
+          1314
+        ],
+        [
+          "#F4B2B0",
+          743
+        ],
+        [
+          "#23221F",
+          527
+        ],
+        [
+          "#504F4C",
+          416
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\refs\\DesktopPet\\assets\\sprites\\idle\\idle_01.png",
+    "label": "qianqian_original"
+  },
+  {
+    "name": "male_B_gentle",
+    "file": "male_B_gentle.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 106,
+      "h": 209
+    },
+    "anchor": {
+      "bottom_y": 226,
+      "center_x": 128
+    },
+    "grid_ratio": {
+      "row": 0.923,
+      "col": 1.156,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.474,
+      "heads_tall": 2.1
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 64,
+      "top16_share": 0.7069464544138929,
+      "mean_luma": 111.30760397973951,
+      "mean_saturation": 0.23215042368600636,
+      "dark_share": 0.6010853835021708,
+      "mid_share": 0.07431259044862518,
+      "light_share": 0.324602026049204,
+      "top_colors": [
+        [
+          "#212025",
+          1636
+        ],
+        [
+          "#1F1E23",
+          1093
+        ],
+        [
+          "#F4C49E",
+          1072
+        ],
+        [
+          "#100F15",
+          1022
+        ],
+        [
+          "#FFFFFE",
+          884
+        ],
+        [
+          "#FFFEFD",
+          685
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\normalized\\male_B_gentle.png",
+    "label": "male_B_gentle"
+  },
+  {
+    "name": "male_C_playful",
+    "file": "male_C_playful.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 96,
+      "h": 188
+    },
+    "anchor": {
+      "bottom_y": 226,
+      "center_x": 128
+    },
+    "grid_ratio": {
+      "row": 1.042,
+      "col": 1.02,
+      "native_1px": true
+    },
+    "outline_px": 1.0,
+    "head_ratio": {
+      "head_share_of_height": 0.463,
+      "heads_tall": 2.1
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 64,
+      "top16_share": 0.7346768202080238,
+      "mean_luma": 117.19716242570578,
+      "mean_saturation": 0.24918624959004615,
+      "dark_share": 0.575687221396731,
+      "mid_share": 0.10141158989598811,
+      "light_share": 0.32290118870728085,
+      "top_colors": [
+        [
+          "#23262D",
+          1736
+        ],
+        [
+          "#FFFFFF",
+          1040
+        ],
+        [
+          "#F3C093",
+          822
+        ],
+        [
+          "#13161D",
+          722
+        ],
+        [
+          "#25282F",
+          680
+        ],
+        [
+          "#FEFEFE",
+          452
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\normalized\\male_C_playful.png",
+    "label": "male_C_playful"
+  },
+  {
+    "name": "qianqian_v2_a",
+    "file": "qianqian_v2_a.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 108,
+      "h": 218
+    },
+    "anchor": {
+      "bottom_y": 226,
+      "center_x": 128
+    },
+    "grid_ratio": {
+      "row": 0.961,
+      "col": 1.059,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.399,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 64,
+      "top16_share": 0.71714046283762,
+      "mean_luma": 131.95439902017662,
+      "mean_saturation": 0.20575525843829368,
+      "dark_share": 0.5009991619931671,
+      "mid_share": 0.1389802101463289,
+      "light_share": 0.3600206278605041,
+      "top_colors": [
+        [
+          "#393733",
+          3821
+        ],
+        [
+          "#FEE0CF",
+          1429
+        ],
+        [
+          "#FDF2EF",
+          1082
+        ],
+        [
+          "#FEF4F2",
+          786
+        ],
+        [
+          "#201F1D",
+          595
+        ],
+        [
+          "#FDAFAF",
+          427
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\normalized\\qianqian_v2_a.png",
+    "label": "qianqian_v2_a"
+  },
+  {
+    "name": "qianqian_v2_b",
+    "file": "qianqian_v2_b.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 117,
+      "h": 227
+    },
+    "anchor": {
+      "bottom_y": 226,
+      "center_x": 128
+    },
+    "grid_ratio": {
+      "row": 0.994,
+      "col": 0.975,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.396,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 64,
+      "top16_share": 0.7133314932376483,
+      "mean_luma": 134.33933033397736,
+      "mean_saturation": 0.1696451179104801,
+      "dark_share": 0.49307203974606684,
+      "mid_share": 0.15545128346674028,
+      "light_share": 0.3514766767871929,
+      "top_colors": [
+        [
+          "#383735",
+          3928
+        ],
+        [
+          "#FEF4F2",
+          1979
+        ],
+        [
+          "#FDDFCE",
+          1560
+        ],
+        [
+          "#25211F",
+          739
+        ],
+        [
+          "#FAB2B2",
+          725
+        ],
+        [
+          "#3D3A36",
+          465
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\normalized\\qianqian_v2_b.png",
+    "label": "qianqian_v2_b"
+  }
+]

@@ -1,0 +1,380 @@
+{
+  "note": "templates with output_size_px >= 128, extracted from pixel-gen-template-info",
+  "templates": [
+    {
+      "template_name": "xlarge_2_3",
+      "output_size": "256+",
+      "output_size_px": 2048,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "4:3",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "2:3",
+        "portrait",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "xlarge_3_2",
+      "output_size": "256+",
+      "output_size_px": 2048,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "3:4",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "3:2",
+        "landscape",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "large_16_9",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "16:9",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "16:9",
+        "large",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "large_3_4",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "3:4",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "3:4",
+        "portrait",
+        "large",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "large_4_3",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "4:3",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "4:3",
+        "landscape",
+        "large",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "large_9_16",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "9:16",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "9:16",
+        "portrait",
+        "large",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "xlarge_1_2",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "1:2",
+        "portrait",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "xlarge_2_1",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "2:1",
+        "landscape",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "xlarge_3_4",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "3:4",
+        "portrait",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "xlarge_4_3",
+      "output_size": "256+",
+      "output_size_px": 512,
+      "default_count": 1,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "4:3",
+        "landscape",
+        "xlarge",
+        "2K",
+        "grid-fusion"
+      ]
+    },
+    {
+      "template_name": "16_9",
+      "output_size": "64-128",
+      "output_size_px": 256,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "16:9",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "16:9",
+        "middle",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "3_4",
+      "output_size": "128-256",
+      "output_size_px": 256,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "3:4",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "3:4",
+        "portrait",
+        "middle",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "4_3",
+      "output_size": "128-256",
+      "output_size_px": 256,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "4:3",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "4:3",
+        "landscape",
+        "middle",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "9_16",
+      "output_size": "128-256",
+      "output_size_px": 256,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "9:16",
+      "default_background_removal": "standard",
+      "labels": [
+        "pixel",
+        "general",
+        "9:16",
+        "portrait",
+        "middle",
+        "2K"
+      ]
+    },
+    {
+      "template_name": "large_portrait",
+      "output_size": "128-256",
+      "output_size_px": 256,
+      "default_count": 2,
+      "default_resolution": "2K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character",
+        "portrait",
+        "large"
+      ]
+    },
+    {
+      "template_name": "monster",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character",
+        "monster"
+      ]
+    },
+    {
+      "template_name": "pixel_char_1",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_10",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_2",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_3",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_4",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_5",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_6",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    },
+    {
+      "template_name": "pixel_char_9",
+      "output_size": "64-128",
+      "output_size_px": 128,
+      "default_count": 2,
+      "default_resolution": "1K",
+      "default_aspect_ratio": "1:1",
+      "default_background_removal": "advanced",
+      "labels": [
+        "pixel",
+        "character"
+      ]
+    }
+  ]
+}
