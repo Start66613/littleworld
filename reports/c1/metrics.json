@@ -1,0 +1,317 @@
+[
+  {
+    "name": "qianqian_original",
+    "file": "idle_01.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 98,
+      "h": 198
+    },
+    "anchor": {
+      "bottom_y": 225,
+      "center_x": 126
+    },
+    "grid_ratio": {
+      "row": 0.968,
+      "col": 1.013,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.399,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.0,
+    "palette": {
+      "unique_colors": 716,
+      "top16_share": 0.775454045129334,
+      "mean_luma": 131.52164077364574,
+      "mean_saturation": 0.17980882434889162,
+      "dark_share": 0.5041276829939461,
+      "mid_share": 0.17910213067065023,
+      "light_share": 0.3167701863354037,
+      "top_colors": [
+        [
+          "#393834",
+          3130
+        ],
+        [
+          "#FCF5F1",
+          1641
+        ],
+        [
+          "#FCE3D2",
+          1314
+        ],
+        [
+          "#F4B2B0",
+          743
+        ],
+        [
+          "#23221F",
+          527
+        ],
+        [
+          "#504F4C",
+          416
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\refs\\DesktopPet\\assets\\sprites\\idle\\idle_01.png"
+  },
+  {
+    "name": "A_boy",
+    "file": "sprite_00.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 113,
+      "h": 221
+    },
+    "anchor": {
+      "bottom_y": 237,
+      "center_x": 127
+    },
+    "grid_ratio": {
+      "row": 0.932,
+      "col": 0.632,
+      "native_1px": false
+    },
+    "outline_px": 1.0,
+    "head_ratio": {
+      "head_share_of_height": 0.462,
+      "heads_tall": 2.1
+    },
+    "semi_alpha_share": 0.0871,
+    "palette": {
+      "unique_colors": 478,
+      "top16_share": 0.725735754539762,
+      "mean_luma": 119.44944221804774,
+      "mean_saturation": 0.23486148934425802,
+      "dark_share": 0.5898559799624296,
+      "mid_share": 0.07980240729144923,
+      "light_share": 0.33034161274612117,
+      "top_colors": [
+        [
+          "#33333A",
+          2724
+        ],
+        [
+          "#FFFFFF",
+          2285
+        ],
+        [
+          "#22202C",
+          862
+        ],
+        [
+          "#FEDAC1",
+          740
+        ],
+        [
+          "#1E1C2A",
+          583
+        ],
+        [
+          "#FEDDC6",
+          572
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\v3a_pair\\sprite_00.png"
+  },
+  {
+    "name": "A_girl",
+    "file": "sprite_01.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 106,
+      "h": 207
+    },
+    "anchor": {
+      "bottom_y": 230,
+      "center_x": 127
+    },
+    "grid_ratio": {
+      "row": 1.077,
+      "col": 0.997,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.396,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.0926,
+    "palette": {
+      "unique_colors": 476,
+      "top16_share": 0.6667617282190218,
+      "mean_luma": 128.50645900470553,
+      "mean_saturation": 0.19995063549346204,
+      "dark_share": 0.5232425495508343,
+      "mid_share": 0.14102381291886495,
+      "light_share": 0.3357336375303009,
+      "top_colors": [
+        [
+          "#383836",
+          2726
+        ],
+        [
+          "#363633",
+          908
+        ],
+        [
+          "#FEDCCA",
+          793
+        ],
+        [
+          "#FEE0D1",
+          736
+        ],
+        [
+          "#FDF4F2",
+          677
+        ],
+        [
+          "#FDF1EF",
+          535
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\v3a_pair\\sprite_01.png"
+  },
+  {
+    "name": "B_boy",
+    "file": "sprite_00.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 120,
+      "h": 222
+    },
+    "anchor": {
+      "bottom_y": 238,
+      "center_x": 126
+    },
+    "grid_ratio": {
+      "row": 0.871,
+      "col": 0.561,
+      "native_1px": false
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.468,
+      "heads_tall": 2.1
+    },
+    "semi_alpha_share": 0.0826,
+    "palette": {
+      "unique_colors": 338,
+      "top16_share": 0.6913060130218307,
+      "mean_luma": 104.91646131750285,
+      "mean_saturation": 0.26069003465868346,
+      "dark_share": 0.6343674198902081,
+      "mid_share": 0.08693986978169284,
+      "light_share": 0.27869271032809906,
+      "top_colors": [
+        [
+          "#302F35",
+          1634
+        ],
+        [
+          "#323238",
+          1594
+        ],
+        [
+          "#F9FEFF",
+          1276
+        ],
+        [
+          "#201E29",
+          957
+        ],
+        [
+          "#FED8C0",
+          857
+        ],
+        [
+          "#1C1A26",
+          724
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\v3b_pair\\sprite_00.png"
+  },
+  {
+    "name": "B_girl",
+    "file": "sprite_01.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "visible": {
+      "w": 100,
+      "h": 206
+    },
+    "anchor": {
+      "bottom_y": 230,
+      "center_x": 127
+    },
+    "grid_ratio": {
+      "row": 0.765,
+      "col": 1.019,
+      "native_1px": true
+    },
+    "outline_px": 2.0,
+    "head_ratio": {
+      "head_share_of_height": 0.398,
+      "heads_tall": 2.5
+    },
+    "semi_alpha_share": 0.1009,
+    "palette": {
+      "unique_colors": 383,
+      "top16_share": 0.664941882264717,
+      "mean_luma": 127.41106906636672,
+      "mean_saturation": 0.21139056711123067,
+      "dark_share": 0.5226096737907762,
+      "mid_share": 0.16205474315710533,
+      "light_share": 0.3153355830521185,
+      "top_colors": [
+        [
+          "#393835",
+          3255
+        ],
+        [
+          "#FEDECE",
+          871
+        ],
+        [
+          "#FEF3F0",
+          786
+        ],
+        [
+          "#FEF6F4",
+          503
+        ],
+        [
+          "#554F4C",
+          432
+        ],
+        [
+          "#FED8C7",
+          408
+        ]
+      ]
+    },
+    "path": "D:\\LittleWorld-Meowa\\characters\\v3b_pair\\sprite_01.png"
+  }
+]
