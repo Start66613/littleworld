@@ -1,0 +1,62 @@
+{
+  "schema": "littleworld.pixel/1",
+  "batch": 2,
+  "generated_at": "2026-10-25T14:40:00+08:00",
+  "contract": "PIXEL_CHARACTER_CONTRACT.md",
+  "analysis": "docs/PIXEL_ANALYSIS.md",
+  "budget": {
+    "approved": 50,
+    "cap_after_topup": 60,
+    "spent": 60,
+    "balance_before": 2964,
+    "balance_after": 2904,
+    "unit_price_note": "custom-size-pixel-gen-run 256x256 bills at the 2K tier: 20 credits per image (text-only), 2 more per reference image"
+  },
+  "female": {
+    "source": "DesktopPet assets (author owned)",
+    "reused": true,
+    "frame": "256x256 RGBA",
+    "height_px": 198,
+    "feet_y": 225,
+    "center_x": 126,
+    "animations": 19,
+    "license_note": "DesktopPet README states no open-source license; keep the sprites out of the public littleworld repo until the owner approves publication"
+  },
+  "male": {
+    "name": "boy_pixel_v1",
+    "status": "concept",
+    "chosen_candidate": "P1_boy_front",
+    "files": {
+      "raw": "characters/P1_boy_front/final_pixel_snapper.png",
+      "cut": "characters/P1_boy_front/boy_front_cut.png",
+      "aligned": "characters/P1_boy_front/boy_front_aligned.png"
+    },
+    "frame": "256x256 RGBA",
+    "height_px": 215,
+    "width_px": 119,
+    "feet_y": 225,
+    "center_x": 129,
+    "colors": 64,
+    "anchor_aligned": true,
+    "notes": [
+      "head slightly larger than qianqian, shading flatter (2 tones vs 3)",
+      "aligned so both characters share feet_y=225 without any scaling"
+    ],
+    "jobs": [
+      {"id": "job_7d589bdd489940e3808935ef7d31f782", "attempt": 1, "mode": "text-only", "credits": 20, "result": "kept (chosen)"},
+      {"id": "job_9949176181aa4c32bbbec1260247bb21", "attempt": 2, "mode": "reference=qianqian", "credits": 20, "result": "rejected: model copied qianqian instead of drawing a boy"},
+      {"id": "job_670d351ec1104da097b690d027dcfee8", "attempt": 3, "mode": "text-only, stronger shading prompt", "credits": 20, "result": "rejected: 157px tall, too short"}
+    ]
+  },
+  "previews": {
+    "pair_256": "previews/pair_256.png",
+    "pair_512": "previews/pair_512.png",
+    "triple_768": "previews/triple_768.png",
+    "pair_in_room": "previews/pair_in_room_1024x600.png"
+  },
+  "open_questions": [
+    "does the flatter shading of the boy read as 'same game' next to qianqian?",
+    "3/4 view still missing (needs one more 20-credit generation)",
+    "publish qianqian sprites in the public repo? default: no"
+  ]
+}
