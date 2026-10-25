@@ -36,6 +36,7 @@ add_executable(LittleWorld
     pixel_pack.c
     pixel_duo_host.c
     os_host.c
+    ../firmware/components/lw_storage/src/lw_storage.c
     ../firmware/components/lw_system/src/lw_system.c
     win_display.c
     host_platform.c
@@ -55,6 +56,7 @@ target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_system/include"
+    "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_storage/include"
     "${CMAKE_CURRENT_LIST_DIR}/../rpg/include"
     "${CMAKE_CURRENT_LIST_DIR}/../rpg/data"
     "${LVGL_DIR}")
@@ -63,6 +65,11 @@ target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_
 
 if(MSVC)
     target_compile_options(LittleWorld PRIVATE /utf-8)
+endif()
+add_executable(StorageTests ../tests/host/test_storage.c ../firmware/components/lw_storage/src/lw_storage.c)
+target_include_directories(StorageTests PRIVATE ../firmware/components/lw_storage/include)
+if(MSVC)
+    target_compile_options(StorageTests PRIVATE /W4 /WX /utf-8 /D_CRT_SECURE_NO_WARNINGS)
 endif()
 add_executable(RPGModelTests ../tests/host/test_rpg.c ${LW_RPG_SOURCES})
 target_include_directories(RPGModelTests PRIVATE ../rpg/include ../rpg/data)

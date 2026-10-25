@@ -1,12 +1,12 @@
 {
-  "checks": 172,
+  "checks": 174,
   "failures": 0,
   "overlay_cycles": 100,
   "page_cycles": 100,
   "pixel_peak_bytes": 589824,
-  "working_set_peak_bytes": 8032256,
-  "wall_ms": 12168.15,
-  "process_cpu_ms": 2953.125,
+  "working_set_peak_bytes": 9056256,
+  "wall_ms": 12023.087,
+  "process_cpu_ms": 3093.75,
   "virtual_clock_unthrottled": true,
   "network": "Windows mock, no actual host or C6 network access",
   "art": "original qianqian and TEST A, final male pending",
@@ -33,5 +33,19 @@
     "19-rpg-dialogue.png",
     "20-rpg-reward.png"
   ],
-  "character_art_publication_authorized": false
+  "character_art_publication_authorized": false,
+  "storage": {
+    "implementation": "actual Windows filesystem and worker thread",
+    "budget_bytes": 786432,
+    "peak_cache_bytes": 786432,
+    "metadata_bytes": 2592,
+    "hits": 920,
+    "misses": 737,
+    "file_reads": 737,
+    "prefetched": 652,
+    "evictions": 733,
+    "read_failures": 0,
+    "lvgl_pixel_peak_bytes": 589824,
+    "tf_hardware_tested": false
+  }
 }

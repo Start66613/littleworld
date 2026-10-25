@@ -104,7 +104,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     int base_timers=timers(); size_t base_bytes=lw_assets_stats().live_bytes;
     if (out) { clock_ms=lv_tick_get(); lv_tick_set_cb(fake_clock); }
     if (!lw_os_start(&system,lw_pixel_pack_art(pack))) { lw_pixel_pack_close(pack); return 2; }
-    if (!out) { int result=lw_host_run_window(); lw_os_stop(); return lw_pixel_pack_close(pack) ? result : 2; }
+    if (!out) { printf("Little World OS V2 ready: Windows simulated services; --legacy restores the stable desktop.\n"); int result=lw_host_run_window(); lw_os_stop(); return lw_pixel_pack_close(pack) ? result : 2; }
     LARGE_INTEGER begin,end,freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&begin); double cpu_start=cpu_ms();
     shot(out,"01-desktop"); CHECK("OS desktop active",lw_os_page()==OS_DESKTOP);
     tap(OC_CONTROL); CHECK("control overlay opens",lw_os_overlay()==OS_OVER_CONTROL); shot(out,"02-control-center");
@@ -172,9 +172,17 @@ int lw_os_host_run(const char *pack_path,const char *out)
     CHECK("safe minimum",lw_system_brightness(&system,0) && system.prefs.brightness==10); lw_system_brightness(&system,70); lw_system_save(&system);
     backend.load=load; lw_system_t reloaded; lw_system_init(&reloaded,&backend); CHECK("restart restores independent OS preferences",reloaded.prefs.volume==system.prefs.volume && reloaded.prefs.brightness==70 && reloaded.prefs.theme==system.prefs.theme);
     uint8_t encoded[LW_SYS_PREF_BYTES]; lw_system_encode(&system.prefs,encoded); encoded[5]^=1; lw_preferences_t invalid; CHECK("corrupt preferences rejected",!lw_system_decode(&invalid,encoded));
-    size_t peak=lw_assets_stats().peak_bytes; lw_os_stop(); CHECK("OS stop releases frame memory",lw_assets_stats().live_bytes==base_bytes && lw_assets_stats().live_leases==0); CHECK("OS stop releases timers",timers()==base_timers); CHECK("stable shell restored",lw_shell_current() && !strcmp(lw_shell_current()->id,"home")); CHECK("pack can be released",lw_pixel_pack_close(pack));
+    size_t peak=lw_assets_stats().peak_bytes; lw_os_stop(); CHECK("OS stop releases frame memory",lw_assets_stats().live_bytes==base_bytes && lw_assets_stats().live_leases==0); CHECK("OS stop releases timers",timers()==base_timers); CHECK("stable shell restored",lw_shell_current() && !strcmp(lw_shell_current()->id,"home"));
+    lw_file_cache_stats_t cache=lw_pixel_pack_cache_stats(pack);
+    CHECK("real frame file cache stays bounded",cache.peak_bytes<=cache.budget_bytes);
+    CHECK("private pack uses real read-ahead",!pack || (cache.prefetched>0 && cache.hits>0));
+    CHECK("pack release joins read-ahead worker",lw_pixel_pack_close(pack));
     QueryPerformanceCounter(&end); PROCESS_MEMORY_COUNTERS memory={0}; memory.cb=sizeof(memory); GetProcessMemoryInfo(GetCurrentProcess(),&memory,sizeof(memory));
     char report[600]; snprintf(report,sizeof(report),"%s\\runtime.json",out); FILE *f=fopen(report,"wb");
     if (f) { fprintf(f,"{\n\"checks\":%u,\n\"failures\":%u,\n\"overlay_cycles\":100,\n\"page_cycles\":100,\n\"pixel_peak_bytes\":%zu,\n\"working_set_peak_bytes\":%zu,\n\"wall_ms\":%.3f,\n\"process_cpu_ms\":%.3f,\n\"virtual_clock_unthrottled\":true,\n\"network\":\"Windows mock, no actual host or C6 network access\",\n\"art\":\"original qianqian and TEST A, final male pending\",\n\"board_tested\":false\n}\n",checks,failures,peak,(size_t)memory.PeakWorkingSetSize,(double)(end.QuadPart-begin.QuadPart)*1000/(double)freq.QuadPart,cpu_ms()-cpu_start); fclose(f); } else failures++;
-    printf("OS V2: %u checks, %u failures; 100 overlay cycles; peak pixels %zu B.\n",checks,failures,peak); return failures ? 1 : 0;
+    snprintf(report,sizeof(report),"%s\\storage.json",out); f=fopen(report,"wb");
+    if (f) { fprintf(f,"{\"implementation\":\"actual Windows filesystem and worker thread\",\"budget_bytes\":%zu,\"peak_cache_bytes\":%zu,\"metadata_bytes\":%zu,\"hits\":%u,\"misses\":%u,\"file_reads\":%u,\"prefetched\":%u,\"evictions\":%u,\"read_failures\":%u,\"lvgl_pixel_peak_bytes\":%zu,\"tf_hardware_tested\":false}\n",cache.budget_bytes,cache.peak_bytes,cache.metadata_bytes,cache.hits,cache.misses,cache.reads,cache.prefetched,cache.evictions,cache.failures,peak); fclose(f); } else failures++;
+    printf("OS V2: %u checks, %u failures; 100 overlay cycles; peak pixels %zu B.\n",checks,failures,peak);
+    printf("File cache: peak %zu / %zu B; hits %u; prefetched %u; evictions %u.\n",cache.peak_bytes,cache.budget_bytes,cache.hits,cache.prefetched,cache.evictions);
+    return failures ? 1 : 0;
 }

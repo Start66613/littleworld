@@ -14,5 +14,7 @@ if report.exists():
     result=json.loads(report.read_text(encoding='utf-8'))
     result['local_screenshots']=[f.name for f in sorted(local.glob('*.png'))]
     result['character_art_publication_authorized']=False
+    storage=local/'storage.json'
+    if storage.exists(): result['storage']=json.loads(storage.read_text(encoding='utf-8'))
     (args.root/'reports/os-v2/runtime.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print('Actual LVGL screenshots:',len(list(local.glob('*.png'))),'(ignored, local only)')

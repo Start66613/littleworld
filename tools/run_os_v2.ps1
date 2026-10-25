@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$Test,[switch]$SkipBuild)
+param([switch]$Test,[switch]$SkipBuild,[string]$LvglDir,[string]$PackPath)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -8,13 +8,15 @@ $python='D:\LittleWorld-Meowa\tools\venv\Scripts\python.exe'
 $source='D:\Espressif\LittleWorld\sources\DesktopPet'
 $actual=& git -C $source rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or $actual.Trim() -ne 'b00a7005f4889644737092dbc7379e2a9b011315' -or (& git -C $source status --porcelain)) { throw 'Pinned clean DesktopPet source required' }
-$pack="$root/private/pixel-duo/qianqian/qianqian.lwpx"
+$pack=if ($PackPath) { $PackPath } else { "$root/private/pixel-duo/qianqian/qianqian.lwpx" }
 if (-not (Test-Path -LiteralPath $pack)) {
     & $python tools/analyze_desktop_pet.py --source $source --output "$root/private/pixel-duo/qianqian" --report "$root/reports/pixel-duo/qianqian-analysis.json"
     if ($LASTEXITCODE -ne 0) {throw 'Source export failed'}
 }
 if (-not $SkipBuild) {
-    & pwsh -NoProfile -File tools/build_demo.ps1 -Reconfigure
+    $buildArgs=@('-NoProfile','-File','tools/build_demo.ps1','-Reconfigure')
+    if ($LvglDir) { $buildArgs+=@('-LvglDir',$LvglDir) }
+    & pwsh @buildArgs
     if ($LASTEXITCODE -ne 0) {throw 'Host build failed'}
 }
 if ($Test) {
@@ -26,6 +28,8 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) {throw 'Character model regression failed'}
     & "$root/build/host/RPGModelTests.exe"
     if ($LASTEXITCODE -ne 0) {throw 'Frozen RPG core tests failed'}
+    & "$root/build/host/StorageTests.exe" "$root/build/host/storage-fixtures"
+    if ($LASTEXITCODE -ne 0) {throw 'Real file cache tests failed'}
     & "$root/build/host/LittleWorld.exe" --os-v2-test $pack $out
     $result=$LASTEXITCODE
     & $python tools/export_os_evidence.py --root $root

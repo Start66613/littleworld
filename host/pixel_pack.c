@@ -3,17 +3,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lw_storage.h"
 
 #define MAX_CLIPS 24
+typedef struct { lw_asset_raw_file_t file; lw_file_cache_t *cache; const char *relative; } frame_source_t;
 struct lw_pixel_pack {
     char path[512],names[MAX_CLIPS][33],ids[MAX_CLIPS][64];
     lw_asset_spec_t specs[MAX_CLIPS+1];
-    lw_asset_raw_file_t sources[MAX_CLIPS];
+    frame_source_t sources[MAX_CLIPS]; lw_file_cache_t *cache; char basename[128];
     lw_named_clip_t clips[MAX_CLIPS],test_clip;
     uint16_t sequences[MAX_CLIPS][32],durations[MAX_CLIPS][32],test_seq[4],test_time[4];
     lw_actor_art_t art[2];
     unsigned count;
 };
+static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
+{
+    frame_source_t *src=ctx; if (!src || frame>=src->file.frames || bytes>src->file.frame_stride) return false;
+    if (!src->cache) return lw_asset_read_raw_file(&src->file,frame,data,bytes);
+    uint64_t offset=(uint64_t)src->file.offset+(uint64_t)frame*src->file.frame_stride;
+    bool ok=lw_file_cache_read(src->cache,src->relative,offset,data,bytes);
+    if (ok) { unsigned next=(frame+1)%src->file.frames; (void)lw_file_cache_prefetch(src->cache,src->relative,(uint64_t)src->file.offset+(uint64_t)next*src->file.frame_stride,bytes); }
+    return ok;
+}
+lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p) { return lw_file_cache_stats(p ? p->cache : NULL); }
 static uint16_t u16(const uint8_t *p) { return (uint16_t)(p[0]|(uint16_t)p[1]<<8); }
 static uint32_t u32(const uint8_t *p) { return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24; }
 static bool test_actor(void *context,uint16_t frame,uint8_t *data,size_t bytes)
@@ -44,6 +56,13 @@ lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
     long file_size=ftell(file); if (file_size<16 || fseek(file,16,SEEK_SET)) { fclose(file); return NULL; }
     lw_pixel_pack_t *pack=calloc(1,sizeof(*pack)); if (!pack) { fclose(file); return NULL; }
     strcpy(pack->path,path); pack->count=u16(header+12);
+    const char *slash=strrchr(path,'/'),*back=strrchr(path,'\\'); if (!slash || (back && back>slash)) slash=back;
+    const char *base=slash ? slash+1 : path; char directory[512]=".";
+    if (strlen(base)<sizeof(pack->basename)) {
+        strcpy(pack->basename,base);
+        if (slash) { size_t n=(size_t)(slash-path); memcpy(directory,path,n); directory[n]=0; }
+        pack->cache=lw_file_cache_open(directory,4u*196608u);
+    }
     bool ok=true;
     for (unsigned i=0;i<pack->count && ok;i++) {
         uint8_t record[108]; if (fread(record,1,sizeof(record),file)!=sizeof(record)) { ok=false; break; }
@@ -53,8 +72,8 @@ lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
         if (!frames || frames>32 || ax<0 || ax>256 || ay<0 || ay>256 || record[38]>1 ||
             offset<16+108*pack->count || (uint64_t)offset+(uint64_t)frames*196608>(uint64_t)file_size) { ok=false; break; }
         snprintf(pack->ids[i],64,"qianqian.%s",pack->names[i]);
-        pack->sources[i]=(lw_asset_raw_file_t){pack->path,offset,196608,(uint16_t)frames};
-        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],256,256,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,lw_asset_read_raw_file,&pack->sources[i]};
+        pack->sources[i]=(frame_source_t){{pack->path,offset,196608,(uint16_t)frames},pack->cache,pack->basename};
+        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],256,256,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,read_frame,&pack->sources[i]};
         for (unsigned f=0;f<frames;f++) {
             pack->sequences[i][f]=(uint16_t)f; pack->durations[i][f]=u16(record+44+f*2);
             if (pack->durations[i][f]<20 || pack->durations[i][f]>2000) ok=false;
@@ -71,7 +90,7 @@ lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
         pack->art[1]=(lw_actor_art_t){"qianqian",pack->clips,pack->count,false};
         ok=lw_assets_register(pack->specs,pack->count+1,2u*1024u*1024u);
     }
-    if (!ok) { free(pack); return NULL; }
+    if (!ok) { lw_file_cache_close(pack->cache); free(pack); return NULL; }
     return pack;
 }
 const lw_actor_art_t *lw_pixel_pack_art(const lw_pixel_pack_t *p) { return p ? p->art : NULL; }
@@ -79,5 +98,5 @@ bool lw_pixel_pack_close(lw_pixel_pack_t *p)
 {
     if (!p) return true;
     if (!lw_assets_register(NULL,0,2u*1024u*1024u)) return false;
-    free(p); return true;
+    lw_file_cache_close(p->cache); free(p); return true;
 }
