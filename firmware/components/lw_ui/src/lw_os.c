@@ -258,7 +258,9 @@ static void build_desktop(bool world)
         lv_obj_t *furniture=button(s->content,"",22,128,230,136,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
         furniture=button(s->content,"",20,281,260,166,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED); if (world) lv_obj_remove_flag(furniture,LV_OBJ_FLAG_CLICKABLE);
         furniture=button(s->content,"",700,140,90,100,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
-        actors(); lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL); return;
+        actors();
+        if (!s->art) { lv_obj_t *empty=surface(s->content,360,400,340,72,16); lw_os_label(empty,"角色资源未安装 · 场景与应用可用",&lw_font_18,16,12,308,c->text); }
+        lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL); return;
     }
     lw_os_label(s->content,world ? "两个人的日常。" : "我们的小世界",&lw_font_28,48,world ? 76 : 86,280,c->text);
     lw_os_label(s->content,world ? "像素生活 · 原生 1×" : "把平凡，慢慢过成喜欢的日子。",&lw_font_18,48,world ? 122 : 137,272,c->muted);
@@ -275,7 +277,7 @@ static void build_desktop(bool world)
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
         button(s->content,"照顾宠物",48,398,110,50,OC_PET,false); button(s->content,"小冒险",172,398,108,50,OC_RPG,true);
     }
-    lw_os_label(s->content,s->art ? "角色素材 · 本地像素版" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
+    lw_os_label(s->content,s->art ? "场景资源未安装 · 应用可用" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
     /* Furniture targets are created first so character hit areas stay above them. */
     lv_obj_t *furniture=button(s->content,"",518,106,224,184,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     furniture=button(s->content,"",378,276,174,96,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
