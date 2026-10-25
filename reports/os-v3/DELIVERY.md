@@ -1,6 +1,6 @@
 # P5 · OS V2 体验升级交付
 
-2026-10-25；工作区 `D:\LittleWorld-Codex`，独立分支 `agent/os-v2-experience-v3`。开始前已 fetch 并确认 OS 基线为 `31dba23d8f14e414b95dad46c8426cd3e61583c8`。本轮复用 P2/P3/P4，不重新开发业务和 ESP32 后端。代码及非敏感报告可公开，本轮全部新截图仅本地。
+2026-10-25；工作区 `D:\LittleWorld-Codex`，独立分支 `agent/os-v2-experience-v3`。开始前已 fetch 并确认 OS 基线为 `31dba23d8f14e414b95dad46c8426cd3e61583c8`。本轮复用 P2/P3/P4，不重新开发业务和 ESP32 后端。代码及非敏感报告可公开。用户随后追加授权发布本轮成功运行的31张UI截图（包括含Qianqian的画面），PNG已收录于[screenshots](screenshots/README.md)；角色原始资源保持私有。
 
 ## 实际实现
 
@@ -23,7 +23,7 @@
 - 对象/timer/lease/动画按进入前基线比较，退出后角色 lease 为 0，照片持有数为 0，主题上下文为 0。退出 OS 恢复旧首页时原有呼吸动画恢复，动画数 1→1 是基线，不是泄漏。
 - ESP-IDF 5.5.5 / esp32p4 / rev3_x / 32MB 本机编译成功。只编译现有稳定固件入口及共用 UI 源码，没有合入 DSH 新后端入口；链接裁剪意味着这不是完整 OS V3 与硬件后端联合运行证明，更不是板测。
 
-31 张 1024×600 PNG 来自真实 LVGL 帧缓冲 BMP 的无损转换，均在忽略目录 `D:\LittleWorld-Codex\reports\ui-v2\os-v3`；缺资源回归和原版回归分别在相邻的 `os-v3-fallback` / `os-v3-legacy`。`SCREENSHOTS.json` 只有本地文件名、尺寸和校验值，不包含图像。已人工查看桌面、夜间、控制中心、锁屏、相册/错误、纪念卡片、音乐、动态设置、暂停层及 RPG 房间/任务/对话/奖励的文字与层级；美术质量仍由用户验收。
+31 张 1024×600 PNG 来自真实 LVGL 帧缓冲 BMP 的无损转换，均在忽略目录 `D:\LittleWorld-Codex\reports\ui-v2\os-v3`；缺资源回归和原版回归分别在相邻的 `os-v3-fallback` / `os-v3-legacy`。用户追加授权后，将这31张PNG按原校验值复制到公开目录 `reports/os-v3/screenshots`；`SCREENSHOTS.json` 记录公开路径、尺寸和校验值。已人工查看桌面、夜间、控制中心、锁屏、相册/错误、纪念卡片、音乐、动态设置、暂停层及 RPG 房间/任务/对话/奖励的文字与层级；美术质量仍由用户验收。
 
 ## 内存和适用范围
 
@@ -52,7 +52,7 @@ pwsh -NoProfile -File tools/gen_fonts.ps1 -Check
 idf.py -C D:/LittleWorld-Codex/firmware -B D:/build/firmware-v2 build
 ```
 
-正常体验运行 `pwsh -NoProfile -File tools/run_os_v2.ps1`；`build/host/LittleWorld.exe --legacy` 保留旧版入口。角色包须使用本机已有私有资源；未提交角色包与截图。未执行编译日志建议的任何设备命令。
+正常体验运行 `pwsh -NoProfile -File tools/run_os_v2.ps1`；`build/host/LittleWorld.exe --legacy` 保留旧版入口。角色包须使用本机已有私有资源；角色包保持私有；本轮31张PNG按用户追加授权公开。未执行编译日志建议的任何设备命令。
 
 ## DSH 交接与尚待完成
 

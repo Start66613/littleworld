@@ -1,8 +1,8 @@
 {
   "source_commit": "bc9f2b59d672bec63beacca4c7ced9570746c58d",
-  "local_only": true,
-  "public_images_authorized": false,
-  "directory": "D:/LittleWorld-Codex/reports/ui-v2/os-v3",
+  "local_only": false,
+  "public_images_authorized": true,
+  "directory": "reports/os-v3/screenshots",
   "source": "Actual LVGL framebuffer BMP, lossless PNG conversion",
   "images": [
     {
@@ -284,5 +284,8 @@
       "source_bmp_sha256": "b6dde220a13fc7a53c3cd6224cdba58cca08ee30ecbf060dbad8549919f017ca",
       "matches_framebuffer": true
     }
-  ]
+  ],
+  "local_capture_directory": "D:/LittleWorld-Codex/reports/ui-v2/os-v3",
+  "publication_authorization": "User explicitly requested publishing the successful new UI screenshots on 2026-10-25",
+  "publication_scope": "Only these 31 rendered LVGL UI PNGs, including Qianqian; no source character art or private resources"
 }

@@ -44,7 +44,7 @@
     "30-game-pause.png",
     "31-rpg-move-feedback.png"
   ],
-  "character_art_publication_authorized": false,
+  "character_art_publication_authorized": true,
   "storage": {
     "implementation": "actual Windows filesystem and worker thread",
     "budget_bytes": 786432,
@@ -72,5 +72,7 @@
     "rapid_overlay_cycles": 100,
     "page_cycles_per_motion_mode": 20,
     "media_is_technical_fixture": true
-  }
+  },
+  "publication_scope": "These 31 rendered UI screenshots only; original character resources remain private",
+  "published_screenshot_directory": "reports/os-v3/screenshots"
 }
