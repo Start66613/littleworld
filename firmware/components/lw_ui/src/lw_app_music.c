@@ -19,15 +19,29 @@ static const int s_track_seconds[TRACK_COUNT] = {168, 205, 192};
 static int s_track;
 static int s_position;
 static int s_playing;
+
+static lv_obj_t *s_title;
+static lv_obj_t *s_artist;
 static lv_obj_t *s_progress;
 static lv_obj_t *s_time_label;
 static lv_obj_t *s_play_label;
 static lv_obj_t *s_volume_label;
+static lv_obj_t *s_rows[TRACK_COUNT];
+static lv_obj_t *s_row_titles[TRACK_COUNT];
+static lv_obj_t *s_row_artists[TRACK_COUNT];
 static lv_timer_t *s_timer;
 
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
+    const lw_palette_t *palette = lw_palette();
+
+    if (s_title != NULL) {
+        lv_label_set_text(s_title, s_track_titles[s_track]);
+    }
+    if (s_artist != NULL) {
+        lv_label_set_text(s_artist, s_track_artist[s_track]);
+    }
     if (s_progress != NULL) {
         lw_bar_set(s_progress, (s_position * 100) / s_track_seconds[s_track]);
     }
@@ -40,6 +54,21 @@ static void refresh(void)
     }
     if (s_volume_label != NULL) {
         lv_label_set_text_fmt(s_volume_label, "%d%%", state->music_volume);
+    }
+
+    for (int i = 0; i < TRACK_COUNT; i++) {
+        int active = (i == s_track);
+        if (s_rows[i] == NULL) {
+            continue;
+        }
+        lv_obj_set_style_bg_color(s_rows[i], lv_color_hex(active ? palette->accent : palette->card_soft), 0);
+        lv_obj_set_style_bg_opa(s_rows[i], active ? LV_OPA_20 : LV_OPA_COVER, 0);
+        if (s_row_titles[i] != NULL) {
+            lv_obj_set_style_text_color(s_row_titles[i], lv_color_hex(active ? palette->accent_deep : palette->text), 0);
+        }
+        if (s_row_artists[i] != NULL) {
+            lv_obj_set_style_text_color(s_row_artists[i], lv_color_hex(active ? palette->accent_deep : palette->dim), 0);
+        }
     }
 }
 
@@ -80,6 +109,17 @@ static void prev_track(lv_event_t *event)
     refresh();
 }
 
+static void track_clicked(lv_event_t *event)
+{
+    int index = (int)(intptr_t)lv_event_get_user_data(event);
+    if (index < 0 || index >= TRACK_COUNT) {
+        return;
+    }
+    s_track = index;
+    s_position = 0;
+    refresh();
+}
+
 static void volume_up(lv_event_t *event)
 {
     (void)event;
@@ -110,11 +150,13 @@ static void create(lv_obj_t *content, const struct lw_app *self)
 {
     (void)self;
     const lw_palette_t *palette = lw_palette();
+    s_playing = 0;
+    s_position = 0;
 
     lv_obj_t *player = lw_card(content, 32, 14, 470, 412);
     lw_text(player, "正在播放", &lw_font_18, palette->dim, 32, 26);
-    lw_text(player, s_track_titles[s_track], &lw_font_28, palette->text, 32, 54);
-    lw_text(player, s_track_artist[s_track], &lw_font_18, palette->dim, 32, 96);
+    s_title = lw_text(player, "", &lw_font_28, palette->text, 32, 54);
+    s_artist = lw_text(player, "", &lw_font_18, palette->dim, 32, 96);
 
     lv_obj_t *art = lw_soft_card(player, 32, 128, 180, 180);
     lv_obj_set_style_radius(art, 26, 0);
@@ -167,13 +209,11 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lw_text(list, "播放列表", &lw_font_22, palette->text, 28, 24);
     for (int i = 0; i < TRACK_COUNT; i++) {
         lv_obj_t *row = lw_soft_card(list, 28, 76 + i * 82, 414, 64);
-        lv_obj_set_style_bg_color(row, lv_color_hex(i == s_track ? palette->accent : palette->card_soft), 0);
-        lv_obj_set_style_bg_opa(row, i == s_track ? LV_OPA_20 : LV_OPA_COVER, 0);
-        lv_obj_t *title = lw_text(row, s_track_titles[i], &lw_font_18, i == s_track ? palette->accent_deep : palette->text,
-                                  20, 12);
-        (void)title;
-        lv_obj_t *sub = lw_text(row, s_track_artist[i], &lw_font_18, palette->dim, 20, 38);
-        (void)sub;
+        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(row, track_clicked, LV_EVENT_CLICKED, (void *)(intptr_t)i);
+        s_rows[i] = row;
+        s_row_titles[i] = lw_text(row, s_track_titles[i], &lw_font_18, palette->text, 20, 12);
+        s_row_artists[i] = lw_text(row, s_track_artist[i], &lw_font_18, palette->dim, 20, 38);
     }
     lw_text_wrap(list, "DEMO：播放器逻辑与进度可用，板载扬声器音频驱动尚未接入。", &lw_font_18, palette->dim, 28, 340, 400);
 
@@ -197,6 +237,13 @@ static void destroy(void)
     s_time_label = NULL;
     s_play_label = NULL;
     s_volume_label = NULL;
+    s_title = NULL;
+    s_artist = NULL;
+    for (int i = 0; i < TRACK_COUNT; i++) {
+        s_rows[i] = NULL;
+        s_row_titles[i] = NULL;
+        s_row_artists[i] = NULL;
+    }
     s_playing = 0;
 }
 

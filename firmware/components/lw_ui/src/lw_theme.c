@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: MIT */
 #include "lw_theme.h"
 
+#include "lw_app_state.h"
+
 static int s_variant;
 static int s_ready;
 
@@ -129,6 +131,12 @@ void lw_style_label(lv_obj_t *obj, const lv_font_t *font, uint32_t color)
 void lw_theme_enter_anim(lv_obj_t *obj)
 {
     if (obj == NULL) {
+        return;
+    }
+    /* The settings page can switch page animations off. */
+    if (!lw_app_state()->settings.animations) {
+        lv_obj_set_style_opa(obj, LV_OPA_COVER, 0);
+        lv_obj_set_style_translate_y(obj, 0, 0);
         return;
     }
     lv_anim_t fade;

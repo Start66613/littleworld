@@ -7,6 +7,25 @@
 
 ---
 
+## 0. 修复轮记录（2026-10-25 上午，对应 ChatGPT 的审查意见）
+
+四个被点名的缺陷都改在代码里，并用无头交互回归重新走了一遍：
+
+| # | 问题 | 修复 | 证据 |
+|---|---|---|---|
+| 1 | 相册大图弹窗的"上一张/下一张/关闭"没有绑定事件 | `lw_app_album.c` 增加 viewer 状态与三个回调，按钮真正可用，关闭会删除遮罩 | `22-album-viewer` → `23-album-next`（标题变成"生日 2/6"）→ `24-album-closed`（回到网格） |
+| 2 | 修改纪念日日期后当前页不刷新 | `adjust_date()` 改为就地 `switch_tab(0)` 重建，而不是 `lw_shell_open()`（当前 app 会提前返回） | `28-date-plus`：2024-10-25 → 2025-10-25，天数 731 → 366 |
+| 3 | 音乐切歌后标题/歌手/播放列表高亮不同步 | 标题、歌手、三行列表的控件指针全部保存，`refresh()` 统一刷新文本与高亮；列表行可点击选歌 | `25-music-next`、`26-music-row`（第三行高亮、时长变 3:12）、`27-music-playing` |
+| 4 | 设置里的"页面动画"开关不生效 | `lw_theme_enter_anim()` 先读 `settings.animations`，关闭时直接显示不播动画 | `21-settings-anim-off` 之后所有页面切换都走无动画分支 |
+| 5 | 其他页面是否有同样的无效按钮/关不掉的遮罩 | 审计了首页、宠物、回忆四页、相册、音乐、设置、小游戏：时间线详情、地点详情、小游戏结算面板的关闭/重开都正常；顺手把设置的两行做成整行可点（点文字也能拨开关） | 见下方回归步骤 |
+
+另外：
+
+- 新增 `LICENSE`（MIT + 第三方声明：LVGL MIT、BSP Apache-2.0、Noto Sans SC OFL）。
+- 自动回归从 17 步扩到 40+ 步，覆盖：打开/关闭相册弹窗、上一张/下一张、音乐切歌与列表点选、播放开始、改日期→离开→回来（验证 NVS/文件存档）、开关页面动画。
+- 结果：`AUTO RUN: PASSED (0 failure(s))`，活动对象 **84 → 84**，共 **29 张截图**。
+---
+
 ## 1. 成果摘要
 
 | 部分 | 状态 | 说明 |
@@ -19,8 +38,8 @@
 | 音乐播放器 | **部分完成** | 播放列表、播放/暂停、进度、音量（持久化）；**没有音频输出** |
 | Arcade 接入 | **通过** | 游戏中心 + 2048 / 贪吃蛇 / 打砖块 三款全屏可玩，可重开、可回游戏中心 |
 | Windows 演示程序 | **通过** | 真实窗口、鼠标即触摸、F12 截图；无头 `--auto` 回归模式 |
-| 自动测试 | **通过** | 142 项核心单元测试；17 张截图的交互回归，10 次往返对象数 84→84 |
-| ESP-IDF 固件编译 | **通过** | esp32p4 / rev3_x / 32 MB；app 1,198,512 B，镜像头 v3.0–v3.99 |
+| 自动测试 | **通过** | 142 项核心单元测试；29 张截图的交互回归，10 次往返对象数 84→84 |
+| ESP-IDF 固件编译 | **通过** | esp32p4 / rev3_x / 32 MB；app 1,199,920 B，镜像头 v3.0–v3.99 |
 | 实板运行 / 触摸 / 帧率 / NVS | **未开始** | 今晚没有连接开发板，按你的要求完全没碰设备 |
 
 ---
@@ -32,7 +51,7 @@
 | **一键启动** | 双击 `D:\LittleWorld-Main-DSH\Start-LittleWorld.bat` |
 | 可执行文件 | `D:\LittleWorld-Main-DSH\build\host\LittleWorld.exe` |
 | 重新构建 | `pwsh -NoProfile -ExecutionPolicy Bypass -File tools\build_demo.ps1 -Run` |
-| 截图目录 | `D:\LittleWorld-Main-DSH\reports\screenshots\`（17 张 PNG） |
+| 截图目录 | `D:\LittleWorld-Main-DSH\reports\screenshots\`（29 张 PNG） |
 | 固件产物 | `D:\LittleWorld-Main-DSH\build\little_world.bin`（+ `bootloader/`、`partition_table/`） |
 | 源码 | `D:\LittleWorld-Main-DSH\firmware\components\lw_core`、`lw_ui`、`arcade_core`；Windows 端在 `host/` |
 | 交接说明 | `CODEX_HANDOFF.md` |
@@ -65,7 +84,7 @@
 | ![snake](reports/screenshots/17-snake.png) | ![breakout](reports/screenshots/19-breakout-playing.png) |
 
 其余：`03-pet-fed`、`04-pet-playing`、`07-surprise`、`10-place`（地点详情）、`11-album`、`12-music`、
-`13-arcade`、`16-home-again`、`18-breakout-ready`、`20-after-cycles`。
+`13-arcade`、`16-home-again`、`18-breakout-ready`、`20-after-cycles`、`21-settings-anim-off`、`22-album-viewer`、`23-album-next`、`24-album-closed`、`25-music-next`、`26-music-row`、`27-music-playing`、`28-date-plus`、`29-date-persisted`。
 
 ---
 
@@ -88,7 +107,7 @@ HOST TESTS PASSED
 ```
 build\host\LittleWorld.exe --auto reports\screenshots
 AUTO RUN: PASSED (0 failure(s))
-objects: 84 -> 84 (20 screenshots)
+objects: 84 -> 84   （29 张截图）
 ```
 
 自动走完：首页 → 宠物（喂食、玩耍）→ 首页 → 纪念日 → 时间线 → 惊喜盒子（打开）→ 小地图 → 地点详情
@@ -98,7 +117,7 @@ LVGL 对象数不变（84 → 84）。
 ### 4.3 固件编译与镜像
 
 ```
-little_world.bin        1,198,512 B   sha256 76c28217...cf1bc5c
+little_world.bin        1,199,920 B   sha256 bbc7a27c...f426fbb
 bootloader.bin             22,016 B   sha256 276f331b...9e3ae8
 partition-table.bin         3,072 B   sha256 84040236...828fc6
 

@@ -132,7 +132,9 @@ static void adjust_date(int field, int delta)
     if (lw_date_valid(date)) {
         state->anniversary = date;
         lw_app_state_save();
-        lw_shell_open("memories");
+        /* Rebuild in place: lw_shell_open() would early-out because this app is
+         * already the current one, leaving the old date on screen. */
+        switch_tab(0);
     }
 }
 

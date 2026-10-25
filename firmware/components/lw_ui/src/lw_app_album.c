@@ -13,11 +13,61 @@
 
 static const uint32_t s_tile_colors[ALBUM_COUNT] = {0xFFD9E4, 0xFFE7CB, 0xE4F2E6, 0xE7E0FB, 0xFFF0C9, 0xDDEFF7};
 static const char *const s_tile_titles[ALBUM_COUNT] = {"海边", "生日", "散步", "旅行", "厨房", "夜晚"};
-static int s_index;
 
-static void show_viewer(int index)
+typedef struct {
+    lv_obj_t *overlay;
+    lv_obj_t *photo;
+    lv_obj_t *title;
+    int index;
+} album_view_t;
+
+static album_view_t s_viewer;
+
+static void viewer_update(void)
+{
+    if (s_viewer.overlay == NULL) {
+        return;
+    }
+    const lw_palette_t *palette = lw_palette();
+    lv_obj_set_style_bg_color(s_viewer.photo, lv_color_hex(s_tile_colors[s_viewer.index % ALBUM_COUNT]), 0);
+    lv_label_set_text_fmt(s_viewer.title, "%s（%d/%d）", s_tile_titles[s_viewer.index % ALBUM_COUNT],
+                          s_viewer.index + 1, ALBUM_COUNT);
+    lv_obj_set_style_text_color(s_viewer.title, lv_color_hex(palette->text), 0);
+}
+
+static void viewer_close(lv_event_t *event)
+{
+    (void)event;
+    if (s_viewer.overlay != NULL) {
+        lv_obj_delete(s_viewer.overlay);
+        s_viewer.overlay = NULL;
+        s_viewer.photo = NULL;
+        s_viewer.title = NULL;
+    }
+}
+
+static void viewer_next(lv_event_t *event)
+{
+    (void)event;
+    s_viewer.index = (s_viewer.index + 1) % ALBUM_COUNT;
+    viewer_update();
+}
+
+static void viewer_prev(lv_event_t *event)
+{
+    (void)event;
+    s_viewer.index = (s_viewer.index + ALBUM_COUNT - 1) % ALBUM_COUNT;
+    viewer_update();
+}
+
+static void viewer_show(int index)
 {
     const lw_palette_t *palette = lw_palette();
+    if (s_viewer.overlay != NULL) {
+        lv_obj_delete(s_viewer.overlay);
+        s_viewer.overlay = NULL;
+    }
+
     lv_obj_t *overlay = lv_obj_create(lv_screen_active());
     lv_obj_remove_style_all(overlay);
     lv_obj_set_size(overlay, LW_SCREEN_W, LW_SCREEN_H);
@@ -28,31 +78,37 @@ static void show_viewer(int index)
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 720, 460);
     lv_obj_center(card);
+
     lv_obj_t *photo = lw_soft_card(card, 24, 24, 672, 300);
     lv_obj_set_style_radius(photo, 18, 0);
     lv_obj_set_style_bg_color(photo, lv_color_hex(s_tile_colors[index % ALBUM_COUNT]), 0);
-
-    lv_obj_t *tag = lw_text(photo, "DEMO 占位图 · 真实照片后续从 SD 卡导入", &lw_font_18, palette->dim, 20, 16);
-    (void)tag;
+    lw_text(photo, "DEMO 占位图 · 真实照片后续从 SD 卡导入", &lw_font_18, palette->dim, 20, 16);
 
     lv_obj_t *title = lw_text(card, "", &lw_font_28, palette->text, 24, 340);
-    lv_label_set_text_fmt(title, "%s（%d/%d）", s_tile_titles[index % ALBUM_COUNT], index + 1, ALBUM_COUNT);
 
     lv_obj_t *prev = lw_button(card, "上一张", 130, 46, palette->card_soft, palette->accent_deep, &lw_font_18);
     lv_obj_set_pos(prev, 24, 396);
+    lv_obj_add_event_cb(prev, viewer_prev, LV_EVENT_CLICKED, NULL);
+
     lv_obj_t *next = lw_button(card, "下一张", 130, 46, palette->accent, 0xFFFFFF, &lw_font_18);
     lv_obj_set_pos(next, 170, 396);
+    lv_obj_add_event_cb(next, viewer_next, LV_EVENT_CLICKED, NULL);
+
     lv_obj_t *close = lw_button(card, "关闭", 120, 46, palette->lav, 0xFFFFFF, &lw_font_18);
     lv_obj_set_pos(close, 570, 396);
-    (void)prev;
-    (void)next;
-    (void)close;
+    lv_obj_add_event_cb(close, viewer_close, LV_EVENT_CLICKED, NULL);
+
+    s_viewer.overlay = overlay;
+    s_viewer.photo = photo;
+    s_viewer.title = title;
+    s_viewer.index = index % ALBUM_COUNT;
+    viewer_update();
 }
 
 static void tile_clicked(lv_event_t *event)
 {
     int index = (int)(intptr_t)lv_event_get_user_data(event);
-    show_viewer(index);
+    viewer_show(index);
 }
 
 static void create(lv_obj_t *content, const struct lw_app *self)
@@ -74,11 +130,11 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     }
 
     lw_text(content, "相册目前使用 DEMO 占位图；接入 SD 卡后会显示真实照片。", &lw_font_18, palette->dim, 32, 404);
-    (void)s_index;
 }
 
 static void destroy(void)
 {
+    viewer_close(NULL);
 }
 
 const lw_app_t lw_app_album_def = {

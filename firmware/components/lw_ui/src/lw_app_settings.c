@@ -41,6 +41,20 @@ static void anim_changed(lv_event_t *event)
     lw_app_state_save();
 }
 
+static void sound_row_clicked(lv_event_t *event)
+{
+    (void)event;
+    lw_toggle_set(s_sound_toggle, !lw_toggle_get(s_sound_toggle));
+    sound_changed(NULL);
+}
+
+static void anim_row_clicked(lv_event_t *event)
+{
+    (void)event;
+    lw_toggle_set(s_anim_toggle, !lw_toggle_get(s_anim_toggle));
+    anim_changed(NULL);
+}
+
 static void theme_clicked(lv_event_t *event)
 {
     int index = (int)(intptr_t)lv_event_get_user_data(event);
@@ -93,6 +107,21 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lw_text(left, "页面动画", &lw_font_18, palette->dim, 28, 136);
     s_anim_toggle = lw_toggle(left, state->settings.animations, 380, 128);
     lv_obj_add_event_cb(s_anim_toggle, anim_changed, LV_EVENT_CLICKED, NULL);
+
+    /* the whole row is a hit area, so tapping the label also flips the switch */
+    lv_obj_t *sound_row = lv_obj_create(left);
+    lv_obj_remove_style_all(sound_row);
+    lv_obj_set_pos(sound_row, 24, 70);
+    lv_obj_set_size(sound_row, 420, 52);
+    lv_obj_add_flag(sound_row, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(sound_row, sound_row_clicked, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *anim_row = lv_obj_create(left);
+    lv_obj_remove_style_all(anim_row);
+    lv_obj_set_pos(anim_row, 24, 122);
+    lv_obj_set_size(anim_row, 420, 52);
+    lv_obj_add_flag(anim_row, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(anim_row, anim_row_clicked, LV_EVENT_CLICKED, NULL);
 
     lw_text(left, "主题", &lw_font_18, palette->dim, 28, 192);
     static const uint32_t swatch[3] = {0xF58FAE, 0xE06A90, 0xB79CED};
