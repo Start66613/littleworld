@@ -182,7 +182,7 @@ static const lw_clip_t *art_clip(unsigned actor,const char *name)
 static void select_actor(lv_event_t *event)
 {
     unsigned i=(unsigned)(uintptr_t)lv_event_get_user_data(event); lw_duo_touch(&s->duo,i);
-    lw_os_notify(i ? "千千：今天也想和你待在一起。" : "男方当前是测试角色，等待美术确认。");
+    lw_os_notify(i ? "千千：今天也想和你待在一起。" : "他：今天也一起待着吧。");
 }
 static void actors(void)
 {
@@ -239,7 +239,7 @@ static void build_desktop(bool world)
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
         button(s->content,"照顾宠物",48,398,110,50,OC_PET,false); button(s->content,"小冒险",172,398,108,50,OC_RPG,true);
     }
-    lw_os_label(s->content,s->art ? "男方形象待定 · 当前为 TEST A" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
+    lw_os_label(s->content,s->art ? "角色素材 · 本地像素版" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
     /* Furniture targets are created first so character hit areas stay above them. */
     lv_obj_t *furniture=button(s->content,"",518,106,224,184,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     furniture=button(s->content,"",378,276,174,96,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
@@ -590,6 +590,9 @@ static void tick(lv_timer_t *timer)
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;
+    /* The legacy shell initialised the saved app state; the OS path never did,
+       so the anniversary read as year 0 and the desktop showed 740312 days. */
+    lw_app_state_init();
     s=lv_malloc_zeroed(sizeof(*s)); if (!s) return false;
     s->system=system; s->art=art; s->pending=s->navigation=-1; s->previous=lv_screen_active(); s->last_tick=lv_tick_get(); s->last_wifi=system->wifi;
     if (!explicit_capabilities) derive_capabilities(system);

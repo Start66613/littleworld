@@ -5,10 +5,11 @@
  *   tap X Y       synthesise one press/release at screen coordinates
  *   status        print heap, display size and the last captured frame
  *
- * Protocol, one record per line:
- *   LCAP BMP <base64 of the 54-byte BMP header>
- *   LCAP DATA <base64 rows...>
- *   LCAP END
+ * Protocol, one record per line, every line numbered so a lost line can be
+ * recovered by re-running the command and merging by index:
+ *   LCAP <index> <base64 chunk of 72 source bytes>
+ *   LCAP END <line count>
+ * The first chunk carries the 54-byte BMP header, the rest are pixel rows.
  *
  * The image is halved (for example 1024x600 -> 512x300) before encoding:
  * 460 800 bytes of BMP become 614 400 base64 characters, about 7 s at
@@ -96,6 +97,8 @@ void lw_capture_attach_input(void)
 
 /* --------------------------------------------------------------- base64 --- */
 
+static unsigned s_line;   /* index of the next LCAP line of the current shot */
+
 static void emit_base64(const uint8_t *src, size_t len)
 {
     char line[CAP_B64_PER_LINE + 4];
@@ -110,8 +113,7 @@ static void emit_base64(const uint8_t *src, size_t len)
         i += 3;
         if (col >= CAP_B64_PER_LINE) {
             line[col] = '\0';
-            fputs(line, stdout);
-            fputc('\n', stdout);
+            printf("LCAP %u %s\n", s_line++, line);
             col = 0;
         }
     }
@@ -125,8 +127,13 @@ static void emit_base64(const uint8_t *src, size_t len)
         line[col++] = (i + 1 < len) ? B64[(v >> 6) & 0x3F] : '=';
         line[col++] = '=';
         line[col] = '\0';
-        fputs(line, stdout);
-        fputc('\n', stdout);
+        printf("LCAP %u %s\n", s_line++, line);
+    } else if (col > 0) {
+        /* Flush the tail of a block whose length is a multiple of 3: without
+           this the last 24 bytes of every 1536-byte row silently vanished and
+           the emitted BMP was 7 KB shorter than the header claimed. */
+        line[col] = '\0';
+        printf("LCAP %u %s\n", s_line++, line);
     }
     fflush(stdout);
 }
@@ -166,7 +173,6 @@ static void emit_bmp_rgb565(const uint8_t *data, uint32_t stride, int w, int h, 
     put_le16(&head[28], 24);
     put_le32(&head[34], bytes);
 
-    fputs("LCAP BMP ", stdout);
     emit_base64(head, sizeof(head));
 
     uint8_t *line = NULL;
@@ -177,7 +183,6 @@ static void emit_bmp_rgb565(const uint8_t *data, uint32_t stride, int w, int h, 
         fflush(stdout);
         return;
     }
-    fputs("LCAP DATA ", stdout);
     for (int y = out_h - 1; y >= 0; y--) {
         const uint8_t *src = data + (size_t)(y * scale) * stride;
         uint8_t *dst = line;
@@ -195,7 +200,7 @@ static void emit_bmp_rgb565(const uint8_t *data, uint32_t stride, int w, int h, 
         emit_base64(line, (size_t)row);
     }
     free(line);
-    fputs("LCAP END\n", stdout);
+    printf("LCAP END %u\n", s_line);
     fflush(stdout);
 }
 
@@ -203,8 +208,13 @@ static void emit_bmp_rgb565(const uint8_t *data, uint32_t stride, int w, int h, 
 
 static int cmd_shot(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
+    int scale = CAP_SCALE;
+    if (argc > 1) {
+        int requested = atoi(argv[1]);
+        if (requested >= 1 && requested <= 4) {
+            scale = requested;
+        }
+    }
     if (!bsp_display_lock(5000)) {
         ESP_LOGE(TAG, "LVGL lock timeout, screenshot skipped");
         fputs("LCAP FAIL lock\n", stdout);
@@ -220,6 +230,7 @@ static int cmd_shot(int argc, char **argv)
     }
     lv_draw_buf_t *buf = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_RGB565);
     bsp_display_unlock();
+    s_line = 0;
     if (buf == NULL) {
         ESP_LOGE(TAG, "snapshot failed");
         fputs("LCAP FAIL snapshot\n", stdout);
@@ -230,7 +241,7 @@ static int cmd_shot(int argc, char **argv)
     s_last_h = (int)buf->header.h;
     ESP_LOGI(TAG, "snapshot %dx%d stride %u", s_last_w, s_last_h,
              (unsigned)buf->header.stride);
-    emit_bmp_rgb565(buf->data, buf->header.stride, s_last_w, s_last_h, CAP_SCALE);
+    emit_bmp_rgb565(buf->data, buf->header.stride, s_last_w, s_last_h, scale);
     lv_draw_buf_destroy(buf);
     return 0;
 }
@@ -272,6 +283,10 @@ bool lw_capture_console_start(void)
     esp_console_repl_config_t repl_cfg = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
     repl_cfg.prompt = "lw>";
     repl_cfg.max_cmdline_length = 64;
+    /* lv_snapshot_take renders a whole screen through the software renderer and
+       overflowed the default 4 KiB console stack on the real board (stack
+       protection fault in task "console_repl"), so give the REPL real room. */
+    repl_cfg.task_stack_size = 16384;
     esp_console_dev_uart_config_t uart_cfg = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
     if (esp_console_new_repl_uart(&uart_cfg, &repl_cfg, &repl) != ESP_OK) {
         ESP_LOGW(TAG, "console REPL unavailable");

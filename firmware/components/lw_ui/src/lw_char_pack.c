@@ -71,7 +71,6 @@ bool lw_char_pack_register(const lw_char_pack_blob_t *blob)
     s_blob_size = blob->size;
     s_clips = clips;
 
-    lw_asset_spec_t specs[LW_CHAR_MAX_CLIPS];
     for (unsigned i = 0; i < clips; i++) {
         const uint8_t *record = data + LW_CHAR_HEADER_BYTES + i * LW_CHAR_RECORD_BYTES;
         const char *name = (const char *)record;
@@ -99,17 +98,17 @@ bool lw_char_pack_register(const lw_char_pack_blob_t *blob)
         snprintf(s_ids[i], sizeof(s_ids[i]), "%s.idle", s_names[i]);
         s_sources[i] = (lw_char_source_t){data, blob->size, offset, (uint16_t)frames,
                                           (uint16_t)width, (uint16_t)height, (uint32_t)frame_bytes};
-        specs[i] = (lw_asset_spec_t){s_ids[i], (uint16_t)width, (uint16_t)height, (uint16_t)frames,
+        s_specs[i] = (lw_asset_spec_t){s_ids[i], (uint16_t)width, (uint16_t)height, (uint16_t)frames,
                                      anchor_x, anchor_y, LV_COLOR_FORMAT_RGB565A8, read_frame, &s_sources[i]};
         for (unsigned f = 0; f < frames; f++) {
             s_sequences[i][f] = (uint16_t)f;
             s_durations[i][f] = (uint16_t)duration;
         }
-        s_named[i].name = s_names[i];
+        s_named[i].name = "idle";   /* lw_os asks for the "idle" clip by name */
         s_named[i].clip = (lw_clip_t){s_ids[i], s_sequences[i], s_durations[i], (uint16_t)frames, loop != 0};
     }
 
-    if (!lw_assets_register(specs, clips, 2u * 1024u * 1024u)) return false;
+    if (!lw_assets_register(s_specs, clips, 2u * 1024u * 1024u)) return false;
 
     int male = index_of("male");
     int qian = index_of("qianqian");

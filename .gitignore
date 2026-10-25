@@ -48,3 +48,5 @@ __pycache__/
 /reports/os-v2/screens/
 /build_os.log
 /build_other.log/build_other*.log
+/build_*.log
+/commitmsg.txt
