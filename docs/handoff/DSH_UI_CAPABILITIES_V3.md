@@ -3,7 +3,7 @@
 本轮只新增UI侧契约和Host测试。DSH继续独占firmware/main、硬件服务、NVS、驱动和固件部署。Codex不实现或修改这些后端。
 
 1. lw_os_capabilities（lw_os.h）：UI线程传入亮度/音量/Wi-Fi/音频/存储的unavailable/simulated/ready快照；只描述能力，不初始化硬件。NULL从既有lw_system后端函数推导，音频/存储默认不可用。服务不可用时相关控件禁用，不能用ready掩盖未完成驱动。能力改变须在UI任务边界通知，当前会重建页，不从硬件任务直接操作LVGL。
-2. lw_album_set_source（lw_ui_content.h）：相册关闭时设置稳定借用源（最多64项），title/load/release；一次至多一张解码图片。loader负责文件/格式/尺寸/预算，返回有效不可变LVGL描述符和token，错误必须能安全release部分结果；UI先删除widget并drop image cache再release。当前仅适用于非动画照片，不扫描路径，不上传文件。
+2. lw_album_set_source（lw_ui_content.h）：相册关闭时设置稳定借用源（最多64项），title/load/release；一次至多一张解码图片，数据上限2MiB。loader负责文件/格式/尺寸/预算与实际adapter要求的buffer/stride对齐，返回有效不可变LVGL描述符和token，错误必须能安全release部分结果；UI先删除widget并drop image cache再release。Host技术图buffer不是ESP解码器范例。当前仅适用于非动画照片，不扫描路径，不上传文件。
 3. lw_memories_set_source：回忆页关闭时设置最多32条稳定借用lw_memory_t，标题≤128字节、正文≤4096，日期有效。NULL/0回到显式示例。个人数据由后端保存；动态文字的完整中文字体覆盖仍需资源方案，不能假设编译子集涵盖所有导入文字。
 4. 动效：关闭复用旧settings.animations格式；减少档暂为会话状态，未来DSH若持久化，请另定版本，不在原记录塞入新字段。可在低性能设备选择REDUCED或OFF。
 5. 音乐仍是模拟进度，没有接音频播放函数；capabilities.audio不能让本轮页面自动具备真实播放。后续需要prepare/play/pause/seek/position/error和封面租约接口，由DSH实现后再对接。当前默认不输出声音且明确提示。

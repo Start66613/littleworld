@@ -99,6 +99,7 @@ static void rpg_tile(int x,int y)
 typedef struct { lv_image_dsc_t image; uint8_t pixels[96*64*2]; } fixture_photo_t;
 static unsigned photo_live,photo_peak; static char photo_root[512];
 static unsigned desktop_objects; static int desktop_timers;
+static unsigned legacy_anim_baseline;
 static void fixture_path(char path[600],unsigned index) { snprintf(path,600,"%s\\ui-test-photo-%u.raw",photo_root,index); }
 static void write_photo(unsigned index)
 {
@@ -137,7 +138,9 @@ static void experience_tests(lw_system_t *system,const char *out)
     lw_os_capabilities_t missing={0}; lw_os_capabilities(&missing); tap(OC_CONTROL);
     CHECK("missing brightness is disabled",lv_obj_has_state(lw_os_control(OC_BRIGHTNESS),LV_STATE_DISABLED));
     CHECK("missing volume is disabled",lv_obj_has_state(lw_os_control(OC_VOLUME),LV_STATE_DISABLED)); CHECK("missing wifi is disabled",lv_obj_has_state(lw_os_control(OC_WIFI),LV_STATE_DISABLED));
-    unsigned brightness_before=system->prefs.brightness; drag(OC_BRIGHTNESS,30); CHECK("disabled service cannot pretend to change",system->prefs.brightness==brightness_before); shot(out,"23-services-unavailable"); lw_os_capabilities(NULL); advance(400);
+    unsigned brightness_before=system->prefs.brightness; drag(OC_BRIGHTNESS,30); CHECK("disabled service cannot pretend to change",system->prefs.brightness==brightness_before); shot(out,"23-services-unavailable"); tap(OC_CLOSE);
+    lw_os_open(OS_MUSIC); advance(400); unsigned stored_volume=lw_app_state()->music_volume; lv_obj_t *volume_plus=text_object(lw_os_root(),"+"); CHECK("music also disables unavailable volume",volume_plus && lv_obj_has_state(lv_obj_get_parent(volume_plus),LV_STATE_DISABLED)); tap_text("+"); CHECK("unavailable music volume never changes preference",lw_app_state()->music_volume==stored_volume);
+    lw_os_open(OS_DESKTOP); lw_os_capabilities(NULL); advance(400);
     tap(OC_CONTROL); tap(OC_DND); CHECK("DND state is shared and visible",system->prefs.dnd && text_object(lw_os_root(),"已开启")); shot(out,"24-dnd"); tap(OC_DND); tap(OC_MUTE); CHECK("mute is shared",system->prefs.muted); tap(OC_MUTE); tap(OC_LOCK);
     lv_obj_t *locked=lv_obj_get_child(lw_os_root(),-1); unsigned locked_objects=objects(lw_os_root());
     for (unsigned i=0;i<100;i++) lw_os_show(OS_OVER_LOCK);
@@ -174,7 +177,7 @@ static void experience_tests(lw_system_t *system,const char *out)
     for (unsigned mode=0;mode<3;mode++) {
         lw_os_motion_mode((lw_motion_mode_t)mode); lw_app_state()->settings.animations=mode!=LW_MOTION_OFF;
         bool stable=true;
-        for (unsigned n=0;n<20;n++) { lw_os_open(OS_WORLD); advance(80); lw_os_open(OS_SETTINGS); advance(80); lw_os_open(OS_RPG); advance(80); lw_os_open(OS_DESKTOP); advance(360); if (objects(lw_os_root())!=base_objects || timers()!=base_timers || lv_anim_count_running()!=base_anims) stable=false; }
+        for (unsigned n=0;n<20;n++) { lw_os_open(OS_WORLD); advance(80); lw_os_open(OS_SETTINGS); advance(80); lw_os_open(OS_RPG); advance(80); lw_os_open(OS_PET); advance(180); if (mode!=LW_MOTION_FULL && lv_anim_count_running()!=0) stable=false; lw_os_open(OS_DESKTOP); advance(360); if (objects(lw_os_root())!=base_objects || timers()!=base_timers || lv_anim_count_running()!=base_anims) stable=false; }
         CHECK("20 page cycles are stable in each motion mode",stable);
     }
     lw_os_motion_mode(LW_MOTION_FULL); lw_app_state()->settings.animations=true;
@@ -191,6 +194,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     unsigned expected_leases=pack ? 2 : 0;
     int base_timers=timers(); size_t base_bytes=lw_assets_stats().live_bytes;
     if (out) { clock_ms=lv_tick_get(); lv_tick_set_cb(fake_clock); }
+    if (out) { advance(400); legacy_anim_baseline=lv_anim_count_running(); }
     if (!lw_os_start(&system,lw_pixel_pack_art(pack))) { lw_pixel_pack_close(pack); return 2; }
     if (!out) { printf("Little World OS V2 ready: Windows simulated services; --legacy restores the stable desktop.\n"); int result=lw_host_run_window(); lw_os_stop(); return lw_pixel_pack_close(pack) ? result : 2; }
     LARGE_INTEGER begin,end,freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&begin); double cpu_start=cpu_ms();
@@ -263,7 +267,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     uint8_t encoded[LW_SYS_PREF_BYTES]; lw_system_encode(&system.prefs,encoded); encoded[5]^=1; lw_preferences_t invalid; CHECK("corrupt preferences rejected",!lw_system_decode(&invalid,encoded));
     size_t peak=lw_assets_stats().peak_bytes; lw_os_stop(); CHECK("OS stop releases frame memory",lw_assets_stats().live_bytes==base_bytes && lw_assets_stats().live_leases==0); CHECK("OS stop releases timers",timers()==base_timers); CHECK("stable shell restored",lw_shell_current() && !strcmp(lw_shell_current()->id,"home"));
     CHECK("wallpaper animation context released",lw_os_scene_live_bytes()==0); CHECK("photo source released at OS stop",photo_live==0);
-    advance(400); CHECK("OS and restored legacy transitions finish without leftover animations",lv_anim_count_running()==0);
+    advance(400); CHECK("animation count returns to the restored legacy breathing baseline",lv_anim_count_running()==legacy_anim_baseline);
     lw_file_cache_stats_t cache=lw_pixel_pack_cache_stats(pack);
     CHECK("real frame file cache stays bounded",cache.peak_bytes<=cache.budget_bytes);
     CHECK("private pack uses real read-ahead",!pack || (cache.prefetched>0 && cache.hits>0));
@@ -274,7 +278,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     snprintf(report,sizeof(report),"%s\\storage.json",out); f=fopen(report,"wb");
     if (f) { fprintf(f,"{\"implementation\":\"actual Windows filesystem and worker thread\",\"budget_bytes\":%zu,\"peak_cache_bytes\":%zu,\"metadata_bytes\":%zu,\"hits\":%u,\"misses\":%u,\"file_reads\":%u,\"prefetched\":%u,\"evictions\":%u,\"read_failures\":%u,\"lvgl_pixel_peak_bytes\":%zu,\"tf_hardware_tested\":false}\n",cache.budget_bytes,cache.peak_bytes,cache.metadata_bytes,cache.hits,cache.misses,cache.reads,cache.prefetched,cache.evictions,cache.failures,peak); fclose(f); } else failures++;
     snprintf(report,sizeof(report),"%s\\experience.json",out); f=fopen(report,"wb");
-    if (f) { fprintf(f,"{\"desktop_objects\":%u,\"OS_active_timers\":%d,\"settled_animations_after_stop\":%u,\"photo_peak_live\":%u,\"photo_live_after_stop\":%u,\"photo_fixture_bytes\":12288,\"scene_context_live_bytes_after_stop\":%zu,\"lock_reuse_cycles\":100,\"rapid_overlay_cycles\":100,\"page_cycles_per_motion_mode\":20,\"media_is_technical_fixture\":true}\n",desktop_objects,desktop_timers,lv_anim_count_running(),photo_peak,photo_live,lw_os_scene_live_bytes()); fclose(f); } else failures++;
+    if (f) { fprintf(f,"{\"desktop_objects\":%u,\"OS_active_timers\":%d,\"restored_legacy_animation_baseline\":%u,\"animations_after_stop\":%u,\"photo_peak_live\":%u,\"photo_live_after_stop\":%u,\"photo_fixture_bytes\":12288,\"scene_context_live_bytes_after_stop\":%zu,\"lock_reuse_cycles\":100,\"rapid_overlay_cycles\":100,\"page_cycles_per_motion_mode\":20,\"media_is_technical_fixture\":true}\n",desktop_objects,desktop_timers,legacy_anim_baseline,lv_anim_count_running(),photo_peak,photo_live,lw_os_scene_live_bytes()); fclose(f); } else failures++;
     printf("OS V2: %u checks, %u failures; 100 overlay cycles; peak pixels %zu B.\n",checks,failures,peak);
     printf("File cache: peak %zu / %zu B; hits %u; prefetched %u; evictions %u.\n",cache.peak_bytes,cache.budget_bytes,cache.hits,cache.prefetched,cache.evictions);
     return failures ? 1 : 0;

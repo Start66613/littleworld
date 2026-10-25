@@ -31,3 +31,4 @@ const lw_rpg_state_t *lw_os_rpg_state(void);
 typedef enum { LW_SERVICE_UNAVAILABLE,LW_SERVICE_SIMULATED,LW_SERVICE_READY } lw_service_state_t;
 typedef struct { lw_service_state_t brightness,volume,wifi,audio,storage; } lw_os_capabilities_t;
 void lw_os_capabilities(const lw_os_capabilities_t *);
+bool lw_os_volume_available(void);

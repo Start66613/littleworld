@@ -2,6 +2,7 @@
 #include "lw_theme.h"
 
 #include "lw_app_state.h"
+#include "lw_os_design.h"
 
 static int s_variant;
 static int s_ready;
@@ -52,6 +53,7 @@ void lw_theme_session_palette(const lw_palette_t *palette)
 {
     s_use_session=palette!=NULL; if (palette) s_session=*palette;
     if (s_ready) {
+        lv_style_set_translate_y(&s_card_pressed,lw_os_motion_get()==LW_MOTION_FULL ? 2 : 0);
         const lw_palette_t *p=lw_palette(); lv_style_set_bg_color(&s_card,lv_color_hex(p->card));
         lv_style_set_shadow_color(&s_card,lv_color_hex(p->shadow)); lv_style_set_text_color(&s_card,lv_color_hex(p->text));
         lv_style_set_bg_color(&s_soft,lv_color_hex(p->card_soft));

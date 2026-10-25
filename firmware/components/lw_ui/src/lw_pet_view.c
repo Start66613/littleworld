@@ -5,6 +5,7 @@
 
 #include "lw_app_state.h"
 #include "lw_theme.h"
+#include "lw_os_design.h"
 
 struct lw_pet_view {
     lv_obj_t *root;
@@ -76,7 +77,7 @@ static void blink_restore_cb(lv_timer_t *timer)
 static void blink_cb(lv_timer_t *timer)
 {
     lw_pet_view_t *view = (lw_pet_view_t *)lv_timer_get_user_data(timer);
-    if (view == NULL || view->mood == LW_PET_MOOD_SLEEPING) {
+    if (view == NULL || view->mood == LW_PET_MOOD_SLEEPING || lw_os_motion_get()!=LW_MOTION_FULL) {
         return;
     }
     lv_obj_set_height(view->eye_left, s(5, view->scale));
@@ -147,7 +148,7 @@ lw_pet_view_t *lw_pet_view_create(lv_obj_t *parent, int x, int y, int scale)
     lv_anim_set_repeat_count(&view->breath, LV_ANIM_REPEAT_INFINITE);
     lv_anim_set_path_cb(&view->breath, lv_anim_path_ease_in_out);
     lv_anim_set_exec_cb(&view->breath, breath_cb);
-    lv_anim_start(&view->breath);
+    if (lw_os_motion_get()==LW_MOTION_FULL) lv_anim_start(&view->breath);
 
     view->blink_timer = lv_timer_create(blink_cb, 3600, view);
     view->blink_restore_timer = lv_timer_create(blink_restore_cb, 130, view);
@@ -176,6 +177,7 @@ void lw_pet_view_refresh(lw_pet_view_t *view, const lw_pet_t *pet, uint32_t now)
         return;
     }
     lw_pet_mood_t mood = lw_pet_mood(pet, now);
+    if (lw_os_motion_get()!=LW_MOTION_FULL) { lv_anim_delete(view->body,breath_cb); lv_obj_set_height(view->body,s(170,view->scale)); }
     if (mood == view->mood) {
         return;
     }
@@ -233,12 +235,12 @@ void lw_pet_view_refresh(lw_pet_view_t *view, const lw_pet_t *pet, uint32_t now)
     lv_anim_set_values(&view->breath, s(170, view->scale), s(176, view->scale));
     lv_anim_set_var(&view->breath, view->body);
     lv_anim_set_exec_cb(&view->breath, breath_cb);
-    lv_anim_start(&view->breath);
+    if (lw_os_motion_get()==LW_MOTION_FULL) lv_anim_start(&view->breath);
 }
 
 void lw_pet_view_react(lw_pet_view_t *view, lw_pet_action_t action)
 {
-    if (view == NULL) {
+    if (view == NULL || lw_os_motion_get()!=LW_MOTION_FULL) {
         return;
     }
     lv_anim_t bounce;

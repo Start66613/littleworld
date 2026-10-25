@@ -10,6 +10,7 @@
 #include "lw_theme.h"
 #include "lw_widgets.h"
 #include "lw_os_design.h"
+#include "lw_os.h"
 
 #define TRACK_COUNT 3
 
@@ -128,6 +129,7 @@ static void track_clicked(lv_event_t *event)
 static void volume_up(lv_event_t *event)
 {
     (void)event;
+    if (!lw_os_volume_available()) return;
     lw_state_t *state = lw_app_state();
     if (state->music_volume <= 90) {
         state->music_volume += 10;
@@ -141,6 +143,7 @@ static void volume_up(lv_event_t *event)
 static void volume_down(lv_event_t *event)
 {
     (void)event;
+    if (!lw_os_volume_available()) return;
     lw_state_t *state = lw_app_state();
     if (state->music_volume >= 10) {
         state->music_volume -= 10;
@@ -213,6 +216,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_pos(vol_down, 200, 322);
     lv_obj_t *vol_up = lw_button(player, "+", 44, 44, palette->card_soft, palette->text, &lw_font_22);
     lv_obj_set_pos(vol_up, 254, 322);
+    if (!lw_os_volume_available()) { lv_obj_add_state(vol_down,LV_STATE_DISABLED); lv_obj_add_state(vol_up,LV_STATE_DISABLED); lv_obj_set_style_opa(vol_down,100,LV_STATE_DISABLED); lv_obj_set_style_opa(vol_up,100,LV_STATE_DISABLED); }
 
     lv_obj_t *list = lw_card(content, 522, 14, 470, 412);
     lw_text(list, "播放列表", &lw_font_22, palette->text, 28, 24);

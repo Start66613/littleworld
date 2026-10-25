@@ -29,6 +29,7 @@ typedef struct {
 } os_t;
 static os_t *s;
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
+bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
 static void render(void);
 static void refresh(void); static void show_overlay(lw_os_overlay_t);
 static void derive_capabilities(const lw_system_t *system)
@@ -579,7 +580,9 @@ static void tick(lv_timer_t *timer)
     if (s->last_revision!=s->system->revision) {
         s->last_revision=s->system->revision; lw_app_state()->music_volume=s->system->prefs.volume; s->last_legacy_volume=s->system->prefs.volume; refresh();
     } else if (s->legacy==&lw_app_music_def && lw_app_state()->music_volume!=s->last_legacy_volume) {
-        lw_system_volume(s->system,lw_app_state()->music_volume); lw_system_save(s->system); s->last_legacy_volume=s->system->prefs.volume;
+        if (lw_os_volume_available()) { lw_system_volume(s->system,lw_app_state()->music_volume); lw_system_save(s->system); }
+        else lw_app_state()->music_volume=s->system->prefs.volume;
+        s->last_legacy_volume=s->system->prefs.volume;
     }
     if (s->toast) { s->toast_ms=s->toast_ms>dt ? s->toast_ms-dt : 0; if (!s->toast_ms) { lv_obj_delete(s->toast); s->toast=NULL; } }
 }
