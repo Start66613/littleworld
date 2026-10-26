@@ -40,6 +40,11 @@ static bool has_clip(const lw_named_clip_t *named, unsigned count, const char *n
 
 const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
 {
+    /* Re-entrant by design: a second call must not leave the first call's
+     * registry published, because lw_pack_registry_register() replaces the
+     * table and the first call's specs would then be the ones pointing at a
+     * closed cache. Detach (and close the old cache) before rebuilding. */
+    if (s_ready) lw_art_release();
     s_ready = false;
     s_report[0] = '\0';
 
@@ -108,7 +113,7 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
 
     if (!lw_pack_registry_register(LW_ART_LEASE_BUDGET)) {
         strncat(s_report, " [registry rejected]", sizeof(s_report) - strlen(s_report) - 1);
-        lw_pack_registry_reset();
+        (void)lw_pack_registry_reset();
         return NULL;
     }
 
@@ -119,7 +124,7 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
         s_art[i] = (lw_actor_art_t){s_actor_names[i], named, count, named == NULL || count == 0};
     }
     if (!s_art[0].count && !s_art[1].count) {
-        lw_pack_registry_reset();
+        (void)lw_pack_registry_reset();
         return NULL;
     }
     s_ready = true;
@@ -132,14 +137,20 @@ const char *lw_art_report(void) { return s_report[0] ? s_report : "no art source
 
 void lw_art_release(void)
 {
-    /* Sprites must already be destroyed: lw_pack_registry_reset() refuses to
-     * drop a table that still has leases, and the cache must not disappear
-     * under a pending frame read. */
+    /* Order matters. Detach the registry FIRST: every spec in it carries a
+     * pointer to s_cache, so closing the cache while the registry is still
+     * published would leave live specs reading through freed memory the next
+     * time a sprite asks for a frame. If the detach is refused (a lease is
+     * still live, i.e. a sprite outlived this call) the cache is kept open on
+     * purpose: a leak is recoverable, a use-after-free is not. */
+    if (!lw_pack_registry_reset()) {
+        s_ready = false;
+        return;
+    }
     if (s_cache) {
         lw_file_cache_close(s_cache);
         s_cache = NULL;
     }
-    lw_pack_registry_reset();
     /* Scene images are freed only once no widget still references them, which
      * is what makes this safe to call on the failed-boot path. */
     (void)lw_visual_assets_shutdown();

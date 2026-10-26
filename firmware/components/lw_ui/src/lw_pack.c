@@ -24,6 +24,13 @@
 #define LW_PACK_PATH_BYTES 768u
 #define LW_PACK_ID_BYTES 48u
 #define LW_PACK_FILE_BYTES 128u
+/* Resolved paths are kept per FILE, not per actor. A source record hands
+ * lw_asset_read_raw_file a pointer to its path, and that pointer has to stay
+ * valid and unchanged for the lifetime of the spec: an actor's second pack
+ * would otherwise overwrite the buffer the first pack's frames still read
+ * through, and every frame of the first clip would be fetched from the second
+ * file at the first clip's offsets — wrong art, no error, no log. */
+#define LW_PACK_MAX_FILES 4u
 
 typedef struct {
     char id[LW_PACK_ID_BYTES];
@@ -58,8 +65,11 @@ static uint16_t s_sequences[LW_PACK_MAX_ACTORS][LW_PACK_MAX_CLIPS][LW_PACK_MAX_F
 static uint16_t s_durations[LW_PACK_MAX_ACTORS][LW_PACK_MAX_CLIPS][LW_PACK_MAX_FRAMES];
 static char s_clip_names[LW_PACK_MAX_ACTORS][LW_PACK_MAX_CLIPS][LW_PACK_NAME_BYTES];
 static char s_actor_names[LW_PACK_MAX_ACTORS][24];
-static char s_pack_file[LW_PACK_MAX_ACTORS][LW_PACK_FILE_BYTES];
-static char s_absolute[LW_PACK_MAX_ACTORS][LW_PACK_PATH_BYTES];
+/* One resolved path per parsed FILE (see LW_PACK_MAX_FILES). Never indexed by
+ * actor: appending a pack must not repoint an earlier pack's raw provider. */
+static char s_file_paths[LW_PACK_MAX_FILES][LW_PACK_PATH_BYTES];
+static char s_file_names[LW_PACK_MAX_FILES][LW_PACK_FILE_BYTES];
+static unsigned s_file_count;
 static lw_file_cache_t *s_caches[LW_PACK_MAX_ACTORS];
 static unsigned s_actor_count;
 static unsigned s_spec_count;
@@ -112,8 +122,7 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
     /* Bind the frame to the cache of the pack file it came from. The cache is
      * stored in the source itself, not looked up per call: the file name alone
      * is ambiguous, because the same clip table can be re-added from a rebuilt
-     * pack and s_pack_file[] then no longer points at the cache this spec was
-     * parsed with. */
+     * pack and the per-file path record then describes a different file. */
     lw_file_cache_t *cache = source->cache;
     uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
     if (cache) {
@@ -137,18 +146,21 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
     return raw_ok;
 }
 
-void lw_pack_registry_reset(void)
+bool lw_pack_registry_reset(void)
 {
-    /* Detach first: lw_assets refuses to drop a table it still holds while a
-     * lease is live, and the caller is expected to have destroyed its sprites.
-     * This must not depend on s_registered: lw_assets can be holding this
-     * table because lw_pack_registry_register() succeeded, but a failed
-     * re-register or a registry replaced by another owner would otherwise
-     * leave this cache stale and the next reset would keep the old clips. */
-    (void)lw_assets_register(NULL, 0, LW_PACK_LEASE_BUDGET);
+    /* Detach first, and ONLY wipe the arrays if the detach really happened.
+     *
+     * lw_assets refuses to drop a table while a lease is live. If we ignored
+     * that refusal and cleared s_specs anyway, the registry would be left
+     * pointing at zeroed specs — ids become NULL and the next lw_assets_find()
+     * strcmp()s through a null pointer. That is the same class of bug that
+     * panicked the board in V3.1, so the failure is reported to the caller
+     * instead of being papered over. */
+    if (!lw_assets_register(NULL, 0, LW_PACK_LEASE_BUDGET)) return false;
     s_registered = false;
     s_actor_count = 0;
     s_spec_count = 0;
+    s_file_count = 0;
     s_caches[0] = NULL;
     s_caches[1] = NULL;
     memset(s_specs, 0, sizeof(s_specs));
@@ -158,15 +170,16 @@ void lw_pack_registry_reset(void)
     memset(s_durations, 0, sizeof(s_durations));
     memset(s_clip_names, 0, sizeof(s_clip_names));
     memset(s_actor_names, 0, sizeof(s_actor_names));
-    memset(s_pack_file, 0, sizeof(s_pack_file));
-    memset(s_absolute, 0, sizeof(s_absolute));
+    memset(s_file_paths, 0, sizeof(s_file_paths));
+    memset(s_file_names, 0, sizeof(s_file_names));
+    return true;
 }
 
 static lw_pack_status_t parse(const char *root, const char *file, const char *actor_name,
                               lw_file_cache_t *cache, lw_pack_t *out)
 {
     if (!root || !file || !actor_name || !file[0]) return LW_PACK_ERR_ARGUMENT;
-    if (strlen(file) >= sizeof(s_pack_file[0])) return LW_PACK_ERR_ARGUMENT;
+    if (strlen(file) >= LW_PACK_FILE_BYTES) return LW_PACK_ERR_ARGUMENT;
 
     /* Find the actor slot first: an actor may arrive in several files (qianqian
      * keeps her base pack and gains a wave pack), and every file of one actor
@@ -187,6 +200,15 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     char absolute[LW_PACK_PATH_BYTES];
     int made = snprintf(absolute, sizeof(absolute), "%s/%s", root, file);
     if (made <= 0 || (size_t)made >= sizeof(absolute)) return LW_PACK_ERR_ARGUMENT;
+
+    /* Reserve the per-FILE path record BEFORE anything is published. Every spec
+     * of this file points into it (source->file / raw.path), so it must be a
+     * distinct buffer per file and must never be recycled while the registry
+     * is alive. */
+    if (s_file_count >= LW_PACK_MAX_FILES) return LW_PACK_ERR_CLIP_COUNT;
+    unsigned file_slot = s_file_count;
+    memcpy(s_file_names[file_slot], file, strlen(file) + 1);
+    memcpy(s_file_paths[file_slot], absolute, (size_t)made + 1);
 
     FILE *f = fopen(absolute, "rb");
     if (!f) return LW_PACK_ERR_OPEN;
@@ -215,15 +237,11 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     while (existing < LW_PACK_MAX_CLIPS && s_named[slot][existing].name) existing++;
     if (existing + clips > LW_PACK_MAX_CLIPS) { fclose(f); return LW_PACK_ERR_CLIP_COUNT; }
 
-    /* The actor's slot strings are published before the clip loop so that
-     * s_sources[].raw can point at the resolved absolute path from the very
-     * first frame read. On an append the slot already exists, but the file
-     * name and path are per FILE: the appended pack may live in another file
-     * under another root, and pointing the raw provider at the first pack's
-     * path would read the wrong bytes. */
+    /* The actor's slot is published before the clip loop so that the raw
+     * provider can point at this file's resolved path from the very first
+     * frame read. The path itself lives in the per-FILE record, not in a
+     * per-actor one, so an append cannot repoint an earlier pack. */
     memcpy(s_actor_names[slot], actor_name, strlen(actor_name) + 1);
-    memcpy(s_pack_file[slot], file, strlen(file) + 1);
-    memcpy(s_absolute[slot], absolute, (size_t)made + 1);
     s_caches[slot] = cache;
     if (fresh) s_actor_count++;
 
@@ -276,7 +294,7 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         s_sources[spec].frames = (uint16_t)frames;
         s_sources[spec].cache = cache;
         s_sources[spec].raw = (lw_asset_raw_file_t){
-            s_absolute[slot], offset, LW_PACK_FRAME_BYTES, (uint16_t)frames};
+            s_file_paths[file_slot], offset, LW_PACK_FRAME_BYTES, (uint16_t)frames};
         s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)LW_PACK_SIDE,
                                           (uint16_t)LW_PACK_SIDE, (uint16_t)frames, (int16_t)anchor_x,
                                           (int16_t)anchor_y, LV_COLOR_FORMAT_RGB565A8, read_frame,
@@ -307,17 +325,25 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
             s_specs[i] = (lw_asset_spec_t){0};
         }
         s_spec_count = first_spec;
+        /* Release the per-file record too: a rejected pack must not consume one
+         * of the LW_PACK_MAX_FILES slots, otherwise four corrupt files in a row
+         * would exhaust the table and a later good pack could never load. */
+        if (s_file_count == file_slot + 1u) {
+            memset(s_file_names[file_slot], 0, LW_PACK_FILE_BYTES);
+            memset(s_file_paths[file_slot], 0, LW_PACK_PATH_BYTES);
+            s_file_count = file_slot;
+        }
         if (fresh) {
             /* Undo the slot publication as well, so a failed first pack leaves
              * no half-configured actor behind for the next add. */
             memset(s_actor_names[slot], 0, sizeof(s_actor_names[slot]));
-            memset(s_pack_file[slot], 0, sizeof(s_pack_file[slot]));
-            memset(s_absolute[slot], 0, sizeof(s_absolute[slot]));
             s_caches[slot] = NULL;
             s_actor_count--;
         }
         return status;
     }
+
+    s_file_count = file_slot + 1u;
 
     if (out) {
         /* clips is what THIS file added, named_count is the actor's whole
@@ -409,8 +435,6 @@ lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
     if ((uint64_t)offset + frame_bytes * frames > size) return LW_PACK_ERR_TRUNCATED;
 
     memcpy(s_actor_names[slot], actor_name, strlen(actor_name) + 1);
-    s_pack_file[slot][0] = '\0';
-    s_absolute[slot][0] = '\0';
     s_caches[slot] = NULL;
     if (fresh) s_actor_count++;
 
@@ -470,14 +494,17 @@ const lw_named_clip_t *lw_pack_registry_clips(const char *actor_name, unsigned *
 void lw_pack_registry_release(void)
 {
     if (!s_registered) return;
-    (void)lw_assets_register(NULL, 0, LW_PACK_LEASE_BUDGET);
+    if (!lw_assets_register(NULL, 0, LW_PACK_LEASE_BUDGET)) return;
     s_registered = false;
 }
 
 lw_pack_status_t lw_pack_open(const char *root, const char *file, const char *actor_name,
                               lw_file_cache_t *cache, lw_pack_t *out)
 {
-    lw_pack_registry_reset();
+    /* A single-pack open replaces whatever was registered, so it must be able
+     * to detach first. If a lease is still live the caller has not destroyed
+     * its sprites; refuse instead of clearing the table under it. */
+    if (!lw_pack_registry_reset()) return LW_PACK_ERR_REGISTER;
     lw_pack_status_t status = parse(root, file, actor_name, cache, out);
     if (status != LW_PACK_OK) return status;
     if (!lw_pack_registry_register(LW_PACK_LEASE_BUDGET)) return LW_PACK_ERR_REGISTER;

@@ -92,8 +92,13 @@ lw_pack_status_t lw_pack_open(const char *root, const char *file, const char *ac
 /* ---- multi-pack registry -------------------------------------------------
  * lw_assets_register() keeps the caller's pointers, so the spec table, the ids
  * and the source records must all be file-scope and stay alive for as long as
- * they are registered. This registry is that storage. */
-void lw_pack_registry_reset(void);
+ * they are registered. This registry is that storage.
+ *
+ * Up to LW_PACK_MAX_FILES (4) files may be added. Every parsed file keeps its
+ * own resolved path record for the lifetime of the registry, so appending a
+ * second pack for one actor can never repoint the first pack's frame reads at
+ * the wrong file. */
+bool lw_pack_registry_reset(void);
 
 /* Add one pack. Fails (and leaves the registry usable) if the pack is
  * malformed, has a clip name that collides with an existing clip for the same
@@ -121,8 +126,20 @@ lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
 /* The clip list for one actor (by the name passed to lw_pack_registry_add). */
 const lw_named_clip_t *lw_pack_registry_clips(const char *actor_name, unsigned *count);
 
-/* Detach from lw_assets; the caller must have destroyed every sprite first. */
+/* Detach from lw_assets but keep the parsed tables in place, so a later
+ * lw_pack_registry_register() can re-publish the same specs (theme rebuild,
+ * a UI that tears its sprites down and puts them back). Refused while a lease
+ * is live, for the same reason as the reset above. */
 void lw_pack_registry_release(void);
+
+/* Detach from lw_assets and clear the parsed tables; the caller must have
+ * destroyed every sprite first.
+ *
+ * Returns false when lw_assets still holds a live lease: the registry is left
+ * intact rather than being cleared under a spec table lw_assets is reading. A
+ * caller that ignores this and proceeds anyway gets a dangling registry, which
+ * is exactly how V3.1 panicked on hardware. */
+bool lw_pack_registry_reset(void);
 
 #ifdef __cplusplus
 }

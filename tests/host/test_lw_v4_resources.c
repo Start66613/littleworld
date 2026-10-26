@@ -263,6 +263,91 @@ static void test_pack_append(void)
     lw_pack_registry_reset();
 }
 
+static void test_pack_append_reads_right_file(void)
+{
+    /* Regression: an actor's SECOND pack used to overwrite the path shared by
+     * the first pack's specs, because every source pointed at one per-actor
+     * buffer. The art then came from the wrong file at the right offset - no
+     * error, no log, just the wrong character. Reading a frame is the only
+     * check that catches it; counting clips does not.
+     *
+     * The two fixtures are sized so the failure is unambiguous: base carries
+     * two clips, so its second clip sits at offset 232 + FRAME_BYTES, which is
+     * past the end of the one-clip extra pack. If the base spec is still
+     * pointing at the extra file the read fails outright instead of returning
+     * plausible pixels. */
+    static const clip_spec_t base[] = {
+        {"idle", 1, 199, 1, 125},
+        {"touch", 1, 199, 0, 125},
+    };
+    static const clip_spec_t extra[] = {
+        {"wave", 1, 199, 0, 100},
+    };
+    lw_pack_registry_reset();
+    CHECK("two-file base written", write_pack("r-base.lwp", base, 2, false));
+    CHECK("two-file extra written", write_pack("r-wave.lwp", extra, 1, false));
+    CHECK("two-file base added",
+          lw_pack_registry_add(fixture_dir(), "r-base.lwp", "qianqian", NULL, NULL) == LW_PACK_OK);
+    CHECK("two-file extra added",
+          lw_pack_registry_add(fixture_dir(), "r-wave.lwp", "qianqian", NULL, NULL) == LW_PACK_OK);
+    CHECK("two-file register", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+
+    /* Base clip 2 lives at 232 + FRAME_BYTES; only r-base.lwp is that long. */
+    lw_asset_lease_t *touch = lw_asset_acquire("qianqian.touch", 0u);
+    CHECK("first pack still readable after append", touch != NULL);
+    if (touch) {
+        const lv_image_dsc_t *image = lw_asset_image(touch);
+        CHECK("first pack pixels come from its own file",
+              image && image->data && image->data[0] == 1u);
+        lw_asset_release(touch);
+    }
+    /* The appended clip must still resolve against its own file. */
+    lw_asset_lease_t *wave = lw_asset_acquire("qianqian.wave", 0u);
+    CHECK("appended pack readable", wave != NULL);
+    if (wave) {
+        const lv_image_dsc_t *image = lw_asset_image(wave);
+        CHECK("appended pixels come from its own file",
+              image && image->data && image->data[0] == 0u);
+        lw_asset_release(wave);
+    }
+
+    lw_pack_registry_reset();
+    snprintf(s_path, sizeof(s_path), "%s/r-base.lwp", fixture_dir());
+    remove(s_path);
+    snprintf(s_path, sizeof(s_path), "%s/r-wave.lwp", fixture_dir());
+    remove(s_path);
+}
+
+static void test_pack_reset_refuses_live_lease(void)
+{
+    /* Regression: reset used to clear the spec table even when lw_assets had
+     * refused to detach, leaving the registry pointing at zeroed specs whose
+     * ids are NULL - the exact shape of the V3.1 hardware panic. A refused
+     * reset must change nothing at all. */
+    static const clip_spec_t clips[] = {
+        {"idle", 1, 199, 1, 125},
+    };
+    lw_pack_registry_reset();
+    CHECK("lease-guard fixture", write_pack("r-lease.lwp", clips, 1, false));
+    CHECK("lease-guard add",
+          lw_pack_registry_add(fixture_dir(), "r-lease.lwp", "qianqian", NULL, NULL) == LW_PACK_OK);
+    CHECK("lease-guard register", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+
+    lw_asset_lease_t *lease = lw_asset_acquire("qianqian.idle", 0u);
+    CHECK("lease held", lease != NULL);
+    CHECK("reset refused while a lease is live", !lw_pack_registry_reset());
+    /* The whole point: the table is still intact and still findable. */
+    CHECK("registry survived the refused reset", lw_assets_find("qianqian.idle") != NULL);
+    CHECK("registry stats still count the lease", lw_assets_stats().live_leases == 1u);
+    if (lease) lw_asset_release(lease);
+
+    CHECK("reset succeeds once the lease is gone", lw_pack_registry_reset());
+    CHECK("registry empty after a real reset", lw_assets_find("qianqian.idle") == NULL);
+
+    snprintf(s_path, sizeof(s_path), "%s/r-lease.lwp", fixture_dir());
+    remove(s_path);
+}
+
 static void test_pack_rejections(void)
 {
     /* Every one of these must fail WITHOUT leaving a half-registered actor. */
@@ -583,6 +668,8 @@ int main(void)
 
     test_pack_ok();
     test_pack_append();
+    test_pack_append_reads_right_file();
+    test_pack_reset_refuses_live_lease();
     test_pack_rejections();
     test_resource_ok();
     test_resource_version_gate();
