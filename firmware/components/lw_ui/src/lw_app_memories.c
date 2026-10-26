@@ -13,6 +13,8 @@
 #include "lw_widgets.h"
 #include "lw_ui_content.h"
 #include "lw_os_design.h"
+#include "lw_polish.h"
+LV_FONT_DECLARE(lw_font_88);
 #include "lw/lw_memories.h"
 #include "lw/lw_time.h"
 
@@ -169,12 +171,13 @@ static void build_tab_today(lv_obj_t *page)
     lw_state_t *state = lw_app_state();
 
     lv_obj_t *hero = lw_card(page, 32, 16, 470, 340);
+    if (lw_shell_host_active()) lw_polish_paper(hero,true);
     lw_os_icon(hero,OS_I_HEART,372,26,58,palette->accent);
     lw_text(hero, "我们在一起", &lw_font_18, palette->dim, 32, 30);
-    s_days_label = lw_text(hero, "--", &lw_font_44, palette->accent_deep, 32, 62);
+    s_days_label = lw_text(hero, "--", lw_shell_host_active() ? &lw_font_88 : &lw_font_44, palette->accent_deep, 32, 62);
     s_days_unit = lw_text(hero, "天", &lw_font_28, palette->accent_deep, 0, 0);
     lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
-    s_next_label = lw_text(hero, "", &lw_font_18, palette->dim, 32, 136);
+    s_next_label = lw_text(hero, "", &lw_font_18, palette->dim, 32, lw_shell_host_active() ? 166 : 136);
     lw_text_wrap(hero,"这张卡片记录一起走过的日子。\n真实故事可以慢慢补进来。",&lw_font_22,palette->text,32,200,400);
 
     lv_obj_t *edit_card = lw_card(page, 522, 16, 470, 208);
@@ -247,6 +250,7 @@ static void memory_clicked(lv_event_t *event)
     s_detail_overlay=overlay;
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
+    if (lw_shell_host_active()) lw_polish_paper(card,true);
     lv_obj_center(card);
     lw_os_motion(card,LW_MOVE_CARD);
 
@@ -281,6 +285,7 @@ static void build_tab_timeline(lv_obj_t *page)
     for (int i = 0; i < count; i++) {
         const lw_memory_t *memory = stories ? &stories[i] : lw_memories_get(i);
         lv_obj_t *row = lw_card(list, 0, 0, 940, 86);
+        if (lw_shell_host_active()) lw_polish_paper(row,false);
         lv_obj_set_style_radius(row, 18, 0);
         lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(row, memory_clicked, LV_EVENT_CLICKED, (void *)memory);

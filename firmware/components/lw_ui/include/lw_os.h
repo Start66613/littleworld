@@ -26,6 +26,8 @@ void lw_os_notify(const char *);
 /* Configure before start; backend must outlive the OS. NULL = session-only. */
 void lw_os_rpg_storage(const lw_rpg_view_host_t *);
 const lw_rpg_state_t *lw_os_rpg_state(void);
+bool lw_os_rpg_has_art(void);
+lv_obj_t *lw_os_rpg_actor(unsigned);
 /* UI-thread capability snapshot; no driver initialization. Call before start
  * or after a backend capability change. NULL derives existing backend callbacks. */
 typedef enum { LW_SERVICE_UNAVAILABLE,LW_SERVICE_SIMULATED,LW_SERVICE_READY } lw_service_state_t;

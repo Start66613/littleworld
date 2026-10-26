@@ -14,3 +14,7 @@ typedef struct {
 lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *host,unsigned theme);
 void lw_rpg_view_suspend(lw_rpg_view_t *,bool);
 const lw_rpg_state_t *lw_rpg_view_state(const lw_rpg_view_t *);
+bool lw_rpg_view_has_art(const lw_rpg_view_t *);
+lv_obj_t *lw_rpg_view_actor(const lw_rpg_view_t *,unsigned);
+/* Scene projection: fixed core tile coordinates, pixel foot point in map. */
+void lw_rpg_view_tile_point(int x,int y,int *px,int *py);

@@ -11,6 +11,7 @@
 #include "lw_widgets.h"
 #include "lw_os_design.h"
 #include "lw_ui_content.h"
+#include "lw_polish.h"
 #include "arcade/arcade_2048.h"
 #include "arcade/arcade_breakout.h"
 #include "arcade/arcade_snake.h"
@@ -257,8 +258,8 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     };
 
     lw_text(content, "小游戏", &lw_font_28, palette->text, 36, 18);
-    lw_text(content, "独立 Arcade 小游戏会集中在这里；点开游戏会全屏运行，随时可以回到游戏中心。", &lw_font_18,
-            palette->dim, 36, 56);
+    lw_text_wrap(content, "挑一个小游戏，给今天留一点轻松。全屏游戏可暂停，也能随时回家。", &lw_font_18,
+            palette->dim, 36, 56,940);
 
     for (int i = 0; i < 3; i++) {
         lv_obj_t *card = lw_card(content, 36 + i * 324, 96, 300, 300);
@@ -278,6 +279,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
         lv_obj_set_style_bg_color(dot, lv_color_hex(0xFFFFFF), 0);
         lv_obj_set_style_bg_opa(dot, LV_OPA_80, 0);
         lv_obj_remove_flag(dot, LV_OBJ_FLAG_CLICKABLE);
+        if (lw_shell_host_active()) {lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);lw_polish_game_badge(card,(unsigned)i,24,18);lw_polish_paper(card,false);}
 
         lw_text(card, cards[i].title, &lw_font_28, palette->text, 24, 108);
         lw_text(card, cards[i].subtitle, &lw_font_18, palette->dim, 24, 150);

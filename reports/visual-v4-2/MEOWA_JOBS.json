@@ -1,0 +1,11 @@
+{
+  "round": "visual-v4-2",
+  "authorized_limit": 831,
+  "prior_round_spend": 169,
+  "original_total_limit": 1000,
+  "initial_balance": 2535,
+  "authorization": "User directs Meowa artwork; explicit quoted batch confirmation is pending after automatic review rejection.",
+  "jobs": [],
+  "approved_limit": 0,
+  "actual_credits_spent": 0
+}

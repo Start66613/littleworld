@@ -95,7 +95,7 @@ static bool disjoint(lv_obj_t *a,lv_obj_t *b)
 { lv_area_t x,y; if (!a || !b) return false; lv_obj_get_coords(a,&x); lv_obj_get_coords(b,&y); return x.y2<y.y1 || y.y2<x.y1 || x.x2<y.x1 || y.x2<x.x1; }
 static void rpg_tile(int x,int y)
 {
-    lw_host_pointer_t *p=lw_host_pointer(); p->x=32+x*44+22; p->y=104+y*44+22;
+    lw_host_pointer_t *p=lw_host_pointer(); p->x=32+x*44+22; p->y=104+144+y*24;
     p->pressed=1; advance(80); p->pressed=0; advance(2600);
 }
 typedef struct { lv_image_dsc_t image; uint8_t pixels[96*64*2]; } fixture_photo_t;
@@ -171,8 +171,8 @@ static void experience_tests(lw_system_t *system,const char *out)
         tap_text(games[i]); tap_text("暂停"); CHECK("game actually enters paused state",lw_arcade_is_paused()); uint32_t steps=lw_arcade_steps(); advance(1200); CHECK("paused game never advances its algorithm",lw_arcade_steps()==steps); if (i==1) shot(out,"30-game-pause"); tap_text("继续游戏"); CHECK("game resumes",!lw_arcade_is_paused()); tap_text("返回游戏中心");
     }
     tap_text("2048"); tap_text("返回桌面"); CHECK("game exits through OS home route",lw_os_page()==OS_DESKTOP);
-    tap(OC_WORLD); tap(OC_RPG); advance(600); CHECK("both RPG test actors remain inside room",in_room(text_object(lw_os_root(),"A")) && in_room(text_object(lw_os_root(),"B")));
-    p->x=32+7*44+22; p->y=104+5*44+22; p->pressed=1; advance(60); p->pressed=0; advance(40); shot(out,"31-rpg-move-feedback"); advance(1200); CHECK("animated RPG still reaches logical target",lw_os_rpg_state()->actors[0].pos.x==7 && lw_os_rpg_state()->actors[0].pos.y==5); tap(OC_HOME);
+    tap(OC_WORLD); tap(OC_RPG); advance(600); CHECK("both RPG character objects remain inside room",in_room(lw_os_rpg_actor(0)) && in_room(lw_os_rpg_actor(1)));
+    p->x=32+7*44+22; p->y=104+144+5*24; p->pressed=1; advance(60); p->pressed=0; advance(40); shot(out,"31-rpg-move-feedback"); advance(1200); CHECK("animated RPG still reaches logical target",lw_os_rpg_state()->actors[0].pos.x==7 && lw_os_rpg_state()->actors[0].pos.y==5); tap(OC_HOME);
     advance(600); unsigned base_objects=objects(lw_os_root()); int base_timers=timers(); unsigned base_anims=lv_anim_count_running();
     for (unsigned i=0;i<100;i++) { lw_os_show(OS_OVER_CONTROL); advance(20); lv_obj_send_event(lw_os_control(OC_CLOSE),LV_EVENT_CLICKED,NULL); advance(20); }
     lw_os_show(OS_OVER_NONE); advance(600); CHECK("rapid close/reopen releases retired overlays and animations",objects(lw_os_root())==base_objects && timers()==base_timers && lv_anim_count_running()==base_anims);
@@ -194,7 +194,7 @@ static void motion_v4_tests(const char *out,bool characters)
     CHECK("envelope and room photo have disjoint touch regions",disjoint(lw_os_control(OC_ENVELOPE),lw_os_control(OC_ROOM_PHOTO)));
     if (lw_visual_assets_available()) CHECK("resource path cannot be replaced under live widgets",!lw_visual_assets_configure("untrusted-change"));
     lw_os_boot(); CHECK("boot timeline actually starts",lw_os_boot_active());
-    for (unsigned i=0;i<7;i++) { char name[64]; snprintf(name,sizeof(name),"v4-boot-%02u",i); capture_now(out,name); advance(200); }
+    for (unsigned i=0;i<11;i++) { char name[64]; snprintf(name,sizeof(name),"v4-boot-%02u",i); capture_now(out,name); advance(200); }
     CHECK("boot ends and releases its overlay",!lw_os_boot_active() && objects(lw_os_root())==base && timers()==timer_base);
     tap(OC_SETTINGS); tap(OC_PERSONAL); tap(OC_WIDGETS); tap(OC_HOME); CHECK("hidden widgets really remove anniversary and letter targets",!lw_os_control(OC_ANNIVERSARY) && !lw_os_control(OC_ENVELOPE));
     tap(OC_SETTINGS); tap(OC_PERSONAL); tap(OC_WIDGETS); tap(OC_HOME); CHECK("restored widgets are interactive again",lw_os_control(OC_ANNIVERSARY) && lw_os_control(OC_ENVELOPE));
@@ -228,17 +228,17 @@ static void motion_v4_tests(const char *out,bool characters)
     lw_os_open(OS_DESKTOP); advance(600);
     for (unsigned mode=0;mode<3;mode++) {
         lw_app_state()->settings.animations=mode!=LW_MOTION_OFF; lw_os_motion_mode((lw_motion_mode_t)mode); lw_os_open(OS_DESKTOP); advance(600); base=objects(lw_os_root()); timer_base=timers(); bool stable=true;
-        for (unsigned n=0;n<20;n++) { lw_os_boot(); advance(1500); lw_os_show(OS_OVER_CONTROL); advance(120); lw_os_show(OS_OVER_LOCK); advance(120); tap(OC_UNLOCK); advance(500); if (objects(lw_os_root())!=base || timers()!=timer_base || lw_os_boot_active()) stable=false; }
+        for (unsigned n=0;n<20;n++) { lw_os_boot(); advance(2300); lw_os_show(OS_OVER_CONTROL); advance(120); lw_os_show(OS_OVER_LOCK); advance(120); tap(OC_UNLOCK); advance(500); if (objects(lw_os_root())!=base || timers()!=timer_base || lw_os_boot_active()) stable=false; }
         CHECK("boot/lock/control lifecycle stays bounded in each motion mode",stable);
         if (mode==LW_MOTION_OFF) { CHECK("off mode creates no decorative animations",lv_anim_count_running()==0); if (characters) { uint16_t frame=lw_os_actor_frame(0); advance(700); CHECK("idle stays still when motion is disabled",lw_os_actor_frame(0)==frame); } }
     }
     lw_app_state()->settings.animations=true; lw_os_motion_mode(LW_MOTION_FULL); lw_os_open(OS_DESKTOP); advance(600);
-    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("only one full room and bounded thumbnails are resident",visual.peak_bytes<=1228800+3*76800); if (lw_visual_assets_available()) CHECK("full scene is reused rather than decoded on every page",visual.hits>visual.reads);
+    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("one full room, bounded thumbnails and one auxiliary room stay bounded",visual.peak_bytes<=1228800+3*76800+704*352*2); if (lw_visual_assets_available()) CHECK("full scene is reused rather than decoded on every page",visual.hits>visual.reads);
     desktop_objects=objects(lw_os_root()); desktop_timers=timers();
 }
 int lw_os_host_run(const char *pack_path,const char *out)
 {
-    const char *visual_path=getenv("LW_VISUAL_ASSETS"); lw_visual_assets_configure(visual_path ? visual_path : "assets/visual-v4/runtime");
+    const char *visual_path=getenv("LW_VISUAL_ASSETS"); lw_visual_assets_configure(visual_path ? visual_path : "assets/visual-v4/runtime"); lw_visual_aux_configure(getenv("LW_POLISH_ASSETS") ? getenv("LW_POLISH_ASSETS") : "assets/visual-v4-2/runtime");
     setvbuf(stdout,NULL,_IONBF,0); snprintf(settings_path,sizeof(settings_path),"%s\\os-settings.dat",host_platform_dir());
     snprintf(rpg_path,sizeof(rpg_path),"%s\\rpg-save.dat",host_platform_dir()); if (out) DeleteFileA(rpg_path);
     lw_rpg_view_host_t rpg_host={NULL,rpg_load,rpg_save,rpg_reward}; lw_os_rpg_storage(&rpg_host);
@@ -247,13 +247,14 @@ int lw_os_host_run(const char *pack_path,const char *out)
     lw_pixel_pack_t *pack=lw_pixel_pack_open(pack_path); if (!pack) fprintf(stderr,"Character pack unavailable: running complete OS with labelled no-art fallback.\n");
     if (pack) { const char *male=getenv("LW_MALE_PACK"); if (!male) male="assets/visual-v4/runtime/male.lwp"; FILE *f=fopen(male,"rb"); if (f) { fclose(f); if (!lw_pixel_pack_attach_male(pack,male)) fprintf(stderr,"Male pack rejected; labelled fallback retained.\n"); } }
     if (pack) { const char *extra="assets/visual-v4/runtime/qianqian-wave.lwp"; FILE *f=fopen(extra,"rb"); if (f) { fclose(f); if (!lw_pixel_pack_attach_qianqian_clips(pack,extra)) fprintf(stderr,"Qianqian extra clips rejected; original motions retained.\n"); } }
+    if (pack) { const char *path=getenv("LW_POLISH_PACK"); if (!path) path="assets/visual-v4-2/runtime/polish.lwp"; FILE *f=fopen(path,"rb"); if (f) { fclose(f); if (!lw_pixel_pack_attach_polish(pack,path)) fprintf(stderr,"Optional native-128 pack rejected; safe no-art RPG retained.\n"); } }
     bool real_male=pack && !lw_pixel_pack_art(pack)[0].placeholder;
     unsigned expected_leases=pack ? 2 : 0;
     int base_timers=timers(); size_t base_bytes=lw_assets_stats().live_bytes;
     if (out) { clock_ms=lv_tick_get(); lv_tick_set_cb(fake_clock); }
     if (out) { advance(400); legacy_anim_baseline=lv_anim_count_running(); }
     if (!lw_os_start(&system,lw_pixel_pack_art(pack))) { lw_pixel_pack_close(pack); return 2; }
-    if (out) advance(1500);
+    if (out) advance(2300);
     if (!out) { printf("Little World OS V2 ready: Windows simulated services; --legacy restores the stable desktop.\n"); int result=lw_host_run_window(); lw_os_stop(); return lw_pixel_pack_close(pack) ? result : 2; }
     LARGE_INTEGER begin,end,freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&begin); double cpu_start=cpu_ms();
     shot(out,"01-desktop"); CHECK("OS desktop active",lw_os_page()==OS_DESKTOP);
@@ -299,7 +300,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     tap(OC_WORLD); tap(OC_RPG); CHECK("RPG enters from real OS",lw_os_page()==OS_RPG && lw_os_rpg_state()!=NULL); shot(out,"17-rpg-room");
     tap_text("打开任务本"); shot(out,"18-rpg-journal"); tap_text("回到房间");
     rpg_tile(2,2); CHECK("blocked furniture rejects touch move",lw_os_rpg_state()->actors[0].pos.x==6 && lw_os_rpg_state()->actors[0].pos.y==5);
-    rpg_tile(5,3); CHECK("touch path arrives at photo hotspot",lw_os_rpg_state()->actors[0].pos.x==5 && lw_os_rpg_state()->actors[0].pos.y==3);
+    rpg_tile(5,3); CHECK("touch reaches a solid photo prop from adjacent floor",lw_rpg_hotspot_near(lw_os_rpg_state())==0 && !lw_rpg_walkable(lw_os_rpg_state()->world->room,5,3));
     tap_text("查看身边物品"); CHECK("real dialogue opens",lw_os_rpg_state()->dialogue_active); shot(out,"19-rpg-dialogue");
     unsigned tick_before=lw_os_rpg_state()->tick_ms; advance(1000); CHECK("dialogue suspends game clock",lw_os_rpg_state()->tick_ms==tick_before);
     tap_text("下一句"); tap_text("下一句"); CHECK("photo dialogue commits quest item",lw_rpg_quest_progress(lw_os_rpg_state())==1);

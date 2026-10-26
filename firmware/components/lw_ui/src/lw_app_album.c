@@ -4,6 +4,8 @@
 #include "lw_widgets.h"
 #include "lw_os_design.h"
 #include "lw_ui_content.h"
+#include "lw_visual_assets.h"
+#include "lw_polish.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #include <stdint.h>
 #include <string.h>
@@ -25,6 +27,7 @@ static void close_view(lv_event_t *e)
 { (void)e; if (overlay) lv_obj_delete(overlay); overlay=stage=caption=NULL; release_picture(); }
 static void sample(lv_obj_t *parent,unsigned index,int w,int h)
 {
+    if (lw_shell_host_active()) { static const unsigned themes[]={0,2,1}; lv_obj_t *picture=lw_visual_scene_image(parent,themes[index%3],w,h,true); if (picture) return; }
     lv_obj_t *scene=lw_os_box(parent,0,0,w,h,sample_colors[index%6],12,255);
     lw_os_box(scene,w*3/4,h/7,h/6,h/6,0xffefcb,LV_RADIUS_CIRCLE,255);
     lw_os_box(scene,0,h*2/3,w,h/3,index==5 ? 0x8999b6 : 0x9db9b4,0,255);
@@ -87,6 +90,7 @@ static void build(void)
     for (unsigned i=0;i<shown;i++) {
         int x=40+(int)(i%3)*324,y=96+(int)(i/3)*154;
         lv_obj_t *card=lw_card(root,x,y,296,142); lv_obj_set_style_radius(card,12,0); lv_obj_add_flag(card,LV_OBJ_FLAG_CLICKABLE);
+        if (lw_shell_host_active()) { lw_polish_paper(card,false);lv_obj_t *tape=lw_os_box(card,117,0,62,10,c->lav,2,130);(void)tape; }
         lw_os_motion_touch(card); lv_obj_add_event_cb(card,open_view,LV_EVENT_CLICKED,(void *)(uintptr_t)i);
         if (demo) { lv_obj_t *thumb=lw_os_box(card,10,10,276,86,0,0,0); sample(thumb,i,276,86); }
         else lw_os_icon(card,OS_I_ALBUM,126,26,44,c->accent);

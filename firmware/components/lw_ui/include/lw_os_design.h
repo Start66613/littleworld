@@ -23,5 +23,7 @@ void lw_os_motion_step(lv_obj_t *,int,int,unsigned);
 void lw_os_motion_cancel(lv_obj_t *);
 void lw_os_motion_slide(lv_obj_t *,int,int,unsigned,unsigned,bool);
 void lw_os_motion_stagger(lv_obj_t *,unsigned);
+void lw_os_motion_vector(lv_obj_t *,int,int,unsigned,unsigned);
+void lw_os_motion_dim(lv_obj_t *,int,int,unsigned);
 /* Small foreground layer drawn after actors. Native coordinates, no image cache. */
 lv_obj_t *lw_os_foreground(lv_obj_t *,unsigned);

@@ -9,6 +9,10 @@
 #include "lw_shell.h"
 #include "lw_theme.h"
 #include "lw_widgets.h"
+#include "lw_os_design.h"
+#include "lw_os.h"
+#include "lw_polish.h"
+#include "lw_visual_assets.h"
 #include "lw/lw_pet.h"
 
 static lw_pet_view_t *s_view;
@@ -21,12 +25,27 @@ static lv_obj_t *s_feedback;
 static lv_obj_t *s_sleep_button_label;
 static lv_obj_t *s_sleep_button;
 static uint32_t s_feedback_until;
+static lw_sprite_t *residents[2]; static const lw_clip_t *resident_clips[2];
+static lw_sprite_t *dog; static const lw_clip_t *dog_clip;
+static bool polished; static uint32_t room_clock,room_last,reaction_until;
 
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
     uint32_t now = lw_now();
     lw_pet_t *pet = &state->pet;
+    if (polished) {
+        uint32_t tick=lv_tick_get(),dt=tick-room_last; room_last=tick;
+        if (lw_os_motion_get()!=LW_MOTION_OFF) room_clock+=dt;
+        for (unsigned i=0;i<2;i++) if (residents[i]) {
+            const char *name=pet->sleeping ? (i ? "v42.q.sleep" : "v42.male.drowsy") : tick<reaction_until ? (i ? "v42.q.seated_wave" : "v42.male.seated_wave") : (i ? "v42.q.seated" : "v42.male.seated");
+            const lw_clip_t *clip=lw_polish_clip(name);
+            if (clip && clip!=resident_clips[i]) { lw_sprite_play(residents[i],clip); resident_clips[i]=clip; }
+            lw_sprite_set_anchor(residents[i],i ? 260 : 138,pet->sleeping && i ? 216 : 250);
+            lw_sprite_seek(residents[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : tick<reaction_until ? 1600-(reaction_until-tick) : room_clock);
+        }
+        if (dog) {const lw_clip_t *clip=lw_polish_clip(pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle");if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
+    }
     if (s_view != NULL) {
         lw_pet_view_refresh(s_view, pet, now);
     }
@@ -71,6 +90,7 @@ static void do_action(lw_pet_action_t action, const char *message)
         lv_label_set_text(s_feedback, message);
     }
     s_feedback_until = now + 4;
+    if (polished && action!=LW_PET_ACTION_SLEEP && action!=LW_PET_ACTION_WAKE) reaction_until=lv_tick_get()+1600;
     refresh();
 }
 
@@ -122,10 +142,39 @@ static lv_obj_t *stat_row(lv_obj_t *parent, const char *name, int y, uint32_t co
     *bar_out = bar;
     return bar;
 }
+static void create_room(lv_obj_t *content)
+{
+    const lw_palette_t *c=lw_palette(); polished=true; room_clock=0; reaction_until=0; room_last=lv_tick_get();
+    lw_os_label(content,"小屋日常",&lw_font_28,32,10,620,c->text);
+    lw_os_label(content,"坐下来，让普通的一天慢一点。",&lw_font_18,32,47,680,c->dim);
+    lv_obj_t *stage=lw_os_box(content,24,82,704,352,c->card_soft,18,255);
+    if (!lw_visual_rpg_image(stage)) lw_os_label(stage,"房间资源未安装 · 日常互动仍可用",&lw_font_18,24,32,650,c->dim);
+    lw_polish_prop(stage,0,138,250); lw_polish_prop(stage,0,260,250); lw_polish_prop(stage,1,596,218); lw_polish_prop(stage,2,478,218); lw_polish_prop(stage,4,410,264);
+    for (unsigned i=0;i<2;i++) {
+        const lw_clip_t *clip=lw_polish_clip(i ? "v42.q.seated" : "v42.male.seated");
+        if (clip) { residents[i]=lw_sprite_create(stage,i ? 260 : 138,250,256); if (residents[i]) { lw_sprite_set_external_clock(residents[i],true); lw_sprite_set_pixel_mode(residents[i]); lw_sprite_play(residents[i],clip); resident_clips[i]=clip; } }
+    }
+    lw_polish_prop(stage,5,138,250); lw_polish_prop(stage,5,260,250);
+    if (!residents[0] || !residents[1]) lw_os_label(stage,"居民资源待载入",&lw_font_18,28,70,500,c->dim);
+    const lw_clip_t *pup=lw_polish_clip("v42.dog.idle"); if (pup) {dog=lw_sprite_create(stage,558,290,256);if (dog) {lw_sprite_set_external_clock(dog,true);lw_sprite_set_pixel_mode(dog);lw_sprite_play(dog,pup);dog_clip=pup;}}
+    if (!dog) s_view=lw_pet_view_create(stage,530,247,30);
+    lv_obj_add_flag(stage,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(stage,tap_pet,LV_EVENT_CLICKED,NULL);
+    lw_os_label(stage,"轻触房间试试",&lw_font_18,344,310,180,c->dim);
+    lv_obj_t *panel=lw_card(content,748,14,252,420);
+    lw_text(panel,"一起慢慢生活",&lw_font_22,c->text,20,20);
+    s_mood_label=lw_pill(panel,"安静",c->card_soft,c->accent_deep); lv_obj_set_pos(s_mood_label,20,62);
+    const char *names[]={"饱腹","精力","好感"}; uint32_t colors[]={c->gold,c->mint,c->accent}; lv_obj_t **bars[]={&s_fullness_bar,&s_energy_bar,&s_affection_bar};
+    for (unsigned i=0;i<3;i++) { lw_text(panel,names[i],&lw_font_18,c->dim,20,110+(int)i*32); *bars[i]=lw_bar(panel,80,120+(int)i*32,148,8,colors[i]); }
+    s_feedback=lw_text_wrap(panel,"陪你发一会儿呆。",&lw_font_18,c->accent_deep,20,218,212);
+    const char *labels[]={"喂食","玩耍","抚摸","休息"}; lv_event_cb_t callbacks[]={feed,play,pet,sleep_toggle};
+    for (unsigned i=0;i<4;i++) { lv_obj_t *b=lw_button(panel,labels[i],102,48,i==3 ? c->lav : c->card_soft,c->text,&lw_font_22); lv_obj_set_pos(b,18+(int)(i%2)*114,300+(int)(i/2)*58); lv_obj_add_event_cb(b,callbacks[i],LV_EVENT_CLICKED,NULL); lw_os_motion_touch(b); if (i==3) {s_sleep_button=b;s_sleep_button_label=lv_obj_get_child(b,0);} }
+    refresh(); s_timer=lv_timer_create(timer_cb,40,NULL);
+}
 
 static void create(lv_obj_t *content, const struct lw_app *self)
 {
     (void)self;
+    if (lw_shell_host_active()) { create_room(content); return; }
     const lw_palette_t *palette = lw_palette();
 
     lv_obj_t *stage = lw_card(content, 32, 14, 520, 412);
@@ -177,6 +226,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
 
 static void destroy(void)
 {
+    polished=false; residents[0]=residents[1]=NULL; resident_clips[0]=resident_clips[1]=NULL;dog=NULL;dog_clip=NULL;
     if (s_timer != NULL) {
         lv_timer_delete(s_timer);
         s_timer = NULL;
