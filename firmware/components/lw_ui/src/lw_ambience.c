@@ -19,7 +19,8 @@ lw_day_phase_t lw_ambience_phase(void)
 unsigned lw_ambience_wallpaper(void) {lw_day_phase_t p=lw_ambience_phase();return p<=LW_DAY ? 0 : p==LW_DUSK ? 2 : 1;}
 void lw_ambience_refresh(lv_obj_t *o)
 {
-    if(!o)return;lw_day_phase_t p=lw_ambience_phase();
+    if(!o) return;
+    lw_day_phase_t p=lw_ambience_phase();
     static const uint32_t color[]={0xffdeb8,0xfff7de,0xffb98b,0x34385b,0x242a4d};
     static const uint8_t alpha[]={12,0,8,0,25};
     lv_obj_set_style_bg_color(o,lv_color_hex(color[p]),0);lv_obj_set_style_bg_opa(o,alpha[p],0);lv_obj_invalidate(o);

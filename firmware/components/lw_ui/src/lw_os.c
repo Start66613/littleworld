@@ -189,7 +189,8 @@ static void build_status(void)
 }
 static void dock_set(bool open)
 {
-    if(!s || !s->dock || s->dock_expanded==open)return;s->dock_expanded=open;s->dock_idle=0;
+    if(!s || !s->dock || s->dock_expanded==open) return;
+    s->dock_expanded=open;s->dock_idle=0;
     lw_os_motion_slide(s->dock,lv_obj_get_style_translate_y(s->dock,0),open ? 0 : 82,300,0,open);
     lv_obj_set_style_opa(s->dock_handle,open ? 100 : 220,0);
     if(open)lv_obj_remove_flag(s->dock_handle,LV_OBJ_FLAG_CLICKABLE);else lv_obj_add_flag(s->dock_handle,LV_OBJ_FLAG_CLICKABLE);
