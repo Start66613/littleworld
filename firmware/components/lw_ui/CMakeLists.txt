@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
         "src/lw_assets.c"
         "src/lw_char_pack.c"
+        "src/lw_pack.c"
         "src/lw_sprite.c"
         "src/lw_scene.c"
         "src/lw_world.c"
@@ -32,6 +33,6 @@ idf_component_register(
         "fonts/lw_font_44.c"
         "fonts/lw_font_88.c"
     INCLUDE_DIRS "include"
-    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg log
+    REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg lw_storage log
     PRIV_REQUIRES esp32_p4_wifi6_touch_lcd_7b
 )

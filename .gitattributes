@@ -1,2 +1,19 @@
-# Generated font files must be reproducible across Windows worktrees.
-firmware/components/lw_ui/fonts/*.c text eol=lf
+# Little World: binary assets must never be normalised or line-converted.
+*.lwr  binary
+*.lwp  binary
+*.lwfa binary
+*.lwpx binary
+*.rgb565a8 binary
+*.png  binary
+*.webp binary
+*.gif  binary
+*.bmp  binary
+*.bin  binary
+# Source and docs stay LF regardless of core.autocrlf on the build machine, so
+# a Windows checkout cannot flip line endings and dirty a clean worktree.
+*.c    text eol=lf
+*.h    text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.ps1  text eol=lf
+*.py   text eol=lf
