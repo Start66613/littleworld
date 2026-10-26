@@ -201,7 +201,7 @@ static void dock_touch(lv_event_t *e)
 {
     if(!s)return;
     if(lv_event_get_code(e)==LV_EVENT_CLICKED)dock_set(!s->dock_expanded);
-    else if(lv_event_get_code(e)==LV_EVENT_GESTURE){lv_indev_t *i=lv_indev_active();if(i && lv_indev_get_gesture_dir(i)==LV_DIR_TOP)dock_set(true);}
+    else if(lv_event_get_code(e)==LV_EVENT_GESTURE){lv_indev_t *i=lv_indev_active();if(i && lv_indev_get_gesture_dir(i)==LV_DIR_TOP){dock_set(true);lv_indev_wait_release(i);}}
 }
 static void build_dock(void)
 {

@@ -36,7 +36,8 @@ for name,(names,times) in sequences.items():
     for suffix in ('gif','webp'):
         args={'lossless':True,'exact':True} if suffix=='webp' else {}
         frames[0].save(P/(name+'.'+suffix),save_all=True,append_images=frames[1:],duration=times,loop=0,**args)
-    previews.append({'name':name,'gif':'previews/'+name+'.gif','webp':'previews/'+name+'.webp','source_pngs':names,'duration_ms':times,'kind':'real sampled LVGL frames, review playback has final hold; no generated concept frames','sha256':sha(P/(name+'.webp'))})
+    kind='five actual settings time-preview captures, held 1.4s each; not an accelerated 24-hour recording' if name.endswith('day-cycle') else 'real sampled LVGL animation; review playback adds final hold, no generated concept frames'
+    previews.append({'name':name,'gif':'previews/'+name+'.gif','webp':'previews/'+name+'.webp','source_pngs':names,'duration_ms':times,'kind':kind,'sha256':sha(P/(name+'.webp'))})
 baseline=[]
 for name in ('17-rpg-room.png','11-pet-idle.png','14-music.png','13-album.png','18-rpg-journal.png','19-rpg-dialogue.png'):
     src=R/'reports/visual-v4/screenshots'/name

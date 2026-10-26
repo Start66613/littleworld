@@ -264,6 +264,8 @@ static void scene_v43_tests(const char *out)
     CHECK("invalid time cannot corrupt phase",!lw_ambience_preview(1440) && !lw_ambience_preview(-2));lw_ambience_preview(-1);
     lw_os_open(OS_DESKTOP);advance(600);unsigned base=objects(lw_os_root());int tb=timers();
     advance(5100);CHECK("idle home really retracts navigation",!lw_os_dock_expanded());capture_now(out,"v43-dock-hidden");
+    swipe_points(512,590,512,510);CHECK("bottom upward swipe reveals navigation without click reversal",lw_os_dock_expanded());
+    lw_os_scene_focus(true);advance(400);
     lw_host_pointer_t *p=lw_host_pointer();p->x=512;p->y=585;p->pressed=1;advance(60);p->pressed=0;
     for(unsigned i=0;i<8;i++){char n[64];snprintf(n,sizeof(n),"v43-dock-open-%02u",i);capture_now(out,n);advance(60);}
     CHECK("bottom handle opens real touch navigation",lw_os_dock_expanded());tap(OC_SETTINGS);tap(OC_TIME);capture_now(out,"v43-time-settings");
