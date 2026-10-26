@@ -32,6 +32,12 @@ bool lw_net_esp_audio_available(void);
  * working one without a scope. Never returns a null terminator-free string. */
 void lw_net_esp_wifi_describe(char *buf, size_t len);
 
+/* Reads the ESP32-C6 coprocessor firmware version over the hosted link and
+ * writes "major.minor.patch" into buf. READ ONLY: it issues the RPC query and
+ * never starts an OTA, so a version mismatch is reported instead of "fixed".
+ * Returns false (and writes "unknown") when the link cannot answer. */
+bool lw_net_esp_wifi_coprocessor_version(char *buf, size_t len);
+
 void lw_net_esp_wifi_attach(struct lw_services *services);
 
 /* Asks the station whether it is already associated (a hosted slave can keep a

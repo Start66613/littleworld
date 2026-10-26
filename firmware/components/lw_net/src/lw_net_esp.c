@@ -41,6 +41,9 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#if CONFIG_ESP_HOSTED_ENABLED
+#include "esp_hosted.h"
+#endif
 
 static const char *TAG = "lw_net_wifi";
 static struct lw_services *s_services;
@@ -170,6 +173,19 @@ void lw_net_esp_wifi_attach(struct lw_services *services)
     }
     s_started = true;
     ESP_LOGI(TAG, "station ready");
+#if CONFIG_ESP_HOSTED_ENABLED
+    /* Report the slave firmware instead of assuming it matches the host stack.
+     * A mismatch is the most common cause of "Wi-Fi compiles but never scans",
+     * and it must never be papered over by updating the C6 from here. */
+    {
+        char ver[24];
+        if (lw_net_esp_wifi_coprocessor_version(ver, sizeof(ver))) {
+            ESP_LOGI(TAG, "coprocessor esp32c6 firmware %s (host stack esp_hosted 1.4.x)", ver);
+        } else {
+            ESP_LOGW(TAG, "coprocessor firmware version unavailable (RPC did not answer)");
+        }
+    }
+#endif
 }
 
 /* The station can already be associated right here, without waiting for the
@@ -196,9 +212,21 @@ void lw_net_esp_wifi_probe_connected(void)
             n++;
         }
         ssid[n] = '\0';
+        /* Also read the address: the UI shows it, and a link with no address is
+         * not usable yet (DHCP still running), so reporting it as up would lie. */
+        char ip[16];
+        ip[0] = '\0';
+        esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        esp_netif_ip_info_t info;
+        if (netif != NULL && esp_netif_get_ip_info(netif, &info) == ESP_OK && info.ip.addr != 0) {
+            snprintf(ip, sizeof(ip), IPSTR, IP2STR(&info.ip));
+        }
         s_link_up = true;
-        lw_services_wifi_report_connected(s_services, s_request_generation, ssid, 0);
-        ESP_LOGW(TAG, "hosted slave already associated with '%s'", ssid);
+        /* LINK_UP, not CONNECTED: this association belongs to a previous boot, so
+         * there is no request generation of ours to match. Reporting it as a
+         * completed request would be dropped by the model's generation check. */
+        lw_services_wifi_report_link_up(s_services, ssid, ip, 0);
+        ESP_LOGW(TAG, "hosted slave already associated with '%s' (%s)", ssid, ip[0] != '\0' ? ip : "no address yet");
     }
 #endif
 }
@@ -233,6 +261,31 @@ void lw_net_esp_wifi_describe(char *buf, size_t len)
              CONFIG_ESP_HOSTED_SDIO_CLOCK_FREQ_KHZ / 1000);
 #else
     snprintf(buf, len, "esp_wifi enabled without ESP-Hosted");
+#endif
+}
+
+bool lw_net_esp_wifi_coprocessor_version(char *buf, size_t len)
+{
+    if (buf == NULL || len == 0) {
+        return false;
+    }
+    buf[0] = '\0';
+#if CONFIG_ESP_HOSTED_ENABLED
+    if (!s_started) {
+        snprintf(buf, len, "unknown");
+        return false;
+    }
+    esp_hosted_coprocessor_fwver_t ver;
+    memset(&ver, 0, sizeof(ver));
+    if (esp_hosted_get_coprocessor_fwversion(&ver) != ESP_OK) {
+        snprintf(buf, len, "unknown");
+        return false;
+    }
+    snprintf(buf, len, "%u.%u.%u", (unsigned)ver.major1, (unsigned)ver.minor1, (unsigned)ver.patch1);
+    return true;
+#else
+    snprintf(buf, len, "unknown");
+    return false;
 #endif
 }
 
@@ -288,6 +341,14 @@ void lw_net_esp_wifi_describe(char *buf, size_t len)
     if (buf != NULL && len > 0) {
         snprintf(buf, len, "CONFIG_LW_NET_WIFI_ENABLE is off in this build");
     }
+}
+
+bool lw_net_esp_wifi_coprocessor_version(char *buf, size_t len)
+{
+    if (buf != NULL && len > 0) {
+        snprintf(buf, len, "unknown");
+    }
+    return false;
 }
 
 void lw_net_esp_wifi_attach(struct lw_services *services)
@@ -387,6 +448,19 @@ static void sntp_wait_task(void *arg)
 void lw_net_esp_time_request(void)
 {
     if (!s_time_started || s_time_waiting) {
+        return;
+    }
+    /* init(start=false) only stores the server list and installs the sync
+     * callback; nothing is ever transmitted until the service is started. This
+     * call is the missing link: esp_netif_sntp_start() does sntp_stop() +
+     * sntp_init() inside the lwIP thread, which begins the NTP exchange. Without
+     * it sync_wait() blocks until its timeout and the clock never leaves DEMO. */
+    esp_err_t start_err = esp_netif_sntp_start();
+    if (start_err != ESP_OK) {
+        ESP_LOGW(TAG_SNTP, "cannot start sntp: %s", esp_err_to_name(start_err));
+        if (s_time_services != NULL) {
+            lw_services_time_report_sync(s_time_services, 0, false, sntp_now_ms());
+        }
         return;
     }
     s_time_waiting = true;

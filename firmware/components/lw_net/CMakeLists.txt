@@ -25,6 +25,16 @@ idf_component_register(
 # with "Unknown CMake command idf_component_require".
 if(CONFIG_LW_NET_WIFI_ENABLE)
     idf_component_optional_requires(PRIVATE esp_wifi esp_event esp_netif)
+    # esp_hosted.h (the coprocessor firmware query) only exists when the hosted
+    # overlay installed the component; optional_requires keeps the offline
+    # build, which never sees the header, from failing to resolve it.
+    # esp_hosted's own public header chain pulls driver/sdmmc_host.h when the
+    # SDIO transport is selected, and esp_hosted declares sdmmc PRIVATE, so the
+    # include directory has to be named here as well - otherwise the build dies
+    # with "fatal error: driver/sdmmc_host.h: No such file or directory".
+    if(CONFIG_ESP_HOSTED_ENABLED)
+        idf_component_optional_requires(PRIVATE espressif__esp_hosted esp_driver_sdmmc)
+    endif()
 endif()
 if(CONFIG_LW_NET_SNTP_ENABLE)
     idf_component_optional_requires(PRIVATE esp_netif esp_netif_sntp lwip)

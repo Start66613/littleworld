@@ -65,6 +65,9 @@ typedef struct {
 typedef enum {
     LW_NET_EV_SCAN_DONE,
     LW_NET_EV_CONNECTED,
+    /* An association that no request of this boot produced (the hosted slave
+     * kept the credential). Applied as "link up" rather than "request done". */
+    LW_NET_EV_LINK_UP,
     LW_NET_EV_CONNECT_FAILED,
     LW_NET_EV_LINK_LOST,
     LW_NET_EV_TIME_SYNC,
@@ -78,6 +81,7 @@ typedef struct {
     uint32_t scan_generation; /* scan generation captured when the scan started */
     bool ok;
     lw_wifi_error_t error;
+    char ssid[LW_WIFI_SSID_MAX];
     char ip[16];
     int64_t utc_seconds;
     unsigned ap_count;
@@ -99,6 +103,10 @@ typedef struct lw_services {
     bool started;
     uint32_t last_poll_ms;
     uint32_t sync_retry_at_ms;
+    /* The hosted slave can finish its association long after boot, without any
+     * event of ours; the poll re-asks the adapter on this cadence while the
+     * radio is on and nothing else is happening. */
+    uint32_t probe_at_ms;
     lw_net_event_ring_t events;
     /* Written only by lw_services_poll(), copied by the UI thread, so a screen
      * refresh can never observe a half-applied event. */
@@ -139,6 +147,8 @@ bool lw_services_push_event(lw_services_t *services, const lw_net_event_t *event
 bool lw_services_wifi_report_scan(lw_services_t *services, uint32_t scan_generation, const lw_wifi_ap_t *aps,
                                   unsigned count, bool ok);
 bool lw_services_wifi_report_connected(lw_services_t *services, uint32_t generation, const char *ip, uint32_t now_ms);
+/* Reports a link that came up without a request of this boot. */
+bool lw_services_wifi_report_link_up(lw_services_t *services, const char *ssid, const char *ip, uint32_t now_ms);
 bool lw_services_wifi_report_failed(lw_services_t *services, uint32_t generation, lw_wifi_error_t error,
                                     uint32_t now_ms);
 bool lw_services_wifi_report_lost(lw_services_t *services, uint32_t generation, uint32_t now_ms);

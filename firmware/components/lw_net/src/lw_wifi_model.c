@@ -379,6 +379,42 @@ void lw_wifi_on_connected(lw_wifi_t *wifi, uint32_t generation, const char *ip, 
     emit_simple(wifi, LW_WIFI_EV_CONNECTED, LW_WIFI_ERR_NONE);
 }
 
+/* A link that nobody asked for in this boot. The hosted slave keeps the
+ * credential in its own flash, so the station can come up already joined before
+ * the UI ever shows a network picker. There is no request to be stale against,
+ * which is why the generation is not compared here; the state guard is what
+ * keeps a probe from overwriting an attempt that is genuinely in flight. */
+bool lw_wifi_on_link_up(lw_wifi_t *wifi, const char *ssid, const char *ip, uint32_t now_ms)
+{
+    (void)now_ms;
+    if (!wifi->supported || !wifi->enabled) {
+        return false;
+    }
+    if (wifi->state != LW_WIFI_ST_IDLE && wifi->state != LW_WIFI_ST_CONNECTED) {
+        return false;
+    }
+    if (ip == NULL || ip[0] == '\0') {
+        return false;
+    }
+    bool changed = wifi->state != LW_WIFI_ST_CONNECTED || strcmp(wifi->ip, ip) != 0;
+    wifi->state = LW_WIFI_ST_CONNECTED;
+    wifi->error = LW_WIFI_ERR_NONE;
+    wifi->attempts = 0;
+    wifi->reconnects = 0;
+    wifi->retry_at_ms = 0;
+    wifi->action = LW_WIFI_ACTION_NONE;
+    /* The target is what the UI shows next to the address; without it the label
+     * would read "connected to <empty>". */
+    if (ssid != NULL && ssid[0] != '\0') {
+        copy_str(wifi->target, sizeof(wifi->target), ssid);
+    }
+    copy_str(wifi->ip, sizeof(wifi->ip), ip);
+    if (changed) {
+        emit_simple(wifi, LW_WIFI_EV_CONNECTED, LW_WIFI_ERR_NONE);
+    }
+    return changed;
+}
+
 void lw_wifi_on_connect_failed(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error_t error, uint32_t now_ms)
 {
     if (generation != wifi->generation || wifi->state != LW_WIFI_ST_CONNECTING) {

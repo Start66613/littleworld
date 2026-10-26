@@ -14,6 +14,10 @@
 #include "lw_net_esp.h"
 
 #define TIME_SYNC_RETRY_MS 30000u
+/* How often the poll re-asks the adapter whether a link came up on its own.
+ * One second is cheap (a single esp_wifi_sta_get_ap_info call) and matches the
+ * UI refresh, so an association that completes late is visible immediately. */
+#define TIME_PROBE_INTERVAL_MS 1000u
 
 #if defined(ESP_PLATFORM)
 #include "freertos/FreeRTOS.h"
@@ -147,6 +151,16 @@ bool lw_services_wifi_report_lost(lw_services_t *services, uint32_t generation, 
     return lw_services_push_event(services, &event);
 }
 
+bool lw_services_wifi_report_link_up(lw_services_t *services, const char *ssid, const char *ip, uint32_t now_ms)
+{
+    (void)now_ms;
+    lw_net_event_t event = make_event(LW_NET_EV_LINK_UP, 0u, 0u);
+    event.ok = true;
+    copy_str(event.ssid, sizeof(event.ssid), ssid);
+    copy_str(event.ip, sizeof(event.ip), ip);
+    return lw_services_push_event(services, &event);
+}
+
 bool lw_services_time_report_sync(lw_services_t *services, int64_t utc_seconds, bool ok, uint32_t now_ms)
 {
     (void)now_ms;
@@ -167,6 +181,9 @@ unsigned lw_services_drain(lw_services_t *services, uint32_t now_ms)
             break;
         case LW_NET_EV_CONNECTED:
             lw_wifi_on_connected(&services->wifi, event.generation, event.ip, now_ms);
+            break;
+        case LW_NET_EV_LINK_UP:
+            lw_wifi_on_link_up(&services->wifi, event.ssid, event.ip, now_ms);
             break;
         case LW_NET_EV_CONNECT_FAILED:
             /* A drop that arrives while the link is up is not a failed attempt:
@@ -298,6 +315,7 @@ void lw_services_poll(lw_services_t *services, uint32_t now_ms)
 {
     pending_action_t pending;
     bool want_time_request = false;
+    bool want_probe = false;
 
     s_now_ms = now_ms;
 
@@ -307,11 +325,25 @@ void lw_services_poll(lw_services_t *services, uint32_t now_ms)
     lw_wifi_tick(&services->wifi, now_ms);
     pending = take_action(services);
 
+    /* The hosted slave can finish associating seconds after the station starts,
+     * with no event of ours to announce it (the IP event only fires for a link
+     * this boot brought up). Ask the adapter again while the radio is on and
+     * nothing is in flight, so the UI cannot sit on "未连接" over a live link. */
+    if (services->caps.wifi_backend && services->wifi.enabled) {
+        lw_wifi_state_t ws = lw_wifi_state(&services->wifi);
+        if (ws == LW_WIFI_ST_IDLE && (services->probe_at_ms == 0 || now_ms >= services->probe_at_ms)) {
+            want_probe = true;
+            services->probe_at_ms = now_ms + TIME_PROBE_INTERVAL_MS;
+        }
+    } else {
+        services->probe_at_ms = 0;
+    }
+
     /* Once the link is up, ask for the wall clock; retry while it is missing. */
     bool connected = lw_wifi_state(&services->wifi) == LW_WIFI_ST_CONNECTED;
     if (connected && services->caps.time_backend) {
         lw_time_state_t state = lw_time_state(&services->time);
-        if (state == LW_TIME_DEMO || state == LW_TIME_FAILED) {
+        if (state == LW_TIME_DEMO || state == LW_TIME_FAILED || state == LW_TIME_STALE) {
             if (services->sync_retry_at_ms == 0 || now_ms >= services->sync_retry_at_ms) {
                 if (lw_time_service_request_sync(&services->time, now_ms)) {
                     want_time_request = true;
@@ -329,6 +361,9 @@ void lw_services_poll(lw_services_t *services, uint32_t now_ms)
     LW_SERVICES_UNLOCK();
 
     run_action(&pending);
+    if (want_probe) {
+        lw_net_esp_wifi_probe_connected();
+    }
     if (want_time_request) {
         lw_net_esp_time_request();
     }

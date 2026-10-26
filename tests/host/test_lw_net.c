@@ -581,6 +581,99 @@ static void test_wifi_reconnect_policy(void)
     check(wifi.retry_at_ms == 0, "no reconnect while disabled");
 }
 
+static void test_wifi_link_up(void)
+{
+    begin("wifi/link-up");
+    lw_wifi_t wifi;
+    lw_wifi_init(&wifi, true);
+    check(!lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.9", 10), "no link before the radio is on");
+
+    lw_wifi_enable(&wifi, true, 20);
+    lw_wifi_event_t ev;
+    while (lw_wifi_next_event(&wifi, &ev)) {
+    }
+    /* An association that no request of this boot produced: accepted from IDLE. */
+    check(lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.9", 30), "unsolicited link accepted");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTED, "state connected");
+    check_str(lw_wifi_ip(&wifi), "10.0.0.9", "ip stored");
+    check_str(lw_wifi_target(&wifi), "cafe", "ssid becomes the label");
+    check(lw_wifi_next_event(&wifi, &ev) && ev.type == LW_WIFI_EV_CONNECTED, "ui told once");
+
+    /* A repeat probe with the same address must not spam the event queue. */
+    check(!lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.9", 40), "same address is not a change");
+    check(!lw_wifi_next_event(&wifi, &ev), "no duplicate event");
+
+    /* A different address is a real change (DHCP renewal, roam). */
+    check(lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.10", 50), "new address is a change");
+    check_str(lw_wifi_ip(&wifi), "10.0.0.10", "ip updated");
+
+    /* A probe must never hijack an attempt that is in flight. */
+    lw_wifi_connect(&wifi, "home", "pw", 60);
+    check(!lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.11", 70), "probe ignored while connecting");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_CONNECTING, "attempt preserved");
+
+    /* Nor revive a link the user just turned off. */
+    lw_wifi_disconnect(&wifi, 80);
+    lw_wifi_enable(&wifi, false, 90);
+    check(!lw_wifi_on_link_up(&wifi, "cafe", "10.0.0.12", 100), "no link while the radio is off");
+    check(lw_wifi_state(&wifi) == LW_WIFI_ST_OFF, "off stays off");
+}
+
+static void test_services_link_up_event(void)
+{
+    begin("services/link-up-event");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    lw_services_start(&svc, 0);
+    lw_wifi_init(&svc.wifi, true);
+    check(lw_wifi_enable(&svc.wifi, true, 0), "radio enabled");
+
+    check(lw_services_wifi_report_link_up(&svc, "cafe", "10.0.0.9", 10), "link-up event queued");
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_IDLE, "not applied before the drain");
+    check(lw_services_drain(&svc, 20) == 1u, "one event applied");
+    check(lw_wifi_state(&svc.wifi) == LW_WIFI_ST_CONNECTED, "connected by the drain");
+    check_str(lw_wifi_target(&svc.wifi), "cafe", "ssid carried through the event");
+
+    /* The snapshot the UI reads is rebuilt by the poll. */
+    lw_net_status_t status;
+    lw_services_status(&svc, 30, &status);
+    check(status.wifi_state == LW_WIFI_ST_CONNECTED, "snapshot shows the link");
+    check_str(status.ssid, "cafe", "snapshot carries the ssid");
+    check_str(status.ip, "10.0.0.9", "snapshot carries the address");
+}
+
+static void test_services_probe_cadence(void)
+{
+    begin("services/probe-cadence");
+    lw_services_t svc;
+    lw_services_init(&svc);
+    /* Pretend the adapter is present and the station came up, which is the only
+     * case where the poll is allowed to spend a probe. */
+    svc.caps.wifi_backend = true;
+    lw_wifi_init(&svc.wifi, true);
+    lw_wifi_enable(&svc.wifi, true, 0);
+
+    lw_services_poll(&svc, 100);
+    check(svc.probe_at_ms == 100u + 1000u, "first poll schedules a probe");
+    uint32_t first = svc.probe_at_ms;
+
+    lw_services_poll(&svc, 500);
+    check(svc.probe_at_ms == first, "no second probe inside the interval");
+    lw_services_poll(&svc, first);
+    check(svc.probe_at_ms == first + 1000u, "probe repeats on the cadence");
+
+    /* With the radio off nothing is probed and the schedule is dropped. */
+    lw_wifi_enable(&svc.wifi, false, 2000);
+    lw_services_poll(&svc, 2000);
+    check(svc.probe_at_ms == 0u, "no probe while the radio is off");
+
+    /* A connect in flight is also not probed: the attempt owns the radio. */
+    lw_wifi_enable(&svc.wifi, true, 3000);
+    lw_wifi_connect(&svc.wifi, "home", "pw", 3000);
+    lw_services_poll(&svc, 3000);
+    check(svc.probe_at_ms == 0u, "no probe while connecting");
+}
+
 int main(void)
 {
     test_wifi_unsupported();
@@ -591,6 +684,7 @@ int main(void)
     test_wifi_events_overflow();
     test_wifi_disable();
     test_wifi_reconnect_policy();
+    test_wifi_link_up();
 
     test_time_demo();
     test_time_sync();
@@ -606,6 +700,8 @@ int main(void)
     test_services_events();
     test_services_queue();
     test_services_time_downgrade();
+    test_services_link_up_event();
+    test_services_probe_cadence();
 
     printf("\n%d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

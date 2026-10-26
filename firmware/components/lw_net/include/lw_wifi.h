@@ -134,6 +134,12 @@ void lw_wifi_forget_password(lw_wifi_t *wifi);
 void lw_wifi_on_scan_done(lw_wifi_t *wifi, uint32_t generation, const lw_wifi_ap_t *aps, unsigned count,
                           bool ok);
 void lw_wifi_on_connected(lw_wifi_t *wifi, uint32_t generation, const char *ip, uint32_t now_ms);
+/* An unsolicited association: the radio came up already joined because the
+ * hosted slave kept the credential of a previous boot. Accepted from IDLE (the
+ * state right after enabling the radio) and from CONNECTED (a repeat probe).
+ * `ssid` may be empty; it only feeds the label the UI shows. Returns true when
+ * the state actually changed. */
+bool lw_wifi_on_link_up(lw_wifi_t *wifi, const char *ssid, const char *ip, uint32_t now_ms);
 void lw_wifi_on_connect_failed(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error_t error, uint32_t now_ms);
 void lw_wifi_on_disconnected(lw_wifi_t *wifi, uint32_t generation, lw_wifi_error_t error, uint32_t now_ms);
 

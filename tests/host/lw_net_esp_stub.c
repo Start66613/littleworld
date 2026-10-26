@@ -37,3 +37,11 @@ void lw_net_esp_wifi_describe(char *buf, size_t len)
     }
 }
 
+bool lw_net_esp_wifi_coprocessor_version(char *buf, size_t len)
+{
+    if (buf != NULL && len > 0) {
+        buf[0] = '\0';
+    }
+    return false;
+}
+
