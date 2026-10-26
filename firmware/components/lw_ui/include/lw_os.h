@@ -12,7 +12,7 @@ typedef enum {
     OC_LOCK,OC_UNLOCK,OC_EDITOR,OC_ENVELOPE,OC_WIDGETS,OC_WALLPAPER,OC_PLAY,OC_SCREEN_OFF,
     OC_NETWORK,OC_DISPLAY,OC_SOUND,OC_PERSONAL,OC_TIME,OC_STORAGE,OC_ABOUT,OC_DEVELOPER,
     OC_GREET,OC_LETTER,OC_REST,OC_BRIGHT_VALUE,OC_VOLUME_VALUE,OC_WIFI_STATUS,OC_KEYBOARD,OC_PET,OC_REFRESH,OC_LOCK_CLOCK,OC_LOCK_DATE,OC_LOCK_LOVE,OC_RPG,
-    OC_MOTION,OC_MOTION_FULL,OC_MOTION_REDUCED,OC_MOTION_OFF,OC_SETTINGS_BACK,OC_ANNIVERSARY,OC_WINDOW,OC_SOFA,OC_ROOM_PHOTO,OC_COUNT
+    OC_MOTION,OC_MOTION_FULL,OC_MOTION_REDUCED,OC_MOTION_OFF,OC_SETTINGS_BACK,OC_ANNIVERSARY,OC_WINDOW,OC_SOFA,OC_ROOM_PHOTO,OC_DOCK_TOGGLE,OC_TIME_AUTO,OC_DAWN,OC_DAY,OC_DUSK,OC_NIGHT,OC_DEEP_NIGHT,OC_COUNT
 } lw_os_control_t;
 bool lw_os_start(lw_system_t *,const lw_actor_art_t [2]);
 void lw_os_stop(void);
@@ -40,3 +40,6 @@ lv_obj_t *lw_os_control_panel(void);
 const lw_duo_t *lw_os_duo_state(void);
 const char *lw_os_actor_clip(unsigned);
 uint16_t lw_os_actor_frame(unsigned);
+bool lw_os_dock_expanded(void);
+/* UI-only attention hint; no saved preference or backend operation. */
+void lw_os_scene_focus(bool focused);

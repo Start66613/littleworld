@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lw_theme.h"
+#include "lw_shell.h"
 #include "lw_os_design.h"
 
 lv_obj_t *lw_card(lv_obj_t *parent, int x, int y, int w, int h)
@@ -54,7 +55,7 @@ lv_obj_t *lw_button(lv_obj_t *parent, const char *text, int w, int h, uint32_t b
     lw_os_motion_touch(btn);
     lv_obj_remove_style_all(btn);
     lv_obj_set_size(btn, w, h);
-    lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_radius(btn, lw_shell_host_active() ? 9 : LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(btn, lv_color_hex(bg), 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
     lv_obj_set_style_shadow_width(btn, 12, 0);

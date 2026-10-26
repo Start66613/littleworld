@@ -4,6 +4,7 @@
 #include "lw_os_design.h"
 #include "lw_theme.h"
 #include "lw_polish.h"
+#include "lw_os.h"
 #include "lw_visual_assets.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ static void action(lv_event_t *e)
 { lw_rpg_view_t *v=lv_event_get_user_data(e); v->pending=(int)(intptr_t)lv_obj_get_user_data(lv_event_get_target_obj(e)); }
 static lv_obj_t *button(lw_rpg_view_t *v,lv_obj_t *p,const char *text,int x,int y,int w,int id)
 {
-    lv_obj_t *o=lw_os_box(p,x,y,w,48,colors(v)->soft,14,255); lv_obj_add_flag(o,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *o=lw_os_box(p,x,y,w,48,0xf2dfc4,8,224); lv_obj_add_flag(o,LV_OBJ_FLAG_CLICKABLE);
     lw_os_motion_touch(o);
     lv_obj_set_user_data(o,(void *)(intptr_t)id); lv_obj_add_event_cb(o,action,LV_EVENT_CLICKED,v);
     lv_obj_t *label=lw_os_label(o,text,&lw_font_18,0,0,w,colors(v)->text); lv_obj_set_style_text_align(label,LV_TEXT_ALIGN_CENTER,0); lv_obj_center(label); return o;
@@ -111,11 +112,12 @@ static void map_click(lv_event_t *e)
 }
 static lv_obj_t *panel(lw_rpg_view_t *v,const char *title,unsigned art)
 {
+    lw_os_scene_focus(true);
     if (v->dialog) lv_obj_delete(v->dialog);
-    v->dialog=lw_os_box(v->root,0,52,1024,442,0x282335,0,110); lv_obj_add_flag(v->dialog,LV_OBJ_FLAG_CLICKABLE);
+    v->dialog=lw_os_box(v->root,0,52,1024,494,0x493e43,0,70); lv_obj_add_flag(v->dialog,LV_OBJ_FLAG_CLICKABLE);
     lv_obj_t *p=lw_os_box(v->dialog,212,60,600,352,colors(v)->surface,20,0);
     if (!lw_polish_art(p,art,28,0)) lv_obj_set_style_bg_opa(p,255,0);
-    lw_os_label(p,title,&lw_font_22,art==1 ? 98 : 206,art==1 ? 48 : 90,380,colors(v)->text); lw_os_motion(p,LW_MOVE_DIALOG); return p;
+    lw_os_label(p,title,&lw_font_22,art==1 ? 98 : 206,art==1 ? 48 : 90,380,colors(v)->text); lw_os_motion(p,art==1 ? LW_MOVE_PAPER : LW_MOVE_DIALOG); return p;
 }
 static void dialog_render(lw_rpg_view_t *v)
 {
@@ -218,16 +220,13 @@ lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *hos
         if (clip) { v->players[i]=lw_sprite_create(v->map,0,0,256); if (v->players[i]) { lw_sprite_set_external_clock(v->players[i],true); lw_sprite_set_pixel_mode(v->players[i]); lw_sprite_play(v->players[i],clip); v->clips[i]=clip; v->actor[i]=lw_sprite_object(v->players[i]); } }
         if (!v->actor[i]) v->actor[i]=lw_os_label(v->map,i ? "千千\n资源待载" : "男方\n资源待载",&lw_font_18,0,0,80,colors(v)->text);
     }
-    lv_obj_t *title=lw_os_box(v->root,26,64,304,76,colors(v)->surface,18,238);
-    lw_os_label(title,"回忆工坊",&lw_font_22,18,10,268,colors(v)->text);
-    lw_os_label(title,"示例故事 · 点地板散步",&lw_font_18,18,43,268,colors(v)->muted);
-    lv_obj_t *side=lw_os_box(v->root,684,65,314,126,colors(v)->surface,20,240);
+    lv_obj_t *side=lw_os_box(v->root,684,65,314,126,0xf5e4c8,8,210);lw_polish_paper(side,false);lw_os_box(side,135,-4,42,10,0xc7a17d,2,140);
     v->progress=lw_os_label(side,"",&lw_font_18,18,14,184,colors(v)->text);
     for (unsigned i=0;i<3;i++) { v->badges[i]=lw_os_box(side,18+(int)i*50,75,38,38,colors(v)->soft,12,255); lw_os_icon(v->badges[i],i==0 ? OS_I_ALBUM : i==1 ? OS_I_MAIL : OS_I_LEAF,5,5,28,colors(v)->deep); }
     button(v,side,"任务本",195,16,104,ACT_JOURNAL);
     v->action=button(v,v->root,"查看身边物品",760,432,238,ACT_INTERACT);
-    lv_obj_t *note=lw_os_box(v->root,26,444,708,38,colors(v)->surface,12,235);
-    v->status=lw_os_label(note,"轻触照片盒、信封或绿植，走近发现回忆。",&lw_font_18,12,8,684,colors(v)->text);
+    lv_obj_t *note=lw_os_box(v->root,26,444,708,38,0xf5e4c8,8,0);
+    v->status=lw_os_label(note,"示例故事 · 照片盒 / 信封 / 绿植",&lw_font_18,12,8,684,0x75595c);
     v->last=lv_tick_get(); v->timer=lv_timer_create(tick,20,v);
     if (!v->timer) { lv_obj_delete(v->root); return NULL; }
     refresh(v); return v;

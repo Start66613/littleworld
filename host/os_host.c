@@ -5,6 +5,7 @@
 #include "lw_app_state.h"
 #include "lw_os_design.h"
 #include "lw_visual_assets.h"
+#include "lw_ambience.h"
 #include "lw_ui_content.h"
 #include "win_display.h"
 #include <stdio.h>
@@ -51,6 +52,10 @@ static int timers(void)
 { int n=0; for (lv_timer_t *t=lv_timer_get_next(NULL);t;t=lv_timer_get_next(t)) n++; return n; }
 static bool tap(lw_os_control_t id)
 {
+    if((id==OC_WORLD || id==OC_ALBUM || id==OC_MEMORIES || id==OC_MUSIC || id==OC_GAMES || id==OC_SETTINGS) && !lw_os_dock_expanded() && lw_os_overlay()==OS_OVER_NONE){
+        lw_host_pointer_t *p=lw_host_pointer();p->x=512;p->y=585;p->pressed=1;advance(80);p->pressed=0;advance(420);
+        CHECK("real bottom-edge touch reveals navigation",lw_os_dock_expanded());
+    }
     lv_obj_t *o=lw_os_control(id); if (!o) { CHECK("control exists",false); return false; }
     lv_obj_update_layout(lw_os_root()); lv_area_t a; lv_obj_get_coords(o,&a);
     CHECK("touch center within screen",a.x1>=0 && a.y1>=0 && a.x2<1024 && a.y2<600);
@@ -127,6 +132,9 @@ static void swipe_points(int x1,int y1,int x2,int y2)
 }
 static bool in_room(lv_obj_t *o)
 { if (!o) return false; lv_area_t a; lv_obj_get_coords(o,&a); return a.x1>=32 && a.x2<736 && a.y1>=104 && a.y2<456; }
+static void capture_now(const char *,const char *);
+static void quick_text_press(const char *text)
+{lv_obj_update_layout(lw_os_root());lv_obj_t *o=text_object(lv_screen_active(),text);CHECK("animated book touch target exists",o!=NULL);if(!o)return;lv_area_t a;lv_obj_get_coords(o,&a);lw_host_pointer_t *p=lw_host_pointer();p->x=(a.x1+a.x2)/2;p->y=(a.y1+a.y2)/2;p->pressed=1;advance(60);p->pressed=0;advance(20);}
 static void experience_tests(lw_system_t *system,const char *out)
 {
     lw_os_open(OS_DESKTOP); advance(400);
@@ -161,7 +169,9 @@ static void experience_tests(lw_system_t *system,const char *out)
     lw_album_source_t source={NULL,2,photo_title,photo_load,photo_release}; CHECK("inject source with album closed",lw_album_set_source(&source)); tap(OC_ALBUM); tap_text("接口测试图"); CHECK("actual file photo acquires exactly one picture",photo_live==1 && lw_album_live_pictures()==1); shot(out,"26-album-local-photo");
     swipe_points(720,300,380,300); CHECK("real photo swipe exposes missing-file error",photo_live==0 && text_object(lw_os_root(),"照片读取失败")!=NULL); shot(out,"27-album-load-error"); write_photo(1); tap_text("重试"); CHECK("retry actually reloads fixed file",photo_live==1 && !text_object(lw_os_root(),"照片读取失败"));
     tap_text("上一张"); CHECK("image switching never holds two decoded photos",photo_peak==1); tap_text("关闭"); CHECK("full-screen close releases source",photo_live==0 && lw_album_live_pictures()==0); tap(OC_HOME); CHECK("clear fixture source while closed",lw_album_set_source(NULL));
-    static const lw_memory_t fixture_story={{2026,10,25},"接口测试故事","这是明确标记的测试内容。",""}; CHECK("inject explicit story data",lw_memories_set_source(&fixture_story,1)); tap(OC_MEMORIES); tap_text("时间线"); tap_text("接口测试故事"); shot(out,"28-story-detail"); tap_text("收起"); tap(OC_HOME); CHECK("story source can be detached",lw_memories_set_source(NULL,0));
+    static const lw_memory_t fixture_story={{2026,10,25},"接口测试故事","这是明确标记的测试内容。",""}; CHECK("inject explicit story data",lw_memories_set_source(&fixture_story,1)); tap(OC_MEMORIES); tap_text("时间线");quick_text_press("接口测试故事");
+    for(unsigned i=0;i<8;i++){char n[64];snprintf(n,sizeof(n),"v43-book-open-%02u",i);capture_now(out,n);advance(80);}shot(out,"28-story-detail");quick_text_press("收起");
+    for(unsigned i=0;i<5;i++){char n[64];snprintf(n,sizeof(n),"v43-book-close-%02u",i);capture_now(out,n);advance(80);}tap(OC_HOME); CHECK("story source can be detached",lw_memories_set_source(NULL,0));
     tap(OC_MUSIC); tap_text("播放"); CHECK("music explicitly identifies simulated playback",text_object(lw_os_root(),"模拟播放中 · 没有真实声音输出")!=NULL);
     lv_obj_t *seek=find_class(lw_os_root(),&lv_slider_class); CHECK("music has a real seek control",seek!=NULL);
     if (seek) { lv_obj_get_coords(seek,&a); p->x=a.x1+2; p->y=(a.y1+a.y2)/2; p->pressed=1; advance(60); p->x=a.x1+(a.x2-a.x1)*3/4; advance(100); p->pressed=0; advance(100); CHECK("pointer seek changes simulated track position",lv_slider_get_value(seek)>=70 && lv_slider_get_value(seek)<=80); }
@@ -245,6 +255,33 @@ static void polish_v42_tests(const char *out)
     lw_os_boot(); advance(100); p->x=500;p->y=300;p->pressed=1;advance(60);p->pressed=0;advance(500);
     CHECK("boot can be skipped without orphaned timeline",!lw_os_boot_active() && objects(lw_os_root())==base && timers()==tb);
     desktop_objects=objects(lw_os_root()); desktop_timers=timers();
+}
+static void scene_v43_tests(const char *out)
+{
+    static const unsigned minute[]={0,299,300,539,540,1019,1020,1139,1140,1379,1380,1439};
+    static const lw_day_phase_t phases[]={LW_DEEP_NIGHT,LW_DEEP_NIGHT,LW_DAWN,LW_DAWN,LW_DAY,LW_DAY,LW_DUSK,LW_DUSK,LW_NIGHT,LW_NIGHT,LW_DEEP_NIGHT,LW_DEEP_NIGHT};
+    for(unsigned i=0;i<12;i++){CHECK("time preview accepts local day minute",lw_ambience_preview((int)minute[i]));CHECK("phase boundary matches five-part local day",lw_ambience_phase()==phases[i]);}
+    CHECK("invalid time cannot corrupt phase",!lw_ambience_preview(1440) && !lw_ambience_preview(-2));lw_ambience_preview(-1);
+    lw_os_open(OS_DESKTOP);advance(600);unsigned base=objects(lw_os_root());int tb=timers();
+    advance(5100);CHECK("idle home really retracts navigation",!lw_os_dock_expanded());capture_now(out,"v43-dock-hidden");
+    lw_host_pointer_t *p=lw_host_pointer();p->x=512;p->y=585;p->pressed=1;advance(60);p->pressed=0;
+    for(unsigned i=0;i<8;i++){char n[64];snprintf(n,sizeof(n),"v43-dock-open-%02u",i);capture_now(out,n);advance(60);}
+    CHECK("bottom handle opens real touch navigation",lw_os_dock_expanded());tap(OC_SETTINGS);tap(OC_TIME);capture_now(out,"v43-time-settings");
+    static const char *const names[]={"dawn","day","dusk","night","deep-night"};
+    unsigned slept=lw_app_state()->pet.sleeping;lw_date_t anniversary=lw_app_state()->anniversary;
+    for(unsigned i=0;i<5;i++){
+        tap((lw_os_control_t)(OC_DAWN+i));tap(OC_HOME);advance(700);char n[64];snprintf(n,sizeof(n),"v43-home-%s",names[i]);capture_now(out,n);
+        lw_os_open(OS_PET);advance(600);snprintf(n,sizeof(n),"v43-daily-%s",names[i]);capture_now(out,n);
+        CHECK("daily room has no redundant title or mood words",!text_object(lw_os_root(),"小屋日常") && !text_object(lw_os_root(),"开心") && !text_object(lw_os_root(),"睡觉"));
+        tap(OC_SETTINGS);tap(OC_TIME);
+    }
+    CHECK("atmosphere preview leaves relationship date and pet save state intact",lw_app_state()->pet.sleeping==slept && !memcmp(&anniversary,&lw_app_state()->anniversary,sizeof(anniversary)));
+    tap(OC_TIME_AUTO);CHECK("automatic ambience uses actual host clock",lw_ambience_clock_valid());tap(OC_HOME);advance(600);
+    CHECK("time previews release page objects and timers",objects(lw_os_root())==base && timers()==tb);
+    for(unsigned mode=0;mode<3;mode++){
+        lw_os_motion_mode((lw_motion_mode_t)mode);lw_app_state()->settings.animations=mode!=LW_MOTION_OFF;lw_os_open(OS_DESKTOP);advance(5400);CHECK("dock retraction works in each motion mode",!lw_os_dock_expanded());tap(OC_ALBUM);tap(OC_HOME);advance(600);
+    }
+    lw_os_motion_mode(LW_MOTION_FULL);lw_app_state()->settings.animations=true;lw_os_open(OS_DESKTOP);advance(600);desktop_objects=objects(lw_os_root());desktop_timers=timers();
 }
 static void motion_v4_tests(const char *out,bool characters)
 {
@@ -374,6 +411,7 @@ int lw_os_host_run(const char *pack_path,const char *out)
     experience_tests(&system,out);
     motion_v4_tests(out,pack!=NULL);
     polish_v42_tests(out);
+    scene_v43_tests(out);
     unsigned before=objects(lw_os_root()); int timer_before=timers(); bool clean=true;
     for (int i=0;i<100;i++) { lw_os_show(OS_OVER_CONTROL); advance(60); lw_os_show(OS_OVER_WIFI); advance(60); lw_os_show(OS_OVER_NONE); advance(60); if (objects(lw_os_root())!=before || timers()!=timer_before || lw_assets_stats().live_leases!=expected_leases) clean=false; }
     CHECK("100 overlay cycles preserve page objects timers and leases",clean);

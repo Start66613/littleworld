@@ -14,6 +14,7 @@
 #include "lw_ui_content.h"
 #include "lw_os_design.h"
 #include "lw_polish.h"
+#include "lw_os.h"
 LV_FONT_DECLARE(lw_font_88);
 #include "lw/lw_memories.h"
 #include "lw/lw_time.h"
@@ -39,13 +40,20 @@ bool lw_memories_set_source(const lw_memory_t *items,unsigned count)
 
 static void build_tabs(lv_obj_t *content);
 static void build_page(void);
+static void book_fade(void *o,int32_t alpha){lv_obj_set_style_opa(o,(lv_opa_t)alpha,0);}
+static void book_closed(lv_anim_t *a){if(s_detail_overlay==a->var)s_detail_overlay=NULL;lv_obj_delete(a->var);lw_os_scene_focus(false);}
 
 static void close_overlay_cb(lv_event_t *event)
 {
     lv_obj_t *overlay = (lv_obj_t *)lv_event_get_user_data(event);
     if (overlay != NULL) {
+        if(lw_shell_host_active() && lw_os_motion_get()==LW_MOTION_FULL){
+            lv_obj_t *card=lv_obj_get_parent(lv_event_get_target_obj(event));lw_os_motion(card,LW_MOVE_DISMISS);
+            lv_anim_delete(overlay,book_fade);lv_anim_t a;lv_anim_init(&a);lv_anim_set_var(&a,overlay);lv_anim_set_exec_cb(&a,book_fade);lv_anim_set_values(&a,255,0);lv_anim_set_duration(&a,180);lv_anim_set_completed_cb(&a,book_closed);lv_anim_start(&a);return;
+        }
         lv_obj_delete(overlay);
         if (s_detail_overlay==overlay) s_detail_overlay=NULL;
+        lw_os_scene_focus(false);
     }
 }
 
@@ -244,17 +252,18 @@ static void memory_clicked(lv_event_t *event)
     lv_obj_remove_style_all(overlay);
     lv_obj_set_size(overlay, LW_SCREEN_W, LW_SCREEN_H);
     lv_obj_set_style_bg_color(overlay, lv_color_hex(0x2A1E26), 0);
-    lv_obj_set_style_bg_opa(overlay, LV_OPA_50, 0);
+    lv_obj_set_style_bg_opa(overlay, 72, 0);
     lv_obj_add_flag(overlay, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_move_foreground(overlay);
     s_detail_overlay=overlay;
+    lw_os_scene_focus(true);
 
     lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
     if (lw_shell_host_active()) lw_polish_paper(card,true);
     lv_obj_center(card);
     bool book=lw_shell_host_active() && lw_polish_art(card,1,8,14);
     if (book) {lv_obj_set_style_bg_opa(card,0,0);lv_obj_set_style_border_width(card,0,0);lv_obj_set_style_shadow_opa(card,0,0);}
-    lw_os_motion(card,LW_MOVE_CARD);
+    lw_os_motion(card,LW_MOVE_PAPER);
 
     lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, book ? 92 : 32, book ? 60 : 28);
     lv_label_set_text_fmt(date, "%04d-%02d-%02d", memory->date.year, memory->date.month, memory->date.day);

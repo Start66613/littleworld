@@ -1,5 +1,6 @@
 /* One full scene + three thumbnail slots. No PNG decoder or hidden file scan. */
 #include "lw_visual_assets.h"
+#include "lw_ambience.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #include <stdio.h>
 #include <string.h>
@@ -68,4 +69,8 @@ static lv_obj_t *aux_image(lv_obj_t *parent,const char *name)
     lv_obj_t *o=lv_image_create(parent); lv_image_set_src(o,&auxiliary.image); lv_image_set_antialias(o,false); lv_obj_add_event_cb(o,deleted,LV_EVENT_DELETE,&auxiliary); return o;
 }
 lv_obj_t *lw_visual_rpg_image(lv_obj_t *parent) { return aux_image(parent,"rpg-room"); }
-lv_obj_t *lw_visual_daily_image(lv_obj_t *parent) { return aux_image(parent,"daily-room"); }
+lv_obj_t *lw_visual_daily_image(lv_obj_t *parent)
+{
+    lw_day_phase_t p=lw_ambience_phase();const char *name=p>=LW_NIGHT ? "daily-room-night" : p<=LW_DAY ? "daily-room-day" : "daily-room";
+    lv_obj_t *o=aux_image(parent,name);return o ? o : aux_image(parent,"daily-room");
+}

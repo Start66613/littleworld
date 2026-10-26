@@ -28,7 +28,8 @@ def save(data):
     temp.replace(LEDGER)
 
 def main():
-    p=argparse.ArgumentParser(); p.add_argument('--name',required=True); p.add_argument('--max-credits',type=int,required=True); p.add_argument('--recover',action='store_true'); p.add_argument('command',nargs=argparse.REMAINDER); a=p.parse_args()
+    global LEDGER
+    p=argparse.ArgumentParser(); p.add_argument('--name',required=True); p.add_argument('--ledger',type=Path,default=LEDGER); p.add_argument('--max-credits',type=int,required=True); p.add_argument('--recover',action='store_true'); p.add_argument('command',nargs=argparse.REMAINDER); a=p.parse_args();LEDGER=a.ledger
     command=a.command; command=command[1:] if command and command[0]=='--' else command
     if not command or any('key' in x.lower() and x.startswith('--') for x in command): raise ValueError('Official command required; credential arguments prohibited')
     data=json.loads(LEDGER.read_text(encoding='utf-8'))

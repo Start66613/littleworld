@@ -1,0 +1,18 @@
+[
+  {
+    "phase": "day",
+    "master_sha256": "05bfad8b736c31b3ff31c88f70e7ef3cafbe1c3fc6708195c77c014cf20ad442",
+    "runtime": "assets/visual-v4-2/runtime/daily-room-day.lwr",
+    "sha256": "004adf3f2d6f93687a0056c54c430421410f48bf785714fbf7c954ac96872555",
+    "bytes": 1228816,
+    "transform": "complete nearest 1/2 plus fixed12px edge padding; no scene cuts or furniture layout"
+  },
+  {
+    "phase": "night",
+    "master_sha256": "11069b91beb0df2aaee5e45bac574638a0bd3a3d009f839be86097db2c9cc5ef",
+    "runtime": "assets/visual-v4-2/runtime/daily-room-night.lwr",
+    "sha256": "16d0df155398e0a01f10e5bbec8cb86c7c274ed12eea19b0c5730a16e799dd3c",
+    "bytes": 1228816,
+    "transform": "complete nearest 1/2 plus fixed12px edge padding; no scene cuts or furniture layout"
+  }
+]
