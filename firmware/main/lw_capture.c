@@ -24,13 +24,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sdkconfig.h"
+
 #include "bsp/esp-bsp.h"
 #include "esp_console.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "lw_diag_board.h"
 
 static const char *TAG = "lw_capture";
 
@@ -277,6 +281,65 @@ static int cmd_status(int argc, char **argv)
     return 0;
 }
 
+#if CONFIG_LW_DIAG_CONSOLE
+/* Read-only diagnostics. These commands never write anything: not flash, not
+ * NVS, not the card, not the radio. They exist so a board test can ask for the
+ * numbers instead of guessing from a boot log. */
+static int cmd_diag(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
+    if (!lw_diag_board_ready()) {
+        printf("diag: board wiring not initialised yet\n");
+        return 1;
+    }
+    lw_diag_report_t report;
+    lw_diag_board_report(&report);
+    static char text[CONFIG_LW_DIAG_MAX_TEXT];
+    lw_diag_text(&report, text, sizeof(text));
+    fputs(text, stdout);
+    fflush(stdout);
+    return 0;
+}
+
+static int cmd_diagjson(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
+    if (!lw_diag_board_ready()) {
+        printf("diagjson: board wiring not initialised yet\n");
+        return 1;
+    }
+    lw_diag_report_t report;
+    lw_diag_board_report(&report);
+    static char json[2048];
+    if (lw_diag_json(&report, json, sizeof(json)) == 0u) {
+        printf("diagjson: report does not fit the buffer\n");
+        return 1;
+    }
+    /* One line, prefixed so the PC collector can pick it out of the console
+     * echo without parsing anything else. */
+    printf("LWDJ %s\n", json);
+    fflush(stdout);
+    return 0;
+}
+
+static int cmd_diagerr(int argc, char **argv)
+{
+    /* Records a marker in the report so a later diag read shows what the
+     * operator was doing. Writes RAM only. */
+    char text[96];
+    int used = snprintf(text, sizeof(text), "operator mark");
+    if (argc >= 2) {
+        used = snprintf(text, sizeof(text), "operator mark: %s", argv[1]);
+    }
+    (void)used;
+    lw_diag_note_error(text, (uint32_t)(esp_timer_get_time() / 1000));
+    printf("diag: %s\n", text);
+    return 0;
+}
+#endif /* CONFIG_LW_DIAG_CONSOLE */
+
 bool lw_capture_console_start(void)
 {
     esp_console_repl_t *repl = NULL;
@@ -300,10 +363,21 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_shot);
     esp_console_cmd_register(&c_tap);
     esp_console_cmd_register(&c_stat);
+#if CONFIG_LW_DIAG_CONSOLE
+    const esp_console_cmd_t c_diag = { .command = "diag", .help = "full read-only diagnostics block",
+                                       .func = &cmd_diag };
+    const esp_console_cmd_t c_diagjson = { .command = "diagjson", .help = "same report as one JSON line",
+                                           .func = &cmd_diagjson };
+    const esp_console_cmd_t c_diagerr = { .command = "diagerr", .help = "diagerr <text>: mark an operator note",
+                                          .func = &cmd_diagerr };
+    esp_console_cmd_register(&c_diag);
+    esp_console_cmd_register(&c_diagjson);
+    esp_console_cmd_register(&c_diagerr);
+#endif
     if (esp_console_start_repl(repl) != ESP_OK) {
         ESP_LOGW(TAG, "console REPL failed to start");
         return false;
     }
-    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status)");
+    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson)");
     return true;
 }

@@ -92,4 +92,32 @@ menu "Little World diagnostics (build-time only)"
             can be done without physically removing the card, and so the
             fallback cannot rot unnoticed. Never ship a build with this on.
 
+    config LW_DIAG_CONSOLE
+        bool "Read-only diagnostics console commands (diag / diagjson / diagreset)"
+        default y
+        help
+            Registers the read-only diagnostics commands on the UART0 console.
+            They only read state: no command here writes flash, NVS, the card or
+            the radio, and none of them changes what the UI renders. Turning
+            this off removes the commands but keeps the boot log line and the
+            report builder, so a release build can still be measured.
+
+    config LW_DIAG_PERIODIC_LOG
+        bool "Periodic heap line (rate limited to 30 s, off by default)"
+        default n
+        help
+            Emits one diagnostics line every 30 seconds, and only when the free
+            heap moved by at least 8 KiB. Off by default: even at 30 s the line
+            is long enough to disturb a serial capture, and a board test should
+            ask for the numbers instead of being handed a stream.
+
+    config LW_DIAG_MAX_TEXT
+        int "Maximum bytes for one diagnostics text block"
+        range 512 4096
+        default 1536
+        help
+            Buffer used by the diag command. The full block is about 700 bytes;
+            the default leaves room for long card paths without a heap
+            allocation on the console task.
+
 endmenu

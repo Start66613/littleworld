@@ -135,6 +135,8 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
 
 const char *lw_art_report(void) { return s_report[0] ? s_report : "no art source"; }
 
+lw_file_cache_t *lw_art_cache(void) { return s_cache; }
+
 void lw_art_release(void)
 {
     /* Order matters. Detach the registry FIRST: every spec in it carries a

@@ -1,0 +1,4 @@
+# Temporary verification fragment: diagnostics periodic log enabled.
+# Used only to prove the CONFIG_LW_DIAG_PERIODIC_LOG code path compiles;
+# it is not a shipping configuration.
+CONFIG_LW_DIAG_PERIODIC_LOG=y

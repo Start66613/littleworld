@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "lw_duo_view.h"
+#include "lw_storage.h"
 
 /* Build the actor art table the OS will render.
  *
@@ -23,6 +24,11 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
 
 /* Human-readable summary of what actually loaded, for the boot log. */
 const char *lw_art_report(void);
+
+/* The card read-ahead cache, or NULL when no card verified or the cache failed
+ * to open. Borrowed, not owned: diagnostics read its counters, nobody else may
+ * close it. Valid until lw_art_release(). */
+lw_file_cache_t *lw_art_cache(void);
 
 /* Detach the registry and close the card cache. Call only after every sprite
  * that borrowed a clip from this table has been destroyed. */

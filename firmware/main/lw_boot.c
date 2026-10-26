@@ -23,6 +23,7 @@
 
 #if CONFIG_LW_BOOT_MODE_OS_V2
 #include "lw_diag.h"
+#include "lw_diag_board.h"
 #include "lvgl.h"
 #include "lw_art.h"
 #include "lw_os.h"
@@ -325,6 +326,12 @@ static void start_os(void)
         /* Later capability changes are applied from the LVGL task only. */
         lv_timer_create(caps_timer_cb, 1000, NULL);
     }
+
+    /* The diagnostics need the live objects, and they must be registered after
+     * the art exists: the resource/frame providers read the registry that
+     * lw_art_boot() just built. */
+    lw_diag_board_bind(&s_system, &s_services);
+    lw_diag_board_init();
 }
 
 #endif /* CONFIG_LW_BOOT_MODE_OS_V2 */

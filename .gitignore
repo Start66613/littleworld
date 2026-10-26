@@ -61,3 +61,7 @@ __pycache__/
 /build_other.log/build_other*.log
 /build_*.log
 /commitmsg.txt
+# V4 diagnostics / flash run output (per-run logs and captures)
+/reports/logs/flash/
+/reports/logs/v4/
+/reports/diagnostics/
