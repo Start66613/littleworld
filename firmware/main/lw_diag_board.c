@@ -209,6 +209,28 @@ void lw_diag_board_bind(lw_system_t *system, lw_services_t *services)
     s_services = services;
 }
 
+/* The recovery decision lives in lw_boot.c, which is the only place that owns
+ * the RTC record and the reset reason. It hands the diagnostics the finished
+ * sentence, so this module never needs to know how the policy works. */
+static bool s_recovery_safe;
+static char s_recovery_text[96];
+
+void lw_diag_board_recovery(bool safe_mode, const char *text)
+{
+    s_recovery_safe = safe_mode;
+    snprintf(s_recovery_text, sizeof(s_recovery_text), "%s", text != NULL ? text : "not tracked");
+}
+
+static void prov_recovery(bool *safe_mode, char *text, size_t len)
+{
+    if (safe_mode != NULL) {
+        *safe_mode = s_recovery_safe;
+    }
+    if (text != NULL && len > 0) {
+        snprintf(text, len, "%s", s_recovery_text[0] ? s_recovery_text : "not tracked");
+    }
+}
+
 #if CONFIG_LW_DIAG_PERIODIC_LOG
 /* One line every 30 s, and only when the free heap actually moved. The point is
  * to catch a slow leak over a long board run without turning the console into a
@@ -271,6 +293,7 @@ void lw_diag_board_init(void)
     providers.theme = prov_theme;
     providers.medium = prov_medium;
     providers.wifi = prov_wifi;
+    providers.recovery = prov_recovery;
     lw_diag_providers(&providers);
     s_ready = true;
 

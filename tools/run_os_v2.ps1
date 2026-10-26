@@ -16,7 +16,7 @@ if (-not (Test-Path -LiteralPath $pack)) {
 if (-not $SkipBuild) {
     $buildArgs=@('-NoProfile','-File','tools/build_demo.ps1','-Reconfigure')
     if ($LvglDir) { $buildArgs+=@('-LvglDir',$LvglDir) }
-    & pwsh @buildArgs
+    & powershell.exe @buildArgs
     if ($LASTEXITCODE -ne 0) {throw 'Host build failed'}
 }
 if ($Test) {

@@ -119,6 +119,13 @@ lw_diag_report_t lw_diag_report(void)
         copy_text(r.wifi_reason, sizeof(r.wifi_reason), "no adapter registered");
     }
 
+    if (s_registered && s_providers.recovery != NULL) {
+        s_providers.recovery(&r.safe_mode, r.recovery, sizeof(r.recovery));
+    }
+    if (r.recovery[0] == '\0') {
+        copy_text(r.recovery, sizeof(r.recovery), "not tracked");
+    }
+
     snprintf(r.last_error, sizeof(r.last_error), "%s", s_last_error[0] ? s_last_error : "none");
     r.last_error_ms = s_last_error_ms;
     return r;
@@ -159,6 +166,7 @@ size_t lw_diag_text(const lw_diag_report_t *report, char *buf, size_t len)
         "theme: %d\n"
         "medium: %s (%s)\n"
         "wifi: %s (%s)\n"
+        "recovery: %s%s\n"
         "last_error: %s @%ums\n",
         report->firmware, report->build_config, report->build_time, report->idf,
         (unsigned)report->reset_reason, (unsigned)report->boot_ms,
@@ -173,6 +181,7 @@ size_t lw_diag_text(const lw_diag_report_t *report, char *buf, size_t len)
         report->theme,
         report->medium_mounted ? "mounted" : "absent", report->medium_reason,
         wifi_text(report->wifi), report->wifi_reason,
+        report->safe_mode ? "SAFE MODE, " : "", report->recovery,
         report->last_error, (unsigned)report->last_error_ms);
     return written < 0 ? 0 : (size_t)written;
 }
@@ -214,6 +223,7 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
     char resource_status[128];
     char medium_reason[128];
     char wifi_reason[128];
+    char recovery[192];
     char last_error[192];
     char lv_note[96];
     json_escape(report->firmware, firmware, sizeof(firmware));
@@ -222,6 +232,7 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
     json_escape(report->resource_status, resource_status, sizeof(resource_status));
     json_escape(report->medium_reason, medium_reason, sizeof(medium_reason));
     json_escape(report->wifi_reason, wifi_reason, sizeof(wifi_reason));
+    json_escape(report->recovery, recovery, sizeof(recovery));
     json_escape(report->last_error, last_error, sizeof(last_error));
     json_escape(report->lv_note, lv_note, sizeof(lv_note));
 
@@ -233,7 +244,8 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         "\"pack\":\"%s\",\"resource\":\"%s\","
         "\"resource_reads\":%u,\"resource_failures\":%u,\"frame_failures\":%u,\"asset_leases\":%u,"
         "\"asset_bytes\":%u,\"theme\":%d,\"medium\":%s,\"medium_reason\":\"%s\",\"wifi\":\"%s\","
-        "\"wifi_reason\":\"%s\",\"last_error\":\"%s\",\"last_error_ms\":%u}",
+        "\"wifi_reason\":\"%s\",\"safe_mode\":%s,\"recovery\":\"%s\","
+        "\"last_error\":\"%s\",\"last_error_ms\":%u}",
         firmware, build_config, report->idf, (unsigned)report->reset_reason, (unsigned)report->boot_ms,
         (unsigned)report->heap_free, (unsigned)report->heap_min_free, (unsigned)report->heap_largest,
         (unsigned)report->psram_free, (unsigned)report->psram_largest,
@@ -243,7 +255,8 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         (unsigned)report->resource_reads, (unsigned)report->resource_failures,
         (unsigned)report->frame_load_failures, (unsigned)report->asset_leases, (unsigned)report->asset_bytes,
         report->theme, report->medium_mounted ? "true" : "false", medium_reason,
-        wifi_text(report->wifi), wifi_reason, last_error, (unsigned)report->last_error_ms);
+        wifi_text(report->wifi), wifi_reason, report->safe_mode ? "true" : "false", recovery,
+        last_error, (unsigned)report->last_error_ms);
     if (written < 0 || (size_t)written >= len) {
         if (len > 0) {
             buf[0] = '\0';

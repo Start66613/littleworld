@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "lw_assets.h"
+#include "lw_fault.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #include <limits.h>
 #include <stdio.h>
@@ -47,6 +48,10 @@ lw_asset_lease_t *lw_asset_acquire(const char *id, uint16_t frame)
     const lw_asset_spec_t *spec=lw_assets_find(id);
     size_t bytes=lw_asset_frame_bytes(spec);
     if (!spec || frame>=spec->frames || bytes>s_stats.budget_bytes-s_stats.live_bytes) { s_stats.failures++; return NULL; }
+    /* Injected lease refusal. Counted like any other acquire failure, and the
+     * registry must still be intact afterwards - that is the property under
+     * test, not the NULL itself. */
+    if (lw_fault_should_fail(LW_FAULT_ASSET_ACQUIRE)) { s_stats.failures++; return NULL; }
     lw_asset_lease_t *lease=lv_malloc_zeroed(sizeof(*lease));
     if (!lease) { s_stats.failures++; return NULL; }
     lease->pixels=lv_malloc(bytes);

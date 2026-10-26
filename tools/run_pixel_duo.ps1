@@ -18,7 +18,7 @@ New-Item -ItemType Directory -Force -Path "$private/screenshots","$root/reports/
 & $Python "$PSScriptRoot/analyze_desktop_pet.py" --source $DesktopPet --output "$private/qianqian" --report "$root/reports/pixel-duo/qianqian-analysis.json"
 if ($LASTEXITCODE -ne 0) { throw 'Source extraction failed' }
 if (-not $SkipBuild) {
-    & pwsh -NoProfile -File "$PSScriptRoot/build_demo.ps1" -Reconfigure
+    & powershell.exe -NoProfile -File "$PSScriptRoot/build_demo.ps1" -Reconfigure
     if ($LASTEXITCODE -ne 0) { throw 'Host build failed' }
 }
 $exe=Join-Path $root 'build/host/LittleWorld.exe'

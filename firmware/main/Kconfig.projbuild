@@ -93,7 +93,7 @@ menu "Little World diagnostics (build-time only)"
             fallback cannot rot unnoticed. Never ship a build with this on.
 
     config LW_DIAG_CONSOLE
-        bool "Read-only diagnostics console commands (diag / diagjson / diagreset)"
+        bool "Read-only diagnostics console commands (diag / diagjson / diagerr)"
         default y
         help
             Registers the read-only diagnostics commands on the UART0 console.
@@ -119,5 +119,18 @@ menu "Little World diagnostics (build-time only)"
             Buffer used by the diag command. The full block is about 700 bytes;
             the default leaves room for long card paths without a heap
             allocation on the console task.
+
+    config LW_FAULT_INJECT
+        bool "Diagnostic E: compile in the fault injection points"
+        default n
+        help
+            Links lw_fault.c and arms the injection points that the storage,
+            cache, asset and mount paths already check. With this off, every
+            lw_fault_should_fail() call site compiles away and the code is byte
+            identical to a build that never had the feature. When it is on, the
+            read-only console grows a `fault` command that can arm a point, so
+            the degradation paths can be exercised on the real board instead of
+            only on the build machine. Never ship a build with this on: an
+            armed point makes the firmware fail on purpose.
 
 endmenu

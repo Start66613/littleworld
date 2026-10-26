@@ -3,6 +3,7 @@
  * Standard C only: the same code answers for a Windows directory and for a
  * mounted FAT volume. SPDX-License-Identifier: MIT */
 #include "lw_resource.h"
+#include "lw_fault.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -145,6 +146,13 @@ bool lw_resource_verify(void)
         return false;
     }
     char manifest[320];
+    if (lw_fault_should_fail(LW_FAULT_RESOURCE_VERIFY)) {
+        /* Injected payload corruption: the card is there, the manifest is not
+         * usable. The caller must fall back to the labelled UI, not to a blank
+         * screen and not to a mount error. */
+        s_report.status = LW_RESOURCE_MANIFEST_INVALID;
+        return false;
+    }
     if (!verify_manifest(manifest, sizeof(manifest))) return false;
 
     for (unsigned t = 0; t < LW_RESOURCE_THEMES; t++) {

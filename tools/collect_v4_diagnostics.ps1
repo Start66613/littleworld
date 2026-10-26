@@ -54,6 +54,7 @@ $RequiredKeys = @(
     'pack', 'resource', 'resource_reads', 'resource_failures',
     'frame_failures', 'asset_leases', 'asset_bytes', 'theme',
     'medium', 'medium_reason', 'wifi', 'wifi_reason',
+    'safe_mode', 'recovery',
     'last_error', 'last_error_ms'
 )
 
@@ -158,6 +159,15 @@ function Format-DiagSummary {
     $lines += "- Wi-Fi 状态：$wifiText"
     $lines += "- Wi-Fi 说明：$($Report.wifi_reason)"
     $lines += ''
+    $lines += "## 启动恢复"
+    $lines += ''
+    if ($Report.safe_mode) {
+        $lines += "- **安全模式（降级启动）**：$($Report.recovery)"
+        $lines += "- 说明：连续异常复位触发了降级策略，本次启动跳过 TF 卡，只使用镜像内置素材。看到这一行说明板子曾经崩溃过，不是一次普通启动。"
+    } else {
+        $lines += "- 正常启动：$($Report.recovery)"
+    }
+    $lines += ''
     $lines += "## 最近错误"
     $lines += ''
     if ($Report.last_error -and $Report.last_error -ne 'none') {
@@ -194,7 +204,7 @@ function Save-DiagRecord {
 function Invoke-SelfTest {
     # A synthetic report with the same shape the firmware emits. If this stops
     # parsing, the parser and the firmware have diverged.
-    $fake = 'LWDJ {"firmware":"4.1.0","build":"os","build_time":"Oct 26 2026","idf":"v5.5.5","reset_reason":3,"boot_ms":8123,"heap_free":200000,"heap_min":150000,"heap_largest":65536,"psram_free":27000000,"psram_largest":20000000,"lv_available":false,"lv_used":0,"lv_max":0,"lv_frag_pct":0,"lv_note":"no LVGL provider","pack":"lw4.1-2026.10","resource":"ok","resource_reads":1234,"resource_failures":7,"frame_failures":3,"asset_leases":2,"asset_bytes":442368,"theme":2,"medium":true,"medium_reason":"sdcard at /sdcard","wifi":1,"wifi_reason":"CONFIG_LW_NET_WIFI_ENABLE is off in this build","last_error":"none","last_error_ms":0}'
+    $fake = 'LWDJ {"firmware":"4.1.0","build":"os","build_time":"Oct 26 2026","idf":"v5.5.5","reset_reason":3,"boot_ms":8123,"heap_free":200000,"heap_min":150000,"heap_largest":65536,"psram_free":27000000,"psram_largest":20000000,"lv_available":false,"lv_used":0,"lv_max":0,"lv_frag_pct":0,"lv_note":"no LVGL provider","pack":"lw4.1-2026.10","resource":"ok","resource_reads":1234,"resource_failures":7,"frame_failures":3,"asset_leases":2,"asset_bytes":442368,"theme":2,"medium":true,"medium_reason":"sdcard at /sdcard","wifi":1,"wifi_reason":"CONFIG_LW_NET_WIFI_ENABLE is off in this build","safe_mode":false,"recovery":"boot 12, previous power-on, streak 0","last_error":"none","last_error_ms":0}'
     $checks = 0
     $failures = @()
 
@@ -239,6 +249,17 @@ function Invoke-SelfTest {
     if ($md -notmatch '未取得测量值') { $failures += 'summary hid the missing LVGL measurement' }
     $checks++
     if ($md -notmatch '未包含射频协议栈|已编译进镜像') { $failures += 'summary did not explain the wifi state' }
+    $checks++
+    if ($md -notmatch '正常启动') { $failures += 'summary did not report the recovery verdict' }
+
+    # And a degraded report must be loud about it.
+    $checks++
+    $degraded = $fake -replace '"safe_mode":false', '"safe_mode":true' -replace '"recovery":"[^"]*"', '"recovery":"previous task_wdt after 4200 ms, streak 2"'
+    $dr = ConvertFrom-LwdjLine -Line $degraded
+    $dmd = Format-DiagSummary -Report $dr -Source 'selftest'
+    if ($dmd -notmatch '安全模式') { $failures += 'summary hid the safe-mode boot' }
+    $checks++
+    if ($dmd -notmatch 'streak 2') { $failures += 'summary dropped the recovery detail' }
 
     if ($failures.Count -gt 0) {
         Write-Output ("{0} checks, {1} failure(s)" -f $checks, $failures.Count)

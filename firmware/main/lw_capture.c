@@ -35,6 +35,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lw_diag_board.h"
+#include "lw_content.h"
+#include "lw_content_boot.h"
+#if CONFIG_LW_FAULT_INJECT
+#include "lw_fault.h"
+#endif
 
 static const char *TAG = "lw_capture";
 
@@ -338,7 +343,77 @@ static int cmd_diagerr(int argc, char **argv)
     printf("diag: %s\n", text);
     return 0;
 }
+
+static int cmd_content(int argc, char **argv)
+{
+    /* Read-only view of the boot-time content load. The file itself is on the
+     * card; this only reports what the last parse accepted, so an operator can
+     * tell "no card" from "card present but the file is wrong". */
+    (void)argc;
+    (void)argv;
+    printf("%s\n", lw_content_boot_report());
+    const lw_content_report_t *report = lw_content_report();
+    printf("  status=%s version=%u memories=%u photos=%u letters=%u dialogues=%u lines=%u bytes=%u\n",
+           lw_content_status_text(report->status), report->content_version, report->memories,
+           report->photos, report->letters, report->dialogues, report->lines, report->bytes);
+    if (report->status != LW_CONTENT_OK) {
+        printf("  rejected at line %u\n", report->rejected);
+    }
+    if (report->source[0]) {
+        printf("  source=%s\n", report->source);
+    }
+    fflush(stdout);
+    return 0;
+}
 #endif /* CONFIG_LW_DIAG_CONSOLE */
+
+#if CONFIG_LW_FAULT_INJECT
+/* Fault injection console, only in a build that compiled the points in. The
+ * command is intentionally awkward to type by accident and prints what it did,
+ * because the whole point is that nobody mistakes an injected failure for a
+ * real one in a log. */
+static int cmd_fault(int argc, char **argv)
+{
+    if (argc < 2) {
+        printf("fault: points are");
+        for (int i = 0; i < (int)LW_FAULT_COUNT; i++) {
+            printf(" %s", lw_fault_point_name((lw_fault_point_t)i));
+        }
+        printf("\nfault: <point> <times> | clear | status\n");
+        return 1;
+    }
+    if (!strcmp(argv[1], "clear")) {
+        lw_fault_clear();
+        printf("fault: all points cleared\n");
+        return 0;
+    }
+    if (!strcmp(argv[1], "status")) {
+        printf("fault: %u injected since clear\n", lw_fault_total());
+        for (int i = 0; i < (int)LW_FAULT_COUNT; i++) {
+            printf("fault: %-16s remaining=%u\n", lw_fault_point_name((lw_fault_point_t)i),
+                   lw_fault_remaining((lw_fault_point_t)i));
+        }
+        return 0;
+    }
+    int point = -1;
+    for (int i = 0; i < (int)LW_FAULT_COUNT; i++) {
+        if (!strcmp(argv[1], lw_fault_point_name((lw_fault_point_t)i))) {
+            point = i;
+        }
+    }
+    if (point < 0) {
+        printf("fault: unknown point '%s'\n", argv[1]);
+        return 1;
+    }
+    unsigned times = 1;
+    if (argc >= 3) {
+        times = (unsigned)strtoul(argv[2], NULL, 10);
+    }
+    lw_fault_arm((lw_fault_point_t)point, times);
+    printf("fault: %s armed (%s)\n", argv[1], times == 0 ? "every call until cleared" : "limited shots");
+    return 0;
+}
+#endif /* CONFIG_LW_FAULT_INJECT */
 
 bool lw_capture_console_start(void)
 {
@@ -370,14 +445,24 @@ bool lw_capture_console_start(void)
                                            .func = &cmd_diagjson };
     const esp_console_cmd_t c_diagerr = { .command = "diagerr", .help = "diagerr <text>: mark an operator note",
                                           .func = &cmd_diagerr };
+    const esp_console_cmd_t c_content = { .command = "content",
+                                          .help = "what the boot-time content file contained",
+                                          .func = &cmd_content };
     esp_console_cmd_register(&c_diag);
     esp_console_cmd_register(&c_diagjson);
     esp_console_cmd_register(&c_diagerr);
+    esp_console_cmd_register(&c_content);
+#endif
+#if CONFIG_LW_FAULT_INJECT
+    const esp_console_cmd_t c_fault = { .command = "fault",
+                                        .help = "fault <point> <times> | clear | status",
+                                        .func = &cmd_fault };
+    esp_console_cmd_register(&c_fault);
 #endif
     if (esp_console_start_repl(repl) != ESP_OK) {
         ESP_LOGW(TAG, "console REPL failed to start");
         return false;
     }
-    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson)");
+    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson / content)");
     return true;
 }

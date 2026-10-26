@@ -120,3 +120,25 @@ lw_date_t lw_today(void)
     lw_civil_from_days((int)(lw_now() / 86400), &date);
     return date;
 }
+
+bool lw_ui_set_anniversary(lw_date_t date)
+{
+    /* lw_date_valid() is the same gate the save decoder uses, so a date that
+     * gets in here is one the next boot will accept back. */
+    if (!lw_date_valid(date)) {
+        return false;
+    }
+    lw_state_t *state = lw_app_state();
+    if (state->anniversary.year == date.year && state->anniversary.month == date.month &&
+        state->anniversary.day == date.day) {
+        return false;
+    }
+    state->anniversary = date;
+    lw_app_state_save();
+    return true;
+}
+
+lw_date_t lw_ui_anniversary(void)
+{
+    return lw_app_state()->anniversary;
+}

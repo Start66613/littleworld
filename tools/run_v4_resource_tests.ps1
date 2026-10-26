@@ -39,6 +39,7 @@ if (-not $cl) { throw 'cl.exe is not available after vcvars64.' }
 Write-Output "compiler: $cl"
 
 $include = @(
+    ('/I' + (Join-Path $root 'firmware/components/lw_core/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_ui/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_duo/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_storage/include')),

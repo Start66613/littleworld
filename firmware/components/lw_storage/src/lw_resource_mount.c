@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "lw_resource.h"
+#include "lw_fault.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,9 @@ static const char *TAG = "lw_res";
 #endif
 
 static bool s_medium_mounted;
+static bool s_force_no_medium;
+
+void lw_resource_force_no_medium(bool forced) { s_force_no_medium = forced; }
 
 bool lw_resource_mount(void)
 {
@@ -46,12 +50,34 @@ bool lw_resource_mount(void)
     lw_resource_flag(LW_RESOURCE_MOUNT_FAILED);
     return false;
 #else
+    if (s_force_no_medium) {
+        /* Boot-loop recovery asked for a card-free boot. Same branch as a real
+         * mount failure, so the fallback path is the one that gets tested. */
+#ifdef ESP_PLATFORM
+        ESP_LOGW(TAG, "storage: card disabled by recovery policy");
+#endif
+        s_medium_mounted = false;
+        lw_resource_set_root(NULL);
+        lw_resource_flag(LW_RESOURCE_MOUNT_FAILED);
+        return false;
+    }
     /* Card first: the V4 runtime payload is ~12 MB and cannot live in a 6 MiB
      * app partition, so the card is the only place the full set fits. */
+    if (lw_fault_should_fail(LW_FAULT_MEDIUM_MOUNT)) {
+        /* Injected mount failure takes the real no-card branch below, not a
+         * separate pretend path. */
+#ifdef ESP_PLATFORM
+        ESP_LOGW(TAG, "storage: no card mounted (injected fault)");
+#endif
+        s_medium_mounted = false;
+        lw_resource_set_root(NULL);
+        lw_resource_flag(LW_RESOURCE_MOUNT_FAILED);
+        return false;
+    }
 #ifdef ESP_PLATFORM
     esp_err_t err = lw_sd_mount_existing();
     if (err != ESP_OK) {
-        ESP_LOGW(TAG, "storage: %s%s", "no card mounted (", esp_err_to_name(err));
+        ESP_LOGW(TAG, "storage: no card mounted (%s)", esp_err_to_name(err));
         s_medium_mounted = false;
         lw_resource_set_root(NULL);
         lw_resource_flag(LW_RESOURCE_MOUNT_FAILED);

@@ -10,27 +10,70 @@
 #include "sdkconfig.h"
 
 #include "esp_err.h"
+#include "esp_attr.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "esp_timer.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
 #include "lw/lw_platform.h"
 #include "lw_hw.h"
+#include "lw_recovery.h"
 #include "lw_services.h"
 #include "lw_store_nvs.h"
 #include "lw_ui.h"
 
 #if CONFIG_LW_BOOT_MODE_OS_V2
+#include "lw_content_boot.h"
 #include "lw_diag.h"
 #include "lw_diag_board.h"
 #include "lvgl.h"
 #include "lw_art.h"
 #include "lw_os.h"
+#include "lw_resource_mount.h"
 #include "lw_store.h"
 #endif
 
 static const char *TAG = "littleworld";
+
+/* ---------------------------------------------------------- recovery ----- */
+
+/* RTC no-init memory: survives a panic or a watchdog reset, cleared by a power
+ * cycle. That is the exact lifetime a boot-loop counter needs, and unlike NVS it
+ * costs no flash write on a board that may be crashing before NVS is ready. */
+static RTC_NOINIT_ATTR lw_recovery_t s_recovery_record;
+static lw_recovery_decision_t s_recovery;
+
+/* Static-assert the reset-reason table against the real header: if ESP-IDF ever
+ * renumbers it, the policy would silently misclassify a crash as a clean boot,
+ * which is the one failure that makes safe mode useless. */
+_Static_assert((int)LW_RESET_PANIC == (int)ESP_RST_PANIC, "reset reason table out of sync");
+_Static_assert((int)LW_RESET_TASK_WDT == (int)ESP_RST_TASK_WDT, "reset reason table out of sync");
+_Static_assert((int)LW_RESET_BROWNOUT == (int)ESP_RST_BROWNOUT, "reset reason table out of sync");
+_Static_assert((int)LW_RESET_POWERON == (int)ESP_RST_POWERON, "reset reason table out of sync");
+
+static void recovery_begin(void)
+{
+    s_recovery = lw_recovery_begin(&s_recovery_record, (uint32_t)esp_reset_reason());
+    char line[192];
+    lw_recovery_describe(&s_recovery_record, &s_recovery, line, sizeof(line));
+    if (s_recovery.safe_mode) {
+        ESP_LOGW(TAG, "%s", line);
+        ESP_LOGW(TAG, "recovery: degraded boot, previous uptime %u ms",
+                 (unsigned)s_recovery.previous_uptime_ms);
+    } else {
+        ESP_LOGI(TAG, "%s", line);
+    }
+}
+
+/* Keeps the record's uptime current so the next boot can say how long the
+ * crashed run survived. One RTC write per second, no flash. */
+static void recovery_tick_cb(void *arg)
+{
+    (void)arg;
+    lw_recovery_tick(&s_recovery_record, (uint32_t)(esp_timer_get_time() / 1000));
+}
 
 /* ------------------------------------------------------------ platform --- */
 
@@ -304,6 +347,16 @@ static void start_os(void)
 
     lw_diag_log_boot();
 
+    /* Safe mode exists to break a crash loop, so it has to actually change the
+     * boot: the card is the only external input to the art path, and a
+     * half-written or power-hungry card is a plausible crash cause. Booting
+     * without it still renders the embedded characters, so a degraded desktop
+     * is visible evidence that safe mode is active rather than a silent one. */
+    if (s_recovery.safe_mode) {
+        lw_resource_force_no_medium(true);
+        ESP_LOGW(TAG, "recovery: safe mode, booting without the card");
+    }
+
     /* Real character art has two sources, and the boot path uses both: the TF
      * card carries the full V4 animation set, the app image always carries a
      * small LWFA pack. lw_art_boot() prefers the card and fills any clip it
@@ -315,6 +368,12 @@ static void start_os(void)
     if (!art) {
         ESP_LOGW(TAG, "art: %s", "no character source loaded, using the labelled fallback");
     }
+
+    /* Read the user's content file from the same verified root the art came
+     * from. This has to happen after lw_art_boot() (which resolves the root)
+     * but before lw_os_start() (which builds the pages that borrow it). */
+    (void)lw_content_boot();
+
     publish_capabilities();
     if (!lw_os_start(&s_system, art)) {
         ESP_LOGE(TAG, "lw_os_start failed; falling back to the legacy shell");
@@ -325,12 +384,19 @@ static void start_os(void)
     } else {
         /* Later capability changes are applied from the LVGL task only. */
         lv_timer_create(caps_timer_cb, 1000, NULL);
+        /* The desktop exists now, so the anniversary is live and the memories
+         * page has been built with the built-in table; installing the source
+         * here is the one moment it is still closed. */
+        lw_content_boot_apply();
     }
 
     /* The diagnostics need the live objects, and they must be registered after
      * the art exists: the resource/frame providers read the registry that
      * lw_art_boot() just built. */
     lw_diag_board_bind(&s_system, &s_services);
+    char recovery_line[96];
+    lw_recovery_describe(&s_recovery_record, &s_recovery, recovery_line, sizeof(recovery_line));
+    lw_diag_board_recovery(s_recovery.safe_mode, recovery_line);
     lw_diag_board_init();
 }
 
@@ -338,6 +404,11 @@ static void start_os(void)
 
 void lw_boot_start(void)
 {
+    /* First thing in the boot path: the reset reason is still the one this boot
+     * started with, and classifying it before any subsystem can panic is what
+     * makes a crash loop countable. */
+    recovery_begin();
+
     lw_nvs_state_t nvs = lw_store_nvs_begin();
     if (nvs != LW_NVS_READY) {
         ESP_LOGW(TAG, "NVS unavailable (%s); existing saves are preserved and settings stay in RAM",
@@ -345,6 +416,16 @@ void lw_boot_start(void)
     }
 
     lw_platform_set(&s_platform);
+
+    /* One-second RTC stamp, so the next boot can report the uptime of the run
+     * that died. Created after NVS so the timer task exists. */
+    const esp_timer_create_args_t tick_args = {.callback = &recovery_tick_cb, .name = "lw_recovery"};
+    esp_timer_handle_t tick = NULL;
+    if (esp_timer_create(&tick_args, &tick) == ESP_OK) {
+        if (esp_timer_start_periodic(tick, 1000 * 1000) != ESP_OK) {
+            esp_timer_delete(tick);
+        }
+    }
 
 #if CONFIG_LW_BOOT_MODE_OS_V2
     start_os();

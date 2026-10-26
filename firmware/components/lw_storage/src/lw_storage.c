@@ -1,4 +1,5 @@
 #include "lw_storage.h"
+#include "lw_fault.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,7 +80,10 @@ static bool same(const cache_key_t *a,const cache_key_t *b)
 static bool read_file(lw_file_cache_t *c,const cache_key_t *key,void *dst)
 {
     char path[648]; int n=snprintf(path,sizeof(path),"%s/%s",c->root,key->file); if (n<0 || n>=(int)sizeof(path)) return false;
-    FILE *f=fopen(path,"rb"); bool ok=false;
+    /* Injected read failure: reported exactly like a missing file, so the
+     * caller keeps whatever frame is already on screen. */
+    bool injected=lw_fault_should_fail(LW_FAULT_CACHE_READ);
+    FILE *f=injected ? NULL : fopen(path,"rb"); bool ok=false;
     if (f) { ok=fseek(f,(long)key->offset,SEEK_SET)==0 && fread(dst,1,key->bytes,f)==key->bytes; fclose(f); }
     lock(c); c->stats.reads++; if (!ok) c->stats.failures++; unlock(c); return ok;
 }

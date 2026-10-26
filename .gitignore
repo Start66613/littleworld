@@ -65,3 +65,8 @@ __pycache__/
 /reports/logs/flash/
 /reports/logs/v4/
 /reports/diagnostics/
+
+# Content: the committed sample is deliberately not personal. Real memories go
+# in content/private/ (or anywhere outside the repo) and must never be pushed.
+/content/private/
+/content/*.local.lwcx

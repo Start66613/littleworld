@@ -73,6 +73,12 @@ typedef struct {
     lw_diag_wifi_t wifi;
     char wifi_reason[64];
 
+    /* Boot-loop recovery: whether this boot is degraded and why the previous
+     * one ended. A board that keeps panicking is exactly the state a field
+     * report must be able to describe, so it belongs in the same snapshot. */
+    bool safe_mode;
+    char recovery[96];
+
     char last_error[96];
     uint32_t last_error_ms;
 } lw_diag_report_t;
@@ -99,6 +105,8 @@ typedef struct {
     void (*medium)(bool *mounted, char *reason, size_t reason_len);
     /* Wi-Fi: state plus the adapter's own explanation. */
     void (*wifi)(lw_diag_wifi_t *state, char *reason, size_t reason_len);
+    /* Recovery: degraded flag plus the one-line description from lw_recovery. */
+    void (*recovery)(bool *safe_mode, char *text, size_t text_len);
 } lw_diag_providers_t;
 
 /* Registers the providers. Call once, before the first lw_diag_report(). The

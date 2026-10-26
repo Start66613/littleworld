@@ -9,9 +9,9 @@ Set-Location -LiteralPath $root
 . (Join-Path $PSScriptRoot 'activate_env.ps1')
 New-Item -ItemType Directory -Force -Path "$root/reports/ui-v2/technical","$root/reports/ui-v2/baseline" | Out-Null
 if (-not (Test-Path -LiteralPath $Python)) { throw 'Pass -Python pointing to a D-drive Python with Pillow 13.0.0; no paid generation API is used.' }
-& pwsh -NoProfile -File "$PSScriptRoot/run_host_tests.ps1"
+& powershell.exe -NoProfile -File "$PSScriptRoot/run_host_tests.ps1"
 if ($LASTEXITCODE -ne 0) { throw 'Core tests failed' }
-& pwsh -NoProfile -File "$PSScriptRoot/build_demo.ps1"
+& powershell.exe -NoProfile -File "$PSScriptRoot/build_demo.ps1"
 if ($LASTEXITCODE -ne 0) { throw 'Host build failed' }
 $exe=Join-Path $root 'build/host/LittleWorld.exe'
 & $exe --ui-v2-test "$root/reports/ui-v2/technical"

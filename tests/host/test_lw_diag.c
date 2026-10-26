@@ -100,6 +100,18 @@ static void fake_wifi_failed(lw_diag_wifi_t *state, char *reason, size_t len)
     snprintf(reason, len, "esp_wifi_start timeout after 5000 ms");
 }
 
+static void fake_recovery_clean(bool *safe_mode, char *text, size_t len)
+{
+    *safe_mode = false;
+    snprintf(text, len, "boot 12, previous power-on, streak 0");
+}
+
+static void fake_recovery_degraded(bool *safe_mode, char *text, size_t len)
+{
+    *safe_mode = true;
+    snprintf(text, len, "previous task_wdt after 4200 ms, streak 2");
+}
+
 /* ------------------------------------------------------------------ tests -- */
 
 static void test_defaults_without_providers(void)
@@ -140,6 +152,7 @@ static void test_full_providers(void)
     p.theme = fake_theme;
     p.medium = fake_medium;
     p.wifi = fake_wifi;
+    p.recovery = fake_recovery_clean;
     lw_diag_providers(&p);
 
     lw_diag_note_error("frame 5 of qianqian-wave.lwp read short", 4242);
@@ -171,8 +184,53 @@ static void test_full_providers(void)
     CHECK_STR_EQUAL(r.medium_reason, "sdcard at /sdcard");
     CHECK(r.wifi == LW_DIAG_WIFI_STARTED);
     CHECK_STR_EQUAL(r.wifi_reason, "hosted esp32c6 fw 1.4.7");
+    CHECK(r.safe_mode == false);
+    CHECK_STR_EQUAL(r.recovery, "boot 12, previous power-on, streak 0");
     CHECK_STR_EQUAL(r.last_error, "frame 5 of qianqian-wave.lwp read short");
     CHECK(r.last_error_ms == 4242u);
+}
+
+static void test_recovery_degraded_is_reported(void)
+{
+    /* Safe mode is the one state a field report must never hide: the board is
+     * up but degraded, so the text block and the JSON both have to say so. */
+    lw_diag_providers_t p;
+    memset(&p, 0, sizeof(p));
+    p.recovery = fake_recovery_degraded;
+    lw_diag_providers(&p);
+    lw_diag_report_t r = lw_diag_report();
+    CHECK(r.safe_mode);
+    CHECK_STR_EQUAL(r.recovery, "previous task_wdt after 4200 ms, streak 2");
+
+    char buf[1024];
+    lw_diag_text(&r, buf, sizeof(buf));
+    CHECK_STR_CONTAINS(buf, "recovery: SAFE MODE, previous task_wdt");
+    CHECK_STR_CONTAINS(buf, "streak 2");
+
+    char json[2048];
+    CHECK(lw_diag_json(&r, json, sizeof(json)) > 0u);
+    CHECK_STR_CONTAINS(json, "\"safe_mode\":true");
+    CHECK_STR_CONTAINS(json, "\"recovery\":\"previous task_wdt");
+
+    /* And the clean case must not leak the SAFE MODE prefix. */
+    memset(&p, 0, sizeof(p));
+    p.recovery = fake_recovery_clean;
+    lw_diag_providers(&p);
+    r = lw_diag_report();
+    lw_diag_text(&r, buf, sizeof(buf));
+    CHECK_STR_CONTAINS(buf, "recovery: boot 12");
+    CHECK(strstr(buf, "SAFE MODE") == NULL);
+    CHECK(lw_diag_json(&r, json, sizeof(json)) > 0u);
+    CHECK_STR_CONTAINS(json, "\"safe_mode\":false");
+}
+
+static void test_recovery_without_provider(void)
+{
+    /* A build without the recovery path must say "not tracked", not "safe". */
+    lw_diag_providers(NULL);
+    lw_diag_report_t r = lw_diag_report();
+    CHECK(r.safe_mode == false);
+    CHECK_STR_EQUAL(r.recovery, "not tracked");
 }
 
 static void test_lv_unavailable_is_reported(void)
@@ -243,6 +301,7 @@ static void test_text_block(void)
     p.theme = fake_theme;
     p.medium = fake_medium;
     p.wifi = fake_wifi;
+    p.recovery = fake_recovery_clean;
     lw_diag_providers(&p);
     lw_diag_note_error("none", 0);
     lw_diag_report_t r = lw_diag_report();
@@ -291,6 +350,7 @@ static void test_json_roundtrip(void)
     p.theme = fake_theme;
     p.medium = fake_medium;
     p.wifi = fake_wifi;
+    p.recovery = fake_recovery_clean;
     lw_diag_providers(&p);
     lw_diag_note_error("bad \"frame\" \\ path", 99);
     lw_diag_report_t r = lw_diag_report();
@@ -380,6 +440,8 @@ int main(void)
     test_lv_unavailable_is_reported();
     test_lv_provider_refuses();
     test_wifi_failure_reason();
+    test_recovery_degraded_is_reported();
+    test_recovery_without_provider();
     test_text_block();
     test_text_truncation();
     test_json_roundtrip();

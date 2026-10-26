@@ -209,7 +209,7 @@ DIAG COLLECTOR SELFTEST PASSED
    60 ms，理论上会被打断；解析器按整行匹配，被打断时会抛错而不是静默丢弃）。
 7. 周期日志（`diaglog` 配置）在板上的实际节奏。
 
-板端验证步骤写在 `reports/backend-sprint/06-BOARD_TEST.md` 的"诊断"一节。
+板端验证步骤写在 `reports/backend-sprint/TEST_RESULTS.md` 的"诊断"一节。
 
 ---
 

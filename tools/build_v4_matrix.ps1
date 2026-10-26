@@ -12,7 +12,11 @@
 # SPDX-License-Identifier: MIT
 [CmdletBinding()]
 param(
-    [string[]]$Configs = @('os', 'legacy', 'noaudio', 'diag-a', 'diag-b', 'diag-c', 'nocard', 'wifi'),
+    [string[]]$Configs = @('os', 'legacy', 'noaudio', 'diag-a', 'diag-b', 'diag-c', 'nocard', 'wifi', 'diag-e'),
+    # Where the machine-readable result goes. The V4.1 delivery report lives at
+    # reports/integration-v4/build_matrix.json and is NOT rewritten by default:
+    # a later sprint must not silently replace the artifact that was shipped.
+    [string]$Report = 'reports\backend-sprint\build_matrix.json',
     [switch]$KeepGoing
 )
 
@@ -20,7 +24,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $fw = Join-Path $root 'firmware'
 $logDir = Join-Path $root 'reports\logs\v41'
-$reportPath = Join-Path $root 'reports\integration-v4\build_matrix.json'
+$reportPath = if ([System.IO.Path]::IsPathRooted($Report)) { $Report } else { Join-Path $root $Report }
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $reportPath) | Out-Null
 
@@ -36,6 +40,7 @@ $matrix = @{
     'diag-c'  = @{ fragment = ';sdkconfig.extra.diag-c';  dir = 'diag-c';  wifi = $false }
     'nocard'  = @{ fragment = ';sdkconfig.extra.nocard';  dir = 'nocard';  wifi = $false }
     'wifi'    = @{ fragment = ';sdkconfig.extra.wifi';    dir = 'wifi';    wifi = $true  }
+    'diag-e'  = @{ fragment = ';sdkconfig.extra.diag-e';  dir = 'diag-e';  wifi = $false }
 }
 
 $base = 'sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os'

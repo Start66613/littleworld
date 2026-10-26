@@ -17,3 +17,6 @@
 *.json text eol=lf
 *.ps1  text eol=lf
 *.py   text eol=lf
+# Content files are byte-counted against a 32 KB limit and the device reads them
+# as-is, so a CRLF checkout would change the size the parser sees. Keep them LF.
+*.lwcx text eol=lf

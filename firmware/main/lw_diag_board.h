@@ -31,6 +31,11 @@ void lw_diag_board_bind(lw_system_t *system, lw_services_t *services);
  * the services exist (i.e. at the end of the boot path), on the LVGL task. */
 void lw_diag_board_init(void);
 
+/* Hands the recovery verdict to the diagnostics. lw_boot.c owns the RTC record
+ * and the reset reason; this module only repeats the sentence, so a console
+ * `diag` from the field can show why the board is in safe mode. */
+void lw_diag_board_recovery(bool safe_mode, const char *text);
+
 /* True when board wiring is in place, so a console command can decide between
  * the full report and a bare allocator snapshot. */
 bool lw_diag_board_ready(void);

@@ -1,0 +1,4 @@
+# Diagnostic E: fault injection compiled in. This is a test-only image: it is
+# never flashed as the shipping build, and the points it adds can make the
+# firmware fail on purpose from the console.
+CONFIG_LW_FAULT_INJECT=y

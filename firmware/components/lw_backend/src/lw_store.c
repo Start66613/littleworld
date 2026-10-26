@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "lw/lw_state.h"
+#include "lw_fault.h"
 
 static uint16_t read_u16(const uint8_t *p)
 {
@@ -124,6 +125,11 @@ lw_store_status_t lw_store_load(const lw_store_io_t *io, uint8_t kind, uint8_t v
     }
     uint8_t raw[LW_STORE_MAX_RECORD];
     size_t raw_length = 0;
+    /* Injected transport failure. It reports the same thing a dead NVS reports,
+     * so the caller's fallback is exercised, not a special test branch. */
+    if (lw_fault_should_fail(LW_FAULT_STORE_READ)) {
+        return LW_STORE_MISSING;
+    }
     if (!io->read(io->context, raw, sizeof(raw), &raw_length)) {
         return LW_STORE_MISSING;
     }
@@ -146,6 +152,12 @@ lw_store_status_t lw_store_save(const lw_store_io_t *io, uint8_t kind, uint8_t v
     size_t raw_length = 0;
     if (!lw_store_encode(kind, version, payload, length, raw, sizeof(raw), &raw_length)) {
         return LW_STORE_BAD_LENGTH;
+    }
+    /* Injected write failure. The transport is never called, which is what a
+     * full or write-protected partition looks like from here: the old record
+     * must still be intact afterwards. */
+    if (lw_fault_should_fail(LW_FAULT_STORE_WRITE)) {
+        return LW_STORE_IO_ERROR;
     }
     if (!io->write(io->context, raw, raw_length)) {
         return LW_STORE_IO_ERROR;

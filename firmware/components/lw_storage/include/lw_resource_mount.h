@@ -21,6 +21,12 @@ bool lw_resource_mount(void);
 /* Whether a medium was successfully joined (independent of payload validity). */
 bool lw_resource_medium_mounted(void);
 
+/* Runtime override: behave exactly as if no card were inserted, taking the same
+ * branch a real mount failure takes. Used by the boot-loop recovery path, which
+ * must rule out the card as a crash cause before retrying the full boot. Set it
+ * before the first lw_resource_mount() call; this is not a way to unmount. */
+void lw_resource_force_no_medium(bool forced);
+
 /* Root of the always-present embedded fallback clip set. */
 const char *lw_resource_embedded_root(void);
 
