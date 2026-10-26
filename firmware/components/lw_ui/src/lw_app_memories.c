@@ -15,6 +15,7 @@
 #include "lw_os_design.h"
 #include "lw_polish.h"
 #include "lw_os.h"
+#include "lw_skin.h"
 LV_FONT_DECLARE(lw_font_88);
 #include "lw/lw_memories.h"
 #include "lw/lw_time.h"
@@ -258,22 +259,24 @@ static void memory_clicked(lv_event_t *event)
     s_detail_overlay=overlay;
     lw_os_scene_focus(true);
 
-    lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
-    if (lw_shell_host_active()) lw_polish_paper(card,true);
+    bool modern=lw_shell_host_active() && lw_assets_find("v43skin.atlas");
+    lv_obj_t *card = lw_card(overlay, 0, 0, modern ? 528 : 560, modern ? 282 : 380);
+    if (lw_shell_host_active() && !modern) lw_polish_paper(card,true);
     lv_obj_center(card);
-    bool book=lw_shell_host_active() && lw_polish_art(card,1,8,14);
+    bool book=modern ? lw_skin_place(card,SK_BOOK,24,20)!=NULL : lw_shell_host_active() && lw_polish_art(card,1,8,14);
     if (book) {lv_obj_set_style_bg_opa(card,0,0);lv_obj_set_style_border_width(card,0,0);lv_obj_set_style_shadow_opa(card,0,0);}
     lw_os_motion(card,LW_MOVE_PAPER);
 
-    lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, book ? 92 : 32, book ? 60 : 28);
+    lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, modern ? 112 : book ? 92 : 32, modern ? 52 : book ? 60 : 28);
     lv_label_set_text_fmt(date, "%04d-%02d-%02d", memory->date.year, memory->date.month, memory->date.day);
-    lv_obj_t *title=lw_text(card,memory->title,book ? &lw_font_22 : &lw_font_28,palette->text,book ? 92 : 32,book ? 104 : 58); lv_obj_set_size(title,book ? 152 : 496,book ? 66 : 44); lv_label_set_long_mode(title,LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_t *body=lw_os_box(card,book ? 310 : 32,book ? 60 : 110,book ? 180 : 496,book ? 176 : 180,0,0,0); lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE); lv_obj_set_scroll_dir(body,LV_DIR_VER); lv_obj_set_scrollbar_mode(body,LV_SCROLLBAR_MODE_AUTO);
-    lw_text_wrap(body,memory->body,book ? &lw_font_18 : &lw_font_22,palette->text,0,0,book ? 160 : 476);
-    lw_text_wrap(card, "暂无配图", &lw_font_18, palette->dim, book ? 92 : 32, book ? 206 : 300,book ? 152 : 390);
+    lv_obj_t *title=lw_text(card,memory->title,book ? &lw_font_22 : &lw_font_28,palette->text,modern ? 102 : book ? 92 : 32,modern ? 90 : book ? 104 : 58); lv_obj_set_size(title,book ? 152 : 496,book ? 66 : 44); lv_label_set_long_mode(title,LV_LABEL_LONG_MODE_DOTS);
+    lv_obj_t *body=lw_os_box(card,modern ? 306 : book ? 310 : 32,modern ? 48 : book ? 60 : 110,modern ? 154 : book ? 180 : 496,modern ? 132 : book ? 176 : 180,0,0,0); lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE); lv_obj_set_scroll_dir(body,LV_DIR_VER); lv_obj_set_scrollbar_mode(body,LV_SCROLLBAR_MODE_AUTO);
+    lw_text_wrap(body,memory->body,book ? &lw_font_18 : &lw_font_22,palette->text,0,0,modern ? 150 : book ? 160 : 476);
+    if(!modern)lw_text_wrap(card, "暂无配图", &lw_font_18, palette->dim,book ? 92 : 32,book ? 206 : 300,book ? 152 : 390);
 
-    lv_obj_t *close = lw_button(card, "收起", 130, 46, palette->accent, 0xFFFFFF, &lw_font_18);
-    lv_obj_align(close, LV_ALIGN_BOTTOM_RIGHT, book ? -68 : -28, book ? -48 : -24);
+    lv_obj_t *close = lw_button(card, "收起", modern ? 80 : 130, modern ? 48 : 46, palette->accent, modern ? 0x75595c : 0xFFFFFF, &lw_font_18);
+    if(modern){lw_skin_button(close,SK_CLOSE,SK_CLOSE,SK_CLOSE);lw_skin_place(card,SK_BOOKMARK,257,196);}
+    lv_obj_align(close, LV_ALIGN_BOTTOM_RIGHT, modern ? -38 : book ? -68 : -28, modern ? -8 : book ? -48 : -24);
     lv_obj_add_event_cb(close, close_overlay_cb, LV_EVENT_CLICKED, overlay);
 }
 

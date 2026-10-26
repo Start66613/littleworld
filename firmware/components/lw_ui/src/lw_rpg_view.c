@@ -5,13 +5,14 @@
 #include "lw_theme.h"
 #include "lw_polish.h"
 #include "lw_os.h"
+#include "lw_skin.h"
 #include "lw_visual_assets.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 struct lw_rpg_view {
     lw_rpg_state_t state; lw_rpg_view_host_t host; const lw_actor_art_t *residents;
-    lv_obj_t *root,*map,*actor[2],*dialog,*status,*progress,*action,*marker,*spots[3],*badges[3];
+    lv_obj_t *root,*map,*actor[2],*dialog,*status,*progress,*action,*action_label,*marker,*spots[3],*badges[3];
     lv_timer_t *timer; uint32_t last,reward_seen; unsigned theme;
     bool suspended,dirty; int pending,last_progress; uint32_t marker_ms;
     int actor_x[2],actor_y[2];
@@ -54,8 +55,8 @@ static void refresh(lw_rpg_view_t *v)
         lw_rpg_tile_t t=v->state.actors[i].pos; int x,y; lw_rpg_view_tile_point(t.x,t.y,&x,&y);
         if (i) {
             int px,py;lw_rpg_view_tile_point(v->state.actors[0].pos.x,v->state.actors[0].pos.y,&px,&py);
-            if (abs(x-px)<104 && abs(y-py)<44) {
-                int right=px+112,left=px-112;
+            if (abs(x-px)<118 && abs(y-py)<44) {
+                int right=px+128,left=px-128;
                 if (lw_rpg_walkable(&v->room,(right-64)/56,(y-299)/22)) x=right;
                 else if (lw_rpg_walkable(&v->room,(left-64)/56,(y-299)/22)) x=left;
             }
@@ -84,7 +85,7 @@ static void refresh(lw_rpg_view_t *v)
         if (v->last_progress>=0) v->reaction_ms=1600;
         v->last_progress=progress;
     }
-    lv_label_set_text(lv_obj_get_child(v->action,0),lw_rpg_hotspot_near(&v->state)>=0 ? "查看身边物品" : "先走到物品旁边");
+    lv_label_set_text(v->action_label,lw_rpg_hotspot_near(&v->state)>=0 ? "查看身边物品" : "先走到物品旁边");
 }
 static void walk_to_spot(lw_rpg_view_t *v,unsigned i)
 {
@@ -217,14 +218,15 @@ lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *hos
     v->art=resident_clip(v,0,"idle") && resident_clip(v,1,"idle");
     for (unsigned i=0;i<2;i++) {
         const lw_clip_t *clip=resident_clip(v,i,"idle");
-        if (clip) { v->players[i]=lw_sprite_create(v->map,0,0,256); if (v->players[i]) { lw_sprite_set_external_clock(v->players[i],true); lw_sprite_set_pixel_mode(v->players[i]); lw_sprite_play(v->players[i],clip); v->clips[i]=clip; v->actor[i]=lw_sprite_object(v->players[i]); } }
+        if (clip) { v->players[i]=lw_sprite_create(v->map,0,0,288); if (v->players[i]) { lw_sprite_set_external_clock(v->players[i],true); lw_sprite_set_pixel_mode(v->players[i]); lw_sprite_play(v->players[i],clip); v->clips[i]=clip; v->actor[i]=lw_sprite_object(v->players[i]); } }
         if (!v->actor[i]) v->actor[i]=lw_os_label(v->map,i ? "千千\n资源待载" : "男方\n资源待载",&lw_font_18,0,0,80,colors(v)->text);
     }
-    lv_obj_t *side=lw_os_box(v->root,684,65,314,126,0xf5e4c8,8,210);lw_polish_paper(side,false);lw_os_box(side,135,-4,42,10,0xc7a17d,2,140);
-    v->progress=lw_os_label(side,"",&lw_font_18,18,14,184,colors(v)->text);
-    for (unsigned i=0;i<3;i++) { v->badges[i]=lw_os_box(side,18+(int)i*50,75,38,38,colors(v)->soft,12,255); lw_os_icon(v->badges[i],i==0 ? OS_I_ALBUM : i==1 ? OS_I_MAIL : OS_I_LEAF,5,5,28,colors(v)->deep); }
-    button(v,side,"任务本",195,16,104,ACT_JOURNAL);
+    lv_obj_t *side=lw_os_box(v->root,744,65,254,112,0xf5e4c8,8,210);if(lw_skin_panel(side,SK_CC_PANEL,254,112,12))lv_obj_set_style_bg_opa(side,0,0);
+    v->progress=lw_os_label(side,"",&lw_font_18,16,12,126,colors(v)->text);
+    for (unsigned i=0;i<3;i++) { v->badges[i]=lw_os_box(side,16+(int)i*38,74,28,28,colors(v)->soft,8,255); lw_os_icon(v->badges[i],i==0 ? OS_I_ALBUM : i==1 ? OS_I_MAIL : OS_I_LEAF,4,4,20,colors(v)->deep); }
+    lv_obj_t *journal=button(v,side,"任务本",140,14,100,ACT_JOURNAL);lw_skin_button(journal,SK_ACTION,SK_SELECTED,SK_PRESSED);
     v->action=button(v,v->root,"查看身边物品",760,432,238,ACT_INTERACT);
+    v->action_label=lv_obj_get_child(v->action,0);lw_skin_button(v->action,SK_ACTION,SK_SELECTED,SK_PRESSED);
     lv_obj_t *note=lw_os_box(v->root,26,444,708,38,0xf5e4c8,8,0);
     v->status=lw_os_label(note,"示例故事 · 照片盒 / 信封 / 绿植",&lw_font_18,12,8,684,0x75595c);
     v->last=lv_tick_get(); v->timer=lv_timer_create(tick,20,v);

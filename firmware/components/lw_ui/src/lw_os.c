@@ -9,6 +9,7 @@
 #include "lw_visual_assets.h"
 #include "lw_polish.h"
 #include "lw_ambience.h"
+#include "lw_skin.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -178,12 +179,13 @@ static void gesture(lv_event_t *event)
 static void build_status(void)
 {
     const lw_os_palette_t *c=palette();
-    lv_obj_t *bar=lw_os_box(s->root,0,0,1024,44,0xfff0dc,0,108); bind_pull(bar);
-    s->clock=lw_os_label(s->root,"",&lw_font_18,28,12,400,0x654c4c);
-    lv_obj_t *entry=button(s->root,"",752,2,242,44,OC_CONTROL,false); lv_obj_set_style_bg_opa(entry,0,0);
-    s->net_icon=lw_os_icon(entry,OS_I_WIFI,7,7,28,c->text); s->volume_icon=lw_os_icon(entry,OS_I_VOLUME,48,7,28,c->text);
-    s->mute_badge=lw_os_label(entry,"静",&lw_font_18,52,10,30,c->muted);
-    lw_os_icon(entry,OS_I_HEART,102,12,22,0xa57577);
+    lv_obj_t *bar=lw_os_box(s->root,0,0,1024,44,0xfff0dc,0,0); bind_pull(bar);
+    lw_skin_place(s->root,SK_TIME,18,0);lw_skin_place(s->root,SK_STATUS_GROUP,816,7);
+    s->clock=lw_os_label(s->root,"",&lw_font_18,44,12,300,0x654c4c);
+    lv_obj_t *entry=button(s->root,"",900,2,112,44,OC_CONTROL,false);lv_obj_set_style_bg_opa(entry,0,0);lv_obj_set_style_border_width(entry,0,0);
+    s->net_icon=lw_os_icon(entry,OS_I_WIFI,8,8,24,c->text); s->volume_icon=lw_os_icon(entry,OS_I_VOLUME,48,8,24,c->text);
+    s->mute_badge=lw_os_label(entry,"静",&lw_font_18,50,8,28,c->muted);
+    lw_os_icon(entry,OS_I_HEART,88,8,24,0xa57577);
     lv_obj_add_flag(entry,LV_OBJ_FLAG_GESTURE_BUBBLE); lv_obj_add_event_cb(entry,gesture,LV_EVENT_GESTURE,NULL);
     bind_pull(entry);
 }
@@ -191,8 +193,8 @@ static void dock_set(bool open)
 {
     if(!s || !s->dock || s->dock_expanded==open) return;
     s->dock_expanded=open;s->dock_idle=0;
-    lw_os_motion_slide(s->dock,lv_obj_get_style_translate_y(s->dock,0),open ? 0 : 82,300,0,open);
-    lv_obj_set_style_opa(s->dock_handle,open ? 100 : 220,0);
+    lw_os_motion_slide(s->dock,lv_obj_get_style_translate_y(s->dock,0),open ? 0 : 94,300,0,open);
+    lv_obj_set_style_opa(s->dock_handle,open ? 0 : 240,0);
     if(open)lv_obj_remove_flag(s->dock_handle,LV_OBJ_FLAG_CLICKABLE);else lv_obj_add_flag(s->dock_handle,LV_OBJ_FLAG_CLICKABLE);
 }
 bool lw_os_dock_expanded(void){return s && s->dock_expanded;}
@@ -205,20 +207,21 @@ static void dock_touch(lv_event_t *e)
 }
 static void build_dock(void)
 {
-    const lw_os_palette_t *c=palette(); lv_obj_t *dock=surface(s->root,226,520,572,66,18);s->dock=dock;s->dock_expanded=true;s->dock_idle=0;
-    lv_obj_set_style_bg_opa(dock,186,0);lv_obj_set_style_border_opa(dock,55,0);lv_obj_set_style_shadow_opa(dock,10,0);
+    const lw_os_palette_t *c=palette(); lv_obj_t *dock=surface(s->root,256,515,512,75,0);s->dock=dock;s->dock_expanded=true;s->dock_idle=0;
+    if(lw_skin_place(dock,SK_DOCK,0,0)){lv_obj_set_style_bg_opa(dock,0,0);lv_obj_set_style_border_width(dock,0,0);lv_obj_set_style_shadow_width(dock,0,0);}
     static const lw_os_icon_t icons[]={OS_I_HOME,OS_I_ALBUM,OS_I_HEART,OS_I_MUSIC,OS_I_GAME,OS_I_SETTINGS};
     static const char *const names[]={"小世界","相册","回忆","音乐","游戏","设置"};
     static const lw_os_control_t ids[]={OC_WORLD,OC_ALBUM,OC_MEMORIES,OC_MUSIC,OC_GAMES,OC_SETTINGS};
     for (int i=0;i<6;i++) {
-        lv_obj_t *item=button(dock,"",10+i*94,2,84,60,ids[i],false);lv_obj_set_style_bg_opa(item,0,0);lv_obj_set_style_border_width(item,0,0);
-        lw_os_icon(item,icons[i],28,4,28,0x75595c);
-        lw_os_label(item,names[i],&lw_font_18,0,34,84,0x654c4c);lv_obj_set_style_text_align(lv_obj_get_child(item,-1),LV_TEXT_ALIGN_CENTER,0);
-        if (((s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG) && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && s->page<=OS_GAMES && (int)s->page-OS_ALBUM+1==i)) lw_os_box(item,32,56,20,2,c->accent,1,200);
+        lv_obj_t *item=button(dock,"",14+i*82,0,76,52,ids[i],false);lv_obj_set_style_bg_opa(item,0,0);lv_obj_set_style_border_width(item,0,0);
+        lw_os_icon(item,icons[i],30,3,16,0x75595c);
+        lw_os_label(item,names[i],&lw_font_18,0,21,76,0x654c4c);lv_obj_set_style_text_align(lv_obj_get_child(item,-1),LV_TEXT_ALIGN_CENTER,0);
+        if (((s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG) && i==0)||(s->page==OS_SETTINGS && i==5)||(s->page>=OS_ALBUM && s->page<=OS_GAMES && (int)s->page-OS_ALBUM+1==i)) lw_os_box(item,28,43,20,2,c->accent,1,200);
     }
     s->dock_handle=lw_os_box(s->root,452,556,120,44,0,0,0);lv_obj_add_flag(s->dock_handle,LV_OBJ_FLAG_GESTURE_BUBBLE);
-    lw_os_box(s->dock_handle,34,34,52,4,0x956f69,2,180);
+    if(lw_skin_place(s->dock_handle,SK_COLLAPSED,28,0)){lv_obj_t *arrow=lw_os_icon(s->dock_handle,OS_I_BACK,47,10,20,0x8f6c64);lv_obj_set_style_transform_pivot_x(arrow,10,0);lv_obj_set_style_transform_pivot_y(arrow,10,0);lv_obj_set_style_transform_rotation(arrow,900,0);}else lw_os_box(s->dock_handle,34,34,52,4,0x956f69,2,180);
     lv_obj_add_event_cb(s->dock_handle,dock_touch,LV_EVENT_CLICKED,NULL);lv_obj_add_event_cb(s->dock_handle,dock_touch,LV_EVENT_GESTURE,NULL);register_control(s->dock_handle,OC_DOCK_TOGGLE);
+    if(s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG){dock_set(false);lw_os_motion_cancel(dock);lv_obj_set_style_translate_y(dock,94,0);}else lv_obj_set_style_opa(s->dock_handle,0,0);
 }
 static const lw_clip_t *art_clip(unsigned actor,const char *name)
 { for (unsigned j=0;j<s->art[actor].count;j++) if (!strcmp(s->art[actor].clips[j].name,name)) return &s->art[actor].clips[j].clip; return NULL; }
@@ -232,11 +235,11 @@ static void actors(void)
     if (!s->art) return;
     for (unsigned i=0;i<2;i++) {
         s->shadows[i]=lw_os_box(s->content,0,0,76,12,0x67505a,LV_RADIUS_CIRCLE,32);
-        s->sprites[i]=lw_sprite_create(s->content,0,0,256);
+        s->sprites[i]=lw_sprite_create(s->content,0,0,288);
         if (!s->sprites[i]) continue;
         lw_sprite_set_pixel_mode(s->sprites[i]); lw_sprite_set_external_clock(s->sprites[i],true);
         s->clips[i]=art_clip(i,"idle"); if (s->clips[i]) lw_sprite_play(s->sprites[i],s->clips[i]);
-        lv_obj_t *hit=lw_os_box(s->content,(int)s->duo.actors[i].x-55,(int)s->duo.actors[i].y-210,110,214,0,0,0);
+        lv_obj_t *hit=lw_os_box(s->content,(int)s->duo.actors[i].x-62,(int)s->duo.actors[i].y-238,124,242,0,0,0);
         lv_obj_add_flag(hit,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(hit,select_actor,LV_EVENT_CLICKED,(void *)(uintptr_t)i);
         /* The sprite's own position is updated below; the hit box follows it in tick. */
         lv_obj_set_user_data(lw_sprite_object(s->sprites[i]),hit);
@@ -262,7 +265,7 @@ static void update_actors(uint32_t dt)
         bool lying=a->motion==LW_ACTOR_SLEEP; int shadow_width=lying ? 180 : 76;
         lv_obj_set_pos(s->shadows[i],x-shadow_width/2,y-5); lv_obj_set_width(s->shadows[i],shadow_width);
         lv_obj_t *hit=lv_obj_get_user_data(lw_sprite_object(s->sprites[i]));
-        if (hit) { lv_obj_set_pos(hit,x-(lying ? 112 : 55),y-(lying ? 100 : 210)); lv_obj_set_size(hit,lying ? 224 : 110,lying ? 100 : 214); }
+        if (hit) { lv_obj_set_pos(hit,x-(lying ? 126 : 62),y-(lying ? 112 : 238)); lv_obj_set_size(hit,lying ? 252 : 124,lying ? 112 : 242); }
     }
     unsigned near=s->duo.actors[0].y>s->duo.actors[1].y ? 0 : 1;
     if (s->front_actor!=near) { lv_obj_move_to_index(lw_sprite_object(s->sprites[1-near]),-1); lv_obj_move_to_index(lw_sprite_object(s->sprites[near]),-1); s->front_actor=near; }
@@ -278,7 +281,8 @@ static void build_desktop(bool world)
         lv_obj_t *card=button(s->content,"",398,72,240,72,OC_ANNIVERSARY,false);lv_obj_set_style_bg_color(card,lv_color_hex(0xffefd0),0);lv_obj_set_style_bg_opa(card,220,0);
         lw_os_box(card,106,-4,28,10,0xc9a991,2,180);lw_os_label(card,"一起走过",&lw_font_18,18,10,100,0x896457);
         char days_text[40];snprintf(days_text,sizeof(days_text),"%d 天",days<1 ? 1 : days);lw_os_label(card,days_text,&lw_font_28,105,26,128,0x865a63);
-        lv_obj_t *letter=button(s->content,"",890,70,84,66,OC_ENVELOPE,false);lv_obj_set_style_bg_opa(letter,160,0);lw_os_icon(letter,OS_I_MAIL,28,5,28,0x97666c);lw_os_label(letter,"今日一封",&lw_font_18,6,36,78,0x75595c);
+        lw_skin_button(card,SK_CC_TILE,SK_CC_SELECTED,SK_CC_PRESSED);
+        lv_obj_t *letter=button(s->content,"",890,70,84,66,OC_ENVELOPE,false);lv_obj_set_style_bg_opa(letter,160,0);lw_os_icon(letter,OS_I_MAIL,28,5,28,0x97666c);lw_os_label(letter,"读信",&lw_font_18,24,36,54,0x75595c);lw_skin_button(letter,SK_CC_TILE,SK_CC_SELECTED,SK_CC_PRESSED);
         }
         if (world) { button(s->content,"见面打招呼",28,412,196,52,OC_GREET,true); button(s->content,"一起读封信",28,346,196,52,OC_LETTER,false); button(s->content,"一起休息",28,280,196,52,OC_REST,false); button(s->content,"照顾宠物",760,412,212,52,OC_PET,false); button(s->content,"小冒险",760,346,212,52,OC_RPG,true); }
         lv_obj_t *furniture=button(s->content,"",22,128,230,136,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
@@ -413,12 +417,13 @@ static void render(void)
         else if (s->page==OS_RPG) { s->rpg=lw_rpg_view_create(s->content,&rpg_storage,s->system->prefs.theme,s->art); if (!s->rpg) lw_os_notify("冒险房间暂不可用"); }
         else build_legacy();
     }
-    build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,700,2,44,OC_HOME);
+    build_status(); build_dock(); if (s->page!=OS_DESKTOP){lv_obj_t *back=icon_button(s->root,OS_I_BACK,840,2,44,OC_HOME);lv_obj_set_style_bg_opa(back,0,0);lv_obj_set_style_border_width(back,0,0);}
     refresh(); update_actors(0); lw_os_motion(s->content,s->page==OS_THEMES ? LW_MOVE_THEME : s->reverse_page ? LW_MOVE_RETURN : LW_MOVE_PAGE); s->reverse_page=false;
 }
 static void build_control(void)
 {
     const lw_os_palette_t *c=palette(); lv_obj_t *p=surface(s->over,484,56,500,486,32);
+    if(lw_skin_panel(p,SK_CC_PANEL,500,486,16)){lv_obj_set_style_bg_opa(p,0,0);lv_obj_set_style_border_width(p,0,0);lv_obj_set_style_shadow_width(p,0,0);}
     s->control_panel=p; lv_obj_t *handle=lw_os_box(p,174,5,152,4,c->line,2,255); (void)handle;
     lv_obj_t *drag_header=lw_os_box(p,0,0,420,76,0,0,0); bind_pull(drag_header);
     lw_os_label(p,"控制中心",&lw_font_28,24,14,360,c->text); icon_button(p,OS_I_CLOSE,430,14,46,OC_CLOSE);
@@ -430,18 +435,22 @@ static void build_control(void)
     lv_obj_t *lock=icon_button(p,OS_I_LOCK,408,78,66,OC_LOCK); lv_obj_set_size(lock,66,92); lw_os_label(lock,"锁屏",&lw_font_18,13,55,54,c->muted);
     for (unsigned i=0;i<2;i++) {
         lv_obj_t *tile=lw_os_box(p,24+(int)i*124,188,108,196,c->soft,24,255);
-        lw_os_icon(tile,i ? OS_I_VOLUME : OS_I_SUN,36,13,36,c->deep);
-        slider(tile,42,65,24,86,i ? OC_VOLUME : OC_BRIGHTNESS);
+        if(lw_skin_panel(tile,SK_CC_PANEL,108,196,10))lv_obj_set_style_bg_opa(tile,0,0);
+        lw_os_icon(tile,i ? OS_I_VOLUME : OS_I_SUN,42,12,24,c->deep);
+        lv_obj_t *sl=slider(tile,44,58,20,100,i ? OC_VOLUME : OC_BRIGHTNESS);lw_skin_slider(sl);
         register_control(lw_os_label(tile,"",&lw_font_18,0,169,108,c->text),i ? OC_VOLUME_VALUE : OC_BRIGHT_VALUE);
         lv_obj_set_style_text_align(lv_obj_get_child(tile,-1),LV_TEXT_ALIGN_CENTER,0);
     }
     lv_obj_t *music=button(p,"",272,188,202,112,OC_MUSIC,false);
     lw_os_icon(music,OS_I_MUSIC,16,18,32,c->deep); lw_os_label(music,"音乐盒",&lw_font_18,58,22,126,c->text);
-    lw_os_label(music,capabilities.audio==LW_SERVICE_READY ? "打开播放页面" : "声音尚未接入",&lw_font_18,16,72,184,c->muted);
+    lw_os_label(music,capabilities.audio==LW_SERVICE_READY ? "打开播放页面" : "声音尚未接入",&lw_font_18,32,66,158,c->muted);
     button(p,s->system->prefs.muted ? "取消静音" : "静音",272,316,94,68,OC_MUTE,false);
     button(p,"换个主题",380,316,94,68,OC_THEMES,false);
     button(p,"打开设置",24,404,286,58,OC_SETTINGS,true); button(p,"回桌面",326,404,148,58,OC_HOME,false);
-    if (!s->pull_active) { lw_os_motion_slide(p,-542,0,320,0,true); lw_os_motion_dim(s->over,0,105,280); for (unsigned i=0;i<lv_obj_get_child_count(p);i++) lw_os_motion_stagger(lv_obj_get_child(p,i),i%5); }
+    static const lw_os_control_t skinned[]={OC_WIFI,OC_DND,OC_LOCK,OC_MUSIC,OC_MUTE,OC_THEMES,OC_SETTINGS,OC_HOME};
+    for(unsigned i=0;i<8;i++){lv_obj_t *o=s->over_controls[skinned[i]];if(o)lw_skin_button(o,SK_CC_TILE,SK_CC_SELECTED,SK_CC_PRESSED);}
+    lw_skin_select(moon,s->system->prefs.dnd);lw_skin_select(s->over_controls[OC_MUTE],s->system->prefs.muted);
+    if (!s->pull_active) { lw_os_motion_slide(p,-542,0,320,0,true); lw_os_motion_dim(s->over,0,105,280); for (unsigned i=1;i<lv_obj_get_child_count(p);i++) lw_os_motion_stagger(lv_obj_get_child(p,i),i%5); }
 }
 static void pull_touch(lv_event_t *e)
 {
@@ -463,7 +472,7 @@ static void pull_touch(lv_event_t *e)
         bool open=s->pull_opening ? (s->pull_distance>112 || (s->pull_distance>44 && s->pull_velocity>650)) : !(s->pull_distance<-72 || (s->pull_distance<-28 && s->pull_velocity<-650));
         if (s->pull_moved) s->suppress_control_until=lv_tick_get()+180;
         s->pull_active=false;
-        if (s->pull_moved && s->control_panel) { if (open) { lw_os_motion_slide(s->control_panel,lv_obj_get_style_translate_y(s->control_panel,0),0,260,0,true); lw_os_motion_dim(s->over,lv_obj_get_style_bg_opa(s->over,0),105,260); for (unsigned i=0;i<lv_obj_get_child_count(s->control_panel);i++) lw_os_motion_stagger(lv_obj_get_child(s->control_panel,i),i%5); } else dismiss_overlay(); }
+        if (s->pull_moved && s->control_panel) { if (open) { lw_os_motion_slide(s->control_panel,lv_obj_get_style_translate_y(s->control_panel,0),0,260,0,true); lw_os_motion_dim(s->over,lv_obj_get_style_bg_opa(s->over,0),105,260); for (unsigned i=1;i<lv_obj_get_child_count(s->control_panel);i++) lw_os_motion_stagger(lv_obj_get_child(s->control_panel,i),i%5); } else dismiss_overlay(); }
     }
 }
 static void build_wifi(void)
@@ -516,7 +525,7 @@ static void build_lock(void)
     lw_os_icon(s->over,OS_I_LOCK,54,103,28,c->muted);
     lw_os_label(s->over,"向上轻扫，或点下方回家",&lw_font_18,50,401,374,c->muted);
     button(s->over,"轻触，回到小世界",48,472,376,60,OC_UNLOCK,true);
-    if (s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,256); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
+    if (s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,288); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
     lw_os_motion(t,LW_MOVE_LOCK);
     if (s->over_controls[OC_LOCK_DATE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_DATE],2);
     if (s->over_controls[OC_LOCK_LOVE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_LOVE],3);
@@ -592,12 +601,13 @@ static void refresh(void)
     }
     for (unsigned layer=0;layer<2;layer++) {
         lv_obj_t **controls=layer ? s->over_controls : s->base_controls;
-        if (controls[OC_BRIGHTNESS]) lv_slider_set_value(controls[OC_BRIGHTNESS],s->system->prefs.brightness,LV_ANIM_OFF);
-        if (controls[OC_VOLUME]) lv_slider_set_value(controls[OC_VOLUME],s->system->prefs.volume,LV_ANIM_OFF);
+        if (controls[OC_BRIGHTNESS]) {lv_slider_set_value(controls[OC_BRIGHTNESS],s->system->prefs.brightness,LV_ANIM_OFF);lv_obj_send_event(controls[OC_BRIGHTNESS],LV_EVENT_REFRESH,NULL);}
+        if (controls[OC_VOLUME]) {lv_slider_set_value(controls[OC_VOLUME],s->system->prefs.volume,LV_ANIM_OFF);lv_obj_send_event(controls[OC_VOLUME],LV_EVENT_REFRESH,NULL);}
         if (controls[OC_BRIGHT_VALUE]) { if (available(OC_BRIGHTNESS)) lv_label_set_text_fmt(controls[OC_BRIGHT_VALUE],"%u%%",s->system->prefs.brightness); else lv_label_set_text(controls[OC_BRIGHT_VALUE],"不可用"); }
         if (controls[OC_VOLUME_VALUE]) { if (available(OC_VOLUME)) lv_label_set_text_fmt(controls[OC_VOLUME_VALUE],"%u%%",s->system->prefs.volume); else lv_label_set_text(controls[OC_VOLUME_VALUE],"不可用"); }
         if (controls[OC_WIFI_STATUS] && s->overlay!=OS_OVER_PASSWORD) lv_label_set_text(controls[OC_WIFI_STATUS],wifi_text());
     }
+    lw_skin_select(s->over_controls[OC_DND],s->system->prefs.dnd);lw_skin_select(s->over_controls[OC_MUTE],s->system->prefs.muted);
     lw_date_t d=lw_today(),status_date=d;struct tm wall_time;if(lw_ambience_localtime(&wall_time))status_date=(lw_date_t){wall_time.tm_year+1900,wall_time.tm_mon+1,wall_time.tm_mday};unsigned minute=lw_ambience_minute();uint32_t now=minute*60;if(s->clock)lv_label_set_text_fmt(s->clock,"%02u:%02u   ·   %d 月 %d 日",minute/60,minute%60,status_date.month,status_date.day);
     if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",(unsigned)(now%86400/3600),(unsigned)(now%3600/60));
     if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,lw_time_is_demo() ? " · 演示日期" : "");
@@ -725,7 +735,7 @@ void lw_os_boot(void)
     for (unsigned i=0;i<8;i++) { lv_obj_t *petal=lw_os_icon(s->boot,OS_I_LEAF,46+(int)i*130,180+(int)(i%3)*90,18+(int)(i%2)*6,palette()->accent); lv_obj_set_style_opa(petal,170,0); lw_os_motion_vector(petal,-22,-72,1450+i*40,i*45); }
     for (unsigned i=0;s->art && i<2;i++) {
         const lw_clip_t *clip=art_clip(i,"idle"); if (!clip) continue;
-        s->boot_sprites[i]=lw_sprite_create(s->boot,(int)s->duo.actors[i].x,(int)s->duo.actors[i].y,256);
+        s->boot_sprites[i]=lw_sprite_create(s->boot,(int)s->duo.actors[i].x,(int)s->duo.actors[i].y,288);
         if (s->boot_sprites[i]) { lw_sprite_set_pixel_mode(s->boot_sprites[i]); lw_sprite_set_external_clock(s->boot_sprites[i],true); lw_sprite_play(s->boot_sprites[i],clip); lw_os_motion_vector(lw_sprite_object(s->boot_sprites[i]),i ? 84 : -84,10,900,300+i*160); }
     }
     lw_os_label(s->boot,"轻触跳过",&lw_font_18,888,24,120,palette()->muted);

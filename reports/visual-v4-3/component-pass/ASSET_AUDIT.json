@@ -1,0 +1,852 @@
+{
+  "checks": 171,
+  "failures": 0,
+  "results": [
+    {
+      "check": "dock inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "time inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "time isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "status-group inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "status-group isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "status-group isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "action inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "action isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "action isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "action isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "selected inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "pressed inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "collapsed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "close isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "bookmark isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "note isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "book isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-panel isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-tile isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-selected isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "cc-pressed isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "slider isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob inside bounded atlas",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "knob isolated atlas region",
+      "passed": true
+    },
+    {
+      "check": "binary alpha edges",
+      "passed": true
+    },
+    {
+      "check": "one atlas below individual-frame limit",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp format",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/couple.seated payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/couple.wave payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/couple.rest payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/dog.idle payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/dog.sleep payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/dogbed.empty payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/dogbed.sleep payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp/dogbed.look payload",
+      "passed": true
+    },
+    {
+      "check": "daily.lwp exact length",
+      "passed": true
+    },
+    {
+      "check": "skin.lwp format",
+      "passed": true
+    },
+    {
+      "check": "skin.lwp/atlas payload",
+      "passed": true
+    },
+    {
+      "check": "skin.lwp exact length",
+      "passed": true
+    },
+    {
+      "check": "actual component charges remain within human-approved remaining budget",
+      "passed": true
+    },
+    {
+      "check": "whole puppy-bed idle stays fixed on one canvas",
+      "passed": true
+    },
+    {
+      "check": "bed loop anchor stable",
+      "passed": true
+    }
+  ],
+  "packs": [
+    {
+      "path": "assets/visual-v4-3/runtime/daily.lwp",
+      "bytes": 18125680,
+      "sha256": "0cc7b372b12279a1409f2d57fbf08377e37710a089d55144f1fce30294ee082b",
+      "canvas": [
+        320,
+        320
+      ],
+      "clips": [
+        {
+          "id": "couple.seated",
+          "frames": 16,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "couple.wave",
+          "frames": 16,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "couple.rest",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "dog.idle",
+          "frames": 8,
+          "anchor": [
+            160,
+            256
+          ]
+        },
+        {
+          "id": "dog.sleep",
+          "frames": 8,
+          "anchor": [
+            160,
+            256
+          ]
+        },
+        {
+          "id": "dogbed.empty",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "dogbed.sleep",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "dogbed.look",
+          "frames": 8,
+          "anchor": [
+            160,
+            274
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/visual-v4-3/runtime/skin.lwp",
+      "bytes": 835708,
+      "sha256": "b25b343973a945be8e24a37fe90d22e1adb7a09f9008b9ea4c3aa07e6c246109",
+      "canvas": [
+        512,
+        544
+      ],
+      "clips": [
+        {
+          "id": "atlas",
+          "frames": 1,
+          "anchor": [
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "component_count": 17,
+  "bed_idle_boxes": [
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ],
+    [
+      8,
+      11,
+      167,
+      102
+    ]
+  ],
+  "actual_component_credits": 115,
+  "pricing_discrepancies": [
+    {
+      "job_id": "job_b98345ef88d44368bb50cfdadb76cc6e",
+      "requested_resolution": "1K",
+      "returned_resolution": "2K",
+      "estimate": 12,
+      "actual": 22,
+      "difference": 10,
+      "status": "no refund assumed; all actual charges retained; no further generation",
+      "sanitized_log_sha256": "353b87281cf2a0e0a8a45852fb124ba8913e17de29699370802c570c64435b02"
+    }
+  ],
+  "user_art_acceptance": "pending; these gates do not certify taste",
+  "board_tested": false
+}

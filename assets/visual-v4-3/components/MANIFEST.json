@@ -1,0 +1,270 @@
+{
+  "atlas_canvas": [
+    512,
+    544
+  ],
+  "atlas_bytes": 835584,
+  "ui": [
+    {
+      "id": "dock",
+      "source": "private/v43-components/flat-dock/Redesign_only_this_single_navigation_component_into_a_very_thin_FLAT_horizontal_blush-linen_ribbon_on_a_narrow_ad06d940/edited.png",
+      "atlas_xywh": [
+        0,
+        0,
+        512,
+        44
+      ],
+      "rotation": 0,
+      "visible_size": [
+        512,
+        42
+      ]
+    },
+    {
+      "id": "time",
+      "source": "assets/visual-v4-3/components/ui/component_009.png",
+      "atlas_xywh": [
+        0,
+        75,
+        316,
+        45
+      ],
+      "rotation": 0,
+      "visible_size": [
+        314,
+        45
+      ]
+    },
+    {
+      "id": "status-group",
+      "source": "assets/visual-v4-3/components/ui/component_005.png",
+      "atlas_xywh": [
+        316,
+        75,
+        196,
+        28
+      ],
+      "rotation": 0,
+      "visible_size": [
+        193,
+        28
+      ]
+    },
+    {
+      "id": "action",
+      "source": "assets/visual-v4-3/components/ui/component_007.png",
+      "atlas_xywh": [
+        0,
+        120,
+        112,
+        44
+      ],
+      "rotation": 0,
+      "visible_size": [
+        112,
+        44
+      ]
+    },
+    {
+      "id": "selected",
+      "source": "assets/visual-v4-3/components/ui/component_006.png",
+      "atlas_xywh": [
+        112,
+        120,
+        112,
+        44
+      ],
+      "rotation": 0,
+      "visible_size": [
+        112,
+        44
+      ]
+    },
+    {
+      "id": "pressed",
+      "source": "assets/visual-v4-3/components/ui/component_008.png",
+      "atlas_xywh": [
+        224,
+        120,
+        112,
+        44
+      ],
+      "rotation": 0,
+      "visible_size": [
+        112,
+        44
+      ]
+    },
+    {
+      "id": "collapsed",
+      "source": "assets/visual-v4-3/components/ui/component_010.png",
+      "atlas_xywh": [
+        336,
+        120,
+        64,
+        44
+      ],
+      "rotation": 90,
+      "visible_size": [
+        64,
+        44
+      ]
+    },
+    {
+      "id": "close",
+      "source": "assets/visual-v4-3/components/ui/component_011.png",
+      "atlas_xywh": [
+        400,
+        120,
+        56,
+        44
+      ],
+      "rotation": 0,
+      "visible_size": [
+        56,
+        44
+      ]
+    },
+    {
+      "id": "bookmark",
+      "source": "assets/visual-v4-3/components/ui/component_004.png",
+      "atlas_xywh": [
+        456,
+        120,
+        20,
+        58
+      ],
+      "rotation": 0,
+      "visible_size": [
+        20,
+        58
+      ]
+    },
+    {
+      "id": "note",
+      "source": "assets/visual-v4-3/components/ui/component_003.png",
+      "atlas_xywh": [
+        0,
+        178,
+        148,
+        136
+      ],
+      "rotation": 0,
+      "visible_size": [
+        148,
+        136
+      ]
+    },
+    {
+      "id": "book",
+      "source": "assets/visual-v4-3/components/ui/component_001.png",
+      "atlas_xywh": [
+        0,
+        314,
+        480,
+        220
+      ],
+      "rotation": 0,
+      "visible_size": [
+        480,
+        219
+      ]
+    },
+    {
+      "id": "cc-panel",
+      "source": "assets/visual-v4-3/components/control/component_001.png",
+      "atlas_xywh": [
+        152,
+        178,
+        128,
+        128
+      ],
+      "rotation": 0,
+      "visible_size": [
+        128,
+        119
+      ]
+    },
+    {
+      "id": "cc-tile",
+      "source": "assets/visual-v4-3/components/control/component_003.png",
+      "atlas_xywh": [
+        284,
+        178,
+        96,
+        48
+      ],
+      "rotation": 0,
+      "visible_size": [
+        96,
+        41
+      ]
+    },
+    {
+      "id": "cc-selected",
+      "source": "assets/visual-v4-3/components/control/component_002.png",
+      "atlas_xywh": [
+        380,
+        178,
+        96,
+        48
+      ],
+      "rotation": 0,
+      "visible_size": [
+        96,
+        41
+      ]
+    },
+    {
+      "id": "cc-pressed",
+      "source": "assets/visual-v4-3/components/control/component_004.png",
+      "atlas_xywh": [
+        284,
+        230,
+        96,
+        48
+      ],
+      "rotation": 0,
+      "visible_size": [
+        96,
+        40
+      ]
+    },
+    {
+      "id": "slider",
+      "source": "assets/visual-v4-3/components/control/component_005.png",
+      "atlas_xywh": [
+        492,
+        178,
+        16,
+        128
+      ],
+      "rotation": 0,
+      "visible_size": [
+        15,
+        128
+      ]
+    },
+    {
+      "id": "knob",
+      "source": "assets/visual-v4-3/components/control/component_006.png",
+      "atlas_xywh": [
+        380,
+        230,
+        32,
+        40
+      ],
+      "rotation": 0,
+      "visible_size": [
+        32,
+        33
+      ]
+    }
+  ],
+  "bed_states": [
+    "empty",
+    "sleep",
+    "look"
+  ],
+  "note": "Meowa components, official alpha segmentation; nearest technical fitting, one shared atlas lease, no baked dynamic labels"
+}

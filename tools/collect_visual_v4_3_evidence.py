@@ -30,6 +30,7 @@ sequences['dock-reveal']=([f'v43-dock-open-{i:02}.png' for i in range(8)],[60]*7
 sequences['home-day-cycle']=([f'v43-home-{n}.png' for n in ('dawn','day','dusk','night','deep-night')],[1400]*5)
 sequences['daily-day-cycle']=([f'v43-daily-{n}.png' for n in ('dawn','day','dusk','night','deep-night')],[1400]*5)
 sequences['storybook']=([f'v43-book-open-{i:02}.png' for i in range(8)]+['28-story-detail.png']+[f'v43-book-close-{i:02}.png' for i in range(5)],[80]*8+[900]+[80]*4+[900])
+sequences['puppy-in-bed']=([f'component-dog-idle-{i:02}.png' for i in range(8)],[125]*7+[600])
 previews=[]
 for name,(names,times) in sequences.items():
     frames=[Image.open(O/n).convert('RGB') for n in names]
@@ -59,7 +60,7 @@ runtime=json.loads((C/'runtime.json').read_text('utf-8'));runtime.update(tested_
 for n in ('experience','storage','visual'):runtime[n]=json.loads((C/(n+'.json')).read_text('utf-8'))
 (D/'runtime/runtime.json').write_text(json.dumps(runtime,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 artifacts=[{'local_path':str(p),'bytes':p.stat().st_size,'sha256':sha(p),'published':False} for p in (R/'build/host/LittleWorld.exe',Path('D:/build/visual-v4-2/little_world.bin'))]
-verification={'tested_source_commit':code,'baseline':'4fc643ff84e5e8ce19b6c55fd8f9b5fe130b3d2b','branch':'agent/visual-v4-2-polish','logs':logs,'artifacts':artifacts,'framebuffers':len(rows),'animation_previews':len(previews),'protected_paths_unchanged':protected,'idf':'5.5.5','target':project['target'],'min_rev':project['min_rev'],'board_tested':False,'firmware_scope':'Shared UI compilation only; unchanged stable firmware entry. New LWPX/rooms are not embedded or mounted on hardware.','meowa_spent':44,'meowa_limit':44,'device_operations':0}
+verification={'tested_source_commit':code,'baseline':'2765d5733d0b98da4b1b5e56da9893fc66da7800','branch':'agent/visual-v4-2-polish','logs':logs,'artifacts':artifacts,'framebuffers':len(rows),'animation_previews':len(previews),'protected_paths_unchanged':protected,'idf':'5.5.5','target':project['target'],'min_rev':project['min_rev'],'board_tested':False,'firmware_scope':'Shared UI compilation only; unchanged stable firmware entry. New LWPX/rooms are not embedded or mounted on hardware.','meowa_time_scenes':44,'meowa_component_pass':115,'meowa_cumulative_original_budget':764,'original_budget_remaining':236,'device_operations':0}
 (D/'VERIFICATION.json').write_text(json.dumps(verification,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 parts=['<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Little World V4.3 真实运行验收</title><style>body{margin:32px auto;max-width:1200px;background:#faf3ec;color:#51444d;font:18px system-ui}img{max-width:100%;image-rendering:pixelated;border-radius:12px}section{margin:32px 0} .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}a{color:#955c79}h1{font-size:30px}small{font-size:15px}</style><h1>Little World V4.3</h1><p>全部画面来自实际 LVGL 帧缓冲。动画为真实采样帧，末帧加停留便于审阅。Windows 已测，实板未测；美术仍待用户验收。</p><p><a href="FINAL_REPORT.md">交付报告</a> · <a href="SCREENSHOTS.json">截图来源</a></p>']
 for n in ('v43-dock-hidden.png','v43-home-day.png','v43-home-night.png','v43-daily-day.png','v43-daily-night.png','v43-time-settings.png','17-rpg-room.png','11-pet-idle.png','v42-daily-sleep.png','18-rpg-journal.png','19-rpg-dialogue.png','13-album.png','14-music.png','28-story-detail.png','21-games.png','04-settings.png'):
@@ -68,5 +69,7 @@ for p in previews:parts.append(f'<section><h2>{p["name"]} · 真实运行</h2><i
 for p in baseline:parts.append(f'<section><h2>V4 → V4.3</h2><div class="pair"><img src="{p["before"]}"><img src="{p["after"]}"></div></section>')
 for name,after in [('home','v43-home-night.png'),('daily','v43-daily-day.png'),('rpg','17-rpg-room.png')]:
     parts.append(f'<section><h2>V4.2 → V4.3 · {name}</h2><div class="pair"><img src="before/{name}.png"><img src="screenshots/{after}"></div></section>')
+for name,after in [('home','v43-home-night.png'),('daily','v43-daily-day.png'),('control','02-control-center.png'),('book','28-story-detail.png')]:
+    parts.append(f'<section><h2>本轮组件精修前 → 后 · {name}</h2><div class="pair"><img src="before/components-{name}.png"><img src="screenshots/{after}"></div></section>')
 parts.append(f'<small>验证源码 {code} · 无刷写、无设备操作</small></html>');(D/'index.html').write_text('\n'.join(parts),encoding='utf-8')
 print(f'Published {len(rows)} verified LVGL screenshots, {len(previews)} motion previews; source {code}.')

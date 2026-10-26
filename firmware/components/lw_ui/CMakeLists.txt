@@ -11,6 +11,7 @@ idf_component_register(
         "src/lw_visual_assets.c"
         "src/lw_polish.c"
         "src/lw_ambience.c"
+        "src/lw_skin.c"
         "src/lw_motion.c"
         "src/lw_rpg_view.c"
         "src/lw_ui.c"

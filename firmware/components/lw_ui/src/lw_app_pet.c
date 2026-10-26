@@ -14,6 +14,7 @@
 #include "lw_polish.h"
 #include "lw_visual_assets.h"
 #include "lw_ambience.h"
+#include "lw_skin.h"
 #include "lw/lw_pet.h"
 
 static lw_pet_view_t *s_view;
@@ -29,6 +30,7 @@ static uint32_t s_feedback_until;
 static lw_sprite_t *couple; static const lw_clip_t *couple_clip;
 static lw_sprite_t *dog; static const lw_clip_t *dog_clip;
 static bool polished; static uint32_t room_clock,room_last,reaction_until;
+static bool joint_bed;static uint32_t empty_until;
 
 static void refresh(void)
 {
@@ -44,7 +46,7 @@ static void refresh(void)
             if (clip && clip!=couple_clip) {lw_sprite_play(couple,clip);couple_clip=clip;}
             if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock<reaction_until ? 1600-(reaction_until-room_clock) : room_clock);
         }
-        if (dog) {const lw_clip_t *clip=lw_polish_clip(pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle");if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
+        if (dog) {const char *id=joint_bed ? (pet->sleeping ? "v42.dogbed.sleep" : room_clock<empty_until ? "v42.dogbed.empty" : "v42.dogbed.look") : pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle";const lw_clip_t *clip=lw_polish_clip(id);if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
     }
     if (s_view != NULL) {
         lw_pet_view_refresh(s_view, pet, now);
@@ -67,6 +69,7 @@ static void refresh(void)
     }
     if (s_sleep_button_label != NULL) {
         lv_label_set_text(s_sleep_button_label, pet->sleeping ? "叫醒" : "休息");
+        if(polished)lw_skin_select(s_sleep_button,pet->sleeping);
     }
 }
 
@@ -91,6 +94,7 @@ static void do_action(lw_pet_action_t action, const char *message)
     }
     s_feedback_until = now + 4;
     if(polished)lw_os_scene_focus(true);
+    if(polished && action==LW_PET_ACTION_PLAY && !state->pet.sleeping)empty_until=room_clock+2000;
     if (polished && !state->pet.sleeping && action!=LW_PET_ACTION_SLEEP && action!=LW_PET_ACTION_WAKE) reaction_until=room_clock+1600;
     refresh();
 }
@@ -150,29 +154,30 @@ static lv_obj_t *stat_row(lv_obj_t *parent, const char *name, int y, uint32_t co
 }
 static void create_room(lv_obj_t *content)
 {
-    const lw_palette_t *c=lw_palette(); polished=true; room_clock=0; reaction_until=0; room_last=lv_tick_get();
+    const lw_palette_t *c=lw_palette(); polished=true; room_clock=0; reaction_until=0;empty_until=0; room_last=lv_tick_get();
     lv_obj_t *stage=lw_os_box(content,0,0,1024,548,c->card_soft,0,255);
     lv_obj_t *bg=lw_visual_daily_image(stage); if (bg) lv_obj_set_y(bg,-52);
     else lw_os_label(stage,"房间资源未安装 · 日常互动仍可用",&lw_font_18,32,100,650,c->dim);
     lw_ambience_layer(stage,1,-52);
     /* State is conveyed by the residents, not a permanent title/mood dashboard. */
     const lw_clip_t *clip=lw_polish_clip("v42.couple.seated");
-    if (clip) { couple=lw_sprite_create(stage,516,308,256);if (couple) {lw_sprite_set_external_clock(couple,true);lw_sprite_set_pixel_mode(couple);lw_sprite_play(couple,clip);couple_clip=clip;} }
+    if (clip) { couple=lw_sprite_create(stage,516,316,282);if (couple) {lw_sprite_set_external_clock(couple,true);lw_sprite_set_pixel_mode(couple);lw_sprite_play(couple,clip);couple_clip=clip;} }
     if (!couple) lw_os_label(stage,"互动角色资源待载入",&lw_font_18,360,150,500,c->dim);
-    lv_obj_t *contact=lw_os_box(stage,889,373,56,10,0x73534b,LV_RADIUS_CIRCLE,45);(void)contact;
-    const lw_clip_t *pup=lw_polish_clip("v42.dog.idle"); if (pup) {dog=lw_sprite_create(stage,916,376,256);if (dog) {lw_sprite_set_external_clock(dog,true);lw_sprite_set_pixel_mode(dog);lw_sprite_play(dog,pup);dog_clip=pup;lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0xd8b99c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),lw_ambience_phase()>=LW_NIGHT ? 85 : 65,0);}}
+    joint_bed=lw_polish_clip("v42.dogbed.look")!=NULL;
+    if(!joint_bed)lw_os_box(stage,889,373,56,10,0x73534b,LV_RADIUS_CIRCLE,45);
+    const lw_clip_t *pup=lw_polish_clip(joint_bed ? "v42.dogbed.look" : "v42.dog.idle"); if (pup) {dog=lw_sprite_create(stage,joint_bed ? 906 : 916,joint_bed ? 412 : 376,256);if (dog) {lw_sprite_set_external_clock(dog,true);lw_sprite_set_pixel_mode(dog);lw_sprite_play(dog,pup);dog_clip=pup;if(!joint_bed){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0xd8b99c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),65,0);}else if(lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0x937a8c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),35,0);}}}
     if(couple && lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(couple),lv_color_hex(0x797092),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(couple),35,0);}
     if (!dog) s_view=lw_pet_view_create(stage,888,330,30);
-    lv_obj_t *hello=lw_button(stage,"打个招呼",144,48,0xf2dfc4,0x775956,&lw_font_22);
-    lv_obj_set_pos(hello,30,322); lv_obj_add_event_cb(hello,greet,LV_EVENT_CLICKED,NULL); lw_os_motion_touch(hello);
+    lv_obj_t *hello=lw_button(stage,"打招呼",88,44,0xf2dfc4,0x775956,&lw_font_18);
+    lv_obj_set_pos(hello,310,190);lw_skin_button(hello,SK_ACTION,SK_SELECTED,SK_PRESSED); lv_obj_add_event_cb(hello,greet,LV_EVENT_CLICKED,NULL);
     lv_obj_add_flag(stage,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(stage,tap_pet,LV_EVENT_CLICKED,NULL);
-    lv_obj_t *stats=lw_os_box(stage,800,18,194,98,0xf5e4c8,6,212);lw_polish_paper(stats,false);lw_os_box(stats,76,-3,42,9,0xc5aa8c,2,150);
+    lv_obj_t *stats=lw_os_box(stage,868,14,130,120,0xf5e4c8,6,210);if(lw_skin_fit(stats,SK_NOTE,0,0,130,120))lv_obj_set_style_bg_opa(stats,0,0);
     const char *names[]={"饱腹","精力","好感"}; uint32_t colors[]={c->gold,c->mint,c->accent}; lv_obj_t **bars[]={&s_fullness_bar,&s_energy_bar,&s_affection_bar};
-    for (unsigned i=0;i<3;i++) { lw_text(stats,names[i],&lw_font_18,0x806953,12,10+(int)i*27); *bars[i]=lw_bar(stats,62,20+(int)i*27,116,5,colors[i]); }
+    for (unsigned i=0;i<3;i++) {lw_os_icon(stats,i==0 ? OS_I_LEAF : i==1 ? OS_I_SUN : OS_I_HEART,12,39+(int)i*29,14,0xa47770);lw_text(stats,names[i],&lw_font_18,0x806953,36,35+(int)i*29); *bars[i]=lw_bar(stats,78,46+(int)i*29,40,4,colors[i]); }
     lv_obj_t *note=lw_os_box(stage,198,450,630,34,0xf5e4c8,6,0);
     s_feedback=lw_text_wrap(note,"",&lw_font_18,0x75595c,14,4,602);
     const char *labels[]={"喂食","玩耍","抚摸","休息"}; lv_event_cb_t callbacks[]={feed,play,pet,sleep_toggle};
-    for (unsigned i=0;i<4;i++) { lv_obj_t *b=lw_button(stage,labels[i],112,48,0xf2dfc4,0x775956,&lw_font_22);lv_obj_set_style_radius(b,8,0);lv_obj_set_style_bg_opa(b,210,0);lv_obj_set_style_shadow_width(b,4,0); lv_obj_set_pos(b,248+(int)i*128,378); lv_obj_add_event_cb(b,callbacks[i],LV_EVENT_CLICKED,NULL); lw_os_motion_touch(b); if (i==3) {s_sleep_button=b;s_sleep_button_label=lv_obj_get_child(b,0);} }
+    for (unsigned i=0;i<4;i++) { lv_obj_t *b=lw_button(stage,labels[i],112,48,0xf2dfc4,0x775956,&lw_font_22);lv_obj_set_pos(b,248+(int)i*128,378);lv_obj_t *label=lv_obj_get_child(b,0);lw_skin_button(b,SK_ACTION,SK_SELECTED,SK_PRESSED);lv_obj_add_event_cb(b,callbacks[i],LV_EVENT_CLICKED,NULL);if(i==3){s_sleep_button=b;s_sleep_button_label=label;} }
     refresh(); s_timer=lv_timer_create(timer_cb,40,NULL);
 }
 

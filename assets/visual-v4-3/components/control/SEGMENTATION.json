@@ -1,0 +1,99 @@
+{
+  "image_size": [
+    2048,
+    1536
+  ],
+  "component_count": 6,
+  "parameters": {
+    "alpha_threshold": 128,
+    "background_tolerance": 8,
+    "connectivity": 8,
+    "min_component_area": 2500,
+    "padding_px": 2,
+    "merge_contained_fragments": true,
+    "fragment_max_area": 256,
+    "fragment_max_area_ratio": 0.02
+  },
+  "warnings": [],
+  "components": [
+    {
+      "id": "component_001",
+      "file": "component_001.png",
+      "bbox": [
+        54,
+        205,
+        1182,
+        1254
+      ],
+      "width": 1128,
+      "height": 1049,
+      "pixel_count": 1155725
+    },
+    {
+      "id": "component_002",
+      "file": "component_002.png",
+      "bbox": [
+        1246,
+        544,
+        1822,
+        788
+      ],
+      "width": 576,
+      "height": 244,
+      "pixel_count": 134910
+    },
+    {
+      "id": "component_003",
+      "file": "component_003.png",
+      "bbox": [
+        1246,
+        230,
+        1822,
+        474
+      ],
+      "width": 576,
+      "height": 244,
+      "pixel_count": 134847
+    },
+    {
+      "id": "component_004",
+      "file": "component_004.png",
+      "bbox": [
+        1246,
+        859,
+        1822,
+        1099
+      ],
+      "width": 576,
+      "height": 240,
+      "pixel_count": 131794
+    },
+    {
+      "id": "component_005",
+      "file": "component_005.png",
+      "bbox": [
+        1900,
+        202,
+        2000,
+        1072
+      ],
+      "width": 100,
+      "height": 870,
+      "pixel_count": 81336
+    },
+    {
+      "id": "component_006",
+      "file": "component_006.png",
+      "bbox": [
+        1870,
+        1110,
+        2006,
+        1251
+      ],
+      "width": 136,
+      "height": 141,
+      "pixel_count": 16240
+    }
+  ],
+  "elapsed_ms": 2898.06
+}

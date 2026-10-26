@@ -9,6 +9,7 @@ bool lw_pixel_pack_attach_male(lw_pixel_pack_t *pack,const char *path);
 bool lw_pixel_pack_attach_qianqian_clips(lw_pixel_pack_t *pack,const char *path);
 bool lw_pixel_pack_attach_polish(lw_pixel_pack_t *pack,const char *path);
 bool lw_pixel_pack_attach_ui(lw_pixel_pack_t *pack,const char *path);
+bool lw_pixel_pack_attach_skin(lw_pixel_pack_t *pack,const char *path);
 const lw_actor_art_t *lw_pixel_pack_art(const lw_pixel_pack_t *pack);
 bool lw_pixel_pack_close(lw_pixel_pack_t *pack);
 lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *pack);

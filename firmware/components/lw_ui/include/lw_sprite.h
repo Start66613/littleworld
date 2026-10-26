@@ -19,7 +19,8 @@ bool lw_sprite_seek(lw_sprite_t *sprite, uint32_t elapsed_ms);
 void lw_sprite_pause(lw_sprite_t *sprite);
 void lw_sprite_resume(lw_sprite_t *sprite);
 void lw_sprite_set_enabled(lw_sprite_t *sprite, bool enabled);
-/* Pixel mode is native 1x with antialiasing disabled; not fractional zoom. */
+/* Nearest-neighbour rendering. V4.3 explicitly permits bounded proportion
+ * correction (standing 288/256, seated 282/256); source art stays untouched. */
 bool lw_sprite_set_pixel_mode(lw_sprite_t *sprite);
 void lw_sprite_set_anchor(lw_sprite_t *sprite,int x,int y);
 /* External scene clock pauses the player's timer; seek controls both actors. */

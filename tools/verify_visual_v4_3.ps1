@@ -12,14 +12,15 @@ if ($LASTEXITCODE -ne 0) {throw 'Missing character regression failed'}
 try {
     $missing=Join-Path $root 'private/intentionally-missing-art'
     $env:LW_VISUAL_ASSETS=$missing; $env:LW_POLISH_ASSETS=$missing
-    $env:LW_POLISH_PACK=$missing; $env:LW_UI_PACK=$missing
+    $env:LW_POLISH_PACK=$missing; $env:LW_UI_PACK=$missing;$env:LW_SKIN_PACK=$missing
     & build/host/LittleWorld.exe --os-v2-test private/pixel-duo/qianqian/qianqian.lwpx reports/ui-v2/v43-missing-art *> reports/logs/v43-verified-missing-art.log
     if ($LASTEXITCODE -ne 0) {throw 'Missing optional art regression failed'}
 } finally {
     $env:LW_VISUAL_ASSETS=Join-Path $root 'assets/visual-v4/runtime'
     $env:LW_POLISH_ASSETS=Join-Path $root 'assets/visual-v4-2/runtime'
-    $env:LW_POLISH_PACK=Join-Path $env:LW_POLISH_ASSETS 'polish.lwp'
+    $env:LW_POLISH_PACK=Join-Path $root 'assets/visual-v4-3/runtime/daily.lwp'
     $env:LW_UI_PACK=Join-Path $env:LW_POLISH_ASSETS 'ui.lwp'
+    $env:LW_SKIN_PACK=Join-Path $root 'assets/visual-v4-3/runtime/skin.lwp'
 }
 & build/host/LittleWorld.exe --ui-v2-test reports/ui-v2/v43-technical *> reports/logs/v43-verified-resources.log
 if ($LASTEXITCODE -ne 0) {throw 'Resource lifecycle regression failed'}

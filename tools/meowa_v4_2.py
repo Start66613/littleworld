@@ -38,6 +38,8 @@ def main():
         if not prior or not prior.get('job_id') or not ('poll' in command[0] and prior['job_id'] in command): raise ValueError('Recovery must poll the original recorded Job')
         row=prior
     else:
+        if data.get('paid_submissions_paused'):
+            raise ValueError('New paid submissions paused after a pricing discrepancy; original-job recovery remains available')
         if prior: raise ValueError('Name already submitted; recover its Job instead')
         reserved=sum(j['reserved_credits'] for j in data['jobs'])
         approved=min(data['authorized_limit'],data.get('approved_limit',0))
@@ -67,6 +69,9 @@ def main():
             row['balance_after_recovery']=after
         else:
             row['balance_after']=after; row['observed_balance_decrease']=row['balance_before']-after
+            if row['observed_balance_decrease']>row['reserved_credits']:
+                row['quote_exceeded_by']=row['observed_balance_decrease']-row['reserved_credits'];data['paid_submissions_paused']=True
+                print('Actual charge exceeded the local reservation; recorded in full and further paid submissions paused.',flush=True)
     finally: save(data)
     return code
 

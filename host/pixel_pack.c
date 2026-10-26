@@ -14,9 +14,9 @@ struct lw_pixel_pack {
     lw_named_clip_t clips[MAX_CLIPS],test_clip;
     uint16_t sequences[MAX_CLIPS][32],durations[MAX_CLIPS][32],test_seq[4],test_time[4];
     lw_actor_art_t art[2];
-    lw_pixel_pack_t *male,*extra,*polish,*ui;
+    lw_pixel_pack_t *male,*extra,*polish,*ui,*skin;
     lw_named_clip_t extra_named[MAX_CLIPS];
-    lw_asset_spec_t combined[MAX_CLIPS*5];
+    lw_asset_spec_t combined[MAX_CLIPS*6];
     unsigned count;
 };
 static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
@@ -31,7 +31,7 @@ static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
 lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p)
 {
     lw_file_cache_stats_t a=lw_file_cache_stats(p ? p->cache : NULL);
-    for (unsigned i=0;p && i<4;i++) { const lw_pixel_pack_t *child=i==3 ? p->ui : i==2 ? p->polish : i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
+    for (unsigned i=0;p && i<5;i++) { const lw_pixel_pack_t *child=i==4 ? p->skin : i==3 ? p->ui : i==2 ? p->polish : i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
 #define SUM(field) a.field+=b.field
         SUM(budget_bytes); SUM(resident_bytes); SUM(peak_bytes); SUM(metadata_bytes); SUM(hits); SUM(misses); SUM(reads); SUM(failures); SUM(evictions); SUM(prefetched); SUM(queue_drops); SUM(pending); SUM(loading);
 #undef SUM
@@ -115,6 +115,7 @@ static bool combine(lw_pixel_pack_t *p)
     if (p->extra) { memcpy(p->combined+count,p->extra->specs,p->extra->count*sizeof(p->specs[0])); count+=p->extra->count; }
     if (p->polish) { memcpy(p->combined+count,p->polish->specs,p->polish->count*sizeof(p->specs[0])); count+=p->polish->count; }
     if (p->ui) { memcpy(p->combined+count,p->ui->specs,p->ui->count*sizeof(p->specs[0])); count+=p->ui->count; }
+    if (p->skin) { memcpy(p->combined+count,p->skin->specs,p->skin->count*sizeof(p->specs[0])); count+=p->skin->count; }
     return lw_assets_register(p->combined,count,2u*1024u*1024u);
 }
 bool lw_pixel_pack_attach_male(lw_pixel_pack_t *p,const char *path)
@@ -142,6 +143,7 @@ bool lw_pixel_pack_close(lw_pixel_pack_t *p)
     if (p->extra) lw_pixel_pack_close(p->extra);
     if (p->polish) lw_pixel_pack_close(p->polish);
     if (p->ui) lw_pixel_pack_close(p->ui);
+    if (p->skin) lw_pixel_pack_close(p->skin);
     lw_file_cache_close(p->cache); free(p); return true;
 }
 bool lw_pixel_pack_attach_polish(lw_pixel_pack_t *p,const char *path)
@@ -162,4 +164,11 @@ bool lw_pixel_pack_attach_ui(lw_pixel_pack_t *p,const char *path)
     p->ui=child;
     if (!combine(p)) { p->ui=NULL; lw_pixel_pack_close(child); combine(p); return false; }
     return true;
+}
+bool lw_pixel_pack_attach_skin(lw_pixel_pack_t *p,const char *path)
+{
+    if(!p || p->skin || lw_assets_stats().live_leases)return false;
+    lw_pixel_pack_t *child=open_budget(path,512u*544u*3u);if(!child)return false;
+    for(unsigned i=0;i<child->count;i++)snprintf(child->ids[i],sizeof(child->ids[i]),"v43skin.%s",child->names[i]);
+    p->skin=child;if(!combine(p)){p->skin=NULL;lw_pixel_pack_close(child);combine(p);return false;}return true;
 }

@@ -1,5 +1,13 @@
 # Little World · Meowa 生产工作流
 
+## 2026-10-27 实测补充：编辑任务的实际档位
+
+扁平导航 `job_b98345ef88d44368bb50cfdadb76cc6e` 以 `image-edit-run / image-2.5 / pixel strict / --resolution 1K` 提交，输入1735×254；服务返回的任务参数为2K/high，实扣22而非预留12。已完整记账，未假定退款，具体覆盖原因尚未证实。宽幅编辑应预留实际可能的2K档，不能把CLI参数当成服务端收费硬封顶。
+
+本机 `--max-credits` 是提交前的**本地预留**，不是传给Meowa的限价参数。新增保护：实扣超过预留时，记录全部费用、暂停新收费提交，仍允许恢复原Job。V4.3本次组件115，低于用户原授权剩余351；后续不继续生成。UI原件、官方分割、运行验收和价格差异分别记录，不能用素材生成成功掩盖估价偏差。
+
+最新V4.3用户指定了人物比例修正，覆盖此前“显示只能原生1×”的限制：站立288/256（+12.5%），共同坐姿282/256（约+10.16%），最近邻、无平滑，源帧不改。站立保持脚底世界坐标；坐姿固定坐垫接触并将共同脚底下移8px。不得把这种有意的分数显示缩放描述成整数网格/原生1×。
+
 2026-10-26。Codex 维护；供 DSH 只读参考。依据官方完整 Skill `33578ab708c1b4dfcd83fe79dffdbd47ff4083b2`、CLI `2026.10.23.2`、`web_parameter_contract.json` 和实际 CLI 帮助。运行副本：`D:\LittleWorld-Meowa\tools\meowa-skills\skills\game-assets`。不修改官方 Runner，不复制认证。
 
 这份手册记录选型与边界，不表示所有收费能力已经实测。完整自查与证据：`reports/visual-v4-2/MEOWA_SKILL_REVIEW.md`、`skill-review/CONTRACT_AUDIT.json`、`CAPABILITIES.json`。

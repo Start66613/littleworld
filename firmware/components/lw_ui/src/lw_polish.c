@@ -2,14 +2,14 @@
 #include "lw_os_design.h"
 #include "lw_theme.h"
 #include <string.h>
-static const char *const ids[]={"v42.couple.seated","v42.couple.wave","v42.couple.rest","v42.dog.idle","v42.dog.sleep"};
-static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[5];
+static const char *const ids[]={"v42.couple.seated","v42.couple.wave","v42.couple.rest","v42.dog.idle","v42.dog.sleep","v42.dogbed.empty","v42.dogbed.sleep","v42.dogbed.look"};
+static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[8];
 const lw_clip_t *lw_polish_clip(const char *name)
 {
-    for (unsigned i=0;i<5;i++) if (!strcmp(name,ids[i])) {
+    for (unsigned i=0;i<8;i++) if (!strcmp(name,ids[i])) {
         const lw_asset_spec_t *spec=lw_assets_find(name); if (!spec) return NULL;
         for (unsigned n=0;n<32;n++) { sequence[n]=(uint16_t)n; time_idle[n]=125; time_wave[n]=100; }
-        bool wave=strstr(name,"wave")!=NULL; bool fast=wave || strstr(name,"dog")!=NULL;
+        bool wave=strstr(name,"wave")!=NULL; bool fast=wave || (strstr(name,"dog")!=NULL && strstr(name,"dogbed")==NULL);
         clips[i]=(lw_clip_t){ids[i],sequence,fast ? time_wave : time_idle,spec->frames,!wave}; return &clips[i];
     }
     return NULL;
