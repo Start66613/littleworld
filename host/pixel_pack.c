@@ -14,6 +14,9 @@ struct lw_pixel_pack {
     lw_named_clip_t clips[MAX_CLIPS],test_clip;
     uint16_t sequences[MAX_CLIPS][32],durations[MAX_CLIPS][32],test_seq[4],test_time[4];
     lw_actor_art_t art[2];
+    lw_pixel_pack_t *male,*extra;
+    lw_named_clip_t extra_named[MAX_CLIPS];
+    lw_asset_spec_t combined[MAX_CLIPS*3];
     unsigned count;
 };
 static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
@@ -25,7 +28,15 @@ static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
     if (ok) { unsigned next=(frame+1)%src->file.frames; (void)lw_file_cache_prefetch(src->cache,src->relative,(uint64_t)src->file.offset+(uint64_t)next*src->file.frame_stride,bytes); }
     return ok;
 }
-lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p) { return lw_file_cache_stats(p ? p->cache : NULL); }
+lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p)
+{
+    lw_file_cache_stats_t a=lw_file_cache_stats(p ? p->cache : NULL);
+    for (unsigned i=0;p && i<2;i++) { const lw_pixel_pack_t *child=i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
+#define SUM(field) a.field+=b.field
+        SUM(budget_bytes); SUM(resident_bytes); SUM(peak_bytes); SUM(metadata_bytes); SUM(hits); SUM(misses); SUM(reads); SUM(failures); SUM(evictions); SUM(prefetched); SUM(queue_drops); SUM(pending); SUM(loading);
+#undef SUM
+    } return a;
+}
 static uint16_t u16(const uint8_t *p) { return (uint16_t)(p[0]|(uint16_t)p[1]<<8); }
 static uint32_t u32(const uint8_t *p) { return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24; }
 static bool test_actor(void *context,uint16_t frame,uint8_t *data,size_t bytes)
@@ -45,7 +56,7 @@ static bool test_actor(void *context,uint16_t frame,uint8_t *data,size_t bytes)
     }
     return true;
 }
-lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
+static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
 {
     if (!path || strlen(path)>=512) return NULL;
     FILE *file=fopen(path,"rb"); if (!file) return NULL;
@@ -61,7 +72,7 @@ lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
     if (strlen(base)<sizeof(pack->basename)) {
         strcpy(pack->basename,base);
         if (slash) { size_t n=(size_t)(slash-path); memcpy(directory,path,n); directory[n]=0; }
-        pack->cache=lw_file_cache_open(directory,4u*196608u);
+        pack->cache=lw_file_cache_open(directory,budget);
     }
     bool ok=true;
     for (unsigned i=0;i<pack->count && ok;i++) {
@@ -94,9 +105,37 @@ lw_pixel_pack_t *lw_pixel_pack_open(const char *path)
     return pack;
 }
 const lw_actor_art_t *lw_pixel_pack_art(const lw_pixel_pack_t *p) { return p ? p->art : NULL; }
+lw_pixel_pack_t *lw_pixel_pack_open(const char *path) { return open_budget(path,4u*196608u); }
+static bool combine(lw_pixel_pack_t *p)
+{
+    unsigned count=p->count; memcpy(p->combined,p->specs,count*sizeof(p->specs[0]));
+    if (!p->male) p->combined[count++]=p->specs[p->count];
+    if (p->male) { memcpy(p->combined+count,p->male->specs,p->male->count*sizeof(p->specs[0])); count+=p->male->count; }
+    if (p->extra) { memcpy(p->combined+count,p->extra->specs,p->extra->count*sizeof(p->specs[0])); count+=p->extra->count; }
+    return lw_assets_register(p->combined,count,2u*1024u*1024u);
+}
+bool lw_pixel_pack_attach_male(lw_pixel_pack_t *p,const char *path)
+{
+    if (!p || p->male || lw_assets_stats().live_leases) return false;
+    lw_pixel_pack_t *male=open_budget(path,2u*196608u); if (!male) return false;
+    for (unsigned i=0;i<male->count;i++) snprintf(male->ids[i],sizeof(male->ids[i]),"male.%s",male->names[i]);
+    p->male=male; if (!combine(p)) { p->male=NULL; lw_pixel_pack_close(male); combine(p); return false; }
+    p->art[0]=(lw_actor_art_t){"male",male->clips,male->count,false}; return true;
+}
+bool lw_pixel_pack_attach_qianqian_clips(lw_pixel_pack_t *p,const char *path)
+{
+    if (!p || p->extra || lw_assets_stats().live_leases) return false;
+    lw_pixel_pack_t *extra=open_budget(path,2u*196608u); if (!extra) return false;
+    if (p->count+extra->count>MAX_CLIPS) { lw_pixel_pack_close(extra); combine(p); return false; }
+    p->extra=extra; if (!combine(p)) { p->extra=NULL; lw_pixel_pack_close(extra); combine(p); return false; }
+    memcpy(p->extra_named,p->clips,p->count*sizeof(p->clips[0])); memcpy(p->extra_named+p->count,extra->clips,extra->count*sizeof(p->clips[0]));
+    p->art[1]=(lw_actor_art_t){"qianqian",p->extra_named,p->count+extra->count,false}; return true;
+}
 bool lw_pixel_pack_close(lw_pixel_pack_t *p)
 {
     if (!p) return true;
     if (!lw_assets_register(NULL,0,2u*1024u*1024u)) return false;
+    if (p->male) lw_pixel_pack_close(p->male);
+    if (p->extra) lw_pixel_pack_close(p->extra);
     lw_file_cache_close(p->cache); free(p); return true;
 }

@@ -1,0 +1,495 @@
+{
+  "tested_code_commit": "96aee9b59126ff3cb4aacd8c05fd870dc814ca28",
+  "public_images_authorized": true,
+  "authorization": "2026-10-26 V4 task authorizes runtime screenshots, animation previews and assets",
+  "framebuffers": [
+    {
+      "file": "screenshots/01-desktop.png",
+      "sha256": "7a0dc01004d6e1baabc9c33f77b535e744a22973b3179b1cd3718c484cbb8628",
+      "bytes": 306611,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/02-control-center.png",
+      "sha256": "6a3155bca55fdb4142106a5d910b6bcf1c093b5a92fe2515324d02baca3e6969",
+      "bytes": 172914,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/03-wifi-list.png",
+      "sha256": "836a69be8d69a3d2e5349af8f0b72841b97c0d4c79840adc7ea7e184351b4c31",
+      "bytes": 184775,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/04-settings.png",
+      "sha256": "197afa1f0c74297e6bcd0e69b00f9a439b0a56e6b83befb95e448c4b86449450",
+      "bytes": 66374,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/05-themes.png",
+      "sha256": "79a39bc620f6836eef517e9dd765856265bc76dcdaf3455a34e98637c3193287",
+      "bytes": 187254,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/06-lockscreen.png",
+      "sha256": "8ec37bcb9750b8c376561c5557ec991195b630b06d67dd8035c7bb01731b1170",
+      "bytes": 168781,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/07-pixel-world.png",
+      "sha256": "e07a18c33498dabdc737fb6902ddbb4acee7243e20341563163d8cbffabf5413",
+      "bytes": 288361,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/08-wifi-password.png",
+      "sha256": "e24f15ed7cbd7f338e655eb8b4feaa9c00f9fb8ef7a7aba8d4e266171d48b6a1",
+      "bytes": 151251,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/09-moonlight-desktop.png",
+      "sha256": "b3449943b25edcf8e66fc53f78d65d27bdf50f394f4b4b7d20688b27ba4548d4",
+      "bytes": 303830,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/10-envelope.png",
+      "sha256": "2e9226948645615911a7a6449a9dbe5e8b81bc432e76d6d8d1825ac5c37fa1d0",
+      "bytes": 179537,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/11-pet-idle.png",
+      "sha256": "32d1651e9490d76a12728a969227db30eecb7b0712ac2755f4b2f820144b627d",
+      "bytes": 56516,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/12-pet-interaction.png",
+      "sha256": "7d982b1c057c096359049702f29ca0b9047777146c34473cdc4b8c8480df504e",
+      "bytes": 59266,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/13-album-viewer.png",
+      "sha256": "6d7435a2975ff87470fdb08b5780a02b12cdd4da3fa7e671e8df0944bf3e326d",
+      "bytes": 16944,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/14-music.png",
+      "sha256": "0f097e0dd2861b0624133e74f512de40f5c64b6637ee326116f6391c2711fa49",
+      "bytes": 81440,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/15-anniversary.png",
+      "sha256": "bd465a84ca7e454ea8b4372cc9a18ba57d12670f69564d1f98692a23d23e2972",
+      "bytes": 74337,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/16-2048.png",
+      "sha256": "00bdbd79082ce7b0e767a8563dad2a6a04239f4afd01e8e1d05e43c2c3e0ec21",
+      "bytes": 12708,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/17-rpg-room.png",
+      "sha256": "ad8018ffdb2b42ecce5d4f378db78d907686b7867783ef71d1bc62d0c8c2c70d",
+      "bytes": 63945,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/18-rpg-journal.png",
+      "sha256": "2415177d2b2445979100513683e34f1673aab81aa148d29e63ed34c6c8253d51",
+      "bytes": 65621,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/19-rpg-dialogue.png",
+      "sha256": "538c98d1e1a8698dbb8c541e594fddc914959458e59ee5fd222d5da47e3bd2e4",
+      "bytes": 55800,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/20-rpg-reward.png",
+      "sha256": "2d26c1b3a78e7a30ee01018e9a164e337b5d944b50e02ff15bfc9bf02ff78860",
+      "bytes": 60735,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/21-album-empty.png",
+      "sha256": "5d6e49d2b7f6955d10ecf4560a637b37d611509ec6f5635a50cc33257e18b5ed",
+      "bytes": 59997,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/22-dock-pressed.png",
+      "sha256": "aad6afeb4b3024b51429113e9eb92d4435d7f3d7c95aa64e8232644da212b0ef",
+      "bytes": 308697,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/23-services-unavailable.png",
+      "sha256": "f9a2f36865c181269901b09eee2a2c9cdf3ae5d2800f88ccbf074d74d765e964",
+      "bytes": 170581,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/24-dnd.png",
+      "sha256": "87fb38c85cf869e68d91a27c2d9c520fc146165a518e3ef32c32e3e8e530915d",
+      "bytes": 171638,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/25-motion-settings.png",
+      "sha256": "465bcce791c794c677b5cb5d470c7094478d263f90afa005db2ce305c16b634e",
+      "bytes": 69551,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/26-album-local-photo.png",
+      "sha256": "312d7916192d51b5de560d0cf31d761b8447496fe52b50f64a44da9143bfbe12",
+      "bytes": 12969,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/27-album-load-error.png",
+      "sha256": "0a3294fdc5416854a84038199541d7e07a634099b56824431a4366e752bd3d56",
+      "bytes": 21441,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/28-story-detail.png",
+      "sha256": "dd2091a1b73107cfadb7b430b28be87ba2cb892cd5c5a24c9a124f8b89d75116",
+      "bytes": 55889,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/29-music-simulated.png",
+      "sha256": "cb67b11dd25320cbccb960fc5ae29e0d45baa5dc8bac42fea7b271c7728fd05e",
+      "bytes": 81771,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/30-game-pause.png",
+      "sha256": "ad7e7c10145ebe54994e0b6e7b184ec22a97b5ddcfc8e177417d2bbcfbe0fde7",
+      "bytes": 28238,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/31-rpg-move-feedback.png",
+      "sha256": "961274232d958071f5664c26718a28bdf10889ef69a7e841729c9f93dd54a089",
+      "bytes": 62749,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-00.png",
+      "sha256": "babdfd68f4b0bdd2c6ab1a90a840d42f79435c3c2c7ea95f2651baf273bf75f4",
+      "bytes": 187621,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-01.png",
+      "sha256": "7f3554967385c0e1a0ac0638a2ad12bad3302c06234e2876a1540cda8747a7e7",
+      "bytes": 197818,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-02.png",
+      "sha256": "436a495459806ed90966e200524ded50ee4ff60568d3709713d61743d220e9f6",
+      "bytes": 191139,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-03.png",
+      "sha256": "48d1d96ee5314fb04a4572622994aa3582e46fd07c9ee2d78def5b4d8c42295e",
+      "bytes": 184467,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-04.png",
+      "sha256": "366a8e8fe149e06d5b5f0b400f8e08a13f34ed9417641bd85ff7a5fda702a8ff",
+      "bytes": 185462,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-05.png",
+      "sha256": "7f163f78d1b2ed0ad541d127d5fac401ed8bf7f82b56d1c701f713e4b98b140a",
+      "bytes": 255400,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-06.png",
+      "sha256": "128c2b9a9197b2b5f8ed3aaa04e6a0ce77eb593ce00a6f5c79f75b5e94742f81",
+      "bytes": 307266,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-00.png",
+      "sha256": "bae36f469a85ded8f6281ea72f4af171a5ab61f493df1ccdfaa7adb31018fe94",
+      "bytes": 242448,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-01.png",
+      "sha256": "efbf005f57a2a37e335903cb0285723d99d33ed60ab6174e115e5b0d996817ba",
+      "bytes": 243570,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-02.png",
+      "sha256": "6adaefb0e808771383bc4e0968c0f21ebf4b24196f69fcf3029ef53745684480",
+      "bytes": 245372,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-03.png",
+      "sha256": "db96d4d25bf148f5d40ed068442b4e4f9f48f8ba9bdbf1d7dd28dc2ebb0d4f21",
+      "bytes": 245347,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-04.png",
+      "sha256": "d126371873172a53840394b1cc1e27fe88b9e7b00e046195742da71fde8f2fd0",
+      "bytes": 245350,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-05.png",
+      "sha256": "27aa62194fa8af5ec033489d4c67742fe5f79d3d05d7f3e858c331b70689f5bd",
+      "bytes": 245633,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-06.png",
+      "sha256": "157d53499ef06ae31ba84aaceff8aeaa4375d9d3d5558b872688ea945a0fc43a",
+      "bytes": 245816,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-07.png",
+      "sha256": "311fad20d2eaf8c76bc596583bcc562095950dcf87447938800a40caaecc0f99",
+      "bytes": 245531,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-restored.png",
+      "sha256": "8def25e38f511c2b94d9b0d79ab02186a2541825277d4da64db155d11752f224",
+      "bytes": 236810,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-00.png",
+      "sha256": "ebbbb9ca5b2467f783450121385f0342867f352da0b85866a6830a03a959551c",
+      "bytes": 178342,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-01.png",
+      "sha256": "e7da99ddb598db550d3eafe814de8339a526317220c705c066ed23d7c4cf4d50",
+      "bytes": 166035,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-02.png",
+      "sha256": "ac4e995eec62a572a81ab27ecf50298062e9a693b08c207630294ab693cdd6ae",
+      "bytes": 151764,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-03.png",
+      "sha256": "f682e0fe0a03545608a0210050228ba97ded99802b622f4d821904fdf876482e",
+      "bytes": 149842,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-04.png",
+      "sha256": "acee42418419ef89923b6c2018e7a3092e6aaf9ef9496da6c63151e218b52fa1",
+      "bytes": 149800,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-closed.png",
+      "sha256": "b831554efd696635336833242a936f0e5287c3cc8a1cb04c6045e62fcbc7b5c2",
+      "bytes": 252113,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-lock-00.png",
+      "sha256": "635800f0368d1fac6f48f2c98b517542ea250c8898930061af6ad49b4b32a89a",
+      "bytes": 139900,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-00.png",
+      "sha256": "f2a35956132054173b7cc7ce55ad68568d16fe1d2f30b15d223e0739f9291afc",
+      "bytes": 303885,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-01.png",
+      "sha256": "5d7b4f1cbb5e021d2de35b0a505e778f29ef7449c1803ee9d8adaa9154a70790",
+      "bytes": 286671,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-02.png",
+      "sha256": "efcd02f013a7504b62e070694bfddeda6427357287ea5c61d12f1b1d479dcfb7",
+      "bytes": 257895,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-03.png",
+      "sha256": "697d95b998188e01882a9abb0add647ec248588a7ac16eb68afa560e3013f0b5",
+      "bytes": 227170,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-open.png",
+      "sha256": "7c2c05238e157efd81c5b634b41ea9795a9278aaf17437e66e450845840d9b9d",
+      "bytes": 170972,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-push-closed.png",
+      "sha256": "99a479c8781db12cba99873505262d120a342c7b95afb9027641c4daed3b5ca8",
+      "bytes": 307165,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-push-mid.png",
+      "sha256": "780de0fdb58610adec57a65243d39d78872ed5d18c4452810121fce018495266",
+      "bytes": 175862,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-0.png",
+      "sha256": "c05f75346f8aa9f408775d6e91e5fa8c09c0f3d4b298b9cfa3637787845d0b76",
+      "bytes": 307114,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-1.png",
+      "sha256": "ad51829ca755a7fced00a5533303dbee08115156f055549ea797dec87a9900fc",
+      "bytes": 304525,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-2.png",
+      "sha256": "f40dcc5c87686bb611392692b635e0669e6b5c0efe132a99acfd2c7a8aaa653f",
+      "bytes": 251860,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-00.png",
+      "sha256": "af3d355a8473cffa9ba388056d9786a341180011b1ddf2229030f755dd63ddbd",
+      "bytes": 138981,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-01.png",
+      "sha256": "35cd86c9ef6b2547e96aeff4cd0358fd66705d5deb368d6c97b16c3347fed725",
+      "bytes": 163599,
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-02.png",
+      "sha256": "7d3759202c6689704ebc3ebceab3031245a9d04e953785103177ba597c23a8eb",
+      "bytes": 236399,
+      "matches_framebuffer": true
+    }
+  ],
+  "previews": [
+    {
+      "file": "previews/boot.gif",
+      "lossless_webp": "previews/boot.webp",
+      "source_pngs": [
+        "v4-boot-00.png",
+        "v4-boot-01.png",
+        "v4-boot-02.png",
+        "v4-boot-03.png",
+        "v4-boot-04.png",
+        "v4-boot-05.png",
+        "v4-boot-06.png"
+      ],
+      "timing": "sampled LVGL animation frames; review playback includes a final hold",
+      "source": "real LVGL framebuffer, not AI generation or Python layout composition",
+      "gif_palette_quantization": true,
+      "sha256": "45cf346b3a9d6a882e305bb8d9f5707c2374ee8062bf5dc7d19499ccf9875900"
+    },
+    {
+      "file": "previews/control-center.gif",
+      "lossless_webp": "previews/control-center.webp",
+      "source_pngs": [
+        "v4-pull-00.png",
+        "v4-pull-01.png",
+        "v4-pull-02.png",
+        "v4-pull-03.png",
+        "v4-pull-open.png",
+        "v4-push-mid.png",
+        "v4-push-closed.png"
+      ],
+      "timing": "sampled LVGL animation frames; review playback includes a final hold",
+      "source": "real LVGL framebuffer, not AI generation or Python layout composition",
+      "gif_palette_quantization": true,
+      "sha256": "92247d7bb378525078f0e281250e67b3bb0a131b9e8e8c257bdd545860e661bb"
+    },
+    {
+      "file": "previews/letter.gif",
+      "lossless_webp": "previews/letter.webp",
+      "source_pngs": [
+        "v4-letter-00.png",
+        "v4-letter-01.png",
+        "v4-letter-02.png",
+        "v4-letter-03.png",
+        "v4-letter-04.png",
+        "v4-letter-closed.png"
+      ],
+      "timing": "sampled LVGL animation frames; review playback includes a final hold",
+      "source": "real LVGL framebuffer, not AI generation or Python layout composition",
+      "gif_palette_quantization": true,
+      "sha256": "308e74532e6759105542a248272b2f85ec09b879c537958ddd2fa63a4357c47a"
+    },
+    {
+      "file": "previews/unlock.gif",
+      "lossless_webp": "previews/unlock.webp",
+      "source_pngs": [
+        "v4-lock-00.png",
+        "v4-unlock-00.png",
+        "v4-unlock-01.png",
+        "v4-unlock-02.png"
+      ],
+      "timing": "sampled LVGL animation frames; review playback includes a final hold",
+      "source": "real LVGL framebuffer, not AI generation or Python layout composition",
+      "gif_palette_quantization": true,
+      "sha256": "39b7498945d6533cfa0c2431b4cf369178bff82a545c2366b0d2fbfa2ab3858a"
+    },
+    {
+      "file": "previews/greeting.gif",
+      "lossless_webp": "previews/greeting.webp",
+      "source_pngs": [
+        "v4-greet-00.png",
+        "v4-greet-01.png",
+        "v4-greet-02.png",
+        "v4-greet-03.png",
+        "v4-greet-04.png",
+        "v4-greet-05.png",
+        "v4-greet-06.png",
+        "v4-greet-07.png",
+        "v4-greet-restored.png"
+      ],
+      "timing": "sampled LVGL animation frames; review playback includes a final hold",
+      "source": "real LVGL framebuffer, not AI generation or Python layout composition",
+      "gif_palette_quantization": true,
+      "sha256": "4d38152f2188044cd334b10a78c8263bb28669e75bc3bebf5d7747243040ba15"
+    }
+  ],
+  "board_tested": false
+}

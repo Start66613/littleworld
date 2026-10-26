@@ -1,0 +1,53 @@
+{
+  "name": "blink",
+  "character": "male",
+  "canvas": [
+    256,
+    256
+  ],
+  "anchor": [
+    128,
+    225
+  ],
+  "durations_ms": [
+    125,
+    125,
+    125,
+    125
+  ],
+  "loop": false,
+  "source": "assets/visual-v4/characters/male/blink-original.webp",
+  "source_sha256": "f6c37be92aea0844b34f1874cb2c0f2371374fe6fb69865969ec50d041a00537",
+  "frames": [
+    "blink/000.png",
+    "blink/001.png",
+    "blink/002.png",
+    "blink/003.png"
+  ],
+  "bboxes": [
+    [
+      76,
+      22,
+      179,
+      225
+    ],
+    [
+      76,
+      19,
+      179,
+      225
+    ],
+    [
+      76,
+      17,
+      179,
+      225
+    ],
+    [
+      76,
+      17,
+      179,
+      225
+    ]
+  ]
+}

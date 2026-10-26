@@ -1,0 +1,113 @@
+{
+  "checks": 114,
+  "failures": 0,
+  "source_commit": "96aee9b59126ff3cb4aacd8c05fd870dc814ca28",
+  "scenes": [
+    {
+      "name": "sakura-morning",
+      "runtime_sha256": "823ad9d4ea912fb80feeefafa6fe876f1017c0a6a18c0499b4fce07af9bc6098",
+      "master_sha256": "61c43af792d7e3bae5ff18ef8425646d8fd500c5e19033ce16c14f4ac3847db4",
+      "window_mean_rgb": [
+        227,
+        194,
+        197
+      ],
+      "raw_bytes": 1228800,
+      "thumbnail_bytes": 76800
+    },
+    {
+      "name": "moonlight-dream",
+      "runtime_sha256": "a08a0303bb1b72df5707951649c01c48de505f5eadc0bca1fc12ba8c636e507d",
+      "master_sha256": "1ea3caa44b44cdc6d18dae9b8d26aa91437e62dbef563964a5c05b67dcd7ff2a",
+      "window_mean_rgb": [
+        103,
+        83,
+        148
+      ],
+      "raw_bytes": 1228800,
+      "thumbnail_bytes": 76800
+    },
+    {
+      "name": "strawberry-sunset",
+      "runtime_sha256": "f3312ac4d874725adc2335f57a6e10520ced411b127a17a79c13648e42f7201e",
+      "master_sha256": "ceab865d833f7f594bec3b0ef28430dcbc1039f12c31fd39056d4bf8da23ecd2",
+      "window_mean_rgb": [
+        229,
+        186,
+        172
+      ],
+      "raw_bytes": 1228800,
+      "thumbnail_bytes": 76800
+    }
+  ],
+  "animations": [
+    {
+      "character": "male",
+      "action": "idle",
+      "frames": 8,
+      "duration_ms": 800,
+      "anchor": [
+        128,
+        225
+      ],
+      "foot_bottom_min": 225,
+      "foot_bottom_max": 225,
+      "rgba_raw_bytes_per_frame": 262144,
+      "rgb565_alpha_bytes_per_frame": 196608,
+      "preview": "../../assets/visual-v4/characters/male/idle.gif"
+    },
+    {
+      "character": "male",
+      "action": "blink",
+      "frames": 4,
+      "duration_ms": 500,
+      "anchor": [
+        128,
+        225
+      ],
+      "foot_bottom_min": 225,
+      "foot_bottom_max": 225,
+      "rgba_raw_bytes_per_frame": 262144,
+      "rgb565_alpha_bytes_per_frame": 196608,
+      "preview": "../../assets/visual-v4/characters/male/blink.gif"
+    },
+    {
+      "character": "male",
+      "action": "wave",
+      "frames": 16,
+      "duration_ms": 1600,
+      "anchor": [
+        128,
+        225
+      ],
+      "foot_bottom_min": 225,
+      "foot_bottom_max": 225,
+      "rgba_raw_bytes_per_frame": 262144,
+      "rgb565_alpha_bytes_per_frame": 196608,
+      "preview": "../../assets/visual-v4/characters/male/wave.gif"
+    },
+    {
+      "character": "qianqian",
+      "action": "wave",
+      "frames": 16,
+      "duration_ms": 1600,
+      "anchor": [
+        128,
+        226
+      ],
+      "foot_bottom_min": 226,
+      "foot_bottom_max": 226,
+      "rgba_raw_bytes_per_frame": 262144,
+      "rgb565_alpha_bytes_per_frame": 196608,
+      "preview": "../../assets/visual-v4/characters/qianqian/wave.gif"
+    }
+  ],
+  "meowa_actual_credits": 169,
+  "scene_resident_upper_bound_bytes": 1459200,
+  "windows_file_cache_budget_bytes": 1572864,
+  "lvgl_character_peak_from_regression_bytes": 983040,
+  "conservative_sum_of_separate_upper_bounds_bytes": 4015104,
+  "includes_display_buffers_fonts_or_system": false,
+  "board_tested": false,
+  "art_direction_user_acceptance": "pending"
+}

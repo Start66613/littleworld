@@ -1,6 +1,20 @@
 # Little World 工作看板
 
-## 2026-10-25 P5 · 体验升级（当前轮次）
+## 2026-10-26 V4 · 像素小屋与原生动效（当前轮次）
+
+- [x] 从release/os-v3.1-stable@d95b806隔离agent/visual-v4-meowa-motion / D:\LittleWorld-V4-Visual；main和DSH后端/业务核心保持不变。
+- [x] 完整备份并fast-forward核对官方Meowa Skill，CLI/帮助/认证/余额/价格/Runner哈希验证通过；原安装已经最新，版本2026.10.23.2。
+- [x] 三套1024×600场景及2K母版，继承DSH房间；固定Codex男方和原版千千身份，真实呼吸/眨眼/挥手帧、同步互动与返回待机。
+- [x] 统一lw_motion、受限lw_visual_assets，真实跟手控制中心、开机/解锁/信封/照片/弹层/反馈，Full/Reduced/Off和退出清理。
+- [x] 正常489、缺角色472、缺场景487项零失败；模型/核心/资源/Python/字体/原版完整回归，素材114项和67张帧缓冲验证通过。
+- [x] 共用UI ESP-IDF5.5.5独立离线构建成功；未挂载新硬件大资源，未连接设备或刷写。
+- [x] 169/1000积分账单、5笔Job和失败记录；5段真实运行动态预览、GIF/WebP/逐帧/资源转换与单入口预览已整理，按本轮授权公开。
+- [ ] 用户视觉验收；可选宠物房/RPG新美术/男方四向与坐睡动作未生产。
+- [ ] DSH后续硬件SD/VFS资源挂载与角色包接入、性能/频闪/显示板测；需另行本次刷机许可。
+
+交付与完整边界见reports/visual-v4/FINAL_REPORT.md，视觉入口reports/visual-v4/README.md，后端契约docs/handoff/DSH_VISUAL_V4_RESOURCES.md。下方是历史轮次。
+
+## 2026-10-25 P5 · 体验升级（历史轮次）
 
 - [x] fetch 并固定31dba23基线，建立agent/os-v2-experience-v3；保留main和DSH独占范围。
 - [x] 桌面家具导航、纪念卡片、Dock反馈与日夜层级；不替换待验收男方角色。

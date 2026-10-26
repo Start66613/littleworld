@@ -6,9 +6,11 @@
 #include "lw_shell.h"
 #include "lw_app_state.h"
 #include "lw_ui_content.h"
+#include "lw_visual_assets.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 LV_FONT_DECLARE(lw_font_88);
 typedef struct {
@@ -26,6 +28,10 @@ typedef struct {
     unsigned painted_wallpaper; bool painted;
     lw_os_page_t theme_return;
     bool caps_refresh_on_unlock;
+    lv_obj_t *control_panel,*boot;
+    lw_sprite_t *lock_sprites[2];
+    int pull_start,pull_distance; bool pull_active,pull_opening,pull_moved,reverse_page;
+    uint32_t suppress_control_until,boot_ms,lock_ms;
 } os_t;
 static os_t *s;
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
@@ -50,6 +56,9 @@ const lw_rpg_state_t *lw_os_rpg_state(void) { return s ? lw_rpg_view_state(s->rp
 static const char *const section_names[]={"网络","显示与亮度","声音","个性化","日期与时间","存储","关于设备"};
 static const lw_os_palette_t *palette(void) { return lw_os_palette(s->page==OS_THEMES ? s->preview_theme : s->system->prefs.theme); }
 static void render(void); static void show_overlay(lw_os_overlay_t); static void refresh(void);
+static void pull_touch(lv_event_t *);
+static void bind_pull(lv_obj_t *o)
+{ lv_obj_add_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_PRESS_LOCK); lv_obj_add_event_cb(o,pull_touch,LV_EVENT_PRESSED,NULL); lv_obj_add_event_cb(o,pull_touch,LV_EVENT_PRESSING,NULL); lv_obj_add_event_cb(o,pull_touch,LV_EVENT_RELEASED,NULL); lv_obj_add_event_cb(o,pull_touch,LV_EVENT_PRESS_LOST,NULL); }
 static void route_app(const char *id)
 {
     static const char *const names[]={"home","pet","album","memories","music","arcade","settings"};
@@ -62,7 +71,7 @@ static lv_obj_t *route_content(void) { return s ? s->mount : NULL; }
 static const lw_app_t *route_current(void) { return s ? s->legacy : NULL; }
 static const lw_shell_host_t shell_host={route_app,route_refresh,route_content,route_current};
 static void event_action(lv_event_t *event)
-{ if (s) s->pending=(int)(intptr_t)lv_event_get_user_data(event); }
+{ if (s) { int id=(int)(intptr_t)lv_event_get_user_data(event); if (id==OC_CONTROL && (int32_t)(s->suppress_control_until-lv_tick_get())>0) return; s->pending=id; } }
 static void register_control(lv_obj_t *o,lw_os_control_t id)
 { (s->building_overlay ? s->over_controls : s->base_controls)[id]=o; }
 static bool available(lw_os_control_t id)
@@ -108,6 +117,7 @@ static void clear_overlay(void)
     if (s->closing) { lv_obj_delete(s->closing); s->closing=NULL; }
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
+    s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
     lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
@@ -119,9 +129,12 @@ static void dismiss_overlay(void)
     if (lw_os_motion_get()!=LW_MOTION_FULL) { clear_overlay(); return; }
     if (s->closing) lv_obj_delete(s->closing);
     s->closing=s->over;
+    if (s->overlay!=OS_OVER_CONTROL && s->overlay!=OS_OVER_LOCK && lv_obj_get_child_count(s->over)) lw_os_motion(lv_obj_get_child(s->over,-1),LW_MOVE_DISMISS);
     lv_anim_t anim; lv_anim_init(&anim); lv_anim_set_var(&anim,s->over); lv_anim_set_exec_cb(&anim,fade);
     lv_anim_set_values(&anim,255,0); lv_anim_set_duration(&anim,180); lv_anim_set_completed_cb(&anim,faded); lv_anim_start(&anim);
+    if (s->overlay==OS_OVER_CONTROL || s->overlay==OS_OVER_LOCK) lw_os_motion_slide(s->over,lv_obj_get_style_translate_y(s->over,0),-600,240,0,false);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
+    s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
     lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
@@ -148,6 +161,7 @@ static void gesture(lv_event_t *event)
     if (!s) return;
     if (lv_event_get_code(event)==LV_EVENT_LONG_PRESSED && s->page==OS_DESKTOP && s->overlay==OS_OVER_NONE) s->pending=OC_EDITOR;
     else if (lv_event_get_code(event)==LV_EVENT_GESTURE) {
+        if (s->pull_active || (int32_t)(s->suppress_control_until-lv_tick_get())>0) return;
         lv_indev_t *indev=lv_indev_active(); lv_point_t point; if (!indev) return; lv_indev_get_point(indev,&point);
         if (point.x>740 && lv_indev_get_gesture_dir(indev)==LV_DIR_BOTTOM) s->pending=OC_CONTROL;
     }
@@ -155,6 +169,7 @@ static void gesture(lv_event_t *event)
 static void build_status(void)
 {
     const lw_os_palette_t *c=palette();
+    lv_obj_t *bar=lw_os_box(s->root,0,0,1024,48,c->bg,0,235); bind_pull(bar);
     lw_os_label(s->root,"LITTLE WORLD",&lw_font_18,32,14,192,c->text);
     s->clock=lw_os_label(s->root,"",&lw_font_18,258,14,330,c->muted);
     lv_obj_t *entry=button(s->root,"",752,2,242,44,OC_CONTROL,false); lv_obj_set_style_bg_opa(entry,0,0);
@@ -162,6 +177,7 @@ static void build_status(void)
     s->mute_badge=lw_os_label(entry,"静",&lw_font_18,52,10,30,c->muted);
     lw_os_label(entry,s->system->backend.simulated ? "Windows 模拟" : "Little World",&lw_font_18,88,10,148,c->muted);
     lv_obj_add_flag(entry,LV_OBJ_FLAG_GESTURE_BUBBLE); lv_obj_add_event_cb(entry,gesture,LV_EVENT_GESTURE,NULL);
+    bind_pull(entry);
 }
 static void build_dock(void)
 {
@@ -197,6 +213,7 @@ static void actors(void)
         lv_obj_add_flag(hit,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(hit,select_actor,LV_EVENT_CLICKED,(void *)(uintptr_t)i);
         /* The sprite's own position is updated below; the hit box follows it in tick. */
         lv_obj_set_user_data(lw_sprite_object(s->sprites[i]),hit);
+        lw_os_motion_stagger(lw_sprite_object(s->sprites[i]),i*2);
     }
 }
 static void update_actors(uint32_t dt)
@@ -214,10 +231,13 @@ static void update_actors(uint32_t dt)
     for (unsigned i=0;i<2;i++) {
         lw_actor_t *a=&s->duo.actors[i]; char clipname[40];
         if (a->motion==LW_ACTOR_WALK) snprintf(clipname,sizeof(clipname),"walk_%s",dirs[a->facing]);
-        else snprintf(clipname,sizeof(clipname),"%s",a->motion==LW_ACTOR_SLEEP ? "sleep_idle" : "idle");
+        else { static const char *const names[]={"idle","walk","touch","wave","sit","letter","window","celebrate","sleep_idle"}; snprintf(clipname,sizeof(clipname),"%s",names[a->motion<=LW_ACTOR_SLEEP ? a->motion : LW_ACTOR_IDLE]); }
+        unsigned blink_period=lw_os_motion_get()==LW_MOTION_REDUCED ? 8000 : 5000;
+        bool blink=a->motion==LW_ACTOR_IDLE && lw_os_motion_get()!=LW_MOTION_OFF && a->animation_ms%blink_period>=blink_period-500 && art_clip(i,"blink");
+        if (blink) snprintf(clipname,sizeof(clipname),"blink");
         const lw_clip_t *clip=art_clip(i,clipname); if (!clip) clip=art_clip(i,"idle");
         if (clip && clip!=s->clips[i] && lw_sprite_play(s->sprites[i],clip)) s->clips[i]=clip;
-        if (clip) lw_sprite_seek(s->sprites[i],s->duo.phase==LW_DUO_ACT ? s->duo.interaction_ms : a->animation_ms);
+        if (clip) { uint32_t time=s->duo.phase==LW_DUO_ACT ? s->duo.interaction_ms : a->animation_ms; if (blink) time=a->animation_ms%blink_period-(blink_period-500); else if (lw_os_motion_get()==LW_MOTION_OFF && a->motion==LW_ACTOR_IDLE) time=0; else if (lw_os_motion_get()==LW_MOTION_REDUCED && a->motion==LW_ACTOR_IDLE) time/=2; lw_sprite_seek(s->sprites[i],time); }
         int x=(int)lroundf(a->x),y=(int)lroundf(a->y); lw_sprite_set_anchor(s->sprites[i],x,y);
         bool lying=a->motion==LW_ACTOR_SLEEP; int shadow_width=lying ? 180 : 76;
         lv_obj_set_pos(s->shadows[i],x-shadow_width/2,y-5); lv_obj_set_width(s->shadows[i],shadow_width);
@@ -232,6 +252,24 @@ static void update_actors(uint32_t dt)
 static void build_desktop(bool world)
 {
     const lw_os_palette_t *c=palette();
+    bool illustrated=lw_visual_assets_available();
+    if (illustrated) {
+        if (s->system->prefs.widgets) {
+        lv_obj_t *paper=surface(s->content,390,66,300,142,20);
+        lw_os_label(paper,world ? "两个人的日常" : "我们的小世界",&lw_font_28,20,14,268,c->text);
+        int days=lw_days_between(lw_app_state()->anniversary,lw_today())+1;
+        lv_obj_t *card=button(paper,"",14,58,272,70,OC_ANNIVERSARY,false); lv_obj_set_style_bg_opa(card,85,0);
+        lw_os_label(card,"在一起的",&lw_font_18,12,11,100,c->muted); char days_text[40]; snprintf(days_text,sizeof(days_text),"%d 天",days<1 ? 1 : days); lw_os_label(card,days_text,&lw_font_28,118,20,148,c->deep);
+        lv_obj_t *letter=button(s->content,"",888,66,96,80,OC_ENVELOPE,false); lv_obj_set_style_bg_opa(letter,235,0); lw_os_icon(letter,OS_I_MAIL,31,7,34,c->deep); lv_obj_t *letter_label=lw_os_label(letter,"今日信封",&lw_font_18,0,48,96,c->text); lv_obj_set_style_text_align(letter_label,LV_TEXT_ALIGN_CENTER,0);
+        } else lw_os_label(s->content,world ? "两个人的日常" : "我们的小世界",&lw_font_28,390,80,320,c->text);
+        if (world) { button(s->content,"见面打招呼",28,412,196,52,OC_GREET,true); button(s->content,"一起读封信",28,346,196,52,OC_LETTER,false); button(s->content,"一起休息",28,280,196,52,OC_REST,false); button(s->content,"照顾宠物",760,412,212,52,OC_PET,false); button(s->content,"小冒险",760,346,212,52,OC_RPG,true); }
+        lv_obj_t *furniture=button(s->content,"",22,128,230,136,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
+        furniture=button(s->content,"",20,281,260,166,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED); if (world) lv_obj_remove_flag(furniture,LV_OBJ_FLAG_CLICKABLE);
+        furniture=button(s->content,"",700,80,90,100,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
+        actors();
+        if (!s->art) { lv_obj_t *empty=surface(s->content,360,400,340,72,16); lw_os_label(empty,"角色资源未安装 · 场景与应用可用",&lw_font_18,16,12,308,c->text); }
+        lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL); return;
+    }
     lw_os_label(s->content,world ? "两个人的日常。" : "我们的小世界",&lw_font_28,48,world ? 76 : 86,280,c->text);
     lw_os_label(s->content,world ? "像素生活 · 原生 1×" : "把平凡，慢慢过成喜欢的日子。",&lw_font_18,48,world ? 122 : 137,272,c->muted);
     int days=lw_days_between(lw_app_state()->anniversary,lw_today())+1; char number[32]; snprintf(number,sizeof(number),"%d",days<1 ? 1 : days);
@@ -247,7 +285,7 @@ static void build_desktop(bool world)
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
         button(s->content,"照顾宠物",48,398,110,50,OC_PET,false); button(s->content,"小冒险",172,398,108,50,OC_RPG,true);
     }
-    lw_os_label(s->content,s->art ? "角色素材 · 本地像素版" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
+    lw_os_label(s->content,s->art ? "场景资源未安装 · 应用可用" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
     /* Furniture targets are created first so character hit areas stay above them. */
     lv_obj_t *furniture=button(s->content,"",518,106,224,184,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     furniture=button(s->content,"",378,276,174,96,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
@@ -312,7 +350,7 @@ static void build_themes(void)
 {
     const lw_os_palette_t *c=palette(); lw_os_label(s->content,"让小世界，换一种心情。",&lw_font_28,48,72,800,c->text);
     lw_os_label(s->content,"场景、Dock 和所有系统浮层，会一起改变。",&lw_font_18,48,116,860,c->muted);
-    static const char *const desc[]={"樱花奶油 · 柔和日光","月光微紫 · 温暖星夜","鼠尾草绿 · 像素日常"};
+    static const char *const desc[]={"樱花奶油 · 柔和晨光","月光微紫 · 温暖星夜","草莓夕照 · 温柔晚霞"};
     for (unsigned i=0;i<3;i++) {
         const lw_os_palette_t *t=lw_os_palette(i); lv_obj_t *tile=button(s->content,"",48+(int)i*312,169,296,248,(lw_os_control_t)(OC_THEME0+i),false);
         lv_obj_set_style_bg_color(tile,lv_color_hex(t->surface),0); lv_obj_set_style_clip_corner(tile,true,0);
@@ -334,7 +372,7 @@ static void render(void)
 {
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=s->boot=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
     lv_obj_clean(s->root); memset(s->base_controls,0,sizeof(s->base_controls)); memset(s->over_controls,0,sizeof(s->over_controls)); s->over=NULL; s->overlay=OS_OVER_NONE;
     unsigned wallpaper=s->page==OS_THEMES ? s->preview_wallpaper : s->system->prefs.wallpaper;
     const lw_os_palette_t *c=palette();
@@ -352,11 +390,13 @@ static void render(void)
         else build_legacy();
     }
     build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,700,2,44,OC_HOME);
-    refresh(); update_actors(0); lw_os_motion(s->content,s->page==OS_THEMES ? LW_MOVE_THEME : LW_MOVE_PAGE);
+    refresh(); update_actors(0); lw_os_motion(s->content,s->page==OS_THEMES ? LW_MOVE_THEME : s->reverse_page ? LW_MOVE_RETURN : LW_MOVE_PAGE); s->reverse_page=false;
 }
 static void build_control(void)
 {
     const lw_os_palette_t *c=palette(); lv_obj_t *p=surface(s->over,484,56,500,486,32);
+    s->control_panel=p; lv_obj_t *handle=lw_os_box(p,174,5,152,4,c->line,2,255); (void)handle;
+    lv_obj_t *drag_header=lw_os_box(p,0,0,420,76,0,0,0); bind_pull(drag_header);
     lw_os_label(p,"控制中心",&lw_font_28,24,14,360,c->text); icon_button(p,OS_I_CLOSE,430,14,46,OC_CLOSE);
     lw_os_label(p,s->system->backend.simulated ? "Windows 模拟 · 状态与设置同步" : "设备服务 · 按可用能力显示",&lw_font_18,24,53,450,c->muted);
     lv_obj_t *wifi=button(p,"",24,78,286,92,OC_WIFI,false); lw_os_icon(wifi,OS_I_WIFI,17,23,44,c->accent);
@@ -377,7 +417,26 @@ static void build_control(void)
     button(p,s->system->prefs.muted ? "取消静音" : "静音",272,316,94,68,OC_MUTE,false);
     button(p,"换个主题",380,316,94,68,OC_THEMES,false);
     button(p,"打开设置",24,404,286,58,OC_SETTINGS,true); button(p,"回桌面",326,404,148,58,OC_HOME,false);
-    lw_os_motion(p,LW_MOVE_CONTROL);
+    if (!s->pull_active) { lw_os_motion_slide(p,-542,0,320,0,true); for (unsigned i=0;i<lv_obj_get_child_count(p);i++) lw_os_motion_stagger(lv_obj_get_child(p,i),i%5); }
+}
+static void pull_touch(lv_event_t *e)
+{
+    if (!s || s->system->locked || s->boot) return;
+    lv_indev_t *input=lv_indev_active(); if (!input) return; lv_point_t point; lv_indev_get_point(input,&point);
+    lv_event_code_t code=lv_event_get_code(e);
+    if (code==LV_EVENT_PRESSED) {
+        if (s->overlay!=OS_OVER_NONE && s->overlay!=OS_OVER_CONTROL) return;
+        s->pull_active=true; s->pull_opening=s->overlay==OS_OVER_NONE; s->pull_start=point.y; s->pull_distance=0; s->pull_moved=false;
+    } else if (code==LV_EVENT_PRESSING && s->pull_active) {
+        int distance=point.y-s->pull_start; if (abs(distance)<8 && !s->pull_moved) return; s->pull_moved=true; s->pull_distance=distance;
+        if (s->pull_opening && s->overlay!=OS_OVER_CONTROL) show_overlay(OS_OVER_CONTROL);
+        if (s->control_panel) { lw_os_motion_cancel(s->control_panel); int y=s->pull_opening ? distance-542 : distance; if (y>0) y=y/5; if (y < -542) y=-542; lv_obj_set_style_translate_y(s->control_panel,y,0); lv_obj_set_style_bg_opa(s->over,(lv_opa_t)(105*(542+y)/542),0); }
+    } else if ((code==LV_EVENT_RELEASED || code==LV_EVENT_PRESS_LOST) && s->pull_active) {
+        bool open=s->pull_opening ? s->pull_distance>112 : s->pull_distance>-72;
+        if (s->pull_moved) s->suppress_control_until=lv_tick_get()+180;
+        s->pull_active=false;
+        if (s->pull_moved && s->control_panel) { if (open) { lw_os_motion_slide(s->control_panel,lv_obj_get_style_translate_y(s->control_panel,0),0,280,0,true); lv_obj_set_style_bg_opa(s->over,105,0); for (unsigned i=0;i<lv_obj_get_child_count(s->control_panel);i++) lw_os_motion_stagger(lv_obj_get_child(s->control_panel,i),i%5); } else dismiss_overlay(); }
+    }
 }
 static void build_wifi(void)
 {
@@ -429,6 +488,11 @@ static void build_lock(void)
     lw_os_icon(s->over,OS_I_LOCK,54,103,28,c->muted);
     lw_os_label(s->over,"向上轻扫，或点下方回家",&lw_font_18,50,401,374,c->muted);
     button(s->over,"轻触，回到小世界",48,472,376,60,OC_UNLOCK,true);
+    if (s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,256); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
+    lw_os_motion(t,LW_MOVE_LOCK);
+    if (s->over_controls[OC_LOCK_DATE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_DATE],2);
+    if (s->over_controls[OC_LOCK_LOVE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_LOVE],3);
+    lw_os_motion_stagger(s->over_controls[OC_UNLOCK],4);
 }
 static void lock_touch(lv_event_t *e)
 {
@@ -448,6 +512,12 @@ static void lock_touch(lv_event_t *e)
         s->lock_dragging=s->lock_ready=false;
     }
 }
+static void flap_draw(lv_event_t *e)
+{
+    lv_obj_t *o=lv_event_get_target_obj(e); lv_area_t area; lv_obj_get_coords(o,&area); if (lv_obj_get_height(o)<1) return;
+    lv_draw_triangle_dsc_t d; lv_draw_triangle_dsc_init(&d); d.color=lv_color_hex(palette()->line); d.opa=255;
+    d.p[0]=(lv_point_precise_t){area.x1,area.y1}; d.p[1]=(lv_point_precise_t){area.x2,area.y1}; d.p[2]=(lv_point_precise_t){(area.x1+area.x2)/2,area.y2}; lv_draw_triangle(lv_event_get_layer(e),&d);
+}
 static void show_overlay(lw_os_overlay_t kind)
 {
     if (kind==OS_OVER_LOCK && s->overlay==kind && s->over) { refresh(); return; }
@@ -458,15 +528,20 @@ static void show_overlay(lw_os_overlay_t kind)
     if (kind==OS_OVER_LOCK) { lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESSED,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESSING,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_RELEASED,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESS_LOST,NULL); }
     if (kind==OS_OVER_CONTROL) build_control(); else if (kind==OS_OVER_WIFI) build_wifi(); else if (kind==OS_OVER_PASSWORD) build_password(); else if (kind==OS_OVER_LOCK) build_lock();
     else {
-        lv_obj_t *p=surface(s->over,270,117,484,354,32); icon_button(p,OS_I_CLOSE,420,16,44,OC_CLOSE);
+        lv_obj_t *p=surface(s->over,270,kind==OS_OVER_LETTER ? 80 : 117,484,kind==OS_OVER_LETTER ? 420 : 354,32); icon_button(p,OS_I_CLOSE,420,16,44,OC_CLOSE);
         if (kind==OS_OVER_EDIT) {
             lw_os_label(p,"布置你的小世界",&lw_font_28,28,29,370,palette()->text);
             button(p,"壁纸与主题",28,103,428,58,OC_THEMES,true); button(p,s->system->prefs.widgets ? "隐藏桌面小组件" : "显示桌面小组件",28,181,428,58,OC_WIDGETS,false); button(p,"走进双人房间",28,259,428,58,OC_WORLD,false);
         } else {
-            lw_os_icon(p,OS_I_MAIL,28,28,48,palette()->accent); lw_os_label(p,"今天也有一封小信",&lw_font_28,28,105,428,palette()->text);
-            lw_os_label(p,"愿普通的一天，也有被惦记的温柔。\n一起吃饭，一起散步，一起慢慢生活。\n下一封惊喜，留给未来的我们。",&lw_font_18,28,167,428,palette()->muted); button(p,"收好这份温柔",28,280,428,50,OC_CLOSE,true);
+            lv_obj_t *paper=lw_os_box(p,24,52,436,270,palette()->surface,12,255);
+            lw_os_label(paper,"今天也有一封小信",&lw_font_28,18,22,400,palette()->text);
+            lw_os_label(paper,"愿普通的一天，也有被惦记的温柔。\n一起吃饭，一起散步，一起慢慢生活。\n下一封惊喜，留给未来的我们。",&lw_font_18,18,94,400,palette()->muted);
+            lw_os_motion(paper,LW_MOVE_PAPER);
+            lw_os_box(p,16,282,452,122,palette()->soft,18,255);
+            lv_obj_t *flap=lw_os_box(p,16,282,452,80,0,0,0); lv_obj_add_event_cb(flap,flap_draw,LV_EVENT_DRAW_MAIN,NULL); lw_os_motion(flap,LW_MOVE_FLAP);
+            lw_os_icon(p,OS_I_HEART,36,338,38,palette()->deep); button(p,"收好这份温柔",92,332,348,50,OC_CLOSE,true);
         }
-        lw_os_motion(p,LW_MOVE_DIALOG);
+        lw_os_motion(p,kind==OS_OVER_LETTER ? LW_MOVE_PAPER : LW_MOVE_DIALOG);
     }
     s->building_overlay=false; refresh();
 }
@@ -474,7 +549,7 @@ void lw_os_notify(const char *message)
 {
     if (!s || s->system->prefs.dnd) return;
     if (s->toast) lv_obj_delete(s->toast);
-    s->toast=surface(s->root,270,428,484,60,22); lw_os_label(s->toast,message,&lw_font_18,22,18,444,palette()->text); s->toast_ms=3000; lw_os_motion(s->toast,LW_MOVE_TOAST);
+    s->toast=surface(s->root,270,50,484,60,22); lw_os_label(s->toast,message,&lw_font_18,22,18,444,palette()->text); s->toast_ms=3000; lw_os_motion(s->toast,LW_MOVE_TOAST);
 }
 static void refresh(void)
 {
@@ -516,7 +591,7 @@ static void act(int id)
 {
     if (id<0) return;
     switch (id) {
-    case OC_HOME:navigate(OS_DESKTOP);break;
+    case OC_HOME:s->reverse_page=true; navigate(OS_DESKTOP);break;
     case OC_WORLD:navigate(OS_WORLD);break;
     case OC_ALBUM:navigate(OS_ALBUM);break;
     case OC_MEMORIES:navigate(OS_MEMORIES);break;
@@ -568,7 +643,7 @@ static void act(int id)
         lw_os_motion_settle(s->root); render();break;
     case OC_GREET:case OC_LETTER:case OC_REST:
         if (!lw_duo_request(&s->duo,id==OC_GREET ? LW_DUO_GREET : id==OC_LETTER ? LW_DUO_LETTER : LW_DUO_REST)) lw_os_notify("有人正在休息，先留一点安静。");
-        else lw_os_notify("互动协调已开始，正式动作素材尚待验收。");
+        else lw_os_notify("慢慢靠近，一起打个招呼。");
         break;
     }
 }
@@ -578,10 +653,13 @@ static void tick(lv_timer_t *timer)
     if (s->navigation>=0) { if (s->navigation_ms>dt) s->navigation_ms-=dt; else { int page=s->navigation; lw_os_open((lw_os_page_t)page); } }
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt); update_actors(dt);
+    s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no
      * toast animation, no Wi-Fi spinner, no sprite seek - a still frame. Any
-     * flicker that survives this is produced by the display/backlight path. */
+     * flicker that survives this is produced by the display/backlight path.
+     * The lock-screen sprite seek above is kept ahead of the return so the
+     * diagnostic build never leaves a lock sprite parked at a stale frame. */
     {
         static bool diag_rendered;
         if (!diag_rendered) { diag_rendered=true; render(); refresh(); }
@@ -605,6 +683,28 @@ static void tick(lv_timer_t *timer)
     }
     if (s->toast) { s->toast_ms=s->toast_ms>dt ? s->toast_ms-dt : 0; if (!s->toast_ms) { lv_obj_delete(s->toast); s->toast=NULL; } }
 }
+static void boot_deleted(lv_event_t *e) { if (s && s->boot==lv_event_get_target_obj(e)) s->boot=NULL; }
+static void boot_complete(lv_anim_t *a) { lv_obj_delete(a->var); }
+static void boot_skip(lv_event_t *e) { (void)e; if (s && s->boot) lv_obj_delete(s->boot); }
+void lw_os_boot(void)
+{
+    if (!s || lw_os_motion_get()==LW_MOTION_OFF) return;
+    if (s->boot) lv_obj_delete(s->boot);
+    s->boot=lw_os_box(s->root,0,0,1024,600,0x302936,0,145); lv_obj_add_flag(s->boot,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s->boot,boot_deleted,LV_EVENT_DELETE,NULL); lv_obj_add_event_cb(s->boot,boot_skip,LV_EVENT_CLICKED,NULL);
+    lv_obj_t *logo=surface(s->boot,322,188,380,172,28); lw_os_icon(logo,OS_I_HEART,164,16,52,palette()->accent);
+    lv_obj_t *title=lw_os_label(logo,"Little World",&lw_font_28,0,84,380,palette()->text); lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
+    title=lw_os_label(logo,"把喜欢的日子，慢慢点亮。",&lw_font_18,0,132,380,palette()->muted); lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
+    for (unsigned i=0;i<3;i++) { lv_obj_t *petal=lw_os_icon(s->boot,OS_I_LEAF,290+(int)i*205,120+(int)(i%2)*252,24,palette()->accent); lw_os_motion_stagger(petal,i*3); }
+    lw_os_motion(logo,LW_MOVE_BOOT);
+    for (unsigned i=0;i<2;i++) if (s->sprites[i]) lw_os_motion(lw_sprite_object(s->sprites[i]),LW_MOVE_ACTOR);
+    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,s->boot); lv_anim_set_exec_cb(&a,fade); lv_anim_set_values(&a,255,0); lv_anim_set_delay(&a,lw_os_motion_get()==LW_MOTION_FULL ? 800 : 80); lv_anim_set_duration(&a,lw_os_motion_get()==LW_MOTION_FULL ? 400 : 90); lv_anim_set_completed_cb(&a,boot_complete); lv_anim_start(&a);
+}
+bool lw_os_boot_active(void) { return s && s->boot; }
+lv_obj_t *lw_os_control_panel(void) { return s ? s->control_panel : NULL; }
+const lw_duo_t *lw_os_duo_state(void) { return s ? &s->duo : NULL; }
+const char *lw_os_actor_clip(unsigned i) { return s && i<2 && s->clips[i] ? s->clips[i]->asset_id : NULL; }
+uint16_t lw_os_actor_frame(unsigned i) { return s && i<2 && s->sprites[i] ? lw_sprite_frame(s->sprites[i]) : UINT16_MAX; }
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;
@@ -618,16 +718,17 @@ bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
     lw_duo_init(&s->duo,0x10252026); s->duo.autonomous=false;
     for (unsigned i=0;i<2;i++) { s->duo.actors[i].x=592.0f+i*224.0f; s->duo.actors[i].y=446.0f; s->duo.actors[i].target_x=s->duo.actors[i].x; s->duo.actors[i].target_y=446.0f; }
     (void)lw_duo_set_bounds(&s->duo,510,862,400,446);
+    if (lw_visual_assets_available()) { for (unsigned i=0;i<2;i++) { s->duo.actors[i].x=450.0f+i*196.0f; s->duo.actors[i].y=478.0f; s->duo.actors[i].target_x=s->duo.actors[i].x; s->duo.actors[i].target_y=478.0f; } (void)lw_duo_set_bounds(&s->duo,394,702,436,478); }
     s->root=lv_obj_create(NULL); lv_obj_remove_style_all(s->root); lv_obj_set_size(s->root,1024,600); lv_obj_set_style_bg_opa(s->root,255,0); lv_obj_remove_flag(s->root,LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(s->root,gesture,LV_EVENT_GESTURE,NULL); lv_screen_load(s->root); render(); s->timer=lv_timer_create(tick,20,s);
-    if (!s->timer) { lw_os_stop(); return false; } return true;
+    if (!s->timer) { lw_os_stop(); return false; } lw_os_boot(); return true;
 }
 void lw_os_stop(void)
 {
     if (!s) return;
     if (s->timer) lv_timer_delete(s->timer);
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
-    lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL; lw_theme_session_palette(NULL); lw_shell_bind_host(NULL);
+    lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL; lw_visual_assets_shutdown(); lw_theme_session_palette(NULL); lw_shell_bind_host(NULL);
 }
 lv_obj_t *lw_os_control(lw_os_control_t id) { return !s || id>=OC_COUNT ? NULL : s->over_controls[id] ? s->over_controls[id] : s->base_controls[id]; }
 lv_obj_t *lw_os_root(void) { return s ? s->root : NULL; }

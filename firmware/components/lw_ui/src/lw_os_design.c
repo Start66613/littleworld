@@ -2,10 +2,11 @@
 #include "lw_os_design.h"
 #include <stdint.h>
 #include "lw_app_state.h"
+#include "lw_visual_assets.h"
 static const lw_os_palette_t palettes[]={
     {0xfff7ee,0xf2e6e9,0xfffcf8,0xf3e8e8,0x51424a,0x81737c,0xe6d6d9,0xda879d,0x905668,0xd0ac8c,0xcde0dc,"Sakura"},
     {0x222940,0x3a3654,0x353c54,0x45465f,0xf7efe6,0xbeb8ce,0x55566c,0xbeafd9,0xd8bed8,0x8f7a85,0x374a6b,"Moonlight"},
-    {0xf5f2df,0xe3e6d1,0xfbf9ee,0xe7e9d6,0x3f514a,0x78877a,0xd8deca,0x8ea990,0x526d5c,0xbb9978,0xd2e3ce,"Pixel Home"}
+    {0xffefe3,0xedd9d9,0xfff9f2,0xf2ddd9,0x59434b,0x8b6e77,0xe7c5c4,0xd9889f,0x9b556b,0xb78365,0xf2baa3,"Sunset"}
 };
 const lw_os_palette_t *lw_os_palette(unsigned i) { return &palettes[i<3 ? i : 0]; }
 lv_obj_t *lw_os_box(lv_obj_t *p,int x,int y,int w,int h,uint32_t color,int radius,lv_opa_t opa)
@@ -138,9 +139,17 @@ static void old_scene(lv_event_t *e)
 static void scene_delete(lv_event_t *e) { scene_mix_count--; lv_free(lv_event_get_user_data(e)); }
 static void scene_fade(void *object,int32_t opacity)
 { scene_mix_t *mix=lv_obj_get_user_data(object); mix->opacity=(unsigned)opacity; lv_obj_invalidate(object); }
+static void image_fade(void *object,int32_t opacity) { lv_obj_set_style_opa(object,(lv_opa_t)opacity,0); }
+static void image_finished(lv_anim_t *a) { lv_obj_delete(a->var); }
 void lw_os_wallpaper_change(lv_obj_t *o,unsigned from)
 {
     if (lw_os_motion_get()!=LW_MOTION_FULL) return;
+    if (lw_visual_assets_available()) {
+        lv_obj_t *prior=lw_visual_scene_image(o,from,lv_obj_get_width(o),lv_obj_get_height(o),true);
+        if (prior) { /* bounded thumbnail overlay, never two full scenes */
+            lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,prior); lv_anim_set_exec_cb(&a,image_fade); lv_anim_set_values(&a,255,0); lv_anim_set_duration(&a,260); lv_anim_set_completed_cb(&a,image_finished); lv_anim_start(&a); }
+        return;
+    }
     scene_mix_t *mix=lv_malloc_zeroed(sizeof(*mix)); if (!mix) return;
     scene_mix_count++;
     mix->theme=from; mix->opacity=255; lv_obj_set_user_data(o,mix);
@@ -149,62 +158,15 @@ void lw_os_wallpaper_change(lv_obj_t *o,unsigned from)
 }
 lv_obj_t *lw_os_wallpaper(lv_obj_t *p,unsigned theme,int x,int y,int w,int h)
 {
-    lv_obj_t *o=lw_os_box(p,x,y,w,h,0,0,0); lv_obj_add_event_cb(o,room_draw,LV_EVENT_DRAW_MAIN,(void *)(uintptr_t)theme); return o;
+    lv_obj_t *o=lw_os_box(p,x,y,w,h,lw_os_palette(theme)->bg,0,255);
+    if (!lw_visual_scene_image(o,theme,w,h,w<800)) lv_obj_add_event_cb(o,room_draw,LV_EVENT_DRAW_MAIN,(void *)(uintptr_t)theme);
+    return o;
 }
-static lw_motion_mode_t motion_mode;
-static void move(void *o,int32_t y) { lv_obj_set_style_translate_y(o,y,0); }
-static void move_x(void *o,int32_t x) { lv_obj_set_style_translate_x(o,x,0); }
-static void appear(void *o,int32_t opacity) { lv_obj_set_style_opa(o,(lv_opa_t)opacity,0); }
-static void animate(lv_obj_t *o,lv_anim_exec_xcb_t exec,int from,int to,unsigned duration,bool spring)
-{
-    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,o); lv_anim_set_exec_cb(&a,exec); lv_anim_set_values(&a,from,to);
-    lv_anim_set_duration(&a,duration); lv_anim_set_path_cb(&a,spring ? lv_anim_path_overshoot : lv_anim_path_ease_out); lv_anim_start(&a);
-}
-lw_motion_mode_t lw_os_motion_get(void) { return !lw_app_state()->settings.animations ? LW_MOTION_OFF : motion_mode; }
-void lw_os_motion_mode(lw_motion_mode_t mode) { motion_mode=mode; }
 void lw_os_motion_settle(lv_obj_t *o)
 {
     if (lv_anim_get(o,scene_fade)) { lv_anim_delete(o,scene_fade); scene_fade(o,0); }
-    lv_anim_delete(o,move); lv_anim_delete(o,move_x); lv_anim_delete(o,appear);
-    move(o,0); move_x(o,0); appear(o,255);
+    lw_os_motion_cancel(o);
     for (unsigned i=0;i<lv_obj_get_child_count(o);i++) lw_os_motion_settle(lv_obj_get_child(o,(int)i));
-}
-void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
-{
-    lw_motion_mode_t mode=lw_os_motion_get(); if (mode==LW_MOTION_OFF) return;
-    if (mode==LW_MOTION_REDUCED) { animate(o,appear,220,255,90,false); return; }
-    switch (kind) {
-    case LW_MOVE_PAGE:animate(o,move_x,22,0,220,false);break;
-    case LW_MOVE_CONTROL:animate(o,move_x,42,0,290,true);break;
-    case LW_MOVE_DIALOG:animate(o,move,20,0,240,true);break;
-    case LW_MOVE_TOAST:animate(o,move,-10,0,170,false);break;
-    case LW_MOVE_REWARD:animate(o,move,28,0,420,true);break;
-    case LW_MOVE_THEME:animate(o,appear,210,255,260,false);break;
-    }
-}
-void lw_os_motion_exit(lv_obj_t *o) { if (lw_os_motion_get()==LW_MOTION_FULL) animate(o,move_x,0,-14,70,false); }
-void lw_os_motion_step(lv_obj_t *o,int x,int y,unsigned duration)
-{
-    lv_obj_update_layout(o); int old_x=lv_obj_get_x(o),old_y=lv_obj_get_y(o);
-    lv_obj_set_pos(o,x,y);
-    if (lw_os_motion_get()==LW_MOTION_FULL) { animate(o,move_x,old_x-x,0,duration,false); animate(o,move,old_y-y,0,duration,false); }
-    else { lv_anim_delete(o,move); lv_anim_delete(o,move_x); move(o,0); move_x(o,0); }
-}
-static void touched(lv_event_t *e)
-{
-    lv_obj_t *o=lv_event_get_target_obj(e);
-    if (lv_obj_has_state(o,LV_STATE_DISABLED) || lw_os_motion_get()!=LW_MOTION_FULL) return;
-    lv_anim_delete(o,move);
-    if (lv_event_get_code(e)==LV_EVENT_PRESSED) move(o,2);
-    else animate(o,move,2,0,140,true);
-}
-void lw_os_motion_touch(lv_obj_t *o)
-{ lv_obj_add_event_cb(o,touched,LV_EVENT_PRESSED,NULL); lv_obj_add_event_cb(o,touched,LV_EVENT_RELEASED,NULL); lv_obj_add_event_cb(o,touched,LV_EVENT_PRESS_LOST,NULL); }
-void lw_os_animate(lv_obj_t *o,int offset,uint32_t duration)
-{
-    if (lw_os_motion_get()==LW_MOTION_OFF) return;
-    if (lw_os_motion_get()==LW_MOTION_FULL) animate(o,move,offset,0,duration,false);
-    else animate(o,appear,220,255,90,false);
 }
 static void foreground_draw(lv_event_t *event)
 {

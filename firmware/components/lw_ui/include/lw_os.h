@@ -32,3 +32,9 @@ typedef enum { LW_SERVICE_UNAVAILABLE,LW_SERVICE_SIMULATED,LW_SERVICE_READY } lw
 typedef struct { lw_service_state_t brightness,volume,wifi,audio,storage; } lw_os_capabilities_t;
 void lw_os_capabilities(const lw_os_capabilities_t *);
 bool lw_os_volume_available(void);
+void lw_os_boot(void);
+bool lw_os_boot_active(void);
+lv_obj_t *lw_os_control_panel(void);
+const lw_duo_t *lw_os_duo_state(void);
+const char *lw_os_actor_clip(unsigned);
+uint16_t lw_os_actor_frame(unsigned);

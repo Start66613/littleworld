@@ -1,0 +1,93 @@
+{
+  "tested_code_commit": "96aee9b59126ff3cb4aacd8c05fd870dc814ca28",
+  "baseline_commit": "d95b806635659a1b3cf0282e306c9e603e7c734a",
+  "branch": "agent/visual-v4-meowa-motion",
+  "artifacts": [
+    {
+      "local_path": "D:/LittleWorld-V4-Visual/build/host/LittleWorld.exe",
+      "bytes": 1385984,
+      "sha256": "3fa4671f706cc6fc607d20dd3c188ffa3840ddb16484b3c5929c73be965f29a3",
+      "published": false
+    },
+    {
+      "local_path": "D:/build/visual-v4/little_world.bin",
+      "bytes": 2256624,
+      "sha256": "21875577167d682ff49c575b413e4508477cc0a09e39f7d1f3c635ec0c305b2e",
+      "published": false
+    }
+  ],
+  "logs": [
+    {
+      "local_log": "reports/logs/v4-verified-host.log",
+      "sha256": "435f5a9a94d2ba4430bfd3f8d976ae53354a676262db01b2e1ba2a2debc30fca",
+      "confirmed_result": "OS V2: 489 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-fallback.log",
+      "sha256": "d8a014f77d491b735edf8a324bd7bc9aa9b3fac8064c429b6f7108dfcb5e18f2",
+      "confirmed_result": "OS V2: 472 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-missing-scene.log",
+      "sha256": "b15e6a01701be89bd73a62312fa67d1e04926c48d1e8922e243cf2672a7937ac",
+      "confirmed_result": "OS V2: 487 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-core.log",
+      "sha256": "62272179f2060d436b81204249fab0f2890a97fc492260a0e97f398bfa088796",
+      "confirmed_result": "142 checks, 0 failure(s)"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-python.log",
+      "sha256": "056ad67be228baa35126bec443e07d7a766911f0cc9ab5195db3c10a90cdbf1d",
+      "confirmed_result": "Ran 18 tests"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-fonts.log",
+      "sha256": "43b4e2a4b3f1b5b83475c997ce907cbbb38273ab00464170f099d148c8b7212d",
+      "confirmed_result": "font outputs are up to date"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-resources.log",
+      "sha256": "8289730d405fb97644bb84c5cafa0ce58a0bb76eb48a3a36a330d5f3bf2ae7e0",
+      "confirmed_result": "94 checks, 0 failures"
+    },
+    {
+      "local_log": "reports/logs/v4-verified-legacy.log",
+      "sha256": "e58a9597367d133ebfdfb94f20b7dfb551e8d3a4301e493a161f40607e67f49a",
+      "confirmed_result": "AUTO RUN: PASSED (0 failure(s))"
+    },
+    {
+      "local_log": "reports/logs/v4-final-idf.log",
+      "sha256": "6327e384d4f72b20251063c733bbd993069ab6a527394a14777551435eb2a3a8",
+      "confirmed_result": "Project build complete."
+    }
+  ],
+  "protected_paths_unchanged": [
+    "firmware/main",
+    "firmware/components/lw_backend",
+    "firmware/components/lw_net",
+    "firmware/components/lw_system",
+    "firmware/components/lw_storage",
+    "firmware/components/lw_core",
+    "firmware/components/lw_duo",
+    "firmware/components/arcade_core",
+    "rpg",
+    "tests/host/test_rpg.c",
+    "firmware/partitions.csv"
+  ],
+  "framebuffers": 67,
+  "runtime_animation_previews": 5,
+  "asset_audit_checks": 114,
+  "meowa_actual_spent": 169,
+  "meowa_authorized_limit": 1000,
+  "idf": "5.5.5",
+  "lvgl": "9.5.0",
+  "target": "esp32p4",
+  "silicon_build_min": "300",
+  "firmware_version": "96aee9b",
+  "firmware_scope": "unchanged release firmware entry and backend; large scene files and new action packs are NOT embedded or mounted by this build",
+  "board_tested": false,
+  "fixed_board_fps_claimed": false,
+  "device_operations": 0
+}

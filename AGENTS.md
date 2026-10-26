@@ -1,5 +1,7 @@
 # Little World 2.0 · Codex 工作区规则
 
+V4用户任务优先（2026-10-26）：工作区D:\LittleWorld-V4-Visual，分支agent/visual-v4-meowa-motion，基线release/os-v3.1-stable@d95b806。允许使用官方最新Meowa完整Skill，在1000积分硬上限内生产场景/现有角色动画；逐笔核价、记Job ID、余额和结果，失败先恢复原Job。默认男方固定Codex male-anchor-aligned，女方固定原版Qianqian，继承DSH房间；可直接完成本轮美术选择与集成，无须等待睡眠中的用户确认。允许公开本轮交付的生成素材、转换资源、动画预览和真实LVGL截图，不公开真人私照、密钥、私有认证、存档或Flash备份。以下旧无预算/待确认/仅本地的冲突限制以本轮明确授权为准。禁止修改DSH显示/背光/驱动、firmware/main、业务核心、冻结RPG、分区；不连接设备、不刷写。所有新增文件/构建/备份在D盘。高亮频闪未解决，不加入快速明暗、整屏闪光或高频闪烁。Full/Reduced/Off和生命周期检查是交付条件。
+
 最新追加授权（2026-10-25）：用户要求将成功运行的新UI截图也推送GitHub。允许公开reports/os-v3/SCREENSHOTS.json明确列出的31张渲染后PNG（包括Qianqian画面），发布副本在reports/os-v3/screenshots；此条覆盖下方旧的截图仅本地限制，但不授权公开角色源文件、资源包、私照、密钥或存档。
 
 本轮P5用户授权优先：分支agent/os-v2-experience-v3，基线31dba23，工作区D:\LittleWorld-Codex。主要修改UI/Host测试/规范；禁止修改firmware/main、lw_system硬件服务、lw_storage、冻结rpg核心及其85项测试、lw_core/arcade_core算法。新能力仅定义UI契约和Host样例，不抢DSH后端实现。允许推送本分支代码/非敏感报告；本轮31张UI截图按上述追加授权公开。无Meowa收费、无设备连接、无刷写。旧P0/P1范围不阻塞本轮已授权应用体验升级。

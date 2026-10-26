@@ -1,0 +1,85 @@
+{
+  "name": "idle",
+  "character": "male",
+  "canvas": [
+    256,
+    256
+  ],
+  "anchor": [
+    128,
+    225
+  ],
+  "durations_ms": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "loop": true,
+  "source": "assets/visual-v4/characters/male/idle-original.webp",
+  "source_sha256": "6b5e2ad30dbaea3d81e5441baf81ac1da222580468aeb6c5654071bd252029b3",
+  "frames": [
+    "idle/000.png",
+    "idle/001.png",
+    "idle/002.png",
+    "idle/003.png",
+    "idle/004.png",
+    "idle/005.png",
+    "idle/006.png",
+    "idle/007.png"
+  ],
+  "bboxes": [
+    [
+      76,
+      18,
+      179,
+      225
+    ],
+    [
+      76,
+      19,
+      179,
+      225
+    ],
+    [
+      76,
+      21,
+      179,
+      225
+    ],
+    [
+      75,
+      23,
+      180,
+      225
+    ],
+    [
+      76,
+      22,
+      179,
+      225
+    ],
+    [
+      76,
+      19,
+      179,
+      225
+    ],
+    [
+      76,
+      17,
+      179,
+      225
+    ],
+    [
+      76,
+      17,
+      179,
+      225
+    ]
+  ]
+}

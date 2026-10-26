@@ -1,0 +1,35 @@
+[
+  {
+    "theme": 0,
+    "name": "sakura-morning",
+    "source": "assets/visual-v4/scenes/sakura-morning-master.png",
+    "source_sha256": "61c43af792d7e3bae5ff18ef8425646d8fd500c5e19033ce16c14f4ac3847db4",
+    "upstream": "job_ddaea059d1274b868e193d5af17084a4",
+    "master": "assets/visual-v4/scenes/sakura-morning-master.png",
+    "runtime_bytes": 1228800,
+    "thumbnail_bytes": 76800,
+    "conversion": "nearest 1/2, then edge-pad 12px top/bottom; no aspect stretch"
+  },
+  {
+    "theme": 1,
+    "name": "moonlight-dream",
+    "source": "assets/visual-v4/scenes/moonlight-dream-master.png",
+    "source_sha256": "1ea3caa44b44cdc6d18dae9b8d26aa91437e62dbef563964a5c05b67dcd7ff2a",
+    "upstream": "job_9786e2bc1b33426e951822c844dc375e",
+    "master": "assets/visual-v4/scenes/moonlight-dream-master.png",
+    "runtime_bytes": 1228800,
+    "thumbnail_bytes": 76800,
+    "conversion": "nearest 1/2, then edge-pad 12px top/bottom; no aspect stretch"
+  },
+  {
+    "theme": 2,
+    "name": "strawberry-sunset",
+    "source": "assets/visual-v4/scenes/strawberry-sunset-master.png",
+    "source_sha256": "ceab865d833f7f594bec3b0ef28430dcbc1039f12c31fd39056d4bf8da23ecd2",
+    "upstream": "DSH git 364e985eba6d09020f20b669362d995b6ecf043c",
+    "master": "assets/visual-v4/scenes/strawberry-sunset-master.png",
+    "runtime_bytes": 1228800,
+    "thumbnail_bytes": 76800,
+    "conversion": "nearest 1/2, then edge-pad 12px top/bottom; no aspect stretch"
+  }
+]

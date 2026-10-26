@@ -1,0 +1,14 @@
+{
+  "canvas": [1024, 600],
+  "origin": "top-left",
+  "same_geometry_for_all_three_themes": true,
+  "actor_world_floor_bounds": [394, 436, 702, 478],
+  "anchors": {"male": [128, 225], "qianqian": [128, 226]},
+  "furniture_rectangles_xywh": {
+    "window_to_themes": [22, 128, 230, 136],
+    "sofa_to_world": [20, 281, 260, 166],
+    "photo_frame_to_album": [700, 80, 90, 100]
+  },
+  "envelope_xywh": [888, 66, 96, 80],
+  "notes": "Photo hotspot follows the actual DSH frame, separated from the envelope. World action buttons take precedence over the sofa hotspot. Actors have separate moving hitboxes."
+}
