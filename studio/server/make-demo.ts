@@ -1,0 +1,10 @@
+import { promises as fs } from "node:fs";
+import { fixture, demoPng } from "../tests/fixtures.ts";
+import { pack } from "./package.ts";
+const snapshot = fixture(true);
+await fs.mkdir("examples", { recursive: true });
+await fs.writeFile("examples/demo.lwpack", pack(snapshot));
+await fs.writeFile("examples/demo.lwstudio", pack(snapshot));
+await fs.writeFile("examples/demo-sakura.png", demoPng());
+await fs.writeFile("examples/demo-sage.png", demoPng(true));
+console.log("Created DEMO content only. No private photos or text.");

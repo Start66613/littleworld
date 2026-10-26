@@ -1,0 +1,11 @@
+node_modules/
+dist/
+private/
+playwright-report/
+test-results/
+*.lwstudio
+*.lwpack
+!examples/demo.lwstudio
+!examples/demo.lwpack
+*.tmp
+*.log
