@@ -20,6 +20,7 @@ def balance():
     raise RuntimeError('Official balance unavailable; paid submission blocked')
 
 def save(data):
+    data['actual_credits_spent']=sum(max(0,j.get('observed_balance_decrease',0)) for j in data['jobs'])
     temp = LEDGER.with_suffix('.tmp')
     temp.write_text(json.dumps(data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     temp.replace(LEDGER)
@@ -58,7 +59,11 @@ def main():
     for match in re.finditer(r'"credit_cost"\s*:\s*(\d+)', ''.join(captured)):
         row['official_credit_cost']=int(match.group(1))
     try:
-        row['balance_after']=balance(); row['observed_balance_decrease']=row['balance_before']-row['balance_after']
+        after=balance()
+        if a.recover and 'observed_balance_decrease' in row:
+            row['balance_after_recovery']=after
+        else:
+            row['balance_after']=after; row['observed_balance_decrease']=row['balance_before']-after
     finally: save(data)
     return code
 

@@ -1,0 +1,1334 @@
+{
+  "date": "2026-10-26",
+  "official_commit": "33578ab708c1b4dfcd83fe79dffdbd47ff4083b2",
+  "sources": [
+    {
+      "file": "SKILL.md",
+      "bytes": 31705,
+      "lines": 232,
+      "sha256": "dd2ff566684f16e5c3202f174b4d931ab1f7285ce0915588e12063f87528f0e2"
+    },
+    {
+      "file": "meowart_api.md",
+      "bytes": 17365,
+      "lines": 194,
+      "sha256": "29cf58a3f9b274836c8e75514e82b7dd9b3031218d0b6daa496325f233644bb8"
+    },
+    {
+      "file": "web_parameter_contract.json",
+      "bytes": 70646,
+      "lines": 2499,
+      "sha256": "ba5db18d4d8bdc1db3256811bda30ffbdb8b4e6929ccca88f65602ca843b741e"
+    },
+    {
+      "file": "meowart_api.py",
+      "bytes": 511044,
+      "lines": 11979,
+      "sha256": "871874676bae2fffeb6edaa7c91ff0b09e3ddaa11ee66d004b717d23a42c14d2"
+    },
+    {
+      "file": "references/animation-and-video.md",
+      "bytes": 26282,
+      "lines": 243,
+      "sha256": "e3d573ddaadbc4d78f8005b83e9124cda0eb83fcda27547a600af2f8cb13da31"
+    },
+    {
+      "file": "references/audio.md",
+      "bytes": 6862,
+      "lines": 126,
+      "sha256": "6b828317dd2614e54edbf8ac02b01338003770d67cb6221b4ce4d778625e5f6a"
+    },
+    {
+      "file": "references/capability-routing.md",
+      "bytes": 12450,
+      "lines": 81,
+      "sha256": "ce41f89566f396f1012f1cceab60eb7749f23a33884789f8ec3632393b19f7e7"
+    },
+    {
+      "file": "references/game-design.md",
+      "bytes": 5004,
+      "lines": 62,
+      "sha256": "64505879f708478f059cbd1f5f1b68e26c3127b449be9363e6ba7d8f30ea5eec"
+    },
+    {
+      "file": "references/local-tools.md",
+      "bytes": 2986,
+      "lines": 30,
+      "sha256": "22c7cefa6516070f0b63f4c75842483dfead2b291f9d49dbc4584db31506413a"
+    },
+    {
+      "file": "references/maps-tiles-and-textures.md",
+      "bytes": 35886,
+      "lines": 514,
+      "sha256": "a8411f51cda13ddf171e8ee6f43dc20ee7ce3cad75fc9ba2dca96a0b5cc49e25"
+    },
+    {
+      "file": "references/pixel-and-hd-assets.md",
+      "bytes": 23257,
+      "lines": 332,
+      "sha256": "338adbc1b1863719f27195204fcef6ebe38c9c15f33264f7d974eed87289af83"
+    },
+    {
+      "file": "references/running-and-outputs.md",
+      "bytes": 7785,
+      "lines": 129,
+      "sha256": "e12b2d92fba2b45c849c601501b27ba05174094da2e2914801e64df5251c9d2c"
+    },
+    {
+      "file": "references/ui-and-image-editing.md",
+      "bytes": 27215,
+      "lines": 275,
+      "sha256": "c766295e50b201ba45a374b5d60b80564db6384960cf1b403ac20d3e55c09737"
+    }
+  ],
+  "installed_copy": [
+    {
+      "file": "SKILL.md",
+      "present": false,
+      "same_as_verified_runner": false
+    },
+    {
+      "file": "meowart_api.py",
+      "present": false,
+      "same_as_verified_runner": false
+    },
+    {
+      "file": "web_parameter_contract.json",
+      "present": false,
+      "same_as_verified_runner": false
+    }
+  ],
+  "contract_feature_count": 44,
+  "public_help_entries": 82,
+  "registered_names_including_aliases": 132,
+  "parameter_flags_compared": 228,
+  "missing_contract_commands_or_flags": [],
+  "features": [
+    {
+      "feature": "media_storage",
+      "command": "media-storage-set",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--media-storage-site"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "general_nano_banana",
+      "command": "general-image-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--generation-model",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--resolution",
+        "--aspect-ratio",
+        "--quality",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "general_image2_5",
+      "command": "general-image-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--generation-model",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--resolution",
+        "--aspect-ratio",
+        "--quality",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "general_image2",
+      "command": "general-image-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--generation-model",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--resolution",
+        "--aspect-ratio",
+        "--quality",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "image_edit",
+      "command": "image-edit-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--reference-image",
+        "--prompt",
+        "--mode",
+        "--strict",
+        "--regional-pixelation",
+        "--multi-pixelation",
+        "--no-multi-pixelation",
+        "--generation-model",
+        "--resolution",
+        "--quality",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "remove_background",
+      "command": "remove-background-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--image-file",
+        "--mode",
+        "--quality",
+        "--source-background-color",
+        "--remove-bg-batch-size",
+        "--preserve-translucency",
+        "--no-preserve-translucency"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "animation_edit",
+      "command": "animation-edit-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--animation-file",
+        "--reference-image",
+        "--prompt",
+        "--mode",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "asset_clone",
+      "command": "asset-clone-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--reference-image",
+        "--prompt",
+        "--skip-prompt-optimization",
+        "--clone-count",
+        "--mode",
+        "--generation-model",
+        "--quality",
+        "--resolution",
+        "--remove-bg-method",
+        "--cell-width",
+        "--cell-height",
+        "--fit-mode"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "one_click_upgrade",
+      "command": "one-click-upgrade-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--reference-image",
+        "--variant-prompt",
+        "--mode",
+        "--generation-model",
+        "--quality",
+        "--resolution",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "custom_size_pixel",
+      "command": "custom-size-pixel-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--width",
+        "--height",
+        "--reference-image",
+        "--generation-model",
+        "--content-mode",
+        "--remove-bg-method",
+        "--fill-canvas",
+        "--no-fill-canvas",
+        "--strong-pixelation"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "pixel_universal",
+      "command": "pixel-universal-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--requirement",
+        "--aspect-ratio",
+        "--view",
+        "--reference-image",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "pixel_preset",
+      "command": "pixel-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--template-name",
+        "--requirement",
+        "--resolution",
+        "--aspect-ratio",
+        "--direction",
+        "--remove-bg-method",
+        "--reference-file",
+        "--reference-files"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "large_pixel_preset",
+      "command": "large-pixel-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--template-name",
+        "--prompt",
+        "--requirement",
+        "--reference-image",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "hd_preset",
+      "command": "hd-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--template-name",
+        "--requirement",
+        "--resolution",
+        "--aspect-ratio",
+        "--quality",
+        "--generation-model",
+        "--direction",
+        "--remove-bg-method",
+        "--reference-file",
+        "--reference-files"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "ui_agent",
+      "command": "ui-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--reference-file",
+        "--resolution",
+        "--aspect-ratio",
+        "--quality",
+        "--generation-model",
+        "--background-color",
+        "--remove-bg-method",
+        "--mode",
+        "--remove-background",
+        "--no-remove-background",
+        "--split-components",
+        "--no-split-components"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_agent",
+      "command": "spine-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--character-reference",
+        "--template-name",
+        "--project-id",
+        "--thread-id",
+        "--source-message-id",
+        "--client-operation-id",
+        "--generation-model",
+        "--export-resolution",
+        "--export-version",
+        "--quality",
+        "--weapon",
+        "--hair",
+        "--outfit"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_part_edit",
+      "command": "spine-edit-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--source-spine-package",
+        "--selected-parts-json",
+        "--prompt",
+        "--project-id",
+        "--thread-id",
+        "--client-operation-id",
+        "--display-name",
+        "--reference-image",
+        "--generation-model",
+        "--resolution",
+        "--quality",
+        "--export-version"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_part_replace",
+      "command": "spine-replace-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--source-spine-package",
+        "--selected-parts-json",
+        "--replacement-image",
+        "--project-id",
+        "--thread-id",
+        "--client-operation-id",
+        "--display-name",
+        "--skin-name",
+        "--scale-percent",
+        "--offset-x-percent",
+        "--offset-y-percent",
+        "--rotation-degrees",
+        "--remove-bg-method",
+        "--export-version"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_frame_cleanup",
+      "command": "spine-cleanup-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--source-spine-package",
+        "--project-id",
+        "--thread-id",
+        "--client-operation-id",
+        "--display-name",
+        "--skin-name",
+        "--export-version"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_full_reskin",
+      "command": "spine-reskin-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--source-spine-package",
+        "--prompt",
+        "--project-id",
+        "--thread-id",
+        "--client-operation-id",
+        "--display-name",
+        "--skin-name",
+        "--reference-image",
+        "--generation-model",
+        "--resolution",
+        "--quality",
+        "--export-version"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "pindou",
+      "command": "pindou-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--source-image",
+        "--reference-image",
+        "--mode",
+        "--prompt",
+        "--size-mode",
+        "--custom-size"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "character_multi_view",
+      "command": "character-multi-view-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--reference-image",
+        "--image-file",
+        "--mode",
+        "--canvas-resolution",
+        "--orientation",
+        "--direction-mode",
+        "--aspect-ratio",
+        "--remove-bg-method",
+        "--extra-constraint",
+        "--output-size"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "self_loop",
+      "command": "self-loop-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--image-file",
+        "--resolution",
+        "--variant",
+        "--mode",
+        "--direction"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "animation_model",
+      "command": "animate-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--image-file",
+        "--prompt",
+        "--output-frames",
+        "--output-format",
+        "--animation-type",
+        "--animation-model",
+        "--intelligence",
+        "--optimize-prompt",
+        "--no-optimize-prompt",
+        "--remove-bg-method",
+        "--color-count",
+        "--padding-top",
+        "--padding-down",
+        "--padding-left",
+        "--padding-right"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "animation_keyframes",
+      "command": "keyframes-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--keyframe",
+        "--keyframe-strength",
+        "--prompt",
+        "--animation-model",
+        "--optimize-prompt",
+        "--no-optimize-prompt",
+        "--total-frames",
+        "--output-format",
+        "--animation-type",
+        "--remove-bg-method",
+        "--color-count",
+        "--padding-top",
+        "--padding-down",
+        "--padding-left",
+        "--padding-right"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "frame_animation_new",
+      "command": "meowa-animation-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--image-file",
+        "--last-image-file",
+        "--prompt",
+        "--style-mode",
+        "--resolution",
+        "--alpha-mode",
+        "--output-frames",
+        "--quality-mode",
+        "--animation-mode",
+        "--remove-bg-method",
+        "--remove-bg-batch-size",
+        "--background-color",
+        "--high-frame-rate",
+        "--auto-scale-to-input",
+        "--optimize-prompt",
+        "--no-optimize-prompt",
+        "--padding",
+        "--padding-alignment"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "video_model",
+      "command": "video-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--first-frame",
+        "--start-keyframe",
+        "--last-frame",
+        "--end-keyframe",
+        "--prompt",
+        "--action",
+        "--direction",
+        "--pixel",
+        "--resolution",
+        "--frame-count",
+        "--motion-mode",
+        "--animation-type"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "sound_effect",
+      "command": "sound-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--duration",
+        "--loop",
+        "--sound-pack",
+        "--variants",
+        "--count",
+        "--language",
+        "--temperature",
+        "--normalize",
+        "--no-normalize"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "music",
+      "command": "music-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--output-mode",
+        "--reference-image"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "tts",
+      "command": "tts-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--text",
+        "--voice",
+        "--reference-audio",
+        "--language",
+        "--emotion",
+        "--emotion-intensity",
+        "--optimize-prompt",
+        "--no-optimize-prompt",
+        "--project-id",
+        "--thread-id",
+        "--project-title"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "voice_clone",
+      "command": "tts-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--text",
+        "--voice",
+        "--reference-audio",
+        "--language",
+        "--emotion",
+        "--emotion-intensity",
+        "--optimize-prompt",
+        "--no-optimize-prompt",
+        "--project-id",
+        "--thread-id",
+        "--project-title"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "pixel_isometric",
+      "command": "isometric-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--mode",
+        "--similar-tiles",
+        "--no-similar-tiles",
+        "--tile-only",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "pixel_hex_isometric",
+      "command": "hex-isometric-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--mode",
+        "--similar-tiles",
+        "--no-similar-tiles",
+        "--tile-only",
+        "--remove-bg-method"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "hd_isometric",
+      "command": "hd-isometric-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--mode",
+        "--similar-tiles",
+        "--no-similar-tiles",
+        "--tile-only",
+        "--template"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "hd_hex_isometric",
+      "command": "hd-hex-isometric-gen-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--prompt",
+        "--reference-image",
+        "--mode",
+        "--similar-tiles",
+        "--no-similar-tiles",
+        "--tile-only",
+        "--generation-model",
+        "--template"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "side_scrolling_pixel",
+      "command": "side-scrolling-map-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--midground",
+        "--background",
+        "--foreground",
+        "--remove-bg-method",
+        "--loop-midground",
+        "--loop-background",
+        "--loop-foreground"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "side_scrolling_hd",
+      "command": "hd-side-scrolling-map-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--midground",
+        "--background",
+        "--foreground",
+        "--art-style",
+        "--custom-art-style",
+        "--loop-midground",
+        "--loop-background",
+        "--loop-foreground"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "video_reference_edit",
+      "command": "meowa-animation-edit-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--video-file",
+        "--image-file",
+        "--edit-intent",
+        "--video-description",
+        "--image-description",
+        "--style-mode",
+        "--resolution",
+        "--alpha-mode",
+        "--remove-bg-method",
+        "--remove-bg-batch-size",
+        "--high-frame-rate",
+        "--auto-scale-to-input",
+        "--background-color",
+        "--primary-reference"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "video_reference_edit_prompts",
+      "command": "meowa-animation-edit-prompts",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--video-file",
+        "--image-file",
+        "--edit-intent",
+        "--video-description",
+        "--image-description",
+        "--style-mode",
+        "--resolution",
+        "--alpha-mode",
+        "--remove-bg-method",
+        "--remove-bg-batch-size",
+        "--high-frame-rate",
+        "--auto-scale-to-input",
+        "--background-color",
+        "--primary-reference",
+        "--output-language"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "free_credits",
+      "command": "free-credits",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "image_expander",
+      "command": "image-expander-run",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--project-id",
+        "--thread-id",
+        "--mode",
+        "--view-preset",
+        "--source-image",
+        "--client-operation-id",
+        "--target-coord",
+        "--neighbor-top",
+        "--neighbor-left",
+        "--neighbor-right",
+        "--neighbor-bottom",
+        "--basic-prompt",
+        "--custom-prompt",
+        "--resolution",
+        "--aspect-ratio",
+        "--generation-provider",
+        "--image2-quality",
+        "--overlap-percent",
+        "--feather-percent"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "image_expander_prompt",
+      "command": "image-expander-prompt",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--project-id",
+        "--thread-id",
+        "--mode",
+        "--view-preset",
+        "--source-image",
+        "--prompt",
+        "--direction"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "image_expander_export",
+      "command": "image-expander-export",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--output-dir",
+        "--output_dir",
+        "--project-id",
+        "--tiles-json",
+        "--mode",
+        "--resolution",
+        "--aspect-ratio",
+        "--generation-provider",
+        "--overlap-percent",
+        "--export-kind"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    },
+    {
+      "feature": "spine_editor",
+      "command": "spine-editor-open",
+      "exists_in_parser": true,
+      "parameter_flags": [
+        "-h",
+        "--help",
+        "--project-id",
+        "--node-id"
+      ],
+      "missing_flags": [],
+      "default_differences_to_interpret": [],
+      "generation_validated_by_this_audit": false
+    }
+  ],
+  "past_jobs_argument_checks": [
+    {
+      "round": "visual-v4",
+      "name": "male-idle",
+      "job_id": "job_e4fd8f65087c42aa875a1521ae7208e1",
+      "command": "animate-run",
+      "argument_parse_valid": true,
+      "observed_credits": 35,
+      "acceptance": "8 frames visually reviewed: stable face, clothing and feet; subtle breathing accepted; eyes do not visibly close, separate blink still needed."
+    },
+    {
+      "round": "visual-v4",
+      "name": "sakura-morning",
+      "job_id": null,
+      "command": "general-image-run",
+      "argument_parse_valid": true,
+      "observed_credits": 0,
+      "acceptance": "No output; no task ID and no balance charge. A single fresh submission is allowed after this transport diagnosis."
+    },
+    {
+      "round": "visual-v4",
+      "name": "sakura-morning-retry1",
+      "job_id": "job_ddaea059d1274b868e193d5af17084a4",
+      "command": "general-image-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Master and real LVGL placement visually reviewed: matching furniture/camera; cherry morning sky and natural left light; lamp off; no people or lettering; accepted for this integration candidate."
+    },
+    {
+      "round": "visual-v4",
+      "name": "moonlight-dream",
+      "job_id": "job_9786e2bc1b33426e951822c844dc375e",
+      "command": "general-image-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Master and real LVGL placement visually reviewed: matching furniture/camera; blue-purple window, moon/stars and warm lamp; static light strings, no flashing; accepted for this integration candidate."
+    },
+    {
+      "round": "visual-v4",
+      "name": "male-wave",
+      "job_id": "job_f8c64c1f9a0842a09933adf436e65af7",
+      "command": "meowa-animation-run",
+      "argument_parse_valid": true,
+      "observed_credits": 45,
+      "acceptance": "All 16 frames visually inspected: fixed Codex face, fluffy hair, white shirt and dark shorts retained; stable planted feet and happy eye closure; global y=-1px only, retimed 100ms/frame; accepted for this integration candidate."
+    },
+    {
+      "round": "visual-v4",
+      "name": "qianqian-wave",
+      "job_id": "job_c7484cd69b324e76a7a84ca7576fac52",
+      "command": "meowa-animation-run",
+      "argument_parse_valid": true,
+      "observed_credits": 45,
+      "acceptance": "All 16 frames visually inspected: identity, rose, braid, bow and clothes retained; feet stable; happy eye closure; retimed only."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "rpg-workshop",
+      "job_id": "job_71123f2e81014ac08baa05021e2f0a19",
+      "command": "general-image-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "daily-lounge",
+      "job_id": "job_ce494b37af0a42f5a5e9880f3426076b",
+      "command": "general-image-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "ui-storybook",
+      "job_id": "job_f86f559ed7a84f24bc3e2adc08d5de9d",
+      "command": "ui-gen-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "male-seated",
+      "job_id": "job_2a19a5e33e08496fa2ea94249213cef5",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 12,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "q-seated",
+      "job_id": "job_7637f3002b494c798eb34fd5fc1e146a",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 12,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "male-seated-idle",
+      "job_id": "job_dcb337617bca471d9f0137f6d14cff44",
+      "command": "animate-run",
+      "argument_parse_valid": true,
+      "observed_credits": 35,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "q-seated-idle",
+      "job_id": "job_431359c3e5864721b048a20c624f85ec",
+      "command": "animate-run",
+      "argument_parse_valid": true,
+      "observed_credits": 35,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "male-drowsy",
+      "job_id": "job_559dc59845e74c6d9d25153eb6fbdf20",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 12,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "q-drowsy",
+      "job_id": "job_25a616fae54e4595a503ee3b7d9dc80c",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 12,
+      "acceptance": "Not selected for final daily room: independent poses did not establish joint furniture contact; experimental cost retained."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "workshop-foreground",
+      "job_id": "job_b58258e4847445e09d498256c0fb884e",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Rejected: generative extraction changed desk geometry/position; not an aligned foreground."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "couple-sofa-contact",
+      "job_id": "job_d17cfd3bd14f4a689e9f79237654bc2f",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 26,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "couple-sofa-alpha",
+      "job_id": "job_757b345842134807bfc9c4a1cc883f45",
+      "command": "image-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 22,
+      "acceptance": "Not aligned to source coordinates; only a traceably normalized derived sprite candidate, subject to contact and identity review."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "couple-idle",
+      "job_id": "job_6a2c1ddbcad549e58d1d0e1a78e550f2",
+      "command": "meowa-animation-run",
+      "argument_parse_valid": true,
+      "observed_credits": 45,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "male-walk-right",
+      "job_id": "job_e628643fd849465d9c7b070652ee07f8",
+      "command": "meowa-animation-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 20,
+      "acceptance": "Technical candidate observed; user art acceptance and final V4.2 integration pending."
+    },
+    {
+      "round": "visual-v4-2",
+      "name": "male-walk-left",
+      "job_id": "job_7939e2a0c8864391b5f5f93f565789ec",
+      "command": "meowa-animation-edit-run",
+      "argument_parse_valid": true,
+      "observed_credits": 20,
+      "acceptance": "Downloaded; full visual review pending."
+    }
+  ],
+  "local_parser_checks": [
+    {
+      "name": "strict and regional pixelation are mutually exclusive",
+      "rejected_by_local_parser": true
+    },
+    {
+      "name": "clone count is square-grid count, not arbitrary subject count",
+      "rejected_by_local_parser": true
+    },
+    {
+      "name": "V2 frames use 8/16/24/32, not V1 12",
+      "rejected_by_local_parser": true
+    },
+    {
+      "name": "Pixel/HD background style uses only public modes",
+      "rejected_by_local_parser": true
+    },
+    {
+      "name": "image-led reference motion is exposed",
+      "passed": true
+    }
+  ],
+  "scope": "Documentation, actual parser, read-only catalogs and historical media only; no paid generation invoked by this audit.",
+  "all_generation_capabilities_claimed_mastered": false
+}

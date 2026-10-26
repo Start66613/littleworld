@@ -1,0 +1,475 @@
+{
+  "date": "2026-10-26",
+  "reviewed_contract_entries": 44,
+  "rows": [
+    {
+      "feature": "media_storage",
+      "command": "media-storage-set",
+      "group": "资源下载",
+      "purpose": "账户的新媒体存储/下载偏好",
+      "pitfall_or_limit": "共享账户设置；不是生成参数或故障时随意换域名的理由",
+      "little_world_use": "不改账户偏好",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "general_nano_banana",
+      "command": "general-image-run",
+      "group": "通用与像素",
+      "purpose": "灵活构图、参考引导及形体控制",
+      "pitfall_or_limit": "像素风提示不保证精确网格；单独模型报价",
+      "little_world_use": "按形体约束评估",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "general_image2_5",
+      "command": "general-image-run",
+      "group": "通用与像素",
+      "purpose": "完整场景、多参考生成、丰富颜色",
+      "pitfall_or_limit": "像素网格/几何仍需验收；原生透明是尽力而为",
+      "little_world_use": "场景候选已有样本",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "general_image2",
+      "command": "general-image-run",
+      "group": "通用与像素",
+      "purpose": "另一套通用图像质量档",
+      "pitfall_or_limit": "不能与Image2.5或Nano Banana的默认/费用混用",
+      "little_world_use": "未作本轮质量对比",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "image_edit",
+      "command": "image-edit-run",
+      "group": "编辑与互动",
+      "purpose": "多素材共同姿态、单图精确意图编辑",
+      "pitfall_or_limit": "仍会重画；strict不保证原坐标、原像素或角色身份",
+      "little_world_use": "已发现独立坐姿和前景提取误用",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "remove_background",
+      "command": "remove-background-run",
+      "group": "编辑与互动",
+      "purpose": "独立去背景，保留已有图片几何",
+      "pitfall_or_limit": "从复杂房间中保留哪些对象仍需验证；静态/动画限制不同",
+      "little_world_use": "不能把生成式提取代替它",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "animation_edit",
+      "command": "animation-edit-run",
+      "group": "动画",
+      "purpose": "修改GIF/WebP的帧内容/外观",
+      "pitfall_or_limit": "以保留时间与布局为目标；不同于视频参考动作迁移",
+      "little_world_use": "适合已有正式动作的一致细节修改",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "asset_clone",
+      "command": "asset-clone-run",
+      "group": "编辑与互动",
+      "purpose": "同风格网格素材族",
+      "pitfall_or_limit": "clone-count是平方参考网格；不是双人互动人数",
+      "little_world_use": "未使用；不拿来替代互动关键帧",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "one_click_upgrade",
+      "command": "one-click-upgrade-run",
+      "group": "编辑与互动",
+      "purpose": "同一物品一到八个受控变体",
+      "pitfall_or_limit": "提示词规划与收费生产分开；不强保像素/锚点",
+      "little_world_use": "可用于信封、奖励和道具状态",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "custom_size_pixel",
+      "command": "custom-size-pixel-gen-run",
+      "group": "通用与像素",
+      "purpose": "一件指定像素尺寸的物件/角色",
+      "pitfall_or_limit": "不是素材包；复杂参考不稳定；fill-canvas不保证填满",
+      "little_world_use": "固定模板没有合适规格时再用",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "pixel_universal",
+      "command": "pixel-universal-gen-run",
+      "group": "通用与像素",
+      "purpose": "自由4:3像素场景、资产包和top-down构图",
+      "pitfall_or_limit": "固定大画布，逐物件规格和质量弱于专用预设",
+      "little_world_use": "可研究RPG概念，不默认生成正式主角",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "pixel_preset",
+      "command": "pixel-gen-run",
+      "group": "通用与像素",
+      "purpose": "固定像素规格的角色、道具和素材包",
+      "pitfall_or_limit": "先选当前模板，尺寸数量不能靠提示词改写",
+      "little_world_use": "当前目录58项；本轮未收费尝试新模板",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "large_pixel_preset",
+      "command": "large-pixel-gen-run",
+      "group": "通用与像素",
+      "purpose": "较大的像素场景/插画/立绘",
+      "pitfall_or_limit": "每个模板的输出大小/数量是契约，不保证1024x600",
+      "little_world_use": "当前目录14项；待按具体任务选",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "hd_preset",
+      "command": "hd-gen-run",
+      "group": "通用与像素",
+      "purpose": "受控风格的HD角色和图标包",
+      "pitfall_or_limit": "HD平滑采样与像素不同；包含计费模板参考",
+      "little_world_use": "当前目录15项；不替换原版像素角色",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "ui_agent",
+      "command": "ui-gen-run",
+      "group": "UI",
+      "purpose": "透明UI/资产总图与组件检测",
+      "pitfall_or_limit": "不是每个组件PNG直接下载；extract会重排",
+      "little_world_use": "本次总图与本地splitter七组件已核对",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_agent",
+      "command": "spine-run",
+      "group": "Spine",
+      "purpose": "模板化骨骼角色包",
+      "pitfall_or_limit": "两头/四头模板、模型、导出版本和费用各有条件",
+      "little_world_use": "当前工程无这条运行链，暂不引入",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_part_edit",
+      "command": "spine-edit-run",
+      "group": "Spine",
+      "purpose": "已上传Spine中1至40个部件改绘",
+      "pitfall_or_limit": "需先inspect并明确选区，导出统一4.2",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_part_replace",
+      "command": "spine-replace-run",
+      "group": "Spine",
+      "purpose": "一张图片直接替换一个指定部件",
+      "pitfall_or_limit": "不经AI也可替换；可选去背景仍另计费",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_frame_cleanup",
+      "command": "spine-cleanup-run",
+      "group": "Spine",
+      "purpose": "移除编辑排版框和标签",
+      "pitfall_or_limit": "依据atlas几何，不是按背景颜色乱抹",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_full_reskin",
+      "command": "spine-reskin-run",
+      "group": "Spine",
+      "purpose": "全包同风格重绘并回填",
+      "pitfall_or_limit": "小于1400px2部件保留；版本/atlas需验收",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "pindou",
+      "command": "pindou-run",
+      "group": "其他",
+      "purpose": "像素或HD拼豆设计",
+      "pitfall_or_limit": "不是LVGL图片优化/压缩工具",
+      "little_world_use": "纪念礼物可选，当前OS不需要",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "character_multi_view",
+      "command": "character-multi-view-run",
+      "group": "方向与角色",
+      "purpose": "八方向静态角色",
+      "pitfall_or_limit": "左右通常镜像；不保证物理一致或动画可用",
+      "little_world_use": "需要不镜像时考虑V2转身",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "self_loop",
+      "command": "self-loop-run",
+      "group": "地图",
+      "purpose": "静态图上下/左右无缝处理",
+      "pitfall_or_limit": "不是角色循环动画；需重复平铺检查",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "animation_model",
+      "command": "animate-run",
+      "group": "动画",
+      "purpose": "V1简单待机、行走等",
+      "pitfall_or_limit": "Standard/Advanced的帧数和256/320边长限制不同",
+      "little_world_use": "轻待机已有样本，复杂互动不应强用V1",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "animation_keyframes",
+      "command": "keyframes-run",
+      "group": "动画",
+      "purpose": "多个关键姿态、逐关键帧strength",
+      "pitfall_or_limit": "至少含0帧和另一关键帧；专有帧数集合",
+      "little_world_use": "适合明确的接触过程，尚未生成验证",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "frame_animation_new",
+      "command": "meowa-animation-run",
+      "group": "动画",
+      "purpose": "V2新动作、首尾帧、旋转、共同互动",
+      "pitfall_or_limit": "Pixel<=320；1080默认不抠；高帧率影响费用；高级档部分未开放",
+      "little_world_use": "已有V4挥手和本轮共同待机样本",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "video_model",
+      "command": "video-run",
+      "group": "动画",
+      "purpose": "图/首尾帧驱动的短视频",
+      "pitfall_or_limit": "原视频不是自动切帧透明精灵；成本与处理不同",
+      "little_world_use": "普通帧动画不足时才考虑",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "sound_effect",
+      "command": "sound-run",
+      "group": "音频",
+      "purpose": "单音效、同族音效包、变体",
+      "pitfall_or_limit": "pack和variants互斥，时长/数量有限",
+      "little_world_use": "后端与时机明确后再报价",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "music",
+      "command": "music-run",
+      "group": "音频",
+      "purpose": "音乐方向或demo/pro渲染",
+      "pitfall_or_limit": "不指定输出模式可能只是方向；30秒预览不能延长成同曲3分钟",
+      "little_world_use": "当前播放器仍明确标注DEMO，无真实音频承诺",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "tts",
+      "command": "tts-run",
+      "group": "音频",
+      "purpose": "一行描述音色的语音",
+      "pitfall_or_limit": "最多200字；英文按词计价；情绪在音色描述中",
+      "little_world_use": "未生成，不编造女友台词",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "voice_clone",
+      "command": "tts-run",
+      "group": "音频",
+      "purpose": "参考音频克隆音色",
+      "pitfall_or_limit": "最多5段/合计1至300秒；私人录音需具体外传授权",
+      "little_world_use": "当前禁止自动上传私人录音",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "pixel_isometric",
+      "command": "isometric-gen-run",
+      "group": "地图",
+      "purpose": "严格中心锚点的像素斜角地块",
+      "pitfall_or_limit": "先下载官方结构参考，standard需两图；不能裁剪或重锚",
+      "little_world_use": "未来地图可用，当前室内视角不能硬套",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "pixel_hex_isometric",
+      "command": "hex-isometric-gen-run",
+      "group": "地图",
+      "purpose": "像素六边形斜角地块",
+      "pitfall_or_limit": "中心间距/参考可见宽度/模式都有契约",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "hd_isometric",
+      "command": "hd-isometric-gen-run",
+      "group": "地图",
+      "purpose": "HD斜角1x1或2x2地块",
+      "pitfall_or_limit": "逻辑footprint不等于图片外框；用平滑显示",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "hd_hex_isometric",
+      "command": "hd-hex-isometric-gen-run",
+      "group": "地图",
+      "purpose": "HD六边形地块",
+      "pitfall_or_limit": "仅standard/tetraploid；七倍体等暂不开放",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "side_scrolling_pixel",
+      "command": "side-scrolling-map-run",
+      "group": "地图",
+      "purpose": "像素前中背景原生三层",
+      "pitfall_or_limit": "文本输入，不接地图预设；适合横卷而非任意室内无损拆层",
+      "little_world_use": "尚未验证本项目室内适用性",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "side_scrolling_hd",
+      "command": "hd-side-scrolling-map-run",
+      "group": "地图",
+      "purpose": "HD前中背景及风格分层",
+      "pitfall_or_limit": "不是当前房间的自动无损分层器；采样/开销不同",
+      "little_world_use": "未生产测试",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "video_reference_edit",
+      "command": "meowa-animation-edit-run",
+      "group": "动画",
+      "purpose": "修改视频角色或让图片角色执行参考动作",
+      "pitfall_or_limit": "primary-reference=image是关键；会重采样时长和帧数",
+      "little_world_use": "右行样本已逐帧看过；左行待视觉检查",
+      "evidence_level": "generation_samples_observed_with_acceptance_limits",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "video_reference_edit_prompts",
+      "command": "meowa-animation-edit-prompts",
+      "group": "动画",
+      "purpose": "生成可审阅的动作/外观/编辑描述",
+      "pitfall_or_limit": "只是描述，不是生成结果；带图片需三项描述完整",
+      "little_world_use": "已理解输入职责，本轮手动审阅描述",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "free_credits",
+      "command": "free-credits",
+      "group": "账户",
+      "purpose": "只读免费权益查询/领取链接",
+      "pitfall_or_limit": "查询不等于替用户领取；不代做验证码",
+      "little_world_use": "未改账户，不拿学习查询当可消费授权",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "image_expander",
+      "command": "image-expander-run",
+      "group": "地图",
+      "purpose": "四邻接参考和坐标的地图延展",
+      "pitfall_or_limit": "复用项目上下文；需要连续视角/相邻图而非任意拼接",
+      "little_world_use": "未来房间外探索可评估",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "image_expander_prompt",
+      "command": "image-expander-prompt",
+      "group": "地图",
+      "purpose": "扩图提示词润色",
+      "pitfall_or_limit": "不产生新场景；须审阅后再生成",
+      "little_world_use": "未调用",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "image_expander_export",
+      "command": "image-expander-export",
+      "group": "地图",
+      "purpose": "已生成地图的整图/分片/Godot4导出",
+      "pitfall_or_limit": "Godot包不是LVGL页面；资源格式和内存仍需适配",
+      "little_world_use": "未调用",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    },
+    {
+      "feature": "spine_editor",
+      "command": "spine-editor-open",
+      "group": "Spine",
+      "purpose": "完整网页关键帧/骨骼/atlas/重绑定编辑",
+      "pitfall_or_limit": "依赖真实项目/节点；重绑定要比较并明确接受",
+      "little_world_use": "未打开网页编辑器，不能声称会完整操作",
+      "evidence_level": "documents_and_actual_parser_only",
+      "all_outputs_art_accepted": false
+    }
+  ],
+  "additional_documented_tools": [
+    {
+      "feature": "pixelate-run",
+      "purpose": "明确的像素转换，不是缩放/压缩；已由像素工作流处理的结果不二次像素化",
+      "evidence_level": "documents_and_cli_only"
+    },
+    {
+      "feature": "game-design-run",
+      "purpose": "策划与设计文档；token与工具分别收费，无单任务硬封顶，学习时不调用",
+      "evidence_level": "documents_and_cli_only"
+    },
+    {
+      "feature": "custom-workflow-list",
+      "purpose": "账户授权目录，本次items为空；不能据此推断没有标准高级能力",
+      "evidence_level": "read_only_service_query"
+    },
+    {
+      "feature": "split-components.py",
+      "purpose": "官方本地连通分割，七个UI组件已导出；不具备家具语义分割能力",
+      "evidence_level": "local_tool_output_observed"
+    },
+    {
+      "feature": "map-preview-server.py",
+      "purpose": "本地地图/分层预览，不冒充LVGL运行画面；源图不改",
+      "evidence_level": "documents_and_help_only"
+    }
+  ],
+  "no_new_paid_jobs_submitted_during_review": true,
+  "confidence_is_not_art_acceptance": true
+}
