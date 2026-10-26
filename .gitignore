@@ -22,6 +22,13 @@
 /reports/logs/*.log
 /reports/screenshots/*.bmp
 
+# Night Runner runtime output: per-run logs, locks, task jsonl and summaries.
+# The plan itself (tools/nightly/night_plan.json) IS tracked; its scratch output
+# is not, otherwise every run would dirty the worktree and trip the very drift
+# check the runner uses to prove a task did not damage the repo.
+/logs/nightly/
+/reports/nightly/
+
 # Never commit firmware images, dumps or private material
 *.bin
 *.elf

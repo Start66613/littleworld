@@ -1,0 +1,248 @@
+{
+    "schema":  "littleworld.nightly/1",
+    "plan_id":  "v3.2-nightly",
+    "created_utc":  "2026-10-26T03:55:00Z",
+    "t0":  "2026-10-26T11:55:40.9394457+08:00",
+    "t0_note":  "t0 is stamped the first time a task actually runs; due_after_min is measured from it",
+    "phases":  [
+                   {
+                       "id":  "T0",
+                       "at_min":  0,
+                       "title":  "工程审查与任务初始化"
+                   },
+                   {
+                       "id":  "T60",
+                       "at_min":  60,
+                       "title":  "显示与背光专项"
+                   },
+                   {
+                       "id":  "T150",
+                       "at_min":  150,
+                       "title":  "刷机链路专项"
+                   },
+                   {
+                       "id":  "T240",
+                       "at_min":  240,
+                       "title":  "Wi-Fi Hosted 专项"
+                   },
+                   {
+                       "id":  "T330",
+                       "at_min":  330,
+                       "title":  "全量回归"
+                   },
+                   {
+                       "id":  "T420",
+                       "at_min":  420,
+                       "title":  "收尾与清理"
+                   }
+               ],
+    "tasks":  [
+                  {
+                      "id":  "T0-01-audit",
+                      "phase":  "T0",
+                      "due_after_min":  0,
+                      "kind":  "agent",
+                      "title":  "工程审查与基线记录",
+                      "why":  "先看清工作树、分支、已有产物与镜像哈希，后面每一步才有对照基准",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  600,
+                      "lock_key":  "repo-read",
+                      "artifacts":  [
+                                        "reports/v3.2/BUILD_MATRIX.md",
+                                        "reports/v3.2/NIGHT_TASK_STATUS.md"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T02:10:00+08:00",
+                                       "ended":  "2026-10-26T02:40:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "基线、镜像哈希、未验证清单已写入 reports/v3.2"
+                                   }
+                  },
+                  {
+                      "id":  "T60-01-host-tests",
+                      "phase":  "T60",
+                      "due_after_min":  60,
+                      "kind":  "script",
+                      "title":  "主机端回归（含压力套件）",
+                      "why":  "显示改动之后第一件必须确认的事是逻辑层没被我改坏",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/run_backend_tests.ps1",
+                      "success_pattern":  "BACKEND TESTS PASSED",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  900,
+                      "lock_key":  "build-host",
+                      "artifacts":  [
+                                        "reports/logs/v3.2/night-T60-host-tests.log"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T03:20:00+08:00",
+                                       "ended":  "2026-10-26T03:24:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "29 + 22 + 188 + 2035 checks, 0 failures"
+                                   }
+                  },
+                  {
+                      "id":  "T60-02-diag-builds",
+                      "phase":  "T60",
+                      "due_after_min":  75,
+                      "kind":  "script",
+                      "title":  "三份诊断镜像重新编译并校验头",
+                      "why":  "diag-a/b/c 是对比频闪的唯一手段，必须保证三份都是当次代码编出来的",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"\u0026 .\\tools\\build_v3_2_matrix.ps1 -Configs diag-a,diag-b,diag-c; \u0026 .\\tools\\check_v3_images.ps1 -Configs diag-a,diag-b,diag-c\"",
+                      "success_pattern":  "0 failure(s)",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  3600,
+                      "lock_key":  "build-fw",
+                      "artifacts":  [
+                                        "reports/v3.2/build_matrix.json",
+                                        "reports/logs/v3.2/build-diag-a.log"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T03:24:00+08:00",
+                                       "ended":  "2026-10-26T03:51:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "2,248,992 / 2,249,072 / 2,245,472 B, 头校验全 PASS"
+                                   }
+                  },
+                  {
+                      "id":  "T150-01-flash-audit",
+                      "phase":  "T150",
+                      "due_after_min":  150,
+                      "kind":  "agent",
+                      "title":  "刷机链路复盘与工具加固",
+                      "why":  "上一轮两次断线、一次读到截断日志，都是工具链的问题而不是板子的问题",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  900,
+                      "lock_key":  "repo-read",
+                      "artifacts":  [
+                                        "reports/v3.2/TOMORROW_BOARD_TEST.md"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T04:00:00+08:00",
+                                       "ended":  "2026-10-26T04:50:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "写入明早板端测试顺序与回滚方案；本轮禁止碰串口，只做复盘"
+                                   }
+                  },
+                  {
+                      "id":  "T240-01-wifi-build",
+                      "phase":  "T240",
+                      "due_after_min":  240,
+                      "kind":  "script",
+                      "title":  "Wi-Fi 实验镜像编译与符号核对",
+                      "why":  "hosted 栈是否真的被链接进来，只能靠 ELF 符号证明，不能靠 Kconfig 说 yes",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_v3_2_matrix.ps1 -Configs os-wifi-experimental",
+                      "success_pattern":  "Project build complete",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  3600,
+                      "lock_key":  "build-fw",
+                      "artifacts":  [
+                                        "reports/v3.2/WIFI_HOSTED_READINESS.md"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T04:55:00+08:00",
+                                       "ended":  "2026-10-26T05:20:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "2,558,064 B; esp_wifi_init / esp_hosted_init 只在 wifi 镜像"
+                                   }
+                  },
+                  {
+                      "id":  "T330-01-full-matrix",
+                      "phase":  "T330",
+                      "due_after_min":  330,
+                      "kind":  "script",
+                      "title":  "全量构建矩阵复核",
+                      "why":  "五个配置必须同一次代码、同一批哈希，明早才有唯一可信的对照表",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"\u0026 .\\tools\\build_v3_2_matrix.ps1 -Configs os-offline,diag-a,diag-b,diag-c,os-wifi-experimental; \u0026 .\\tools\\check_v3_images.ps1 -Configs os,diag-a,diag-b,diag-c,wifi\"",
+                      "success_pattern":  "0 failure(s)",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  7200,
+                      "lock_key":  "build-fw",
+                      "artifacts":  [
+                                        "reports/v3.2/build_matrix.json"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T05:30:00+08:00",
+                                       "ended":  "2026-10-26T06:50:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "五份镜像全 PASS，符号表已核对"
+                                   }
+                  },
+                  {
+                      "id":  "T420-01-report",
+                      "phase":  "T420",
+                      "due_after_min":  420,
+                      "kind":  "agent",
+                      "title":  "汇总报告、提交与停止计划任务",
+                      "why":  "夜里生成的一切必须留成可复核的文字，并且计划任务必须注销，不能留在系统里",
+                      "status":  "done",
+                      "max_attempts":  1,
+                      "timeout_sec":  900,
+                      "lock_key":  "repo-write",
+                      "artifacts":  [
+                                        "reports/v3.2/NIGHT_TASK_STATUS.md",
+                                        "reports/v3.2/DSH_TO_CODEX_V3_2.md"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T06:50:00+08:00",
+                                       "ended":  "2026-10-26T07:10:00+08:00",
+                                       "result":  "ok",
+                                       "note":  "提交 006c974，已推送"
+                                   }
+                  },
+                  {
+                      "id":  "T420-02-nightly-selfcheck",
+                      "phase":  "T420",
+                      "due_after_min":  425,
+                      "kind":  "script",
+                      "title":  "Night Runner 自检（本轮新增，仍待跑）",
+                      "why":  "调度器自己也要被测：锁、超时、黑名单、脏工作树检测、断点恢复，五项各跑一次",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/nightly/lw_night_runner.ps1 -Action SelfTest",
+                      "success_pattern":  "NIGHTLY SELFTEST PASSED",
+                      "status":  "done",
+                      "max_attempts":  2,
+                      "timeout_sec":  600,
+                      "lock_key":  "repo-read",
+                      "artifacts":  [
+                                        "logs/nightly/selftest.json"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T11:55:40.9375057+08:00",
+                                       "ended":  "2026-10-26T11:55:45.7197120+08:00",
+                                       "result":  "done",
+                                       "note":  "13 checks, 0 failures: ids, guards, locks, stale-lock reclaim, timeout kill, success pattern, attempt cap, git drift, resume, schema",
+                                       "attempts":  1
+                                   }
+                  },
+                  {
+                      "id":  "T420-03-nightly-verify",
+                      "phase":  "T420",
+                      "due_after_min":  430,
+                      "kind":  "script",
+                      "title":  "计划任务一次性执行验证",
+                      "why":  "注册成功不等于能跑；必须由计划任务真的启动一次并留下证据",
+                      "command":  "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/nightly/lw_night_runner.ps1 -Action Verify",
+                      "success_pattern":  "NIGHTLY SCHEDULED RUN CONFIRMED",
+                      "status":  "done",
+                      "max_attempts":  2,
+                      "timeout_sec":  600,
+                      "lock_key":  "repo-read",
+                      "artifacts":  [
+                                        "logs/nightly/scheduled-verify.json",
+                                        "reports/nightly/last-scheduled-run.json"
+                                    ],
+                      "last_run":  {
+                                       "started":  "2026-10-26T11:56:21+08:00",
+                                       "ended":  "2026-10-26T11:56:26+08:00",
+                                       "result":  "ok",
+                                       "attempts":  2,
+                                       "note":  "计划任务真实启动并自删；证实 marker pid=59576，任务列表无残留"
+                                   }
+                  }
+              ]
+}
