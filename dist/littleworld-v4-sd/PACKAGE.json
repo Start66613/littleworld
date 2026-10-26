@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-10-26T20:54:32+08:00",
+  "gitCommit": "3827040",
+  "schema": 1,
+  "packVersion": 4,
+  "source": "D:\\软件开发\\lw-dsh\\assets\\visual-v4\\runtime",
+  "target": "D:\\软件开发\\lw-dsh\\dist\\littleworld-v4-sd\\littleworld",
+  "manifestBytes": 118,
+  "totalBytes": 12568230,
+  "files": {
+    "scene-0.lwr": {
+      "bytes": 1228816,
+      "sha256": "0f8bf7982c0f586635a368c497e7d96c421d5a234af0d8a8a9c51b32a19e269f",
+      "kind": "scene"
+    },
+    "scene-1.lwr": {
+      "bytes": 1228816,
+      "sha256": "f5d4c146d921987255070d54420b82dbc78b60c085aaa12d95f3289706f1beae",
+      "kind": "scene"
+    },
+    "scene-2.lwr": {
+      "bytes": 1228816,
+      "sha256": "f4e63792048e9dfe6cba262b627df19fdfdb3b33da7e894cff56022aa6550dd7",
+      "kind": "scene"
+    },
+    "scene-0-thumb.lwr": {
+      "bytes": 76816,
+      "sha256": "0b3d37cea72b220a2fbb7e9456dc036ab9331ca689148d804966c31e562b05bf",
+      "kind": "thumb"
+    },
+    "scene-1-thumb.lwr": {
+      "bytes": 76816,
+      "sha256": "d101b7df816e5ad01768c1ef243e67efd80435b7e7f532032476a0d02d9942d8",
+      "kind": "thumb"
+    },
+    "scene-2-thumb.lwr": {
+      "bytes": 76816,
+      "sha256": "3bd3458a2018b52a478af751a13f6e7df7e7618319ebfa497152371dc5ccc98e",
+      "kind": "thumb"
+    },
+    "male.lwp": {
+      "bytes": 5505364,
+      "sha256": "d74b012ccae13a2f61e1b55e9b754a30fd674300255b48644458d180f2adb237",
+      "kind": "character",
+      "clips": 3,
+      "frames": 28,
+      "names": [
+        "idle",
+        "blink",
+        "wave"
+      ]
+    },
+    "qianqian-wave.lwp": {
+      "bytes": 3145852,
+      "sha256": "b838d35c5af1bdc6c1a7646afce0432747d714e9979eb0f1d14711dc951f96e6",
+      "kind": "character",
+      "clips": 1,
+      "frames": 16,
+      "names": [
+        "wave"
+      ]
+    },
+    "littleworld-v4.json": {
+      "bytes": 118,
+      "sha256": "bec46af1a4c5ccfdaa69d97fbca3cf343a608e75dc46270d86e181f6b98b6917"
+    }
+  },
+  "validation": {
+    "problems": [],
+    "ok": true
+  }
+}
