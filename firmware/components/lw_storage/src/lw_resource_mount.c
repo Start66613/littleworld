@@ -33,6 +33,19 @@ static bool s_medium_mounted;
 
 bool lw_resource_mount(void)
 {
+    /* Diagnostic D forces the no-card path at compile time so the fallback can
+     * be exercised without pulling the card out of the slot. It must take the
+     * exact same branch as a real mount failure - a separate "pretend" path
+     * would prove nothing about the shipping code. */
+#if defined(CONFIG_LW_DIAG_NO_MEDIUM)
+#ifdef ESP_PLATFORM
+    ESP_LOGW(TAG, "storage: no-card diagnostic build, skipping the mount");
+#endif
+    s_medium_mounted = false;
+    lw_resource_set_root(NULL);
+    lw_resource_flag(LW_RESOURCE_MOUNT_FAILED);
+    return false;
+#else
     /* Card first: the V4 runtime payload is ~12 MB and cannot live in a 6 MiB
      * app partition, so the card is the only place the full set fits. */
 #ifdef ESP_PLATFORM
@@ -72,6 +85,7 @@ bool lw_resource_mount(void)
     ESP_LOGI(TAG, "resources: verified, %u theme(s) available", lw_resource_report()->themes);
 #endif
     return true;
+#endif /* CONFIG_LW_DIAG_NO_MEDIUM */
 }
 
 bool lw_resource_medium_mounted(void) { return s_medium_mounted; }

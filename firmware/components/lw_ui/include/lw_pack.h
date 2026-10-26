@@ -104,6 +104,20 @@ lw_pack_status_t lw_pack_registry_add(const char *root, const char *file, const 
 /* Publish everything added so far to lw_assets. Call once, after all packs. */
 bool lw_pack_registry_register(size_t budget);
 
+/* Add one clip from an EMBEDDED LWFA v1 blob (firmware/main/art/characters.lwfa).
+ *
+ * LWFA is a different container from LWPX: 32-byte records, per-clip geometry
+ * (male 108x212, qianqian 104x202) and a payload that is already in the
+ * flash-mapped image, so frames are memcpy'd instead of read from a file. It
+ * lands in the same spec table on purpose: lw_assets_register() replaces the
+ * whole registry, so a second table would silently unregister the first one.
+ *
+ * clip_name is what the UI will look up ("idle"); the blob's own record name is
+ * the character name and is used only to find the record. */
+lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
+                                               const char *actor_name, const char *clip_name,
+                                               lw_pack_t *out);
+
 /* The clip list for one actor (by the name passed to lw_pack_registry_add). */
 const lw_named_clip_t *lw_pack_registry_clips(const char *actor_name, unsigned *count);
 

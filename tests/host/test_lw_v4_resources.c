@@ -388,6 +388,192 @@ static void test_resource_no_medium(void)
     CHECK("embedded root non-empty", lw_resource_embedded_root()[0] != '\0');
 }
 
+/* ---- embedded LWFA fallback ---------------------------------------------
+ * The app image always carries an LWFA pack so the board shows real characters
+ * with no card. LWFA is a different container from LWPX (32-byte records, its
+ * own per-clip geometry, payload already in the flash mapping), so it gets its
+ * own tests rather than being assumed to work because LWPX does. */
+
+#define FA_HEADER_BYTES 16u
+#define FA_RECORD_BYTES 32u
+
+typedef struct {
+    const char *name;
+    unsigned frames;
+    unsigned width, height;
+    int anchor_x, anchor_y;
+    unsigned loop;
+    unsigned duration;
+} fa_clip_t;
+
+/* Builds an LWFA v1 blob in memory. Frame payload is one byte per frame so the
+ * reader can be checked for frame addressing without a 600 KB buffer. */
+static uint8_t *build_lwfa(const fa_clip_t *clips, unsigned clip_count, size_t *out_size,
+                           bool bad_magic, bool wrong_total, unsigned truncate_frames)
+{
+    size_t header = FA_HEADER_BYTES + (size_t)FA_RECORD_BYTES * clip_count;
+    size_t payload = 0;
+    for (unsigned i = 0; i < clip_count; i++) {
+        payload += (size_t)clips[i].width * clips[i].height * 3u * clips[i].frames;
+    }
+    size_t total = header + payload;
+    if (truncate_frames) total -= (size_t)truncate_frames * 3u;
+    uint8_t *blob = calloc(1, total);
+    if (!blob) return NULL;
+    memcpy(blob, bad_magic ? "LWFA0002" : "LWFA0001", 8);
+    put16(blob + 8, 1u);
+    put16(blob + 10, clip_count);
+    put32(blob + 12, wrong_total ? (unsigned)(total + 1u) : (unsigned)total);
+    unsigned offset = (unsigned)header;
+    for (unsigned i = 0; i < clip_count; i++) {
+        uint8_t *record = blob + FA_HEADER_BYTES + (size_t)i * FA_RECORD_BYTES;
+        memcpy(record, clips[i].name, strlen(clips[i].name));
+        put16(record + 12, clips[i].frames);
+        put16(record + 14, clips[i].width);
+        put16(record + 16, clips[i].height);
+        put16(record + 18, (unsigned)clips[i].anchor_x);
+        put16(record + 20, (unsigned)clips[i].anchor_y);
+        record[22] = (uint8_t)clips[i].loop;
+        put16(record + 24, clips[i].duration);
+        put32(record + 28, offset);
+        /* Payload byte n of frame f is f, so a mis-addressed read is visible. */
+        for (unsigned f = 0; f < clips[i].frames; f++) {
+            size_t frame_bytes = (size_t)clips[i].width * clips[i].height * 3u;
+            if (offset + frame_bytes <= total) memset(blob + offset, (int)f, frame_bytes);
+            offset += (unsigned)frame_bytes;
+        }
+    }
+    *out_size = total;
+    return blob;
+}
+
+static void test_embedded_pack(void)
+{
+    /* Real geometry of the shipped pack: male 108x212 one frame, qianqian
+     * 104x202 eight frames. A loader that assumes 256x256 fails here. */
+    const fa_clip_t clips[2] = {
+        {"male", 1u, 108u, 212u, 54, 209, 1u, 500u},
+        {"qianqian", 8u, 104u, 202u, 51, 199, 1u, 125u},
+    };
+
+    size_t size = 0;
+    uint8_t *blob = build_lwfa(clips, 2u, &size, false, false, 0u);
+    const size_t blob_size = size; /* the rejection fixtures below reuse `size` */
+    CHECK("embedded fixture built", blob != NULL && size > 0);
+    if (!blob) return;
+
+    lw_pack_registry_reset();
+    lw_pack_t info;
+    CHECK("embedded male accepted",
+          lw_pack_registry_add_embedded(blob, size, "male", "idle", &info) == LW_PACK_OK);
+    CHECK("embedded male clip count", info.clips == 1u);
+    CHECK("embedded male frame count", info.frames == 1u);
+    CHECK("embedded male publishes idle", info.named && info.named[0].name &&
+          !strcmp(info.named[0].name, "idle"));
+    CHECK("embedded male asset id is actor-prefixed", info.named &&
+          !strcmp(info.named[0].clip.asset_id, "male.idle"));
+    CHECK("embedded male keeps its own geometry", info.named && info.named[0].clip.count == 1u);
+
+    CHECK("embedded qianqian accepted",
+          lw_pack_registry_add_embedded(blob, size, "qianqian", "idle", &info) == LW_PACK_OK);
+    CHECK("embedded qianqian frame count", info.frames == 8u);
+    CHECK("embedded qianqian named count", info.named_count == 1u);
+
+    CHECK("both actors registered", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+
+    /* The spec table must carry the pack's geometry, not LWPX's 256x256. */
+    const lw_asset_spec_t *male = lw_assets_find("male.idle");
+    CHECK("male spec present", male != NULL);
+    if (male) {
+        CHECK("male spec width", male->width == 108u);
+        CHECK("male spec height", male->height == 212u);
+        CHECK("male spec anchor x", male->anchor_x == 54);
+        CHECK("male spec anchor y", male->anchor_y == 209);
+        CHECK("male spec format", male->format == LV_COLOR_FORMAT_RGB565A8);
+    }
+    const lw_asset_spec_t *qian = lw_assets_find("qianqian.idle");
+    CHECK("qianqian spec present", qian != NULL);
+    if (qian) {
+        CHECK("qianqian spec width", qian->width == 104u);
+        CHECK("qianqian spec height", qian->height == 202u);
+        CHECK("qianqian spec frames", qian->frames == 8u);
+    }
+
+    /* Frame addressing: frame f is filled with byte f. */
+    lw_asset_lease_t *lease = lw_asset_acquire("qianqian.idle", 5u);
+    CHECK("embedded frame 5 leased", lease != NULL);
+    if (lease) {
+        const lv_image_dsc_t *image = lw_asset_image(lease);
+        CHECK("embedded frame 5 pixels", image && image->data && image->data[0] == 5u);
+        CHECK("embedded frame 5 tail", image && image->data[image->data_size - 1u] == 5u);
+        lw_asset_release(lease);
+    }
+    CHECK("embedded frame past end refused", lw_asset_acquire("qianqian.idle", 8u) == NULL);
+
+    /* Rejections: each must fail without disturbing the table already built. */
+    lw_pack_registry_reset();
+    lw_pack_t rejected;
+    CHECK("good blob accepted on a fresh registry",
+          lw_pack_registry_add_embedded(blob, blob_size, "male", "idle", &rejected) == LW_PACK_OK);
+    lw_pack_registry_reset();
+    uint8_t *bad = build_lwfa(clips, 2u, &size, true, false, 0u);
+    CHECK("wrong magic refused",
+          bad && lw_pack_registry_add_embedded(bad, size, "male", "idle", &rejected) == LW_PACK_ERR_MAGIC);
+    free(bad);
+    bad = build_lwfa(clips, 2u, &size, false, true, 0u);
+    CHECK("wrong total size refused",
+          bad && lw_pack_registry_add_embedded(bad, size, "male", "idle", &rejected) == LW_PACK_ERR_TRUNCATED);
+    free(bad);
+    bad = build_lwfa(clips, 2u, &size, false, false, 4u);
+    CHECK("short payload refused",
+          bad && lw_pack_registry_add_embedded(bad, size, "qianqian", "idle", &rejected) == LW_PACK_ERR_TRUNCATED);
+    free(bad);
+    CHECK("unknown actor refused",
+          lw_pack_registry_add_embedded(blob, blob_size, "nobody", "idle", &rejected) == LW_PACK_ERR_CLIP_NAME);
+    CHECK("null blob refused",
+          lw_pack_registry_add_embedded(NULL, blob_size, "male", "idle", &rejected) == LW_PACK_ERR_ARGUMENT);
+
+    lw_pack_registry_reset();
+    free(blob);
+}
+
+/* A card pack and the embedded pack must coexist in ONE spec table, because
+ * lw_assets_register() replaces the whole registry. This is the case the board
+ * actually runs when a card is present. */
+static void test_card_plus_embedded(void)
+{
+    const clip_spec_t card_clips[2] = {
+        {"idle", 2u, 225, 1u, 100u},
+        {"wave", 3u, 225, 0u, 100u},
+    };
+    CHECK("card fixture written", write_pack("male.lwp", card_clips, 2u, false));
+
+    lw_pack_registry_reset();
+    lw_pack_t info;
+    CHECK("card male opened",
+          lw_pack_registry_add(fixture_dir(), "male.lwp", "male", NULL, &info) == LW_PACK_OK);
+    CHECK("card male has idle and wave", info.named_count == 2u);
+
+    const fa_clip_t embedded[1] = {{"qianqian", 8u, 104u, 202u, 51, 199, 1u, 125u}};
+    size_t size = 0;
+    uint8_t *blob = build_lwfa(embedded, 1u, &size, false, false, 0u);
+    CHECK("embedded fixture built", blob != NULL);
+    if (blob) {
+        CHECK("embedded qianqian added beside the card pack",
+              lw_pack_registry_add_embedded(blob, size, "qianqian", "idle", &info) == LW_PACK_OK);
+        CHECK("registry holds both actors", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+        /* The card clip and the embedded clip must both be findable at once: a
+         * second registration would have silently dropped the first table. */
+        CHECK("card clip survived the embedded add", lw_assets_find("male.wave") != NULL);
+        CHECK("card idle survived too", lw_assets_find("male.idle") != NULL);
+        CHECK("embedded clip landed in the same table", lw_assets_find("qianqian.idle") != NULL);
+        lw_pack_registry_reset();
+        free(blob);
+    }
+    snprintf(s_path, sizeof(s_path), "%s/male.lwp", fixture_dir());
+    remove(s_path);
+}
+
 int main(void)
 {
     if (!getenv("LW_RESOURCE_ROOT")) {
@@ -402,6 +588,8 @@ int main(void)
     test_resource_version_gate();
     test_resource_missing_and_broken();
     test_resource_no_medium();
+    test_embedded_pack();
+    test_card_plus_embedded();
 
     printf("%u checks, %u failure(s)\n", checks, failures);
     if (failures) return 1;

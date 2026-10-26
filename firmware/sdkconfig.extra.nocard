@@ -1,0 +1,5 @@
+# Diagnostic D: the no-TF-card acceptance build.
+# Skips the mount entirely so the boot takes the same branch a missing card
+# takes: embedded LWFA characters, labelled scene fallback, no scene files.
+# The point is to prove the device boots and stays usable with no card at all.
+CONFIG_LW_DIAG_NO_MEDIUM=y

@@ -1,0 +1,74 @@
+[
+    {
+        "config":  "os",
+        "build_dir":  "firmware/build/os",
+        "bytes":  2334896,
+        "sha256":  "4192a903c9682b201ae5977f4ae73d17deb522e81a993db26c9611d6fc9e2563",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os",
+        "note":  "V4 offline default (the image to flash)",
+        "status":  "built"
+    },
+    {
+        "config":  "legacy",
+        "build_dir":  "firmware/build/legacy",
+        "bytes":  1420864,
+        "sha256":  "3307e9c3dacccfa88bf63299a68d3b5644b05a63141419e8a48af4537e79d559",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.legacy",
+        "note":  "legacy shell fallback",
+        "status":  "built"
+    },
+    {
+        "config":  "noaudio",
+        "build_dir":  "firmware/build/noaudio",
+        "bytes":  2334896,
+        "sha256":  "b647bb46f3d3bd1b24ddaf51539e4915870b6ea276a6cfb7659802fe5883990a",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.noaudio",
+        "note":  "no ES8311 probe",
+        "status":  "built"
+    },
+    {
+        "config":  "nocard",
+        "build_dir":  "firmware/build/nocard",
+        "bytes":  2266016,
+        "sha256":  "67b8827480a49ab3637ca1092c1410f0d530434345fe8f29e30f2ae1e6ec2226",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.nocard",
+        "note":  "no-TF-card acceptance build",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-a",
+        "build_dir":  "firmware/build/diag-a",
+        "bytes":  2334896,
+        "sha256":  "0354e774cfab4bf7cf3a7032eaa0c3ca0e8f416649dadc5dcfc29afe7b5ea129",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-a",
+        "note":  "flicker control A",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-b",
+        "build_dir":  "firmware/build/diag-b",
+        "bytes":  2334976,
+        "sha256":  "41cb091b78d85f8225f36a5bb5e72621fad7585421da47391b4e740701d19371",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-b",
+        "note":  "flicker fixed backlight B",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-c",
+        "build_dir":  "firmware/build/diag-c",
+        "bytes":  2331152,
+        "sha256":  "50a466a93274bdab93ae858f62c1cb2dcf683bb0b4555f85119f1ece69f8a7b0",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-c",
+        "note":  "flicker minimal load C",
+        "status":  "built"
+    },
+    {
+        "config":  "wifi",
+        "build_dir":  "firmware/build/wifi",
+        "bytes":  2620800,
+        "sha256":  "464384d9f7fc2b187c7a36209d63e190ac3a04270db846f970f8860054b7e18f",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.wifi",
+        "note":  "hosted Wi-Fi experimental (never run on hardware)",
+        "status":  "built"
+    }
+]

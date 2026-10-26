@@ -20,6 +20,8 @@
 
 # Logs and simulator intermediate images
 /reports/logs/*.log
+/reports/logs/v41/
+/reports/logs/v41-*.txt
 /reports/screenshots/*.bmp
 
 # Night Runner runtime output: per-run logs, locks, task jsonl and summaries.

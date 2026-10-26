@@ -1,4 +1,4 @@
-﻿/* SPDX-License-Identifier: MIT */
+/* SPDX-License-Identifier: MIT */
 /* Hardware-side LWPX pack loader.
  *
  * The LWPX container is NOT the embedded LWFA pack and is not treated as one:
@@ -29,7 +29,14 @@ typedef struct {
     char id[LW_PACK_ID_BYTES];
     char file[LW_PACK_FILE_BYTES]; /* basename, kept stable: lw_assets stores &id */
     uint32_t offset;
+    /* Bytes per frame. LWPX is always 256x256x3, but the embedded LWFA pack
+     * stores its own geometry (male 108x212, qianqian 104x202), so the size
+     * belongs to the source and must not be assumed at read time. */
+    uint32_t frame_bytes;
     uint16_t frames;
+    /* Non-NULL for an embedded blob: frames are copied straight out of the
+     * flash-mapped image, so there is no file to open and no cache to consult. */
+    const uint8_t *memory;
     /* The cache this clip was parsed from. Bound per clip, not looked up by
      * file name at read time: two packs of the same actor may live in the same
      * file name from different roots, and a wrong binding reads the wrong art
@@ -75,6 +82,7 @@ const char *lw_pack_status_text(lw_pack_status_t status)
     case LW_PACK_ERR_OFFSET: return "bad-frame-offset";
     case LW_PACK_ERR_TRUNCATED: return "truncated-pack";
     case LW_PACK_ERR_DUPLICATE: return "duplicate-clip";
+    case LW_PACK_ERR_LOOP: return "bad-loop-flag";
     case LW_PACK_ERR_ACTORS: return "actor-table-full";
     case LW_PACK_ERR_REGISTER: return "register-rejected";
     }
@@ -93,14 +101,21 @@ static uint32_t u32(const uint8_t *p)
 static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t bytes)
 {
     lw_pack_source_t *source = context;
-    if (!source || frame >= source->frames || bytes != LW_PACK_FRAME_BYTES) return false;
+    if (!source || frame >= source->frames || bytes != source->frame_bytes) return false;
+    if (source->memory) {
+        /* Embedded pack: the bytes are already in the flash mapping, so a frame
+         * is a memcpy. This is the no-TF-card path and it must stay allocation
+         * free and non-blocking. */
+        memcpy(pixels, source->memory + (uint64_t)frame * source->frame_bytes, bytes);
+        return true;
+    }
     /* Bind the frame to the cache of the pack file it came from. The cache is
      * stored in the source itself, not looked up per call: the file name alone
      * is ambiguous, because the same clip table can be re-added from a rebuilt
      * pack and s_pack_file[] then no longer points at the cache this spec was
      * parsed with. */
     lw_file_cache_t *cache = source->cache;
-    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * LW_PACK_FRAME_BYTES;
+    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
     if (cache) {
         bool ok = lw_file_cache_read(cache, source->file, offset, pixels, bytes);
         if (ok) {
@@ -109,7 +124,7 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
              * exactly what this cache exists to avoid. */
             unsigned next = (unsigned)((frame + 1u) % source->frames);
             (void)lw_file_cache_prefetch(cache, source->file,
-                                         (uint64_t)source->offset + (uint64_t)next * LW_PACK_FRAME_BYTES,
+                                         (uint64_t)source->offset + (uint64_t)next * source->frame_bytes,
                                          bytes);
         }
         return ok;
@@ -256,6 +271,8 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         snprintf(s_sources[spec].id, sizeof(s_sources[spec].id), "%s.%s", actor_name, name);
         memcpy(s_sources[spec].file, file, strlen(file) + 1);
         s_sources[spec].offset = offset;
+        s_sources[spec].frame_bytes = LW_PACK_FRAME_BYTES;
+        s_sources[spec].memory = NULL;
         s_sources[spec].frames = (uint16_t)frames;
         s_sources[spec].cache = cache;
         s_sources[spec].raw = (lw_asset_raw_file_t){
@@ -319,6 +336,115 @@ lw_pack_status_t lw_pack_registry_add(const char *root, const char *file, const 
                                       lw_file_cache_t *cache, lw_pack_t *out)
 {
     return parse(root, file, actor_name, cache, out);
+}
+
+/* ---- embedded LWFA fallback ---------------------------------------------
+ * The app image always carries one small LWFA pack (firmware/main/art), so the
+ * device shows real characters with no TF card. LWFA is a different container
+ * from LWPX and is parsed here rather than in a second loader, because the two
+ * must land in the SAME spec table: lw_assets_register() replaces the whole
+ * registry, so one table per registration is the only way to publish both. */
+#define LW_FA_HEADER_BYTES 16u
+#define LW_FA_RECORD_BYTES 32u
+
+lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
+                                               const char *actor_name, const char *clip_name,
+                                               lw_pack_t *out)
+{
+    if (!data || !actor_name || !clip_name || size < LW_FA_HEADER_BYTES) return LW_PACK_ERR_ARGUMENT;
+    if (memcmp(data, "LWFA0001", 8) != 0) return LW_PACK_ERR_MAGIC;
+    if (u16(data + 8) != 1u) return LW_PACK_ERR_MAGIC;
+    unsigned clips = u16(data + 10);
+    if (u32(data + 12) != size) return LW_PACK_ERR_TRUNCATED;
+    if (clips == 0 || clips > LW_PACK_MAX_CLIPS) return LW_PACK_ERR_CLIP_COUNT;
+    if (size < LW_FA_HEADER_BYTES + (size_t)LW_FA_RECORD_BYTES * clips) return LW_PACK_ERR_TRUNCATED;
+    if (s_spec_count + 1u > LW_PACK_MAX_SPECS) return LW_PACK_ERR_CLIP_COUNT;
+
+    /* One slot per actor, exactly like the file loader: an actor may receive an
+     * embedded clip and a card clip in the same session. */
+    unsigned slot = LW_PACK_MAX_ACTORS;
+    for (unsigned i = 0; i < s_actor_count; i++) {
+        if (!strcmp(s_actor_names[i], actor_name)) { slot = i; break; }
+    }
+    bool fresh = slot == LW_PACK_MAX_ACTORS;
+    if (fresh) {
+        if (s_actor_count >= LW_PACK_MAX_ACTORS) return LW_PACK_ERR_ACTORS;
+        if (strlen(actor_name) >= sizeof(s_actor_names[0])) return LW_PACK_ERR_ARGUMENT;
+        slot = s_actor_count;
+    }
+    unsigned existing = 0;
+    while (existing < LW_PACK_MAX_CLIPS && s_named[slot][existing].name) existing++;
+    if (existing >= LW_PACK_MAX_CLIPS) return LW_PACK_ERR_CLIP_COUNT;
+
+    /* The LWFA record for this actor: the embedded pack names its clip after
+     * the character ("male", "qianqian"), while the UI looks clips up as
+     * "idle". The caller passes the name to publish, so the container's own
+     * spelling never leaks into the UI contract. */
+    const uint8_t *record = NULL;
+    for (unsigned i = 0; i < clips; i++) {
+        const uint8_t *candidate = data + LW_FA_HEADER_BYTES + (size_t)i * LW_FA_RECORD_BYTES;
+        char name[13];
+        memcpy(name, candidate, 12);
+        name[12] = '\0';
+        if (!strcmp(name, actor_name)) { record = candidate; break; }
+    }
+    if (!record) return LW_PACK_ERR_CLIP_NAME;
+
+    unsigned frames = u16(record + 12);
+    unsigned width = u16(record + 14);
+    unsigned height = u16(record + 16);
+    int anchor_x = i16(record + 18);
+    int anchor_y = i16(record + 20);
+    unsigned loop = record[22];
+    unsigned duration = u16(record + 24);
+    uint32_t offset = u32(record + 28);
+    if (frames == 0 || frames > LW_PACK_MAX_FRAMES) return LW_PACK_ERR_FRAMES;
+    if (width == 0 || height == 0 || width > 1024 || height > 600) return LW_PACK_ERR_GEOMETRY;
+    if (anchor_x < 0 || anchor_y < 0 || anchor_x > (int)width || anchor_y > (int)height) return LW_PACK_ERR_ANCHOR;
+    if (loop > 1u) return LW_PACK_ERR_LOOP;
+    if (duration < 20 || duration > 2000) return LW_PACK_ERR_DURATION;
+    uint64_t frame_bytes = (uint64_t)width * height * 3u;
+    if (frame_bytes == 0 || frame_bytes > LW_PACK_FRAME_BYTES) return LW_PACK_ERR_GEOMETRY;
+    if (offset < LW_FA_HEADER_BYTES + (uint64_t)LW_FA_RECORD_BYTES * clips) return LW_PACK_ERR_OFFSET;
+    if ((uint64_t)offset + frame_bytes * frames > size) return LW_PACK_ERR_TRUNCATED;
+
+    memcpy(s_actor_names[slot], actor_name, strlen(actor_name) + 1);
+    s_pack_file[slot][0] = '\0';
+    s_absolute[slot][0] = '\0';
+    s_caches[slot] = NULL;
+    if (fresh) s_actor_count++;
+
+    unsigned spec = s_spec_count++;
+    snprintf(s_sources[spec].id, sizeof(s_sources[spec].id), "%s.%s", actor_name, clip_name);
+    s_sources[spec].file[0] = '\0';
+    s_sources[spec].offset = 0;
+    s_sources[spec].frame_bytes = (uint32_t)frame_bytes;
+    s_sources[spec].memory = data + offset;
+    s_sources[spec].frames = (uint16_t)frames;
+    s_sources[spec].cache = NULL;
+    s_sources[spec].raw = (lw_asset_raw_file_t){NULL, 0, 0, 0};
+    s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)width, (uint16_t)height,
+                                      (uint16_t)frames, (int16_t)anchor_x, (int16_t)anchor_y,
+                                      LV_COLOR_FORMAT_RGB565A8, read_frame, &s_sources[spec]};
+
+    for (unsigned k = 0; k < frames; k++) {
+        s_sequences[slot][existing][k] = (uint16_t)k;
+        s_durations[slot][existing][k] = (uint16_t)duration;
+    }
+    memcpy(s_clip_names[slot][existing], clip_name, strlen(clip_name) + 1);
+    s_named[slot][existing].name = s_clip_names[slot][existing];
+    s_named[slot][existing].clip = (lw_clip_t){s_sources[spec].id, s_sequences[slot][existing],
+                                               s_durations[slot][existing], (uint16_t)frames,
+                                               loop != 0u};
+
+    if (out) {
+        out->clips = 1;
+        out->frames = frames;
+        out->bytes = (unsigned)frame_bytes * frames;
+        out->named = s_named[slot];
+        out->named_count = existing + 1u;
+    }
+    return LW_PACK_OK;
 }
 
 bool lw_pack_registry_register(size_t budget)

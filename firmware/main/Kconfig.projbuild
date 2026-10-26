@@ -82,4 +82,14 @@ menu "Little World diagnostics (build-time only)"
             separate "the animation/render load flickers the panel" from "the
             display path itself flickers". Never ship a build with this on.
 
+    config LW_DIAG_NO_MEDIUM
+        bool "Diagnostic D: behave as if no TF card were inserted"
+        default n
+        help
+            Skips the card mount entirely and takes the same code path a real
+            missing card takes: embedded character pack, labelled scene
+            fallback, no scene files. It exists so the no-card acceptance run
+            can be done without physically removing the card, and so the
+            fallback cannot rot unnoticed. Never ship a build with this on.
+
 endmenu

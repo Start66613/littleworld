@@ -24,8 +24,8 @@
 #if CONFIG_LW_BOOT_MODE_OS_V2
 #include "lw_diag.h"
 #include "lvgl.h"
+#include "lw_art.h"
 #include "lw_os.h"
-#include "lw_char_pack.h"
 #include "lw_store.h"
 #endif
 
@@ -303,19 +303,23 @@ static void start_os(void)
 
     lw_diag_log_boot();
 
-    /* Real character art is linked into the image (firmware/main/art). A
-     * rejected pack is reported instead of silently painting a placeholder. */
-    const lw_char_pack_blob_t art_blob = {
-        characters_lwfa_start,
-        (size_t)(characters_lwfa_end - characters_lwfa_start),
-    };
-    const bool art_ok = lw_char_pack_register(&art_blob);
-    if (!art_ok) {
-        ESP_LOGW(TAG, "art: %s", "character pack rejected, using the labelled fallback");
+    /* Real character art has two sources, and the boot path uses both: the TF
+     * card carries the full V4 animation set, the app image always carries a
+     * small LWFA pack. lw_art_boot() prefers the card and fills any clip it
+     * could not supply from the embedded pack, so a missing card costs the
+     * extra clips and never the characters. */
+    const lw_actor_art_t *art = lw_art_boot(characters_lwfa_start,
+                                            (size_t)(characters_lwfa_end - characters_lwfa_start));
+    ESP_LOGI(TAG, "art: %s", lw_art_report());
+    if (!art) {
+        ESP_LOGW(TAG, "art: %s", "no character source loaded, using the labelled fallback");
     }
     publish_capabilities();
-    if (!lw_os_start(&s_system, art_ok ? lw_char_pack_art() : NULL)) {
+    if (!lw_os_start(&s_system, art)) {
         ESP_LOGE(TAG, "lw_os_start failed; falling back to the legacy shell");
+        /* The legacy shell does not render actors, so the registry and the card
+         * read-ahead worker must not stay alive behind it. */
+        lw_art_release();
         lw_ui_start();
     } else {
         /* Later capability changes are applied from the LVGL task only. */
