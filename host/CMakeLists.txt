@@ -27,6 +27,7 @@ file(GLOB LW_UI_FONTS "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/fo
 file(GLOB LW_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/src/*.c")
 file(GLOB ARCADE_CORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/src/*.c")
 file(GLOB LW_DUO_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/src/*.c")
+file(GLOB LW_ENGINE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_engine/src/*.c")
 set(LW_RPG_SOURCES ../rpg/src/lw_rpg.c ../rpg/src/lw_rpg_save.c ../rpg/data/lw_rpg_home.c)
 
 add_executable(LittleWorld
@@ -46,12 +47,14 @@ add_executable(LittleWorld
     ${LW_CORE_SOURCES}
     ${LW_RPG_SOURCES}
     ${ARCADE_CORE_SOURCES}
-    ${LW_DUO_SOURCES})
+    ${LW_DUO_SOURCES}
+    ${LW_ENGINE_SOURCES})
 
 target_include_directories(LittleWorld PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_ui/src"
+    "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_engine/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/arcade_core/include"
     "${CMAKE_CURRENT_LIST_DIR}/../firmware/components/lw_duo/include"
@@ -66,7 +69,7 @@ target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_
 if(MSVC)
     target_compile_options(LittleWorld PRIVATE /utf-8)
 endif()
-add_executable(StorageTests ../tests/host/test_storage.c ../firmware/components/lw_storage/src/lw_storage.c ../firmware/components/lw_core/src/lw_fault.c)
+add_executable(StorageTests ../tests/host/test_storage.c ../firmware/components/lw_storage/src/lw_storage.c ../firmware/components/lw_core/src/lw_fault.c ../firmware/components/lw_core/src/lw_path.c)
 target_include_directories(StorageTests PRIVATE ../firmware/components/lw_storage/include ../firmware/components/lw_core/include)
 if(MSVC)
     target_compile_options(StorageTests PRIVATE /W4 /WX /utf-8 /D_CRT_SECURE_NO_WARNINGS)

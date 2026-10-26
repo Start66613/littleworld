@@ -15,6 +15,7 @@
  * is plain stdio and is what the Windows host already uses.
  */
 #include "lw_pack.h"
+#include "lw_path.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -198,8 +199,10 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     }
 
     char absolute[LW_PACK_PATH_BYTES];
-    int made = snprintf(absolute, sizeof(absolute), "%s/%s", root, file);
-    if (made <= 0 || (size_t)made >= sizeof(absolute)) return LW_PACK_ERR_ARGUMENT;
+    /* Same join rule as every other consumer (lw_path.h): a pack file name is
+     * relative to the resource root and must not carry a path of its own. */
+    if (!lw_path_join(absolute, sizeof(absolute), root, file)) return LW_PACK_ERR_ARGUMENT;
+    size_t made = strlen(absolute);
 
     /* Reserve the per-FILE path record BEFORE anything is published. Every spec
      * of this file points into it (source->file / raw.path), so it must be a
@@ -208,7 +211,7 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     if (s_file_count >= LW_PACK_MAX_FILES) return LW_PACK_ERR_CLIP_COUNT;
     unsigned file_slot = s_file_count;
     memcpy(s_file_names[file_slot], file, strlen(file) + 1);
-    memcpy(s_file_paths[file_slot], absolute, (size_t)made + 1);
+    memcpy(s_file_paths[file_slot], absolute, made + 1u);
 
     FILE *f = fopen(absolute, "rb");
     if (!f) return LW_PACK_ERR_OPEN;

@@ -103,6 +103,26 @@ lw_diag_report_t lw_diag_report(void)
         r.theme = -1;
     }
 
+    if (s_registered && s_providers.cache != NULL) {
+        s_providers.cache(&r.cache_available, &r.cache_hits, &r.cache_misses, &r.cache_evictions,
+                          &r.cache_queue_drops, &r.cache_resident, &r.cache_peak, &r.cache_budget);
+    }
+
+    if (s_registered && s_providers.clock != NULL) {
+        s_providers.clock(r.clock, sizeof(r.clock));
+    }
+    if (r.clock[0] == '\0') {
+        copy_text(r.clock, sizeof(r.clock), "n/a");
+    }
+
+    if (s_registered && s_providers.ui_assets != NULL) {
+        s_providers.ui_assets(&r.ui_assets, &r.ui_asset_bytes);
+    }
+
+    if (s_registered && s_providers.animation != NULL) {
+        s_providers.animation(&r.anim_sprites, &r.anim_running);
+    }
+
     if (s_registered && s_providers.medium != NULL) {
         s_providers.medium(&r.medium_mounted, r.medium_reason, sizeof(r.medium_reason));
     }
@@ -164,6 +184,10 @@ size_t lw_diag_text(const lw_diag_report_t *report, char *buf, size_t len)
         "resources: reads=%u failures=%u\n"
         "frames: failures=%u leases=%u bytes=%u\n"
         "theme: %d\n"
+        "cache: %s hits=%u misses=%u evictions=%u drops=%u resident=%u peak=%u budget=%u\n"
+        "clock: %s\n"
+        "ui_assets: count=%u bytes=%u\n"
+        "animation: sprites=%u running=%u\n"
         "medium: %s (%s)\n"
         "wifi: %s (%s)\n"
         "recovery: %s%s\n"
@@ -179,6 +203,11 @@ size_t lw_diag_text(const lw_diag_report_t *report, char *buf, size_t len)
         (unsigned)report->resource_reads, (unsigned)report->resource_failures,
         (unsigned)report->frame_load_failures, (unsigned)report->asset_leases, (unsigned)report->asset_bytes,
         report->theme,
+        report->cache_available ? "open" : "absent", (unsigned)report->cache_hits,
+        (unsigned)report->cache_misses, (unsigned)report->cache_evictions,
+        (unsigned)report->cache_queue_drops, (unsigned)report->cache_resident,
+        (unsigned)report->cache_peak, (unsigned)report->cache_budget, report->clock,
+        report->ui_assets, (unsigned)report->ui_asset_bytes, report->anim_sprites, report->anim_running,
         report->medium_mounted ? "mounted" : "absent", report->medium_reason,
         wifi_text(report->wifi), report->wifi_reason,
         report->safe_mode ? "SAFE MODE, " : "", report->recovery,
@@ -226,6 +255,7 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
     char recovery[192];
     char last_error[192];
     char lv_note[96];
+    char clock_text[96];
     json_escape(report->firmware, firmware, sizeof(firmware));
     json_escape(report->build_config, build_config, sizeof(build_config));
     json_escape(report->pack_version, pack_version, sizeof(pack_version));
@@ -235,6 +265,7 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
     json_escape(report->recovery, recovery, sizeof(recovery));
     json_escape(report->last_error, last_error, sizeof(last_error));
     json_escape(report->lv_note, lv_note, sizeof(lv_note));
+    json_escape(report->clock, clock_text, sizeof(clock_text));
 
     int written = snprintf(
         buf, len,
@@ -243,7 +274,12 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         "\"lv_available\":%s,\"lv_used\":%u,\"lv_max\":%u,\"lv_frag_pct\":%u,\"lv_note\":\"%s\","
         "\"pack\":\"%s\",\"resource\":\"%s\","
         "\"resource_reads\":%u,\"resource_failures\":%u,\"frame_failures\":%u,\"asset_leases\":%u,"
-        "\"asset_bytes\":%u,\"theme\":%d,\"medium\":%s,\"medium_reason\":\"%s\",\"wifi\":\"%s\","
+        "\"asset_bytes\":%u,\"theme\":%d,"
+        "\"cache_open\":%s,\"cache_hits\":%u,\"cache_misses\":%u,\"cache_evictions\":%u,"
+        "\"cache_drops\":%u,\"cache_resident\":%u,\"cache_peak\":%u,\"cache_budget\":%u,"
+        "\"clock\":\"%s\",\"ui_assets\":%u,\"ui_asset_bytes\":%u,"
+        "\"anim_sprites\":%u,\"anim_running\":%u,"
+        "\"medium\":%s,\"medium_reason\":\"%s\",\"wifi\":\"%s\","
         "\"wifi_reason\":\"%s\",\"safe_mode\":%s,\"recovery\":\"%s\","
         "\"last_error\":\"%s\",\"last_error_ms\":%u}",
         firmware, build_config, report->idf, (unsigned)report->reset_reason, (unsigned)report->boot_ms,
@@ -254,7 +290,13 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         pack_version, resource_status,
         (unsigned)report->resource_reads, (unsigned)report->resource_failures,
         (unsigned)report->frame_load_failures, (unsigned)report->asset_leases, (unsigned)report->asset_bytes,
-        report->theme, report->medium_mounted ? "true" : "false", medium_reason,
+        report->theme,
+        report->cache_available ? "true" : "false", (unsigned)report->cache_hits,
+        (unsigned)report->cache_misses, (unsigned)report->cache_evictions,
+        (unsigned)report->cache_queue_drops, (unsigned)report->cache_resident,
+        (unsigned)report->cache_peak, (unsigned)report->cache_budget, clock_text,
+        report->ui_assets, (unsigned)report->ui_asset_bytes, report->anim_sprites, report->anim_running,
+        report->medium_mounted ? "true" : "false", medium_reason,
         wifi_text(report->wifi), wifi_reason, report->safe_mode ? "true" : "false", recovery,
         last_error, (unsigned)report->last_error_ms);
     if (written < 0 || (size_t)written >= len) {

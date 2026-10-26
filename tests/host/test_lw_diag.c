@@ -82,6 +82,36 @@ static void fake_frames(uint32_t *failures, uint32_t *leases, size_t *bytes)
 
 static int fake_theme(void) { return 2; }
 
+static void fake_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
+                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget)
+{
+    *available = true;
+    *hits = 900;
+    *misses = 40;
+    *evictions = 6;
+    *queue_drops = 2;
+    *resident = 884736;
+    *peak = 1048576;
+    *budget = 1048576;
+}
+
+static void fake_clock(char *text, size_t len)
+{
+    snprintf(text, len, "19:30 demo, not trusted, night, theme 1");
+}
+
+static void fake_ui_assets(unsigned *count, size_t *bytes)
+{
+    *count = 5;
+    *bytes = 12288;
+}
+
+static void fake_animation(unsigned *sprites, unsigned *running)
+{
+    *sprites = 2;
+    *running = 2;
+}
+
 static void fake_medium(bool *mounted, char *reason, size_t len)
 {
     *mounted = true;
@@ -131,6 +161,12 @@ static void test_defaults_without_providers(void)
     CHECK(r.medium_mounted == false);
     CHECK(r.wifi == LW_DIAG_WIFI_ABSENT);
     CHECK_STR_EQUAL(r.last_error, "none");
+    /* Sections without a provider must admit they are unknown, not report zero
+     * as if a cache existed with no hits. */
+    CHECK(r.cache_available == false);
+    CHECK_STR_EQUAL(r.clock, "n/a");
+    CHECK(r.ui_assets == 0u);
+    CHECK(r.anim_sprites == 0u);
     CHECK(r.build_time[0] != '\0');   /* __DATE__ is always present */
     /* No memory provider: the allocator numbers must be zero, not garbage. */
     CHECK(r.reset_reason == 0u);
@@ -150,6 +186,10 @@ static void test_full_providers(void)
     p.resources = fake_resources;
     p.frames = fake_frames;
     p.theme = fake_theme;
+    p.cache = fake_cache;
+    p.clock = fake_clock;
+    p.ui_assets = fake_ui_assets;
+    p.animation = fake_animation;
     p.medium = fake_medium;
     p.wifi = fake_wifi;
     p.recovery = fake_recovery_clean;
@@ -180,6 +220,19 @@ static void test_full_providers(void)
     CHECK(r.asset_leases == 2u);
     CHECK(r.asset_bytes == 442368u);
     CHECK(r.theme == 2);
+    CHECK(r.cache_available);
+    CHECK(r.cache_hits == 900u);
+    CHECK(r.cache_misses == 40u);
+    CHECK(r.cache_evictions == 6u);
+    CHECK(r.cache_queue_drops == 2u);
+    CHECK(r.cache_resident == 884736u);
+    CHECK(r.cache_peak == 1048576u);
+    CHECK(r.cache_budget == 1048576u);
+    CHECK_STR_EQUAL(r.clock, "19:30 demo, not trusted, night, theme 1");
+    CHECK(r.ui_assets == 5u);
+    CHECK(r.ui_asset_bytes == 12288u);
+    CHECK(r.anim_sprites == 2u);
+    CHECK(r.anim_running == 2u);
     CHECK(r.medium_mounted);
     CHECK_STR_EQUAL(r.medium_reason, "sdcard at /sdcard");
     CHECK(r.wifi == LW_DIAG_WIFI_STARTED);
@@ -348,6 +401,10 @@ static void test_json_roundtrip(void)
     p.resources = fake_resources;   /* contains embedded quotes on purpose */
     p.frames = fake_frames;
     p.theme = fake_theme;
+    p.cache = fake_cache;
+    p.clock = fake_clock;
+    p.ui_assets = fake_ui_assets;
+    p.animation = fake_animation;
     p.medium = fake_medium;
     p.wifi = fake_wifi;
     p.recovery = fake_recovery_clean;
@@ -367,6 +424,10 @@ static void test_json_roundtrip(void)
     CHECK_STR_CONTAINS(buf, "\"firmware\":\"4.1.0-dsh\"");
     CHECK_STR_CONTAINS(buf, "\"medium\":true");
     CHECK_STR_CONTAINS(buf, "\"theme\":2");
+    CHECK_STR_CONTAINS(buf, "\"cache_open\":true");
+    CHECK_STR_CONTAINS(buf, "\"cache_hits\":900");
+    CHECK_STR_CONTAINS(buf, "\"clock\":\"19:30 demo, not trusted, night, theme 1\"");
+    CHECK_STR_CONTAINS(buf, "\"anim_running\":2");
     CHECK_STR_CONTAINS(buf, "\"wifi\":\"started\"");
     /* No raw newline may appear inside the object: it must stay one line. */
     CHECK(strchr(buf, '\n') == NULL);

@@ -26,6 +26,8 @@
 
 #if CONFIG_LW_BOOT_MODE_OS_V2
 #include "lw_content_boot.h"
+#include "lw_time_boot.h"
+#include "lw_ui_clock.h"
 #include "lw_diag.h"
 #include "lw_diag_board.h"
 #include "lvgl.h"
@@ -83,8 +85,9 @@ extern const uint8_t characters_lwfa_end[] asm("_binary_characters_lwfa_end");
 static bool platform_get_time(struct tm *out)
 {
 #if CONFIG_LW_BOOT_MODE_OS_V2
-    /* No RTC and no SNTP session: say so instead of inventing a date. */
-    return lw_hw_time_get(out);
+    /* The effective clock lives in lw_time_boot: it answers only when the time
+     * is REAL or MANUAL, so the UI's demo fallback stays honest. */
+    return lw_time_boot_get_tm(out);
 #else
     (void)out;
     return false;
@@ -290,10 +293,22 @@ static void publish_capabilities(void)
              (int)caps.volume, (int)caps.wifi, (int)caps.audio, (int)caps.storage);
 }
 
+/* Feed the effective clock from the service snapshot. Runs on the LVGL task,
+ * like publish_capabilities, because lw_time_boot_get_tm() is read from the same
+ * task through lw_platform. */
+static void publish_time(void)
+{
+    uint32_t now_ms = lw_services_now_ms();
+    lw_net_status_t status;
+    lw_services_status(&s_services, now_ms, &status);
+    lw_time_boot_update(&status, now_ms);
+}
+
 static void caps_timer_cb(lv_timer_t *timer)
 {
     (void)timer;
     publish_capabilities();
+    publish_time();
 }
 static bool hw_brightness(void *context, unsigned value)
 {
@@ -339,6 +354,13 @@ static void start_os(void)
     }
     ESP_LOGI(TAG, "network: %s", lw_hw_wifi_reason());
     ESP_LOGI(TAG, "time: %s", lw_hw_time_reason());
+
+    /* The effective clock starts on the labelled demo time and is upgraded only
+     * when the service reports a real sync. */
+    lw_time_boot_init();
+    /* Hand the one clock to the UI before the first frame: pages read it, they
+     * never decide the time themselves. */
+    lw_ui_clock_attach(lw_time_boot_day());
 
     /* The OS keeps a pointer to this descriptor for the lifetime of the
      * session, so it must not live on the stack. */

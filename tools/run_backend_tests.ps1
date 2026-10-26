@@ -49,6 +49,7 @@ $common = @(
     (Join-Path $root 'firmware/components/lw_core/src/lw_state.c'),
     (Join-Path $root 'firmware/components/lw_core/src/lw_pet.c'),
     (Join-Path $root 'firmware/components/lw_core/src/lw_time.c'),
+    (Join-Path $root 'firmware/components/lw_core/src/lw_path.c'),
     (Join-Path $root 'firmware/components/lw_core/src/lw_fault.c'),
     (Join-Path $root 'firmware/components/lw_backend/src/lw_store.c'),
     (Join-Path $root 'firmware/components/lw_backend/src/lw_diag_report.c'),

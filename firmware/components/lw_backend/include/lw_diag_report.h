@@ -67,6 +67,30 @@ typedef struct {
 
     int theme;
 
+    /* Frame cache: the numbers that answer "is the card keeping up?". A hit
+     * rate near zero with a high eviction count means the budget is too small
+     * for the scene, which looks like stutter and nothing else. */
+    bool cache_available;
+    uint32_t cache_hits;
+    uint32_t cache_misses;
+    uint32_t cache_evictions;
+    uint32_t cache_queue_drops;
+    size_t cache_resident;
+    size_t cache_peak;
+    size_t cache_budget;
+
+    /* Effective clock, as the screen shows it. "demo" here is the honest answer
+     * that the time is a rehearsal, not a reading. */
+    char clock[72];
+
+    /* UI asset cache: how much .lwu art is resident and how many pieces. */
+    unsigned ui_assets;
+    size_t ui_asset_bytes;
+
+    /* UI animation state: sprites alive and whether their clock is running. */
+    unsigned anim_sprites;
+    unsigned anim_running;
+
     bool medium_mounted;
     char medium_reason[64];
 
@@ -101,6 +125,14 @@ typedef struct {
     void (*frames)(uint32_t *failures, uint32_t *leases, size_t *bytes);
     /* Current theme index. */
     int (*theme)(void);
+    /* Frame cache counters, NULL when no cache is open (no card). */
+    void (*cache)(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
+                  uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget);
+    /* Effective clock, one line, from the same source the UI reads. */
+    void (*clock)(char *text, size_t len);
+    /* UI asset cache and animation state. */
+    void (*ui_assets)(unsigned *count, size_t *bytes);
+    void (*animation)(unsigned *sprites, unsigned *running);
     /* Storage medium: mounted plus a human-readable reason when it is not. */
     void (*medium)(bool *mounted, char *reason, size_t reason_len);
     /* Wi-Fi: state plus the adapter's own explanation. */

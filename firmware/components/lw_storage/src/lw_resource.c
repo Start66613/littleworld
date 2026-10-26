@@ -4,6 +4,7 @@
  * mounted FAT volume. SPDX-License-Identifier: MIT */
 #include "lw_resource.h"
 #include "lw_fault.h"
+#include "lw_path.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,8 +24,7 @@ static bool read_head(const char *path, uint8_t *out, size_t bytes)
 
 static bool join(char *dst, size_t cap, const char *name)
 {
-    int n = snprintf(dst, cap, "%s/%s", s_root, name);
-    return n > 0 && (size_t)n < cap;
+    return lw_path_join(dst, cap, s_root, name);
 }
 
 /* The manifest is deliberately tiny and line oriented; pulling a JSON parser
@@ -126,6 +126,15 @@ void lw_resource_set_root(const char *root)
 }
 
 const char *lw_resource_root(void) { return s_root; }
+
+bool lw_resource_path(char *dst, size_t cap, const char *relative)
+{
+    if (!s_root[0]) {
+        if (dst && cap) dst[0] = '\0';
+        return false;
+    }
+    return lw_path_join(dst, cap, s_root, relative);
+}
 
 void lw_resource_flag(lw_resource_status_t status)
 {

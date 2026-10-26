@@ -17,15 +17,25 @@
 #include "esp_log.h"
 
 #include "lw_content.h"
+#include "lw_path.h"
 #include "lw_resource.h"
 #include "lw_ui_content.h"
 
 static const char *TAG = "lw_content";
 
-/* "littleworld/" lives on the card under the verified root. */
-#define LW_CONTENT_DIR "littleworld"
-#define LW_CONTENT_FILE "content.lwcx"
-
+/* The resource root IS the littleworld directory: lw_sd_asset_root() returns
+ * BSP_SD_MOUNT_POINT "/littleworld", i.e. /sdcard/littleworld. The content file
+ * therefore sits directly under it as content.lwcx.
+ *
+ * This used to append a second "littleworld/" and ask for
+ * /sdcard/littleworld/littleworld/content.lwcx - a directory that no card built
+ * by tools/package_v4_content.py ever contains. Every boot logged "no card" or
+ * "file missing" while the file was sitting right there one level up, and no
+ * test caught it because no test built a tree shaped like the real card.
+ *
+ * The name now lives in lw_content.h and the join goes through
+ * lw_content_resolve_path(), so the host test exercises the exact function the
+ * board calls. */
 static char s_path[192];
 static char s_report[192];
 static bool s_loaded;
@@ -45,9 +55,11 @@ bool lw_content_boot(void)
         return false;
     }
 
-    int n = snprintf(s_path, sizeof(s_path), "%s/%s/%s", root, LW_CONTENT_DIR, LW_CONTENT_FILE);
-    if (n < 0 || (size_t)n >= sizeof(s_path)) {
-        (void)snprintf(s_report, sizeof(s_report), "content: path too long");
+    /* One join rule for every consumer: lw_content_resolve_path() wraps
+     * lw_path_join() and refuses an unset root, an unsafe name or an overflow.
+     * The root already ends in "littleworld", so only the file name is added. */
+    if (!lw_content_resolve_path(s_path, sizeof(s_path), root)) {
+        (void)snprintf(s_report, sizeof(s_report), "content: path rejected (root too long?)");
         ESP_LOGW(TAG, "%s", s_report);
         s_path[0] = '\0';
         return false;

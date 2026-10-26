@@ -1,0 +1,56 @@
+[
+    {
+        "config":  "legacy",
+        "build_dir":  "firmware/build/legacy",
+        "bytes":  1429808,
+        "sha256":  "edf2fc82c6097c3f30a4b9b5415661d7f21891d653dc518a7d9991005ae04d10",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.legacy",
+        "log":  "reports/logs/v41/build-legacy.log",
+        "status":  "built"
+    },
+    {
+        "config":  "noaudio",
+        "build_dir":  "firmware/build/noaudio",
+        "bytes":  2356928,
+        "sha256":  "d1d4b371935661a8258a42fb113e9e680c0ca921d6cae4024028881c4282530f",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.noaudio",
+        "log":  "reports/logs/v41/build-noaudio.log",
+        "status":  "built"
+    },
+    {
+        "config":  "nocard",
+        "build_dir":  "firmware/build/nocard",
+        "bytes":  2287872,
+        "sha256":  "55473e96414272e94e050f344b01955b22562fd9aff3f6f20abc181d746041ea",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.nocard",
+        "log":  "reports/logs/v41/build-nocard.log",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-a",
+        "build_dir":  "firmware/build/diag-a",
+        "bytes":  2356928,
+        "sha256":  "cea273fd8e8743a74e26ed7dde5c4d602b3b052ceda39a888be5415daa9958a7",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-a",
+        "log":  "reports/logs/v41/build-diag-a.log",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-b",
+        "build_dir":  "firmware/build/diag-b",
+        "bytes":  2357024,
+        "sha256":  "bf48e885dfd5d6ac4a943edc4bf27dc7e699108dde8f0131b2e6b3b201376dd6",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-b",
+        "log":  "reports/logs/v41/build-diag-b.log",
+        "status":  "built"
+    },
+    {
+        "config":  "diag-c",
+        "build_dir":  "firmware/build/diag-c",
+        "bytes":  2353184,
+        "sha256":  "3fd8abaf1f105883fb135f7b615307b082dea883dd1af0368af30ad52d1782c2",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.diag-c",
+        "log":  "reports/logs/v41/build-diag-c.log",
+        "status":  "built"
+    }
+]

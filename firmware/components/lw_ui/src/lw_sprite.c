@@ -12,7 +12,56 @@ struct lw_sprite {
     int anchor_x, anchor_y;
     uint16_t scale, frame;
     bool enabled, paused, finished, external;
+    struct lw_sprite *prev, *next;
 };
+
+/* Live sprites, in creation order. Two sprites exist on the desktop, so a list
+ * is cheaper than any registry, and it lets the diagnostics answer "is anything
+ * actually animating" without the UI handing out pointers to its own state. */
+static lw_sprite_t *s_head;
+
+static void link_sprite(lw_sprite_t *s)
+{
+    s->prev = NULL;
+    s->next = s_head;
+    if (s_head) {
+        s_head->prev = s;
+    }
+    s_head = s;
+}
+
+static void unlink_sprite(lw_sprite_t *s)
+{
+    if (s->prev) {
+        s->prev->next = s->next;
+    } else if (s_head == s) {
+        s_head = s->next;
+    }
+    if (s->next) {
+        s->next->prev = s->prev;
+    }
+    s->prev = s->next = NULL;
+}
+
+void lw_sprite_stats(unsigned *live, unsigned *running)
+{
+    unsigned count = 0;
+    unsigned moving = 0;
+    for (const lw_sprite_t *s = s_head; s != NULL; s = s->next) {
+        count++;
+        /* The same condition tick() uses to advance a frame, so this is what the
+         * panel is really doing rather than what was requested. */
+        if (s->clip && s->enabled && !s->paused && !s->finished) {
+            moving++;
+        }
+    }
+    if (live) {
+        *live = count;
+    }
+    if (running) {
+        *running = moving;
+    }
+}
 
 static uint32_t clip_length(const lw_clip_t *clip)
 {
@@ -62,6 +111,10 @@ bool lw_sprite_seek(lw_sprite_t *s, uint32_t elapsed)
 static void tick(lv_timer_t *timer)
 {
     lw_sprite_t *s=lv_timer_get_user_data(timer);
+    /* No clip yet (created but never played) means nothing to advance; seeking
+     * with a NULL clip would be a no-op anyway, but this keeps the running
+     * condition in lw_sprite_stats() and here identical. */
+    if (!s || !s->clip) return;
     if (s->enabled && !s->paused) (void)lw_sprite_seek(s,lv_tick_get()-s->epoch);
 }
 
@@ -71,6 +124,7 @@ static void deleted(lv_event_t *event)
     lv_timer_delete(s->timer);
     lv_image_set_src(s->image,NULL);
     lw_asset_release(s->lease);
+    unlink_sprite(s);
     lv_free(s);
 }
 
@@ -93,6 +147,7 @@ lw_sprite_t *lw_sprite_create(lv_obj_t *parent, int x, int y, uint16_t scale)
      * from "the display path flickers on its own". */
 #endif
     lv_obj_add_event_cb(s->image,deleted,LV_EVENT_DELETE,s);
+    link_sprite(s);
     return s;
 }
 lv_obj_t *lw_sprite_object(lw_sprite_t *s) { return s ? s->image : NULL; }

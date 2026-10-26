@@ -43,12 +43,16 @@ $include = @(
     ('/I' + (Join-Path $root 'firmware/components/lw_ui/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_duo/include')),
     ('/I' + (Join-Path $root 'firmware/components/lw_storage/include')),
+    ('/I' + (Join-Path $root 'firmware/components/lw_content/include')),
     ('/I' + (Join-Path $root 'host')),
     ('/I' + (Join-Path $root 'firmware/managed_components/lvgl__lvgl'))
 )
 
 $sources = @(
     (Join-Path $root 'tests/host/test_lw_v4_resources.c'),
+    (Join-Path $root 'firmware/components/lw_core/src/lw_path.c'),
+    (Join-Path $root 'firmware/components/lw_core/src/lw_time.c'),
+    (Join-Path $root 'firmware/components/lw_content/src/lw_content.c'),
     (Join-Path $root 'firmware/components/lw_ui/src/lw_pack.c'),
     (Join-Path $root 'firmware/components/lw_ui/src/lw_assets.c'),
     (Join-Path $root 'firmware/components/lw_storage/src/lw_resource.c'),

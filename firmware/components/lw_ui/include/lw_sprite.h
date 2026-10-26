@@ -27,3 +27,11 @@ void lw_sprite_set_external_clock(lw_sprite_t *sprite,bool external);
 uint16_t lw_sprite_frame(const lw_sprite_t *sprite);
 bool lw_sprite_finished(const lw_sprite_t *sprite);
 void lw_sprite_destroy(lw_sprite_t *sprite);
+
+/* Live sprite count and how many are actually advancing frames right now.
+ *
+ * "Running" uses the same condition the frame timer uses (clip set, enabled,
+ * not paused, not finished), so a panel that shows a still frame because an
+ * animation was paused is reported as not running rather than as healthy. Used
+ * by the diagnostics; either output pointer may be NULL. */
+void lw_sprite_stats(unsigned *live, unsigned *running);

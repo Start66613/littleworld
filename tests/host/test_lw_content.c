@@ -292,8 +292,26 @@ static void test_missing_file(void)
     CHECK("missing file leaves no content", lw_content_memory_count() == 0u);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    /* Converter hook: tools/studio_to_device.py --verify runs THIS binary, so a
+     * Studio package is checked by the shipping parser rather than by a Python
+     * re-implementation of it. */
+    if (argc == 3 && strcmp(argv[1], "--check-content") == 0) {
+        if (!lw_content_load(argv[2])) {
+            const lw_content_report_t *report = lw_content_report();
+            printf("REJECT %s: %s (line %u)\n", argv[2],
+                   lw_content_status_text(report->status), report->rejected);
+            return 1;
+        }
+        const lw_content_t *content = lw_content_get();
+        printf("OK %s v%u memories=%u photos=%u letters=%u dialogues=%u lines=%u bytes=%u\n",
+               argv[2], content->content_version, content->memory_count, content->photo_count,
+               content->letter_count, content->dialogue_count, content->line_count,
+               lw_content_report()->bytes);
+        return 0;
+    }
+
     test_good_file();
     test_utf8();
     test_bom_and_crlf();

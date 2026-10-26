@@ -56,6 +56,16 @@ typedef struct {
 void lw_resource_set_root(const char *root);
 const char *lw_resource_root(void);
 
+/* Build "<root>/<relative>" into dst using the one join rule in lw_path.h.
+ *
+ * This is the ONLY supported way to turn a name into a path under the resource
+ * root. The root already ends in "littleworld" (/sdcard/littleworld on the
+ * board), so callers pass just the file name - "content.lwcx", "male.lwp",
+ * "scene-0.lwr" - and never repeat a directory the root already contains.
+ * Returns false when the root is unset, the relative name is unsafe, or the
+ * result does not fit. */
+bool lw_resource_path(char *dst, size_t cap, const char *relative);
+
 /* What the last lw_resource_verify() found. Never NULL. */
 const lw_resource_report_t *lw_resource_report(void);
 const char *lw_resource_status_text(lw_resource_status_t status);

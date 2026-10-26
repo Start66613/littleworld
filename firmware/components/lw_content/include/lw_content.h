@@ -65,7 +65,12 @@ extern "C" {
 #define LW_CONTENT_TITLE_MAX 128u
 #define LW_CONTENT_BODY_MAX 512u
 #define LW_CONTENT_PATH_MAX 96u
-#define LW_CONTENT_SPEAKER_MAX 16u
+/* A speaker label is a name, not a sentence. 24 UTF-8 bytes is eight Chinese
+ * characters: enough for "男方"/"阿妈"/"陌生女人" plus a qualifier, and small
+ * enough that a runaway string cannot eat the arena. The first limit here was
+ * 16, which rejected the Studio demo package's own speaker label - a real
+ * conversion failure, found by running the bridge against it. */
+#define LW_CONTENT_SPEAKER_MAX 24u
 
 typedef enum {
     LW_CONTENT_OK = 0,
@@ -141,6 +146,24 @@ bool lw_content_parse(const char *text, size_t length);
 
 /** Read and parse a file. Sets LW_CONTENT_MISSING when it cannot be opened. */
 bool lw_content_load(const char *path);
+
+/** The file name the device looks for, with no directory part. */
+#define LW_CONTENT_FILE_NAME "content.lwcx"
+
+/**
+ * Build the absolute path of the content file inside @p root.
+ *
+ * The resource root ALREADY ends in "littleworld" (/sdcard/littleworld on the
+ * board), so the content file sits directly under it. This is the single place
+ * that turns a root into a content path, so the device loader and the tests
+ * cannot disagree about the shape - the bug this function replaces appended
+ * "littleworld/" a second time and asked for a directory no card contains.
+ *
+ * @p root is normally lw_resource_root(). Returns false and writes an empty
+ * string when the root is empty, the name would not fit, or the join rule in
+ * lw_path.h rejects the root.
+ */
+bool lw_content_resolve_path(char *dst, size_t cap, const char *root);
 
 /** Drop the current content; lw_content_get() then reports zero entries. */
 void lw_content_clear(void);

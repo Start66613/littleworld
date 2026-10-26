@@ -37,6 +37,7 @@
 #include "lw_diag_board.h"
 #include "lw_content.h"
 #include "lw_content_boot.h"
+#include "lw_time_boot.h"
 #if CONFIG_LW_FAULT_INJECT
 #include "lw_fault.h"
 #endif
@@ -365,6 +366,19 @@ static int cmd_content(int argc, char **argv)
     fflush(stdout);
     return 0;
 }
+
+static int cmd_clock(int argc, char **argv)
+{
+    /* The effective clock, not the raw service state: source, whether it may be
+     * presented as the real time, phase and the next boundary. A console that
+     * only printed the SNTP state would leave "what does the screen show"
+     * unanswered, which is the question an operator actually has. */
+    (void)argc;
+    (void)argv;
+    printf("%s\n", lw_time_boot_report());
+    fflush(stdout);
+    return 0;
+}
 #endif /* CONFIG_LW_DIAG_CONSOLE */
 
 #if CONFIG_LW_FAULT_INJECT
@@ -448,10 +462,14 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_content = { .command = "content",
                                           .help = "what the boot-time content file contained",
                                           .func = &cmd_content };
+    const esp_console_cmd_t c_clock = { .command = "clock",
+                                        .help = "effective clock: source, phase, next boundary",
+                                        .func = &cmd_clock };
     esp_console_cmd_register(&c_diag);
     esp_console_cmd_register(&c_diagjson);
     esp_console_cmd_register(&c_diagerr);
     esp_console_cmd_register(&c_content);
+    esp_console_cmd_register(&c_clock);
 #endif
 #if CONFIG_LW_FAULT_INJECT
     const esp_console_cmd_t c_fault = { .command = "fault",
@@ -463,6 +481,6 @@ bool lw_capture_console_start(void)
         ESP_LOGW(TAG, "console REPL failed to start");
         return false;
     }
-    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson / content)");
+    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson / content / clock)");
     return true;
 }

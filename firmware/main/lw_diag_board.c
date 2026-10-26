@@ -39,8 +39,11 @@
 #include "lw_resource.h"
 #include "lw_resource_mount.h"
 #include "lw_services.h"
+#include "lw_sprite.h"
 #include "lw_storage.h"
 #include "lw_system.h"
+#include "lw_time_boot.h"
+#include "lw_ui_asset_view.h"
 #include "lvgl.h"
 
 #if defined(CONFIG_LW_NET_WIFI_ENABLE)
@@ -155,6 +158,41 @@ static int prov_theme(void)
         return -1;
     }
     return (int)s_system->prefs.theme;
+}
+
+static void prov_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
+                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget)
+{
+    lw_file_cache_t *cache = lw_art_cache();
+    if (cache == NULL) {
+        *available = false;
+        return;
+    }
+    lw_file_cache_stats_t stats = lw_file_cache_stats(cache);
+    *available = true;
+    *hits = stats.hits;
+    *misses = stats.misses;
+    *evictions = stats.evictions;
+    *queue_drops = stats.queue_drops;
+    *resident = stats.resident_bytes;
+    *peak = stats.peak_bytes;
+    *budget = stats.budget_bytes;
+}
+
+static void prov_clock(char *text, size_t len)
+{
+    lw_time_boot_line(text, len);
+}
+
+static void prov_ui_assets(unsigned *count, size_t *bytes)
+{
+    *count = (unsigned)lw_ui_asset_count();
+    *bytes = lw_ui_asset_bytes();
+}
+
+static void prov_animation(unsigned *sprites, unsigned *running)
+{
+    lw_sprite_stats(sprites, running);
 }
 
 static void prov_medium(bool *mounted, char *reason, size_t len)
@@ -291,6 +329,10 @@ void lw_diag_board_init(void)
     providers.resources = prov_resources;
     providers.frames = prov_frames;
     providers.theme = prov_theme;
+    providers.cache = prov_cache;
+    providers.clock = prov_clock;
+    providers.ui_assets = prov_ui_assets;
+    providers.animation = prov_animation;
     providers.medium = prov_medium;
     providers.wifi = prov_wifi;
     providers.recovery = prov_recovery;

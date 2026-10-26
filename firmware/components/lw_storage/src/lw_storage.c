@@ -1,5 +1,6 @@
 #include "lw_storage.h"
 #include "lw_fault.h"
+#include "lw_path.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,7 +80,7 @@ static bool same(const cache_key_t *a,const cache_key_t *b)
 { return a->offset==b->offset && a->bytes==b->bytes && a->generation==b->generation && !strcmp(a->file,b->file); }
 static bool read_file(lw_file_cache_t *c,const cache_key_t *key,void *dst)
 {
-    char path[648]; int n=snprintf(path,sizeof(path),"%s/%s",c->root,key->file); if (n<0 || n>=(int)sizeof(path)) return false;
+    char path[648]; if (!lw_path_join(path,sizeof(path),c->root,key->file)) return false;
     /* Injected read failure: reported exactly like a missing file, so the
      * caller keeps whatever frame is already on screen. */
     bool injected=lw_fault_should_fail(LW_FAULT_CACHE_READ);

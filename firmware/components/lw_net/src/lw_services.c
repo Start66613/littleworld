@@ -387,7 +387,7 @@ static void build_status(const lw_services_t *services, uint32_t now_ms, lw_net_
     out->time_state = lw_time_state(&services->time);
     out->time_error = lw_time_error(&services->time);
     out->zone_minutes = lw_time_service_zone(&services->time);
-    out->time_valid = lw_time_service_utc(&services->time, now_ms, NULL);
+    out->time_valid = lw_time_service_utc(&services->time, now_ms, &out->utc_seconds);
     lw_time_service_hm(&services->time, now_ms, out->clock);
     lw_time_service_date_label(&services->time, now_ms, out->date_label, sizeof(out->date_label));
 

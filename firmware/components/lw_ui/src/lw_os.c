@@ -6,6 +6,7 @@
 #include "lw_shell.h"
 #include "lw_app_state.h"
 #include "lw_ui_content.h"
+#include "lw_ui_clock.h"
 #include "lw_visual_assets.h"
 #include <math.h>
 #include <stdint.h>
@@ -38,6 +39,7 @@ static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
 bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
 static void render(void);
 static void refresh(void); static void show_overlay(lw_os_overlay_t);
+static void clock_fields(unsigned *hour, unsigned *minute, char *qualifier, size_t cap, bool *demo);
 static void derive_capabilities(const lw_system_t *system)
 { lw_service_state_t ready=system->backend.simulated ? LW_SERVICE_SIMULATED : LW_SERVICE_READY; capabilities=(lw_os_capabilities_t){system->backend.brightness ? ready : LW_SERVICE_UNAVAILABLE,system->backend.volume ? ready : LW_SERVICE_UNAVAILABLE,system->backend.network_available ? ready : LW_SERVICE_UNAVAILABLE,LW_SERVICE_UNAVAILABLE,LW_SERVICE_UNAVAILABLE}; }
 void lw_os_capabilities(const lw_os_capabilities_t *value)
@@ -477,11 +479,13 @@ static void build_lock(void)
     const lw_os_palette_t *c=palette(); lw_os_wallpaper(s->over,s->system->prefs.wallpaper,0,0,1024,600);
     lw_os_box(s->over,0,0,1024,600,s->system->screen_off ? 0x151822 : c->bg,0,s->system->screen_off ? 255 : 145);
     if (s->system->screen_off) { lw_os_icon(s->over,OS_I_MOON,482,198,60,0xd5c6dc); lw_os_label(s->over,"屏幕已熄灭 · Windows 模拟",&lw_font_22,310,292,600,0xe9dfea); button(s->over,"轻触唤醒",360,418,304,60,OC_UNLOCK,true); return; }
-    uint32_t now=lw_now(); char clock[16]; snprintf(clock,sizeof(clock),"%02u:%02u",(unsigned)(now%86400/3600),(unsigned)(now%3600/60));
+    unsigned hour=0, minute=0; char qualifier[24]; bool demo=false;
+    clock_fields(&hour,&minute,qualifier,sizeof(qualifier),&demo);
+    char clock[16]; snprintf(clock,sizeof(clock),"%02u:%02u",hour,minute);
     /* Reserve the left column for text; the room remains a quiet right vignette. */
     lw_os_box(s->over,24,96,424,340,c->bg,28,245);
     lv_obj_t *t=lw_os_label(s->over,clock,&lw_font_88,48,146,376,c->text); register_control(t,OC_LOCK_CLOCK);
-    lw_date_t d=lw_today(); char date[80]; snprintf(date,sizeof(date),"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,lw_time_is_demo() ? " · 演示日期" : "");
+    lw_date_t d=lw_today(); char date[80]; snprintf(date,sizeof(date),"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,demo ? " · 演示日期" : "");
     t=lw_os_label(s->over,date,&lw_font_18,50,260,374,c->muted); register_control(t,OC_LOCK_DATE);
     int days=lw_days_between(lw_app_state()->anniversary,d)+1; char love[96]; snprintf(love,sizeof(love),"在一起的第 %d 天，晚安也想对你说。",days<1 ? 1 : days);
     t=lw_os_label(s->over,love,&lw_font_18,50,330,364,c->text); register_control(t,OC_LOCK_LOVE);
@@ -551,6 +555,32 @@ void lw_os_notify(const char *message)
     if (s->toast) lv_obj_delete(s->toast);
     s->toast=surface(s->root,270,50,484,60,22); lw_os_label(s->toast,message,&lw_font_18,22,18,444,palette()->text); s->toast_ms=3000; lw_os_motion(s->toast,LW_MOVE_TOAST);
 }
+/* One place decides what the clock label says. The effective clock (lw_day,
+ * reached through lw_ui_clock) is authoritative once the boot layer attaches it;
+ * the legacy lw_now() path stays as the fallback for the desktop build and the
+ * legacy shell, where nothing is attached. The qualifier is not decoration: a
+ * rehearsal clock shown without it is exactly the lie this system exists to
+ * prevent. */
+static void clock_fields(unsigned *hour, unsigned *minute, char *qualifier, size_t cap, bool *demo)
+{
+    qualifier[0]='\0';
+    *demo=false;
+    lw_ui_clock_t clock;
+    if (lw_ui_clock_read(&clock)) {
+        *hour=clock.hour; *minute=clock.minute;
+        *demo=clock.source==LW_DAY_SOURCE_DEMO;
+        if (!clock.needs_qualifier) return;
+        if (clock.stale) snprintf(qualifier,cap," · 时间未校时");
+        else if (clock.manual) snprintf(qualifier,cap," · 手动");
+        else snprintf(qualifier,cap," · 演示");
+        return;
+    }
+    uint32_t now=lw_now();
+    *hour=(unsigned)(now%86400/3600); *minute=(unsigned)(now%3600/60);
+    *demo=lw_time_is_demo();
+    if (*demo) snprintf(qualifier,cap," · 演示");
+}
+
 static void refresh(void)
 {
     if (s->net_icon) lv_obj_set_style_opa(s->net_icon,s->system->wifi==LW_WIFI_CONNECTED ? 255 : s->system->wifi==LW_WIFI_OFF ? 50 : 125,0);
@@ -566,9 +596,11 @@ static void refresh(void)
         if (controls[OC_VOLUME_VALUE]) { if (available(OC_VOLUME)) lv_label_set_text_fmt(controls[OC_VOLUME_VALUE],"%u%%",s->system->prefs.volume); else lv_label_set_text(controls[OC_VOLUME_VALUE],"不可用"); }
         if (controls[OC_WIFI_STATUS] && s->overlay!=OS_OVER_PASSWORD) lv_label_set_text(controls[OC_WIFI_STATUS],wifi_text());
     }
-    lw_date_t d=lw_today(); uint32_t now=lw_now(); if (s->clock) lv_label_set_text_fmt(s->clock,"%02u:%02u   %d 月 %d 日%s",(unsigned)(now%86400/3600),(unsigned)(now%3600/60),d.month,d.day,lw_time_is_demo() ? " · 演示" : "");
-    if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",(unsigned)(now%86400/3600),(unsigned)(now%3600/60));
-    if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,lw_time_is_demo() ? " · 演示日期" : "");
+    lw_date_t d=lw_today(); unsigned hour=0, minute=0; char qualifier[24]; bool demo=false;
+    clock_fields(&hour,&minute,qualifier,sizeof(qualifier),&demo);
+    if (s->clock) lv_label_set_text_fmt(s->clock,"%02u:%02u   %d 月 %d 日%s",hour,minute,d.month,d.day,qualifier);
+    if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",hour,minute);
+    if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,demo ? " · 演示日期" : "");
     if (s->over_controls[OC_LOCK_LOVE]) { int days=lw_days_between(lw_app_state()->anniversary,d)+1; lv_label_set_text_fmt(s->over_controls[OC_LOCK_LOVE],"在一起的第 %d 天，晚安也想对你说。",days<1 ? 1 : days); }
 }
 void lw_os_open(lw_os_page_t page)

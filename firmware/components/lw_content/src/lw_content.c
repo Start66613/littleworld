@@ -14,6 +14,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include "lw_content.h"
+#include "lw_path.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -503,6 +504,17 @@ bool lw_content_parse(const char *text, size_t length)
     s_report.dialogues = s_content.dialogue_count;
     s_report.lines = s_content.line_count;
     return true;
+}
+
+bool lw_content_resolve_path(char *dst, size_t cap, const char *root)
+{
+    if (!dst || cap == 0u) return false;
+    dst[0] = '\0';
+    if (!root || !root[0]) return false;
+    /* lw_path_join() owns the rules: it rejects a bare separator root, a
+     * relative name that escapes the root and any overflow. The content file
+     * name is a constant here, so the only variable is the root. */
+    return lw_path_join(dst, cap, root, LW_CONTENT_FILE_NAME);
 }
 
 bool lw_content_load(const char *path)

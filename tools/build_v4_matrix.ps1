@@ -17,13 +17,18 @@ param(
     # reports/integration-v4/build_matrix.json and is NOT rewritten by default:
     # a later sprint must not silently replace the artifact that was shipped.
     [string]$Report = 'reports\backend-sprint\build_matrix.json',
+    # Where the per-config build logs go. The default keeps the historical
+    # location so older reports' `log` fields stay valid; a new round passes its
+    # own directory instead of inheriting v41 by accident.
+    [string]$LogDir = 'reports\logs\v41',
     [switch]$KeepGoing
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $fw = Join-Path $root 'firmware'
-$logDir = Join-Path $root 'reports\logs\v41'
+$logDir = if ([System.IO.Path]::IsPathRooted($LogDir)) { $LogDir } else { Join-Path $root $LogDir }
+$logLabel = $LogDir -replace '\\', '/'
 $reportPath = if ([System.IO.Path]::IsPathRooted($Report)) { $Report } else { Join-Path $root $Report }
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $reportPath) | Out-Null
@@ -84,7 +89,7 @@ foreach ($name in $Configs) {
             bytes    = $item.Length
             sha256   = $sha
             defaults = $defaults
-            log      = "reports/logs/v41/build-$name.log"
+            log      = "$logLabel/build-$name.log"
             status   = 'built'
         }
         Write-Output ("    {0} B  {1}" -f $item.Length, $sha)
@@ -95,7 +100,7 @@ foreach ($name in $Configs) {
             config   = $name
             build_dir = "firmware/build/$($cfg.dir)"
             defaults = $defaults
-            log      = "reports/logs/v41/build-$name.log"
+            log      = "$logLabel/build-$name.log"
             status   = 'failed'
             error    = $_.Exception.Message
         }

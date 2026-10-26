@@ -51,6 +51,10 @@ typedef struct {
     lw_time_state_t time_state;
     lw_time_error_t time_error;
     bool time_valid;
+    /* UTC seconds the snapshot was built from. Carried here so a reader on
+     * another task never has to touch services->time: the snapshot is the one
+     * structure written by the poll and copied by everyone else. */
+    int64_t utc_seconds;
     int32_t zone_minutes;
     char clock[6];       /* "19:30" or "--:--" */
     char date_label[32]; /* "10月25日 周日" or "" */
