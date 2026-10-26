@@ -2,11 +2,11 @@
 #include "lw_os_design.h"
 #include "lw_theme.h"
 #include <string.h>
-static const char *const ids[]={"v42.male.idle","v42.male.blink","v42.male.wave","v42.q.idle","v42.q.wave","v42.q.sleep","v42.q.walk_down","v42.q.walk_left","v42.q.walk_right","v42.q.walk_up","v42.male.seated","v42.q.seated","v42.male.seated_wave","v42.q.seated_wave","v42.male.drowsy","v42.dog.idle","v42.dog.sleep"};
-static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[17];
+static const char *const ids[]={"v42.couple.seated","v42.couple.wave","v42.couple.rest","v42.dog.idle","v42.dog.sleep"};
+static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[5];
 const lw_clip_t *lw_polish_clip(const char *name)
 {
-    for (unsigned i=0;i<17;i++) if (!strcmp(name,ids[i])) {
+    for (unsigned i=0;i<5;i++) if (!strcmp(name,ids[i])) {
         const lw_asset_spec_t *spec=lw_assets_find(name); if (!spec) return NULL;
         for (unsigned n=0;n<32;n++) { sequence[n]=(uint16_t)n; time_idle[n]=125; time_wave[n]=100; }
         bool wave=strstr(name,"wave")!=NULL; bool fast=wave || strstr(name,"dog")!=NULL;
@@ -15,12 +15,12 @@ const lw_clip_t *lw_polish_clip(const char *name)
     return NULL;
 }
 static void release(lv_event_t *e) { lv_image_set_src(lv_event_get_target_obj(e),NULL); lw_asset_release(lv_event_get_user_data(e)); }
-lv_obj_t *lw_polish_prop(lv_obj_t *parent,unsigned frame,int x,int y)
+lv_obj_t *lw_polish_art(lv_obj_t *parent,unsigned frame,int x,int y)
 {
-    const lw_asset_spec_t *spec=lw_assets_find("v42.props"); if (!spec || frame>=spec->frames) return NULL;
+    const lw_asset_spec_t *spec=lw_assets_find("v42ui.sheet"); if (!spec || frame>=spec->frames) return NULL;
     lw_asset_lease_t *lease=lw_asset_acquire(spec->id,(uint16_t)frame); if (!lease) return NULL;
     lv_obj_t *o=lv_image_create(parent); lv_image_set_src(o,lw_asset_image(lease)); lv_image_set_antialias(o,false);
-    lv_obj_set_pos(o,x-spec->anchor_x,y-spec->anchor_y); lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(o,release,LV_EVENT_DELETE,lease); return o;
+    lv_obj_set_pos(o,x,y); lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(o,release,LV_EVENT_DELETE,lease); return o;
 }
 static void ruled(lv_event_t *e)
 {

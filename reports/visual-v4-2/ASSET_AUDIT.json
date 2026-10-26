@@ -1,0 +1,355 @@
+{
+  "checks": 47,
+  "failures": 0,
+  "results": [
+    {
+      "check": "daily-room.lwr content hash",
+      "passed": true
+    },
+    {
+      "check": "male.lwp content hash",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp content hash",
+      "passed": true
+    },
+    {
+      "check": "rpg-room.lwr content hash",
+      "passed": true
+    },
+    {
+      "check": "ui.lwp content hash",
+      "passed": true
+    },
+    {
+      "check": "male.lwp format and bounded frame",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/idle bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/blink bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/wave bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/walk_down bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/walk_left bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/walk_right bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp/walk_up bounds",
+      "passed": true
+    },
+    {
+      "check": "male.lwp exact payload length",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp format and bounded frame",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp/couple.seated bounds",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp/couple.wave bounds",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp/couple.rest bounds",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp/dog.idle bounds",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp/dog.sleep bounds",
+      "passed": true
+    },
+    {
+      "check": "polish.lwp exact payload length",
+      "passed": true
+    },
+    {
+      "check": "ui.lwp format and bounded frame",
+      "passed": true
+    },
+    {
+      "check": "ui.lwp/sheet bounds",
+      "passed": true
+    },
+    {
+      "check": "ui.lwp exact payload length",
+      "passed": true
+    },
+    {
+      "check": "walk_down formal visible scale",
+      "passed": true
+    },
+    {
+      "check": "walk_down stable foot baseline",
+      "passed": true
+    },
+    {
+      "check": "walk_down 800ms gait",
+      "passed": true
+    },
+    {
+      "check": "walk_left formal visible scale",
+      "passed": true
+    },
+    {
+      "check": "walk_left stable foot baseline",
+      "passed": true
+    },
+    {
+      "check": "walk_left 800ms gait",
+      "passed": true
+    },
+    {
+      "check": "walk_right formal visible scale",
+      "passed": true
+    },
+    {
+      "check": "walk_right stable foot baseline",
+      "passed": true
+    },
+    {
+      "check": "walk_right 800ms gait",
+      "passed": true
+    },
+    {
+      "check": "walk_up formal visible scale",
+      "passed": true
+    },
+    {
+      "check": "walk_up stable foot baseline",
+      "passed": true
+    },
+    {
+      "check": "walk_up 800ms gait",
+      "passed": true
+    },
+    {
+      "check": "couple.seated safe transparent margins",
+      "passed": true
+    },
+    {
+      "check": "couple.seated joint furniture anchor",
+      "passed": true
+    },
+    {
+      "check": "couple.wave safe transparent margins",
+      "passed": true
+    },
+    {
+      "check": "couple.wave joint furniture anchor",
+      "passed": true
+    },
+    {
+      "check": "couple.rest safe transparent margins",
+      "passed": true
+    },
+    {
+      "check": "couple.rest joint furniture anchor",
+      "passed": true
+    },
+    {
+      "check": "rpg-workshop screen canvas",
+      "passed": true
+    },
+    {
+      "check": "rpg-workshop untouched complete master",
+      "passed": true
+    },
+    {
+      "check": "daily-lounge screen canvas",
+      "passed": true
+    },
+    {
+      "check": "daily-lounge untouched complete master",
+      "passed": true
+    },
+    {
+      "check": "all known generation charges within authorization",
+      "passed": true
+    }
+  ],
+  "packs": [
+    {
+      "path": "assets/visual-v4-2/runtime/male.lwp",
+      "canvas": [
+        256,
+        256
+      ],
+      "bytes": 17892100,
+      "frame_bytes": 196608,
+      "clips": [
+        {
+          "id": "idle",
+          "frames": 8,
+          "duration_ms": 800,
+          "anchor": [
+            128,
+            225
+          ]
+        },
+        {
+          "id": "blink",
+          "frames": 4,
+          "duration_ms": 500,
+          "anchor": [
+            128,
+            225
+          ]
+        },
+        {
+          "id": "wave",
+          "frames": 16,
+          "duration_ms": 1600,
+          "anchor": [
+            128,
+            225
+          ]
+        },
+        {
+          "id": "walk_down",
+          "frames": 16,
+          "duration_ms": 800,
+          "anchor": [
+            128,
+            226
+          ]
+        },
+        {
+          "id": "walk_left",
+          "frames": 15,
+          "duration_ms": 800,
+          "anchor": [
+            128,
+            226
+          ]
+        },
+        {
+          "id": "walk_right",
+          "frames": 16,
+          "duration_ms": 800,
+          "anchor": [
+            128,
+            226
+          ]
+        },
+        {
+          "id": "walk_up",
+          "frames": 16,
+          "duration_ms": 800,
+          "anchor": [
+            128,
+            226
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/polish.lwp",
+      "canvas": [
+        320,
+        320
+      ],
+      "bytes": 15053356,
+      "frame_bytes": 307200,
+      "clips": [
+        {
+          "id": "couple.seated",
+          "frames": 16,
+          "duration_ms": 2000,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "couple.wave",
+          "frames": 16,
+          "duration_ms": 1600,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "couple.rest",
+          "frames": 1,
+          "duration_ms": 1000,
+          "anchor": [
+            160,
+            274
+          ]
+        },
+        {
+          "id": "dog.idle",
+          "frames": 8,
+          "duration_ms": 800,
+          "anchor": [
+            160,
+            256
+          ]
+        },
+        {
+          "id": "dog.sleep",
+          "frames": 8,
+          "duration_ms": 800,
+          "anchor": [
+            160,
+            256
+          ]
+        }
+      ]
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/ui.lwp",
+      "canvas": [
+        544,
+        352
+      ],
+      "bytes": 4021372,
+      "frame_bytes": 574464,
+      "clips": [
+        {
+          "id": "sheet",
+          "frames": 7,
+          "duration_ms": 7000,
+          "anchor": [
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "meowa_spent": 436,
+  "user_visual_acceptance": "pending; technical gates do not certify identity, perspective or aesthetic preference",
+  "hardware_tested": false,
+  "memory": {
+    "scene_cache_upper_bytes": 2688000,
+    "file_cache_upper_bytes": 2761728,
+    "lease_budget_bytes": 2097152,
+    "note": "independent counters; file cache and lease pixels may alias. Excludes LVGL objects, transforms, framebuffers, fonts, backend and stacks."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "original_frames": 16,
+  "retained_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "reason": "full directional cycle retained",
+  "runtime_cycle_ms": 800,
+  "transform": "timing only; no per-frame recentering, no anatomy editing"
+}

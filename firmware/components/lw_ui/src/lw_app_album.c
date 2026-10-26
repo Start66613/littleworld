@@ -39,7 +39,7 @@ static void update_view(void)
     lv_obj_clean(stage); release_picture(); const lw_palette_t *c=lw_palette();
     const char *title=demo ? sample_titles[current] : source.title(source.context,current);
     lv_label_set_text_fmt(caption,"%s   %u / %u%s",title ? title : "未命名照片",current+1,count(),demo ? " · 示例" : "");
-    if (demo) { sample(stage,current,944,400); lw_os_label(stage,"代码绘制示例 · 没有私人照片",&lw_font_18,24,26,880,c->text); }
+    if (demo) { sample(stage,current,944,400); lw_os_label(stage,"美术场景示例 · 没有私人照片",&lw_font_18,24,26,880,c->text); }
     else {
         bool loaded=source.load(source.context,current,&picture); const lv_image_dsc_t *image=picture.image;
         if (loaded && image && image->header.magic==LV_IMAGE_HEADER_MAGIC && image->data && image->data_size && image->data_size<=2u*1024u*1024u && image->header.w && image->header.h && image->header.w<=4096 && image->header.h<=4096) {
@@ -81,10 +81,12 @@ static void build(void)
     lw_os_label(root,"把喜欢的瞬间，慢慢收好。",&lw_font_28,40,14,760,c->text);
     lw_os_label(root,demo ? "示例照片墙 · 不是真实私人照片" : "本地相册 · 只读取明确提供的照片",&lw_font_18,40,58,800,c->dim);
     if (!count()) {
-        lw_os_icon(root,OS_I_ALBUM,460,114,92,c->accent);
-        lw_os_label(root,"这里，等你的第一张照片",&lw_font_28,304,224,680,c->text);
-        lw_os_label(root,"照片还没导入也没关系，先把位置留好。",&lw_font_18,330,272,640,c->dim);
-        lv_obj_t *b=lw_button(root,"查看示例",200,52,c->accent,0xffffff,&lw_font_18); lv_obj_set_pos(b,412,328); lv_obj_add_event_cb(b,show_samples,LV_EVENT_CLICKED,NULL); return;
+        if (lw_shell_host_active() && lw_polish_art(root,3,480,80)) {
+            lw_os_label(root,"收藏还没开始",&lw_font_18,678,182,230,c->dim);
+        } else lw_os_icon(root,OS_I_ALBUM,460,114,92,c->accent);
+        lw_os_label(root,"这里，等你的第一张照片",&lw_font_28,72,150,520,c->text);
+        lw_os_label(root,"照片还没导入也没关系，先把位置留好。",&lw_font_18,72,206,480,c->dim);
+        lv_obj_t *b=lw_button(root,"查看示例",200,52,c->accent,0xffffff,&lw_font_18); lv_obj_set_pos(b,72,276); lv_obj_add_event_cb(b,show_samples,LV_EVENT_CLICKED,NULL); return;
     }
     unsigned shown=count()<6 ? count() : 6;
     for (unsigned i=0;i<shown;i++) {

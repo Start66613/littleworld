@@ -14,9 +14,9 @@ struct lw_pixel_pack {
     lw_named_clip_t clips[MAX_CLIPS],test_clip;
     uint16_t sequences[MAX_CLIPS][32],durations[MAX_CLIPS][32],test_seq[4],test_time[4];
     lw_actor_art_t art[2];
-    lw_pixel_pack_t *male,*extra,*polish;
+    lw_pixel_pack_t *male,*extra,*polish,*ui;
     lw_named_clip_t extra_named[MAX_CLIPS];
-    lw_asset_spec_t combined[MAX_CLIPS*4];
+    lw_asset_spec_t combined[MAX_CLIPS*5];
     unsigned count;
 };
 static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
@@ -31,7 +31,7 @@ static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
 lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p)
 {
     lw_file_cache_stats_t a=lw_file_cache_stats(p ? p->cache : NULL);
-    for (unsigned i=0;p && i<3;i++) { const lw_pixel_pack_t *child=i==2 ? p->polish : i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
+    for (unsigned i=0;p && i<4;i++) { const lw_pixel_pack_t *child=i==3 ? p->ui : i==2 ? p->polish : i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
 #define SUM(field) a.field+=b.field
         SUM(budget_bytes); SUM(resident_bytes); SUM(peak_bytes); SUM(metadata_bytes); SUM(hits); SUM(misses); SUM(reads); SUM(failures); SUM(evictions); SUM(prefetched); SUM(queue_drops); SUM(pending); SUM(loading);
 #undef SUM
@@ -61,7 +61,7 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
     if (!path || strlen(path)>=512) return NULL;
     FILE *file=fopen(path,"rb"); if (!file) return NULL;
     uint8_t header[16];
-    if (fread(header,1,16,file)!=16 || memcmp(header,"LWPX0001",8) || (u16(header+8)!=256 && u16(header+8)!=128) || u16(header+10)!=u16(header+8) ||
+    if (fread(header,1,16,file)!=16 || memcmp(header,"LWPX0001",8) || !u16(header+8) || u16(header+8)>1024 || !u16(header+10) || u16(header+10)>600 || (uint32_t)u16(header+8)*u16(header+10)*3u>1250000u ||
         !u16(header+12) || u16(header+12)>MAX_CLIPS) { fclose(file); return NULL; }
     unsigned width=u16(header+8),height=u16(header+10),stride=width*height*3;
     if (fseek(file,0,SEEK_END)) { fclose(file); return NULL; }
@@ -114,6 +114,7 @@ static bool combine(lw_pixel_pack_t *p)
     if (p->male) { memcpy(p->combined+count,p->male->specs,p->male->count*sizeof(p->specs[0])); count+=p->male->count; }
     if (p->extra) { memcpy(p->combined+count,p->extra->specs,p->extra->count*sizeof(p->specs[0])); count+=p->extra->count; }
     if (p->polish) { memcpy(p->combined+count,p->polish->specs,p->polish->count*sizeof(p->specs[0])); count+=p->polish->count; }
+    if (p->ui) { memcpy(p->combined+count,p->ui->specs,p->ui->count*sizeof(p->specs[0])); count+=p->ui->count; }
     return lw_assets_register(p->combined,count,2u*1024u*1024u);
 }
 bool lw_pixel_pack_attach_male(lw_pixel_pack_t *p,const char *path)
@@ -140,14 +141,25 @@ bool lw_pixel_pack_close(lw_pixel_pack_t *p)
     if (p->male) lw_pixel_pack_close(p->male);
     if (p->extra) lw_pixel_pack_close(p->extra);
     if (p->polish) lw_pixel_pack_close(p->polish);
+    if (p->ui) lw_pixel_pack_close(p->ui);
     lw_file_cache_close(p->cache); free(p); return true;
 }
 bool lw_pixel_pack_attach_polish(lw_pixel_pack_t *p,const char *path)
 {
     if (!p || p->polish || lw_assets_stats().live_leases) return false;
-    lw_pixel_pack_t *child=open_budget(path,4u*49152u); if (!child) return false;
+    lw_pixel_pack_t *child=open_budget(path,2u*320u*320u*3u); if (!child) return false;
     for (unsigned i=0;i<child->count;i++) snprintf(child->ids[i],sizeof(child->ids[i]),"v42.%s",child->names[i]);
     p->polish=child;
     if (!combine(p)) { p->polish=NULL; lw_pixel_pack_close(child); combine(p); return false; }
+    return true;
+}
+
+bool lw_pixel_pack_attach_ui(lw_pixel_pack_t *p,const char *path)
+{
+    if (!p || p->ui || lw_assets_stats().live_leases) return false;
+    lw_pixel_pack_t *child=open_budget(path,544u*352u*3u); if (!child) return false;
+    for (unsigned i=0;i<child->count;i++) snprintf(child->ids[i],sizeof(child->ids[i]),"v42ui.%s",child->names[i]);
+    p->ui=child;
+    if (!combine(p)) { p->ui=NULL; lw_pixel_pack_close(child); combine(p); return false; }
     return true;
 }

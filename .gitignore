@@ -57,3 +57,9 @@ __pycache__/
 /assets/visual-v4-2/generated/
 /reports/logs/meowa-skill-review/
 /reports/logs/v42-custom-workflow-catalog.json
+/reports/visual-v4-2/preflight/
+/reports/visual-v4-2/contact-review/
+/reports/visual-v4-2/scale-review/
+/reports/visual-v4-2/interface-check/
+/reports/visual-v4-2/meowa-first/
+/reports/visual-v4-2/meowa-second/

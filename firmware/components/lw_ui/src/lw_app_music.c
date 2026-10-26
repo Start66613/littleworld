@@ -202,10 +202,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_style_bg_opa(note_flag, LV_OPA_90, 0);
     lv_obj_remove_flag(note_flag, LV_OBJ_FLAG_CLICKABLE);
     if (lw_shell_host_active()) {
-        lv_obj_add_flag(note_head,LV_OBJ_FLAG_HIDDEN);lv_obj_add_flag(note_stem,LV_OBJ_FLAG_HIDDEN);lv_obj_add_flag(note_flag,LV_OBJ_FLAG_HIDDEN);
-        for (int r=0;r<6;r++) {lv_obj_t *ring=lw_os_box(art,8+r*10,8+r*10,164-r*20,164-r*20,0,LV_RADIUS_CIRCLE,0);lv_obj_set_style_border_width(ring,1,0);lv_obj_set_style_border_color(ring,lv_color_hex(palette->lav),0);lv_obj_set_style_border_opa(ring,110,0);}
-        lv_obj_t *cover=lw_os_box(art,66,66,48,48,palette->accent,24,255);lw_os_icon(cover,OS_I_HEART,10,10,28,palette->card);
-        lv_obj_t *needle=lw_os_box(player,183,128,46,5,palette->gold,3,255);lv_obj_set_style_transform_rotation(needle,450,0);
+        if (lw_polish_art(player,2,-157,34)) lv_obj_add_flag(art,LV_OBJ_FLAG_HIDDEN);
     }
 
     s_progress = lv_slider_create(player); lv_obj_set_pos(s_progress,236,168); lv_obj_set_size(s_progress,200,10); lv_slider_set_range(s_progress,0,100);

@@ -343,7 +343,7 @@ static void build_settings(void)
         lw_os_label(panel,"关闭动效会保存；减少动态仅本次生效。",&lw_font_18,28,337,580,c->muted);
     } else {
         lw_os_label(panel,s->section==6 ? "Little World V4.2" : "开发验证",&lw_font_28,28,100,580,c->text);
-        lw_os_label(panel,s->section==6 ? "7 英寸 · 1024 × 600\nESP32-P4 / LVGL 9.5\nWindows 原型 · 硬件功能未在本次验证" : "所有网络与音量为 Windows Mock。\n真实硬件能力由服务适配层独立报告。\n无设备连接、无刷写、无付费生成。",&lw_font_18,28,165,580,c->muted);
+        lw_os_label(panel,s->section==6 ? "7 英寸 · 1024 × 600\nESP32-P4 / LVGL 9.5\nWindows 原型 · 硬件功能未在本次验证" : "所有网络与音量为 Windows Mock。\n真实硬件能力由服务适配层独立报告。\n设备诊断由后端提供。",&lw_font_18,28,165,580,c->muted);
         if (s->section==6) button(panel,"开发者选项",28,300,280,50,OC_DEVELOPER,false);
     }
 }
@@ -387,7 +387,7 @@ static void render(void)
     else {
         lw_os_box(s->content,0,48,1024,446,palette()->bg,0,252);
         if (s->page==OS_SETTINGS) build_settings(); else if (s->page==OS_THEMES) build_themes();
-        else if (s->page==OS_RPG) { s->rpg=lw_rpg_view_create(s->content,&rpg_storage,s->system->prefs.theme); if (!s->rpg) lw_os_notify("冒险房间暂不可用"); }
+        else if (s->page==OS_RPG) { s->rpg=lw_rpg_view_create(s->content,&rpg_storage,s->system->prefs.theme,s->art); if (!s->rpg) lw_os_notify("冒险房间暂不可用"); }
         else build_legacy();
     }
     build_status(); build_dock(); if (s->page!=OS_DESKTOP) icon_button(s->root,OS_I_BACK,700,2,44,OC_HOME);
@@ -527,6 +527,7 @@ static void show_overlay(lw_os_overlay_t kind)
 {
     if (s->boot) lv_obj_delete(s->boot);
     if (kind!=OS_OVER_CONTROL) s->pull_active=s->pull_moved=false;
+    if (kind==OS_OVER_LOCK && s->navigation>=0) {s->navigation=-1;s->navigation_ms=0;lw_os_motion_settle(s->content);}
     if (kind==OS_OVER_LOCK && s->overlay==kind && s->over) { refresh(); return; }
     clear_overlay(); if (kind==OS_OVER_NONE) return;
     s->overlay=kind; s->building_overlay=true;

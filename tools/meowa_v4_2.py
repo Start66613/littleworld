@@ -21,6 +21,8 @@ def balance():
 
 def save(data):
     data['actual_credits_spent']=sum(max(0,j.get('observed_balance_decrease',0)) for j in data['jobs'])
+    data['remaining_round_credits']=data['approved_limit']-data['actual_credits_spent']
+    data['production_state']='V4.2 production resumed by user; serial submission, original-job recovery, visual review required.'
     temp = LEDGER.with_suffix('.tmp')
     temp.write_text(json.dumps(data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     temp.replace(LEDGER)

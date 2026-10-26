@@ -51,19 +51,21 @@ bool lw_visual_aux_configure(const char *path)
     if (stats.refs || (path && strlen(path)>=sizeof(aux_directory))) return false;
     free_entry(&auxiliary); aux_directory[0]=0; if (path) strcpy(aux_directory,path); return true;
 }
-lv_obj_t *lw_visual_rpg_image(lv_obj_t *parent)
+static lv_obj_t *aux_image(lv_obj_t *parent,const char *name)
 {
     if (!aux_directory[0] || auxiliary.refs) return NULL;
-    char path[600]; snprintf(path,sizeof(path),"%s/rpg-room.lwr",aux_directory);
+    char path[600]; snprintf(path,sizeof(path),"%s/%s.lwr",aux_directory,name);
     FILE *f=fopen(path,"rb"); if (!f) { stats.failures++; return NULL; }
-    uint8_t header[16]; const size_t bytes=704u*352u*2u;
-    bool valid=fread(header,1,16,f)==16 && !memcmp(header,"LWSR0001",8) && u16(header+8)==704 && u16(header+10)==352;
+    uint8_t header[16]; const size_t bytes=1024u*600u*2u;
+    bool valid=fread(header,1,16,f)==16 && !memcmp(header,"LWSR0001",8) && u16(header+8)==1024 && u16(header+10)==600;
     uint8_t *data=valid ? lv_malloc(bytes) : NULL;
     valid=data && fread(data,1,bytes,f)==bytes && fgetc(f)==EOF; fclose(f);
     if (!valid) { lv_free(data); stats.failures++; return NULL; }
     auxiliary.pixels=data; auxiliary.refs=1; auxiliary.image.header.magic=LV_IMAGE_HEADER_MAGIC;
-    auxiliary.image.header.cf=LV_COLOR_FORMAT_RGB565; auxiliary.image.header.w=704; auxiliary.image.header.h=352; auxiliary.image.header.stride=1408;
+    auxiliary.image.header.cf=LV_COLOR_FORMAT_RGB565; auxiliary.image.header.w=1024; auxiliary.image.header.h=600; auxiliary.image.header.stride=2048;
     auxiliary.image.data=data; auxiliary.image.data_size=bytes; stats.refs++; stats.reads++; stats.live_bytes+=bytes;
     if (stats.live_bytes>stats.peak_bytes) stats.peak_bytes=stats.live_bytes;
     lv_obj_t *o=lv_image_create(parent); lv_image_set_src(o,&auxiliary.image); lv_image_set_antialias(o,false); lv_obj_add_event_cb(o,deleted,LV_EVENT_DELETE,&auxiliary); return o;
 }
+lv_obj_t *lw_visual_rpg_image(lv_obj_t *parent) { return aux_image(parent,"rpg-room"); }
+lv_obj_t *lw_visual_daily_image(lv_obj_t *parent) { return aux_image(parent,"daily-room"); }
