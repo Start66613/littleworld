@@ -1,0 +1,45 @@
+{
+  "dsh_head": "05bfc36b335a5a4636f38d641a0fefde4dbd6599",
+  "dsh_branch": "agent/dsh-v4-3-engine",
+  "frozen_visual_is_ancestor": false,
+  "capture_provenance": "Existing DSH PNGs verified against their BMPs. Their build source SHA was not recorded.",
+  "result": "REJECT_AS_V43_JOINT_EVIDENCE",
+  "board_tested": false,
+  "screenshots": [
+    {
+      "path": "D:\\LittleWorld-V43\\reports\\ui-v2\\os-v2\\01-desktop.png",
+      "sha256": "7a0dc01004d6e1baabc9c33f77b535e744a22973b3179b1cd3718c484cbb8628",
+      "matches_own_bmp": true,
+      "identical_to_old_v41": true,
+      "reviewed_copy": "reports/v43-integration-support/reviewed-dsh-old-ui/01-desktop.png"
+    },
+    {
+      "path": "D:\\LittleWorld-V43\\reports\\ui-v2\\os-v2\\02-control-center.png",
+      "sha256": "6a3155bca55fdb4142106a5d910b6bcf1c093b5a92fe2515324d02baca3e6969",
+      "matches_own_bmp": true,
+      "identical_to_old_v41": true,
+      "reviewed_copy": "reports/v43-integration-support/reviewed-dsh-old-ui/02-control-center.png"
+    },
+    {
+      "path": "D:\\LittleWorld-V43\\reports\\ui-v2\\os-v2\\11-pet-idle.png",
+      "sha256": "32d1651e9490d76a12728a969227db30eecb7b0712ac2755f4b2f820144b627d",
+      "matches_own_bmp": true,
+      "identical_to_old_v41": true,
+      "reviewed_copy": "reports/v43-integration-support/reviewed-dsh-old-ui/11-pet-idle.png"
+    },
+    {
+      "path": "D:\\LittleWorld-V43\\reports\\ui-v2\\os-v2\\17-rpg-room.png",
+      "sha256": "ad8018ffdb2b42ecce5d4f378db78d907686b7867783ef71d1bc62d0c8c2c70d",
+      "matches_own_bmp": true,
+      "identical_to_old_v41": true,
+      "reviewed_copy": "reports/v43-integration-support/reviewed-dsh-old-ui/17-rpg-room.png"
+    }
+  ],
+  "findings": [
+    "Old full-width white Dock and large white anniversary card remain.",
+    "Pet view is the old geometric avatar; seated couple and joint dog-bed are absent.",
+    "RPG still shows TEST A+B and square floor; frozen V4.3 room/actors not present.",
+    "Current captures do not establish navigation return or day/night swapping."
+  ],
+  "next": "DSH merge V4.3 + reader compatibility, then capture the joint executable with source SHA and actual resource IDs."
+}

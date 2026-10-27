@@ -1,0 +1,39 @@
+{
+  "dsh_base": "05bfc36b335a5a4636f38d641a0fefde4dbd6599",
+  "files": [
+    {
+      "path": "firmware/components/lw_ui/include/lw_pack.h",
+      "before_sha256": "d7f46c068eb3be288bc9765e1ca337350d9525bb981141ba2218428c2e300de3",
+      "after_sha256": "1243b6865f94c49a34c30cce18ab8e23706d3f088851f7458ffda20fea909259"
+    },
+    {
+      "path": "firmware/components/lw_ui/src/lw_pack.c",
+      "before_sha256": "ee04a4e491dc9268b73c4a95c4a030581d80192e4fb1cec87d9bbc725eb32609",
+      "after_sha256": "6824e53531d9620ea769effc847ac12802443cb0d5b6138c5e59086f5ee3782a"
+    }
+  ],
+  "scope": "Pure UI resource parser only. DSH decides when to apply; no boot/hardware files changed.",
+  "accepted_geometries": [
+    [
+      256,
+      256
+    ],
+    [
+      320,
+      320
+    ],
+    [
+      544,
+      352
+    ],
+    [
+      512,
+      544
+    ]
+  ],
+  "namespaces": 5,
+  "max_files": 8,
+  "max_specs": 64,
+  "max_clips_per_namespace": 32,
+  "boot_requirement": "Register all namespaces once, with 2MiB lease ceiling. Atlas should use NULL file cache if existing cache is smaller than835584."
+}

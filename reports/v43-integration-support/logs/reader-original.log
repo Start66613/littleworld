@@ -1,0 +1,12 @@
+lw_pack.c
+test_v43_pack_compat.c
+shim.c
+lw_path.c
+lw_assets.c
+正在生成代码...
+male.lwp: bad-clip-count
+qianqian-base.lwp: bad-clip-count
+qianqian-wave.lwp: ok
+daily.lwp: bad-geometry
+ui.lwp: bad-geometry
+skin.lwp: bad-geometry

@@ -1,0 +1,31 @@
+--- a/firmware/components/lw_ui/src/lw_sprite.c
++++ b/firmware/components/lw_ui/src/lw_sprite.c
+@@ -130,7 +130,7 @@
+ 
+ lw_sprite_t *lw_sprite_create(lv_obj_t *parent, int x, int y, uint16_t scale)
+ {
+-    if (!parent || !scale || scale>256) return NULL; /* Export a larger asset rather than upscale. */
++    if (!parent || !scale || scale>320) return NULL; /* Frozen V4.3 uses 288 standing / 282 seated. */
+     lw_sprite_t *s=lv_malloc_zeroed(sizeof(*s));
+     if (!s) return NULL;
+     s->image=lv_image_create(parent);
+@@ -182,7 +182,7 @@
+     else { s->epoch=lv_tick_get()-s->elapsed; if (!s->paused && !s->finished && s->clip && !s->external) lv_timer_resume(s->timer); }
+ }
+ bool lw_sprite_set_pixel_mode(lw_sprite_t *s)
+-{ if (!s || s->scale!=256) return false; lv_image_set_antialias(s->image,false); return true; }
++{ if (!s) return false; lv_image_set_antialias(s->image,false); return true; }
+ void lw_sprite_set_anchor(lw_sprite_t *s,int x,int y)
+ {
+     if (!s) return;
+--- a/firmware/components/lw_ui/include/lw_sprite.h
++++ b/firmware/components/lw_ui/include/lw_sprite.h
+@@ -19,7 +19,7 @@
+ void lw_sprite_pause(lw_sprite_t *sprite);
+ void lw_sprite_resume(lw_sprite_t *sprite);
+ void lw_sprite_set_enabled(lw_sprite_t *sprite, bool enabled);
+-/* Pixel mode is native 1x with antialiasing disabled; not fractional zoom. */
++/* Nearest-neighbor pixel mode; frozen V4.3 also uses bounded 282/288 scale. */
+ bool lw_sprite_set_pixel_mode(lw_sprite_t *sprite);
+ void lw_sprite_set_anchor(lw_sprite_t *sprite,int x,int y);
+ /* External scene clock pauses the player's timer; seek controls both actors. */

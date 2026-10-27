@@ -1,2 +1,4 @@
 # Generated font files must be reproducible across Windows worktrees.
 firmware/components/lw_ui/fonts/*.c text eol=lf
+# Unified-diff blank context lines intentionally contain a single space.
+reports/v43-integration-support/*.patch text eol=lf whitespace=-blank-at-eol

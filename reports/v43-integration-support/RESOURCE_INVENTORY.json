@@ -1,0 +1,804 @@
+{
+  "frozen_commit": "2900569e381f1e06ecf88d720a3f032a9bd97db6",
+  "private_data_modified": false,
+  "device_operations": 0,
+  "paid_calls": 0,
+  "resources": [
+    {
+      "path": "assets/visual-v4-3/runtime/skin.lwp",
+      "target": "skin.lwp",
+      "bytes": 835708,
+      "sha256": "b25b343973a945be8e24a37fe90d22e1adb7a09f9008b9ea4c3aa07e6c246109",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "LWPX registry -> lw_assets -> lw_skin shared atlas lease",
+      "fallback": "Native LVGL controls; visual downgrade must be reported",
+      "format": "LWPX0001",
+      "resolution": [
+        512,
+        544
+      ],
+      "pixel_format": "RGB565_LE plane + A8 plane",
+      "record_bytes": 108,
+      "frame_bytes": 835584,
+      "clips": [
+        {
+          "name": "atlas",
+          "id": "v43skin.atlas",
+          "frames": 1,
+          "anchor": [
+            0,
+            0
+          ],
+          "loop": false,
+          "duration_ms": [
+            1000
+          ],
+          "payload_offset": 124,
+          "frame_bytes": 835584
+        }
+      ],
+      "ids": [
+        "v43skin.atlas"
+      ],
+      "frame_total": 1
+    },
+    {
+      "path": "assets/visual-v4-3/runtime/daily.lwp",
+      "target": "daily.lwp",
+      "bytes": 18125680,
+      "sha256": "0cc7b372b12279a1409f2d57fbf08377e37710a089d55144f1fce30294ee082b",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "LWPX registry -> lw_assets -> lw_sprite",
+      "fallback": "Old polish.lwp if explicitly supplied; otherwise labelled native pet view",
+      "format": "LWPX0001",
+      "resolution": [
+        320,
+        320
+      ],
+      "pixel_format": "RGB565_LE plane + A8 plane",
+      "record_bytes": 108,
+      "frame_bytes": 307200,
+      "clips": [
+        {
+          "name": "couple.seated",
+          "id": "v42.couple.seated",
+          "frames": 16,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": true,
+          "duration_ms": [
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125
+          ],
+          "payload_offset": 880,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "couple.wave",
+          "id": "v42.couple.wave",
+          "frames": 16,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": false,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 4916080,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "couple.rest",
+          "id": "v42.couple.rest",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": true,
+          "duration_ms": [
+            1000
+          ],
+          "payload_offset": 9831280,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "dog.idle",
+          "id": "v42.dog.idle",
+          "frames": 8,
+          "anchor": [
+            160,
+            256
+          ],
+          "loop": true,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 10138480,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "dog.sleep",
+          "id": "v42.dog.sleep",
+          "frames": 8,
+          "anchor": [
+            160,
+            256
+          ],
+          "loop": true,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 12596080,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "dogbed.empty",
+          "id": "v42.dogbed.empty",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": true,
+          "duration_ms": [
+            125
+          ],
+          "payload_offset": 15053680,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "dogbed.sleep",
+          "id": "v42.dogbed.sleep",
+          "frames": 1,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": true,
+          "duration_ms": [
+            125
+          ],
+          "payload_offset": 15360880,
+          "frame_bytes": 307200
+        },
+        {
+          "name": "dogbed.look",
+          "id": "v42.dogbed.look",
+          "frames": 8,
+          "anchor": [
+            160,
+            274
+          ],
+          "loop": true,
+          "duration_ms": [
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125,
+            125
+          ],
+          "payload_offset": 15668080,
+          "frame_bytes": 307200
+        }
+      ],
+      "ids": [
+        "v42.couple.seated",
+        "v42.couple.wave",
+        "v42.couple.rest",
+        "v42.dog.idle",
+        "v42.dog.sleep",
+        "v42.dogbed.empty",
+        "v42.dogbed.sleep",
+        "v42.dogbed.look"
+      ],
+      "frame_total": 59
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/male.lwp",
+      "target": "male.lwp",
+      "bytes": 17892100,
+      "sha256": "bd8f0ccbe1938fbfd902f4374139e2c15475891195c7ce7ea847f4c5e085df2d",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "LWPX registry -> lw_actor_art_t[0] -> lw_sprite",
+      "fallback": "Embedded LWFA idle only; do not call it the full V4.3 motion set",
+      "format": "LWPX0001",
+      "resolution": [
+        256,
+        256
+      ],
+      "pixel_format": "RGB565_LE plane + A8 plane",
+      "record_bytes": 108,
+      "frame_bytes": 196608,
+      "clips": [
+        {
+          "name": "idle",
+          "id": "male.idle",
+          "frames": 8,
+          "anchor": [
+            128,
+            225
+          ],
+          "loop": true,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 772,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "blink",
+          "id": "male.blink",
+          "frames": 4,
+          "anchor": [
+            128,
+            225
+          ],
+          "loop": false,
+          "duration_ms": [
+            125,
+            125,
+            125,
+            125
+          ],
+          "payload_offset": 1573636,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "wave",
+          "id": "male.wave",
+          "frames": 16,
+          "anchor": [
+            128,
+            225
+          ],
+          "loop": false,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 2360068,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "walk_down",
+          "id": "male.walk_down",
+          "frames": 16,
+          "anchor": [
+            128,
+            226
+          ],
+          "loop": true,
+          "duration_ms": [
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "payload_offset": 5505796,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "walk_left",
+          "id": "male.walk_left",
+          "frames": 15,
+          "anchor": [
+            128,
+            226
+          ],
+          "loop": true,
+          "duration_ms": [
+            53,
+            53,
+            54,
+            53,
+            53,
+            54,
+            53,
+            53,
+            54,
+            53,
+            53,
+            54,
+            53,
+            53,
+            54
+          ],
+          "payload_offset": 8651524,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "walk_right",
+          "id": "male.walk_right",
+          "frames": 16,
+          "anchor": [
+            128,
+            226
+          ],
+          "loop": true,
+          "duration_ms": [
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "payload_offset": 11600644,
+          "frame_bytes": 196608
+        },
+        {
+          "name": "walk_up",
+          "id": "male.walk_up",
+          "frames": 16,
+          "anchor": [
+            128,
+            226
+          ],
+          "loop": true,
+          "duration_ms": [
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "payload_offset": 14746372,
+          "frame_bytes": 196608
+        }
+      ],
+      "ids": [
+        "male.idle",
+        "male.blink",
+        "male.wave",
+        "male.walk_down",
+        "male.walk_left",
+        "male.walk_right",
+        "male.walk_up"
+      ],
+      "frame_total": 91
+    },
+    {
+      "path": "assets/visual-v4/runtime/qianqian-wave.lwp",
+      "target": "qianqian-wave.lwp",
+      "bytes": 3145852,
+      "sha256": "b838d35c5af1bdc6c1a7646afce0432747d714e9979eb0f1d14711dc951f96e6",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "Append to qianqian namespace; preserve base idle",
+      "fallback": "Original idle retained; missing wave must not replace the character",
+      "format": "LWPX0001",
+      "resolution": [
+        256,
+        256
+      ],
+      "pixel_format": "RGB565_LE plane + A8 plane",
+      "record_bytes": 108,
+      "frame_bytes": 196608,
+      "clips": [
+        {
+          "name": "wave",
+          "id": "qianqian.wave",
+          "frames": 16,
+          "anchor": [
+            128,
+            226
+          ],
+          "loop": false,
+          "duration_ms": [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "payload_offset": 124,
+          "frame_bytes": 196608
+        }
+      ],
+      "ids": [
+        "qianqian.wave"
+      ],
+      "frame_total": 16
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/ui.lwp",
+      "target": "ui.lwp",
+      "bytes": 4021372,
+      "sha256": "4fee1daf7b472e010a8e8aaf55838c2b015fd195304af1832e29ddd2be5cb8d1",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "LWPX registry -> lw_assets -> RPG journal/dialogue/reward UI",
+      "fallback": "Native UI drawing",
+      "format": "LWPX0001",
+      "resolution": [
+        544,
+        352
+      ],
+      "pixel_format": "RGB565_LE plane + A8 plane",
+      "record_bytes": 108,
+      "frame_bytes": 574464,
+      "clips": [
+        {
+          "name": "sheet",
+          "id": "v42ui.sheet",
+          "frames": 7,
+          "anchor": [
+            0,
+            0
+          ],
+          "loop": false,
+          "duration_ms": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "payload_offset": 124,
+          "frame_bytes": 574464
+        }
+      ],
+      "ids": [
+        "v42ui.sheet"
+      ],
+      "frame_total": 7
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-0.lwr",
+      "target": "scene-0.lwr",
+      "bytes": 1228816,
+      "sha256": "0f8bf7982c0f586635a368c497e7d96c421d5a234af0d8a8a9c51b32a19e269f",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-0-thumb.lwr",
+      "target": "scene-0-thumb.lwr",
+      "bytes": 76816,
+      "sha256": "0b3d37cea72b220a2fbb7e9456dc036ab9331ca689148d804966c31e562b05bf",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        256,
+        150
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 76800
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-1.lwr",
+      "target": "scene-1.lwr",
+      "bytes": 1228816,
+      "sha256": "f5d4c146d921987255070d54420b82dbc78b60c085aaa12d95f3289706f1beae",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-1-thumb.lwr",
+      "target": "scene-1-thumb.lwr",
+      "bytes": 76816,
+      "sha256": "d101b7df816e5ad01768c1ef243e67efd80435b7e7f532032476a0d02d9942d8",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        256,
+        150
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 76800
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-2.lwr",
+      "target": "scene-2.lwr",
+      "bytes": 1228816,
+      "sha256": "f4e63792048e9dfe6cba262b627df19fdfdb3b33da7e894cff56022aa6550dd7",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4/runtime/scene-2-thumb.lwr",
+      "target": "scene-2-thumb.lwr",
+      "bytes": 76816,
+      "sha256": "3bd3458a2018b52a478af751a13f6e7df7e7618319ebfa497152371dc5ccc98e",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_assets_configure(root) -> lw_visual_scene_image",
+      "fallback": "Native geometric room / theme thumbnail",
+      "format": "LWSR0001",
+      "resolution": [
+        256,
+        150
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 76800
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/rpg-room.lwr",
+      "target": "rpg-room.lwr",
+      "bytes": 1228816,
+      "sha256": "2321df177c36f76da222dadf3a9e890eb80a148ad2b5e0ac8c58dcce723c4244",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_aux_configure(root) -> lw_visual_rpg_image/lw_visual_daily_image",
+      "fallback": "Day/night falls back to daily-room; missing base returns native page",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/daily-room.lwr",
+      "target": "daily-room.lwr",
+      "bytes": 1228816,
+      "sha256": "da50673917fef45c696b68464257f329b7957dfcab39afdc2f1e35fa9dcebc39",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_aux_configure(root) -> lw_visual_rpg_image/lw_visual_daily_image",
+      "fallback": "Day/night falls back to daily-room; missing base returns native page",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/daily-room-day.lwr",
+      "target": "daily-room-day.lwr",
+      "bytes": 1228816,
+      "sha256": "004adf3f2d6f93687a0056c54c430421410f48bf785714fbf7c954ac96872555",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_aux_configure(root) -> lw_visual_rpg_image/lw_visual_daily_image",
+      "fallback": "Day/night falls back to daily-room; missing base returns native page",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    },
+    {
+      "path": "assets/visual-v4-2/runtime/daily-room-night.lwr",
+      "target": "daily-room-night.lwr",
+      "bytes": 1228816,
+      "sha256": "16d0df155398e0a01f10e5bbec8cb86c7c274ed12eea19b0c5730a16e799dd3c",
+      "frozen_tracked": true,
+      "local_only": false,
+      "loader": "lw_visual_aux_configure(root) -> lw_visual_rpg_image/lw_visual_daily_image",
+      "fallback": "Day/night falls back to daily-room; missing base returns native page",
+      "format": "LWSR0001",
+      "resolution": [
+        1024,
+        600
+      ],
+      "pixel_format": "RGB565_LE",
+      "ids": [],
+      "frame_bytes": 1228800
+    }
+  ],
+  "fonts": [
+    {
+      "path": "firmware/components/lw_ui/fonts/lw_font_18.c",
+      "format": "LVGL 9 C bitmap font, compiled into firmware",
+      "nominal_px": 18,
+      "bytes": 615533,
+      "sha256": "c4a190338a7438f8b5197eb6c5fd293814dd950846df1d5d6fb19c49f7605596",
+      "id": "lw_font_18",
+      "loader": "CMake lw_ui/fonts/*.c + lw_theme",
+      "fallback": "No automatic alternate Chinese font; missing linked symbol is a build error"
+    },
+    {
+      "path": "firmware/components/lw_ui/fonts/lw_font_22.c",
+      "format": "LVGL 9 C bitmap font, compiled into firmware",
+      "nominal_px": 22,
+      "bytes": 851544,
+      "sha256": "91bd41d352e1aaeccc73c3d054644cfd844c300410aa6415afa31c03ab1003a4",
+      "id": "lw_font_22",
+      "loader": "CMake lw_ui/fonts/*.c + lw_theme",
+      "fallback": "No automatic alternate Chinese font; missing linked symbol is a build error"
+    },
+    {
+      "path": "firmware/components/lw_ui/fonts/lw_font_28.c",
+      "format": "LVGL 9 C bitmap font, compiled into firmware",
+      "nominal_px": 28,
+      "bytes": 1308217,
+      "sha256": "39106ff23567d00e996000214e10b61c9b17f554cff509fc33c23408f2ea05bd",
+      "id": "lw_font_28",
+      "loader": "CMake lw_ui/fonts/*.c + lw_theme",
+      "fallback": "No automatic alternate Chinese font; missing linked symbol is a build error"
+    },
+    {
+      "path": "firmware/components/lw_ui/fonts/lw_font_44.c",
+      "format": "LVGL 9 C bitmap font, compiled into firmware",
+      "nominal_px": 44,
+      "bytes": 223090,
+      "sha256": "90d68331de005d2b25c5e75e6cce134a43323f559aa2a70bebd7b0957835eb88",
+      "id": "lw_font_44",
+      "loader": "CMake lw_ui/fonts/*.c + lw_theme",
+      "fallback": "No automatic alternate Chinese font; missing linked symbol is a build error"
+    },
+    {
+      "path": "firmware/components/lw_ui/fonts/lw_font_88.c",
+      "format": "LVGL 9 C bitmap font, compiled into firmware",
+      "nominal_px": 88,
+      "bytes": 710789,
+      "sha256": "e3a20c2a9011e35ae87e0d23b612ac7cb0d8a1057f584d074d02bb5a8bd90d3b",
+      "id": "lw_font_88",
+      "loader": "CMake lw_ui/fonts/*.c + lw_theme",
+      "fallback": "No automatic alternate Chinese font; missing linked symbol is a build error"
+    }
+  ],
+  "unique_asset_ids": 18,
+  "bundle_bytes": 52852872,
+  "ui_registry_budget_bytes": 2097152,
+  "tested_host_asset_peak_bytes": 1999872,
+  "note": "This is a resource audit, not a joint-firmware or board acceptance."
+}

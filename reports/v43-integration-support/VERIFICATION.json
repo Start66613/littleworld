@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-27 Asia/Shanghai",
+  "frozen_visual_commit": "2900569e381f1e06ecf88d720a3f032a9bd97db6",
+  "dsh_reviewed_commit": "05bfc36b335a5a4636f38d641a0fefde4dbd6599",
+  "support_branch": "agent/v43-integration-support",
+  "frozen_resource_files": 16,
+  "local_bundle_bytes": 75070996,
+  "local_bundle_asset_ids": 31,
+  "font_sources": 5,
+  "original_dsh_source_modified": false,
+  "visual_runtime_files_modified": false,
+  "paid_calls": 0,
+  "device_operations": 0,
+  "tests": {
+    "reader-patched.log": "1597 checks, 0 failures",
+    "sprite-bridge.log": "230 checks, 0 failures"
+  },
+  "patches_check_apply_to_dsh": [
+    "lw-pack-v43-compat.patch",
+    "lw-sprite-v43-scale.patch"
+  ],
+  "patched_reader_stdio_only": true,
+  "real_lvgl_sprite_test": true,
+  "joint_firmware_build_executed": false,
+  "board_tested": false,
+  "joint_visual_acceptance": "not passed: existing captures are old UI; waiting for DSH joint run",
+  "artifacts": [
+    {
+      "path": "tools/audit_v43_frozen.py",
+      "sha256": "fdcb87e5cd847a5f01566f3fbc6cf1d03ac956db3628f3647c4a50931b31f383",
+      "bytes": 7933
+    },
+    {
+      "path": "tools/prepare_v43_pack_compat.py",
+      "sha256": "d44569d8b46ee3bde0cb71315abff576422ac876dc2a45204cebcf38e69299f3",
+      "bytes": 7163
+    },
+    {
+      "path": "tools/review_v43_integration_evidence.py",
+      "sha256": "14417e5835df22a192548945eb8c47240e340c408dc0c7ed867f6db008555496",
+      "bytes": 5599
+    },
+    {
+      "path": "tools/test_v43_pack_compat.ps1",
+      "sha256": "672cec6ed8bd79d4dd238133376a524e430637a9e4617a5f815ff35248a478a8",
+      "bytes": 4718
+    },
+    {
+      "path": "tests/host/test_v43_pack_compat.c",
+      "sha256": "03bfbfd420aba631fbeaf3ad49b2941ff188c2650bac5145fe668369806371f6",
+      "bytes": 4434
+    },
+    {
+      "path": "tests/host/test_v43_sprite_bridge.c",
+      "sha256": "4c51778b032e24d9e728c4b189c4e8b3bc9c7e1d706f8878bc2acf6afed46f0d",
+      "bytes": 3292
+    },
+    {
+      "path": "reports/v43-integration-support/logs/reader-original.log",
+      "sha256": "79eb776aef0510210fc501dc0700c6f3abb4d36fe9f0c874d30ec7f3a79ee37f",
+      "bytes": 245
+    },
+    {
+      "path": "reports/v43-integration-support/logs/reader-patched.log",
+      "sha256": "db8e1f77906cc1cd993c9b198b0e273381933f15448ca0a9fe68558cf877cad0",
+      "bytes": 146
+    },
+    {
+      "path": "reports/v43-integration-support/logs/sprite-bridge.log",
+      "sha256": "40b5d0ac503e284819812c3010fa0f1ca9129bbaf58d86ff51308b576a6e78be",
+      "bytes": 166
+    },
+    {
+      "path": "reports/v43-integration-support/lw-pack-v43-compat.patch",
+      "sha256": "47747c3b74ba53a6527ba1df15c1dc7d48d77308de4500eca6a133d51f010748",
+      "bytes": 7212
+    },
+    {
+      "path": "reports/v43-integration-support/lw-sprite-v43-scale.patch",
+      "sha256": "8b8d0e6d8a76b1d2eb7af07454c9d95b6295f7650132154e5c063b0c606c6921",
+      "bytes": 1615
+    }
+  ],
+  "binaries": [
+    {
+      "local_path": "D:\\LittleWorld-V4-2\\build\\v43-pack-compat\\patched\\pack-compat.exe",
+      "sha256": "c42594aabb673dbabae2a3bc61839a08e9fbb186c4b33d0faebc4c8b2ffe33c9",
+      "bytes": 169984,
+      "published": false
+    },
+    {
+      "local_path": "D:\\LittleWorld-V4-2\\build\\v43-pack-compat\\sprite-bridge.exe",
+      "sha256": "0fc59682bf299f311def56193634096619a52448ca3235d930a847ad6a4db92a",
+      "bytes": 484864,
+      "published": false
+    }
+  ]
+}
