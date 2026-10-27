@@ -288,6 +288,12 @@ static int cmd_status(int argc, char **argv)
                (int)lv_display_get_vertical_resolution(disp),
                s_last_w, s_last_h);
     }
+    /* The page/overlay pair is what a board test needs to prove a tap actually
+     * navigated. Screenshots are 40 s over the console, and the dock retracts
+     * after 4.5 s, so both states are unobservable by picture alone. */
+    printf("page %d, overlay %d, dock %s\n",
+           (int)lw_os_page(), (int)lw_os_overlay(),
+           lw_os_dock_expanded() ? "open" : "closed");
     return 0;
 }
 
