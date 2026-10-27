@@ -15,6 +15,8 @@
 
 这是给DSH打包器的资源输入，**不是已经具备清单并通过设备挂载验证的TF成品包**。请继续由DSH自己的打包器生成/验证`littleworld-v4.json`，保留自己的内容与私人数据。本轮没有访问TF设备。
 
+特别注意：当前DSH `package_v4_sd.py`的默认源仍为`assets/visual-v4/runtime`，`package_v4_3_release.ps1`也没有覆盖它；直接运行会选到旧3动作男方5,505,364B。冻结V4.3男方应为7动作17,892,100B，源在`assets/visual-v4-2/runtime`，已复制到本次交接runtime。旧打包器还限制6动作且只列male/qianqian-wave，不会自动包含daily/UI/skin/辅助场景。请DSH更新自己的文件清单与校验，明确选用本交接输入并逐SHA核对；不要把“旧SD包验证通过”当作新资源已打包，也不要通过改名/压缩原图绕过校验。
+
 仓库内完整说明：`reports/v43-integration-support/RESOURCE_RUNTIME.md`和`RESOURCE_INVENTORY.json`。后者公开清单排除了本地千千基础源包。
 
 ## 已真实复现的阻碍及补丁
