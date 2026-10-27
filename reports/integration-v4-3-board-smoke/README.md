@@ -26,9 +26,17 @@ Windows 联合版是从本分支重新构建的，OS V2 752 项 + 模型/存储 
 
 ## 关键坐标
 
-- 集成分支 HEAD：`041bf46`（父 `e70042b` 合并提交，再父 `05bfc36` DSH 引擎 / `2900569` Codex 视觉）
+- 集成分支 HEAD：`a974bd5`（`041bf46` 之上的三次提交：`48ae519` 打开 FatFs 长文件名并部署 TF 卡、`dfeeed4` 附构建日志、`a974bd5` 按固件逻辑复核卡；`041bf46` 的父是 `e70042b` 合并提交，再父 `05bfc36` DSH 引擎 / `2900569` Codex 视觉）
 - 固件：`firmware/build/os/little_world.bin`，2,352,784 B，sha256 `0114fe684c636d144a88b988ab3232a29d4ef7f87b1fb00d9d13be3d235c9f51`
 - TF 卡（已部署）：`F:\littleworld\`，FAT32 / 59.45 GB，19 文件 / 75,074,074 B
 - TF 卡包源：`dist/littleworld-v4-sd/`（公开包，20 个文件共 52,863,139 B，其中卡上 18 个）
 - 私有包：`dist/littleworld-v4-sd-private/`（含千千基础包，**不提交、不发布**）
 - Windows 联合版：`build/host/LittleWorld.exe`，1,401,344 B，sha256 `9ed1414dd822d016ac31b61fd979ed52aa24b38d6113e1f787503bddb5b1c55c`
+
+## 插上板子之后的三步（已准备好，等硬件）
+
+1. `powershell -File tools/flash_v4_safe.ps1 -ListPorts` → 确认出现的 COM 是 `VID_303A` / `1A86` / `10C4` / `0403` 之一，**不是**蓝牙的 BTHENUM。
+2. `powershell -File tools/flash_v4_safe.ps1 -Probe -Port COMx` → 只读，读芯片型号/Revision/Flash/MAC，一个字都不写。
+3. 把只读结果贴出来 → 确认无误后执行 `-Stage app -Execute -Authorized`（只写 0x10000，不碰 bootloader/分区表/NVS/C6）。
+
+板子接哪个口：Waveshare ESP32-P4-WIFI6-Touch-LCD-7B 上标 **USB/UART** 的那个 Type-C（板载 CH343P 转串口），不是标 USB-OTG 的那个。插上后设备管理器里应出现 `USB-Enhanced-SERIAL CH343 (COMx)`，`GetPortNames()` 会多一个 COM。
