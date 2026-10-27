@@ -57,6 +57,36 @@ fps: 10
 
 `reports/integration-v4-3-board-smoke/windows/perf/01-anim-a.png` 与 `02-anim-b.png` 是连续两张真机截图，可直接看出两个角色的手臂姿势不同 —— 动画在播。
 
+### 重启后仍然有效（关键验证）
+
+因为失效状态原本存在 NVS 里，所以必须验证修复能跨重启存活。断电重启后立刻读：
+
+```
+anim: motion_mode=0 animations_enabled=1 raw_mode=0
+anim 0: clip=male.idle frame=4 motion=0 animation_ms=28439 phase=0
+anim 1: clip=qianqian.idle frame=3 motion=0 animation_ms=28439 phase=0
+sched: ticks=222 avg_gap=36 ms max_gap=434 ms (timer period 20 ms)
+fps: 15
+cache: open hits=2400 misses=901 evictions=731 drops=0 resident=3145728 peak=3784704 budget=4194304
+animation: sprites=2 running=2
+```
+
+`animations_enabled=1` 没有再退回 0 —— `anim on` 已经写进存档，不是只在 RAM 里生效。
+
+### 招手动作实测时间线
+
+点「见面打招呼」后连续采样，动作确实完整播放：
+
+```
+anim 0: clip=male.wave frame=1  motion=3 animation_ms=120   phase=3
+anim 0: clip=male.wave frame=7  motion=3 animation_ms=720   phase=3
+anim 0: clip=male.wave frame=13 motion=3 animation_ms=1320  phase=3
+anim 0: clip=male.wave frame=15 motion=3 animation_ms=2260  phase=3
+anim 0: clip=male.idle frame=4  motion=0 animation_ms=400   phase=0
+```
+
+帧 1 → 7 → 13 → 15 走完 16 帧，约 2600 ms 后回到 idle。100 ms 的采样间隔能稳定看到不同的帧号，说明抖动已经降到可以被观察的程度。
+
 ## 改了哪些代码
 
 | 文件 | 改动 | 为什么 |
