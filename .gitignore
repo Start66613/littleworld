@@ -92,3 +92,4 @@ __pycache__/
 
 /reports/board/*.bmp
 /reports/board-v43/
+/reports/board/*.png
