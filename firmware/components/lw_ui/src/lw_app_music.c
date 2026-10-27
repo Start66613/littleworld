@@ -11,6 +11,8 @@
 #include "lw_widgets.h"
 #include "lw_os_design.h"
 #include "lw_os.h"
+#include "lw_visual_assets.h"
+#include "lw_polish.h"
 
 #define TRACK_COUNT 3
 
@@ -164,6 +166,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     s_position = 0;
 
     lv_obj_t *player = lw_card(content, 32, 14, 470, 412);
+    if (lw_shell_host_active()) lw_polish_paper(player,false);
     lw_text(player, "音乐盒", &lw_font_18, palette->dim, 32, 26);
     s_title = lw_text(player, "", &lw_font_28, palette->text, 32, 54);
     lv_obj_set_width(s_title,406); lv_label_set_long_mode(s_title,LV_LABEL_LONG_MODE_DOTS);
@@ -198,6 +201,9 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_style_bg_color(note_flag, lv_color_hex(0xFFFFFF), 0);
     lv_obj_set_style_bg_opa(note_flag, LV_OPA_90, 0);
     lv_obj_remove_flag(note_flag, LV_OBJ_FLAG_CLICKABLE);
+    if (lw_shell_host_active()) {
+        if (lw_polish_art(player,2,-157,34)) lv_obj_add_flag(art,LV_OBJ_FLAG_HIDDEN);
+    }
 
     s_progress = lv_slider_create(player); lv_obj_set_pos(s_progress,236,168); lv_obj_set_size(s_progress,200,10); lv_slider_set_range(s_progress,0,100);
     lv_obj_set_style_bg_color(s_progress,lv_color_hex(palette->line),LV_PART_MAIN); lv_obj_set_style_bg_color(s_progress,lv_color_hex(palette->accent),LV_PART_INDICATOR);
@@ -221,6 +227,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     if (!lw_os_volume_available()) { lv_obj_add_state(vol_down,LV_STATE_DISABLED); lv_obj_add_state(vol_up,LV_STATE_DISABLED); lv_obj_set_style_opa(vol_down,100,LV_STATE_DISABLED); lv_obj_set_style_opa(vol_up,100,LV_STATE_DISABLED); }
 
     lv_obj_t *list = lw_card(content, 522, 14, 470, 412);
+    if (lw_shell_host_active()) lw_polish_paper(list,false);
     lw_text(list, "播放列表", &lw_font_22, palette->text, 28, 24);
     for (int i = 0; i < TRACK_COUNT; i++) {
         lv_obj_t *row = lw_soft_card(list, 28, 76 + i * 82, 414, 64);

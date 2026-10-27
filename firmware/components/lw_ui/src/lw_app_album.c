@@ -4,6 +4,8 @@
 #include "lw_widgets.h"
 #include "lw_os_design.h"
 #include "lw_ui_content.h"
+#include "lw_visual_assets.h"
+#include "lw_polish.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #include <stdint.h>
 #include <string.h>
@@ -25,6 +27,7 @@ static void close_view(lv_event_t *e)
 { (void)e; if (overlay) lv_obj_delete(overlay); overlay=stage=caption=NULL; release_picture(); }
 static void sample(lv_obj_t *parent,unsigned index,int w,int h)
 {
+    if (lw_shell_host_active()) { static const unsigned themes[]={0,2,1}; lv_obj_t *picture=lw_visual_scene_image(parent,themes[index%3],w,h,true); if (picture) return; }
     lv_obj_t *scene=lw_os_box(parent,0,0,w,h,sample_colors[index%6],12,255);
     lw_os_box(scene,w*3/4,h/7,h/6,h/6,0xffefcb,LV_RADIUS_CIRCLE,255);
     lw_os_box(scene,0,h*2/3,w,h/3,index==5 ? 0x8999b6 : 0x9db9b4,0,255);
@@ -36,7 +39,7 @@ static void update_view(void)
     lv_obj_clean(stage); release_picture(); const lw_palette_t *c=lw_palette();
     const char *title=demo ? sample_titles[current] : source.title(source.context,current);
     lv_label_set_text_fmt(caption,"%s   %u / %u%s",title ? title : "未命名照片",current+1,count(),demo ? " · 示例" : "");
-    if (demo) { sample(stage,current,944,400); lw_os_label(stage,"代码绘制示例 · 没有私人照片",&lw_font_18,24,26,880,c->text); }
+    if (demo) { sample(stage,current,944,400); lw_os_label(stage,"美术场景示例 · 没有私人照片",&lw_font_18,24,26,880,c->text); }
     else {
         bool loaded=source.load(source.context,current,&picture); const lv_image_dsc_t *image=picture.image;
         if (loaded && image && image->header.magic==LV_IMAGE_HEADER_MAGIC && image->data && image->data_size && image->data_size<=2u*1024u*1024u && image->header.w && image->header.h && image->header.w<=4096 && image->header.h<=4096) {
@@ -78,15 +81,18 @@ static void build(void)
     lw_os_label(root,"把喜欢的瞬间，慢慢收好。",&lw_font_28,40,14,760,c->text);
     lw_os_label(root,demo ? "示例照片墙 · 不是真实私人照片" : "本地相册 · 只读取明确提供的照片",&lw_font_18,40,58,800,c->dim);
     if (!count()) {
-        lw_os_icon(root,OS_I_ALBUM,460,114,92,c->accent);
-        lw_os_label(root,"这里，等你的第一张照片",&lw_font_28,304,224,680,c->text);
-        lw_os_label(root,"照片还没导入也没关系，先把位置留好。",&lw_font_18,330,272,640,c->dim);
-        lv_obj_t *b=lw_button(root,"查看示例",200,52,c->accent,0xffffff,&lw_font_18); lv_obj_set_pos(b,412,328); lv_obj_add_event_cb(b,show_samples,LV_EVENT_CLICKED,NULL); return;
+        if (lw_shell_host_active() && lw_polish_art(root,3,480,80)) {
+            lw_os_label(root,"收藏还没开始",&lw_font_18,678,182,230,c->dim);
+        } else lw_os_icon(root,OS_I_ALBUM,460,114,92,c->accent);
+        lw_os_label(root,"这里，等你的第一张照片",&lw_font_28,72,150,520,c->text);
+        lw_os_label(root,"照片还没导入也没关系，先把位置留好。",&lw_font_18,72,206,480,c->dim);
+        lv_obj_t *b=lw_button(root,"查看示例",200,52,c->accent,0xffffff,&lw_font_18); lv_obj_set_pos(b,72,276); lv_obj_add_event_cb(b,show_samples,LV_EVENT_CLICKED,NULL); return;
     }
     unsigned shown=count()<6 ? count() : 6;
     for (unsigned i=0;i<shown;i++) {
         int x=40+(int)(i%3)*324,y=96+(int)(i/3)*154;
         lv_obj_t *card=lw_card(root,x,y,296,142); lv_obj_set_style_radius(card,12,0); lv_obj_add_flag(card,LV_OBJ_FLAG_CLICKABLE);
+        if (lw_shell_host_active()) { lw_polish_paper(card,false);lv_obj_t *tape=lw_os_box(card,117,0,62,10,c->lav,2,130);(void)tape; }
         lw_os_motion_touch(card); lv_obj_add_event_cb(card,open_view,LV_EVENT_CLICKED,(void *)(uintptr_t)i);
         if (demo) { lv_obj_t *thumb=lw_os_box(card,10,10,276,86,0,0,0); sample(thumb,i,276,86); }
         else lw_os_icon(card,OS_I_ALBUM,126,26,44,c->accent);

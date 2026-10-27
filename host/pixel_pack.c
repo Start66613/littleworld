@@ -5,7 +5,7 @@
 #include <string.h>
 #include "lw_storage.h"
 
-#define MAX_CLIPS 24
+#define MAX_CLIPS 32
 typedef struct { lw_asset_raw_file_t file; lw_file_cache_t *cache; const char *relative; } frame_source_t;
 struct lw_pixel_pack {
     char path[512],names[MAX_CLIPS][33],ids[MAX_CLIPS][64];
@@ -14,9 +14,9 @@ struct lw_pixel_pack {
     lw_named_clip_t clips[MAX_CLIPS],test_clip;
     uint16_t sequences[MAX_CLIPS][32],durations[MAX_CLIPS][32],test_seq[4],test_time[4];
     lw_actor_art_t art[2];
-    lw_pixel_pack_t *male,*extra;
+    lw_pixel_pack_t *male,*extra,*polish,*ui,*skin;
     lw_named_clip_t extra_named[MAX_CLIPS];
-    lw_asset_spec_t combined[MAX_CLIPS*3];
+    lw_asset_spec_t combined[MAX_CLIPS*6];
     unsigned count;
 };
 static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
@@ -31,7 +31,7 @@ static bool read_frame(void *ctx,uint16_t frame,uint8_t *data,size_t bytes)
 lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p)
 {
     lw_file_cache_stats_t a=lw_file_cache_stats(p ? p->cache : NULL);
-    for (unsigned i=0;p && i<2;i++) { const lw_pixel_pack_t *child=i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
+    for (unsigned i=0;p && i<5;i++) { const lw_pixel_pack_t *child=i==4 ? p->skin : i==3 ? p->ui : i==2 ? p->polish : i ? p->extra : p->male; if (!child) continue; lw_file_cache_stats_t b=lw_file_cache_stats(child->cache);
 #define SUM(field) a.field+=b.field
         SUM(budget_bytes); SUM(resident_bytes); SUM(peak_bytes); SUM(metadata_bytes); SUM(hits); SUM(misses); SUM(reads); SUM(failures); SUM(evictions); SUM(prefetched); SUM(queue_drops); SUM(pending); SUM(loading);
 #undef SUM
@@ -61,8 +61,9 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
     if (!path || strlen(path)>=512) return NULL;
     FILE *file=fopen(path,"rb"); if (!file) return NULL;
     uint8_t header[16];
-    if (fread(header,1,16,file)!=16 || memcmp(header,"LWPX0001",8) || u16(header+8)!=256 || u16(header+10)!=256 ||
+    if (fread(header,1,16,file)!=16 || memcmp(header,"LWPX0001",8) || !u16(header+8) || u16(header+8)>1024 || !u16(header+10) || u16(header+10)>600 || (uint32_t)u16(header+8)*u16(header+10)*3u>1250000u ||
         !u16(header+12) || u16(header+12)>MAX_CLIPS) { fclose(file); return NULL; }
+    unsigned width=u16(header+8),height=u16(header+10),stride=width*height*3;
     if (fseek(file,0,SEEK_END)) { fclose(file); return NULL; }
     long file_size=ftell(file); if (file_size<16 || fseek(file,16,SEEK_SET)) { fclose(file); return NULL; }
     lw_pixel_pack_t *pack=calloc(1,sizeof(*pack)); if (!pack) { fclose(file); return NULL; }
@@ -80,11 +81,11 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
         memcpy(pack->names[i],record,32); pack->names[i][32]=0;
         if (!memchr(record,0,32) || !pack->names[i][0]) { ok=false; break; }
         unsigned frames=u16(record+32); int ax=(int16_t)u16(record+34),ay=(int16_t)u16(record+36); uint32_t offset=u32(record+40);
-        if (!frames || frames>32 || ax<0 || ax>256 || ay<0 || ay>256 || record[38]>1 ||
-            offset<16+108*pack->count || (uint64_t)offset+(uint64_t)frames*196608>(uint64_t)file_size) { ok=false; break; }
+        if (!frames || frames>32 || ax<0 || (unsigned)ax>width || ay<0 || (unsigned)ay>height || record[38]>1 ||
+            offset<16+108*pack->count || (uint64_t)offset+(uint64_t)frames*stride>(uint64_t)file_size) { ok=false; break; }
         snprintf(pack->ids[i],64,"qianqian.%s",pack->names[i]);
-        pack->sources[i]=(frame_source_t){{pack->path,offset,196608,(uint16_t)frames},pack->cache,pack->basename};
-        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],256,256,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,read_frame,&pack->sources[i]};
+        pack->sources[i]=(frame_source_t){{pack->path,offset,stride,(uint16_t)frames},pack->cache,pack->basename};
+        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],(uint16_t)width,(uint16_t)height,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,read_frame,&pack->sources[i]};
         for (unsigned f=0;f<frames;f++) {
             pack->sequences[i][f]=(uint16_t)f; pack->durations[i][f]=u16(record+44+f*2);
             if (pack->durations[i][f]<20 || pack->durations[i][f]>2000) ok=false;
@@ -112,6 +113,9 @@ static bool combine(lw_pixel_pack_t *p)
     if (!p->male) p->combined[count++]=p->specs[p->count];
     if (p->male) { memcpy(p->combined+count,p->male->specs,p->male->count*sizeof(p->specs[0])); count+=p->male->count; }
     if (p->extra) { memcpy(p->combined+count,p->extra->specs,p->extra->count*sizeof(p->specs[0])); count+=p->extra->count; }
+    if (p->polish) { memcpy(p->combined+count,p->polish->specs,p->polish->count*sizeof(p->specs[0])); count+=p->polish->count; }
+    if (p->ui) { memcpy(p->combined+count,p->ui->specs,p->ui->count*sizeof(p->specs[0])); count+=p->ui->count; }
+    if (p->skin) { memcpy(p->combined+count,p->skin->specs,p->skin->count*sizeof(p->specs[0])); count+=p->skin->count; }
     return lw_assets_register(p->combined,count,2u*1024u*1024u);
 }
 bool lw_pixel_pack_attach_male(lw_pixel_pack_t *p,const char *path)
@@ -137,5 +141,34 @@ bool lw_pixel_pack_close(lw_pixel_pack_t *p)
     if (!lw_assets_register(NULL,0,2u*1024u*1024u)) return false;
     if (p->male) lw_pixel_pack_close(p->male);
     if (p->extra) lw_pixel_pack_close(p->extra);
+    if (p->polish) lw_pixel_pack_close(p->polish);
+    if (p->ui) lw_pixel_pack_close(p->ui);
+    if (p->skin) lw_pixel_pack_close(p->skin);
     lw_file_cache_close(p->cache); free(p); return true;
+}
+bool lw_pixel_pack_attach_polish(lw_pixel_pack_t *p,const char *path)
+{
+    if (!p || p->polish || lw_assets_stats().live_leases) return false;
+    lw_pixel_pack_t *child=open_budget(path,2u*320u*320u*3u); if (!child) return false;
+    for (unsigned i=0;i<child->count;i++) snprintf(child->ids[i],sizeof(child->ids[i]),"v42.%s",child->names[i]);
+    p->polish=child;
+    if (!combine(p)) { p->polish=NULL; lw_pixel_pack_close(child); combine(p); return false; }
+    return true;
+}
+
+bool lw_pixel_pack_attach_ui(lw_pixel_pack_t *p,const char *path)
+{
+    if (!p || p->ui || lw_assets_stats().live_leases) return false;
+    lw_pixel_pack_t *child=open_budget(path,544u*352u*3u); if (!child) return false;
+    for (unsigned i=0;i<child->count;i++) snprintf(child->ids[i],sizeof(child->ids[i]),"v42ui.%s",child->names[i]);
+    p->ui=child;
+    if (!combine(p)) { p->ui=NULL; lw_pixel_pack_close(child); combine(p); return false; }
+    return true;
+}
+bool lw_pixel_pack_attach_skin(lw_pixel_pack_t *p,const char *path)
+{
+    if(!p || p->skin || lw_assets_stats().live_leases)return false;
+    lw_pixel_pack_t *child=open_budget(path,512u*544u*3u);if(!child)return false;
+    for(unsigned i=0;i<child->count;i++)snprintf(child->ids[i],sizeof(child->ids[i]),"v43skin.%s",child->names[i]);
+    p->skin=child;if(!combine(p)){p->skin=NULL;lw_pixel_pack_close(child);combine(p);return false;}return true;
 }

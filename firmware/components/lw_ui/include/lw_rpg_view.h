@@ -2,6 +2,7 @@
 #pragma once
 #include "lvgl.h"
 #include "lw_rpg.h"
+#include "lw_duo_view.h"
 typedef struct lw_rpg_view lw_rpg_view_t;
 typedef struct {
     void *user;
@@ -11,6 +12,10 @@ typedef struct {
 } lw_rpg_view_host_t;
 /* Parent owns objects. LV_EVENT_DELETE releases the timer and saves committed progress.
  * Only the pinned demo world is accepted; arbitrary downloaded worlds are unsupported. */
-lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *host,unsigned theme);
+lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *host,unsigned theme,const lw_actor_art_t art[2]);
 void lw_rpg_view_suspend(lw_rpg_view_t *,bool);
 const lw_rpg_state_t *lw_rpg_view_state(const lw_rpg_view_t *);
+bool lw_rpg_view_has_art(const lw_rpg_view_t *);
+lv_obj_t *lw_rpg_view_actor(const lw_rpg_view_t *,unsigned);
+/* Scene projection: fixed core tile coordinates, pixel foot point in map. */
+void lw_rpg_view_tile_point(int x,int y,int *px,int *py);

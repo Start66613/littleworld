@@ -24,6 +24,9 @@ if (-not (Test-Path -LiteralPath (Join-Path $fontDir 'cache/NotoSansSC-Regular.o
 $outDir = Join-Path $projectRoot 'firmware/components/lw_ui/fonts'
 $regular = Join-Path $fontDir 'cache/NotoSansSC-Regular.otf'
 $bold = Join-Path $fontDir 'cache/NotoSansSC-Bold.otf'
+$bodyFont=Join-Path $projectRoot 'tools/fonts/cache/LXGWWenKaiScreen.ttf'
+if (-not (Test-Path -LiteralPath $bodyFont)) {& "$PSScriptRoot/setup_scene_font.ps1"}
+if ((Get-FileHash -LiteralPath $bodyFont -Algorithm SHA256).Hash -ne 'CD1A6FA39C4EA42FD8F4E289945789B0E510CF7016435640F8893CDAD9B220F3') {throw 'Pinned scene font hash differs'}
 
 foreach ($p in @($regular, $bold)) {
     if (-not (Test-Path -LiteralPath $p)) { throw "Font source missing: $p" }
@@ -69,9 +72,9 @@ $charsetSymbols = Join-Path $genDir 'charset-symbols.txt'
 [System.IO.File]::WriteAllText($charsetEmpty, '', (New-Object System.Text.UTF8Encoding($false)))
 
 $jobs = @(
-    @{ Name = 'lw_font_18'; Size = 18; Font = $regular; Charset = $charsetFile },
-    @{ Name = 'lw_font_22'; Size = 22; Font = $regular; Charset = $charsetFile },
-    @{ Name = 'lw_font_28'; Size = 28; Font = $bold; Charset = $charsetFile },
+    @{ Name = 'lw_font_18'; Size = 18; Font = $bodyFont; Charset = $charsetFile },
+    @{ Name = 'lw_font_22'; Size = 22; Font = $bodyFont; Charset = $charsetFile },
+    @{ Name = 'lw_font_28'; Size = 28; Font = $bodyFont; Charset = $charsetFile },
     @{ Name = 'lw_font_44'; Size = 44; Font = $bold; Charset = $charsetSymbols },
     @{ Name = 'lw_font_88'; Size = 88; Font = $regular; Charset = $charsetSymbols }
 )

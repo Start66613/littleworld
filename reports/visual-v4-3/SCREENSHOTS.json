@@ -1,0 +1,1169 @@
+{
+  "tested_source_commit": "6c0a4613ee0919adb9227166ed70a932fc9828c8",
+  "capture": "lv_refr_now -> Windows framebuffer BMP -> lossless PNG; byte-equivalent RGB checked",
+  "board_tested": false,
+  "public_images_authorized": true,
+  "framebuffers": [
+    {
+      "file": "screenshots/01-desktop.png",
+      "sha256": "1db57d11ad0ff4ae36e8ca77ba9cc94e70718c5f6505a363983bc15863898373",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/02-control-center.png",
+      "sha256": "460ecaca0d23da11c0c43abc83d99ab6a341c23ce8dc35db140230b8a2fcd096",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/03-wifi-list.png",
+      "sha256": "7a1f682b4a33fc660b56e98cf2c900bed8d189e71d9a3444f18a0029585b8ed8",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/04-settings.png",
+      "sha256": "5903610c29a14c27119e284f5b9990a9fd1f00d5d99318ddfe9dcf155df001f1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/05-themes.png",
+      "sha256": "953b0760643529fca0a84165bd2e5f101bbec9869faba8b6fe6830182f625f36",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/06-lockscreen.png",
+      "sha256": "97fbd18eb8acbdec0f4ec2b52dee2b9427782d4a60ad8b31809fc469fbcaa4ab",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/07-pixel-world.png",
+      "sha256": "cf28a5e08836415b1f7df3f7ce06a8e3ef8c619a4892734b8014a89670b28d9e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/08-wifi-password.png",
+      "sha256": "3bc9f603d9c98f96cd035a4e5cde73f9dfb882915f1f8b5cc8d41593f069ab9f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/09-moonlight-desktop.png",
+      "sha256": "085124ddd0d0266d599b9dda46ce293d3f8e96d9db134bf5f022522a05e66961",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/10-envelope.png",
+      "sha256": "882e563244e2a69753a25f4a5bb5312409873f56d85f6b3ed73ff6bc2d4674fe",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/11-pet-idle.png",
+      "sha256": "fd599935f8b5da9f72e98d84757853651e40e23a7f3e4f61252a65596f463cf0",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/12-pet-interaction.png",
+      "sha256": "87443b78285c4c8375d6546ca17e011c89f5c1efde4be123d349af06e254ff74",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/13-album-viewer.png",
+      "sha256": "83f19b8c3537798312363864307b21801b32a3eb80d98d2d606bdd61aba2710e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/14-music.png",
+      "sha256": "ab40e943b487a24b9b715d77384023afa1a708b39f9362b7ff9bc4146b5d9ed2",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/15-anniversary.png",
+      "sha256": "4f490b5fda96a81399bbad193dfd14c1927c01a497d4688bbcf57df81f3a5630",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/16-2048.png",
+      "sha256": "2e689106683f18f6a010f7906d0c98ea3943e5e1a4b636fea0aeae939d64dd92",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/17-rpg-room.png",
+      "sha256": "927f503b5f3322b20d6abfad064e2bc9ca37cb05055d09777f31275bc3266544",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/18-rpg-journal.png",
+      "sha256": "92a9dd902776bba54ecdfedec888f072b614c03484f3dfdd0680b659696f6e67",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/19-rpg-dialogue.png",
+      "sha256": "6f6304178255584e4a6cc0c8b48f085cc0a8821db350ea34ef7adad51b9857d9",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/20-rpg-reward.png",
+      "sha256": "1f2697de7bf64ff05972e1ecb439a05969ef1b0eedcdee1efa4cfcc0d3d75cf5",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/21-album-empty.png",
+      "sha256": "29e44705187d13703aa6e98b63b26fa592af13d541ebd9deb42b731291297c6e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/22-dock-pressed.png",
+      "sha256": "8ec2d58d4fc54ca782b241514e504f49ec2558a24fe82e8b19d3b551bad259e0",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/23-services-unavailable.png",
+      "sha256": "1ca7fa69aba71dfc08635b6ee5b3c095ce57b6370046ffebf24219ab4ac8ff28",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/24-dnd.png",
+      "sha256": "a8504e14847e0df5d97290aa58c86345aacd11cd37ebf1aab32f9056b508907b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/25-motion-settings.png",
+      "sha256": "5858855799d725a2d2154926b3d89823f0f728c64d3b7ba3216f9850d760dc32",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/26-album-local-photo.png",
+      "sha256": "7b1252334a0df90b1c7c75607b298dfb0d87d9dc01d49e4a63d15f298f7e967e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/27-album-load-error.png",
+      "sha256": "18a6e18c687e496bb473e110a31ef6072f38587a6639c94bda361c385951f680",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/28-story-detail.png",
+      "sha256": "3f8e99c6c9e91010cc695d9c7fbb9a15c1b67b510e006efb5e3c9c484440fd75",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/29-music-simulated.png",
+      "sha256": "7e74d94569988146d0e3445364ae592f899d475a3c9ca516242519ccdd0db924",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/30-game-pause.png",
+      "sha256": "0139698adc871fd214f9cad042d1c68ba88a99309b855df0b54ecaf3f5393b68",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/31-rpg-move-feedback.png",
+      "sha256": "8337ca28bb2b72ad6cf1135fec18a60e9c433f014ab2a3a8a8dcba36486760da",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-empty.png",
+      "sha256": "926f9760eac48fc1f266999c2c5bdbda870de5192abaed19aee166e5c203a5b3",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-00.png",
+      "sha256": "967644ebdcdbd9289e20cdf27b7e687e46873517f866541867d3152186936fcb",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-01.png",
+      "sha256": "cbbe8754ebd34b56e342cd6bf89d694192c55a05ec09762cc8050cc25e8da46d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-02.png",
+      "sha256": "668a5ee57e3bc60430a13e7485a8c148537aba2a43e827d3003c078278190118",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-03.png",
+      "sha256": "c7a5a120f367f074ccf4e5134f3b61037bf94f08b7a9ab742f0aa52d975cfb3d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-04.png",
+      "sha256": "6689e7915443d5bbcfbebef7ca5fd39caec6cfc7004eb5e5370796df4fb8edb5",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-05.png",
+      "sha256": "af2c6390fe73a7a059cdc00af16626be5271a44af5f9979491587ef8b4c8043f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-06.png",
+      "sha256": "d9eddc31e32c5aff302c2ecc6503ba1e5bcbcc06a710c0efbf64f64c92ccaba8",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-idle-07.png",
+      "sha256": "c9d59fd5ee27dffbcea21c7086d11e4faff4c7e6faba35f522b858139a33eb94",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-look.png",
+      "sha256": "967644ebdcdbd9289e20cdf27b7e687e46873517f866541867d3152186936fcb",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-return.png",
+      "sha256": "e2ad178a713663efa604d8e61a3184deca1a290f47823f1bfa527a3129c37909",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/component-dog-sleep.png",
+      "sha256": "89fdf76fb04fc6444347f3eb232f8e3fbfdb825a06a382a124c0a8174204e6f1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-00.png",
+      "sha256": "c6c6aad100f3c660ec3af26ef0e76a33255c3cbe90f09256e8e00402a6649da2",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-01.png",
+      "sha256": "f867d1e948dc8c1035954f2f611aabc5493d11228873049a126e824a351d2096",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-02.png",
+      "sha256": "f90852a6ea9817d7365f2f4f1488115f02b63ac96f15b49d761761786286a50a",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-03.png",
+      "sha256": "c66cf5337f19ef14833ec40c6db9f79a767e7444ea9fd5c706427d37d82994fb",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-04.png",
+      "sha256": "9a722676e9bc6f931b57fbf43b6473dd52deca2817f9d03e62bb7fc23b28c65d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-05.png",
+      "sha256": "389081901d64ca29c589abe627a8496eaf22d3528bb521d93ff7f36eb8e395dc",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-06.png",
+      "sha256": "44412b29a6a9b3706c4704e1a80056b2838a632463debb36b3482fc2ade946ac",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-07.png",
+      "sha256": "a8a2e1ac37c1373369a7a7360deb673f9f1d62d05d5fad49bc3e52824b83d969",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-08.png",
+      "sha256": "dfcb984bcb5f66633741388eae419e50a93c46c557a5c661df32539d50d47392",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-09.png",
+      "sha256": "712086451a18528df6f4856cb943be1bb9ffdf0eb2d6d0760fabb8cc906ab2d3",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-boot-10.png",
+      "sha256": "f95e324c364d120fea893a2f6d4bc491b4e1f86608a31627d24e3ed341bec871",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-00.png",
+      "sha256": "82d3a2f0727897cdeb3cbfc56568c89e8b591dc161ad9c2cf0c64c2ec6b090c5",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-01.png",
+      "sha256": "ec29ec6edf0fd39ce100c71b921654eca7483144e778dddf0c3f512203f5247e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-02.png",
+      "sha256": "4935553f1328986c5290762b286c45dc65f53a241acb987eb38e7278ff0afc5d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-03.png",
+      "sha256": "768ce8a7d750d0bad7a32c0352bbe8fc779203b64be58efc98b9313bb1be7357",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-04.png",
+      "sha256": "bb499b08cf2b08436540465044aa743140bd5c5050c82a734ac916206542f922",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-05.png",
+      "sha256": "dd223b81bc6694e78e4384b6509b4bd5327f277bf9efcd05f641c59d32b18b6a",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-06.png",
+      "sha256": "3a8419d43a84541882177a13694ff5ee68e39146fa1b0357823fd78e9acd15e7",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-07.png",
+      "sha256": "468c9fa55999aa7004b6d64c11718eadefba6ecc884baab105d688e40f19d94f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-greet-restored.png",
+      "sha256": "0f47f303ed3483d52f1b86be7e6fce9ff29ed60e0629715b40c3b330ca0a54f6",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-00.png",
+      "sha256": "ede277e84a71dd70a0fc9bb906f63f4580f008b44f6788490470bf590463e1c2",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-01.png",
+      "sha256": "d026151ff4424491a9d86f5fc1db29dcd95985f9276139d36b981023909629f1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-02.png",
+      "sha256": "8c0a1381eae7719042234711dbfde4812fb7359f1ed78430140bbefc545d655a",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-03.png",
+      "sha256": "5a0a99a969f8694d319a417f30328010e8b2b006711fdcc87f321e4817876dc3",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-04.png",
+      "sha256": "7665ef7fb6120ec7c0be337ebf4dd3c14786bc65c65134c0041c65859aa61d59",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-letter-closed.png",
+      "sha256": "0599def8f82c34ad6c5c70330829cf57aa08fb9950c5447b4a82ef999858d27e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-lock-00.png",
+      "sha256": "17108f80851ee2c4193e306530e55704e15989cc2659491652d62d64a9f751c9",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-00.png",
+      "sha256": "00cce2ce6c69d1581661eb27148634ac09e1de5b0eebc8c19b2e51730b596d92",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-01.png",
+      "sha256": "00abcecbda8fcfda9d1a13b5a9d7b918e3dfe40f1ee44c679ac8c05be207bcd6",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-02.png",
+      "sha256": "ed14ad2ea488216a9f81c8790333dbb56711c8c8daaf21b96b5e4313ee01177e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-03.png",
+      "sha256": "6b99c5ae102df9297d8285cee4b8d722654562d360ae681044967ec64285b625",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-pull-open.png",
+      "sha256": "4cdf8813fec228ac22f7671d847288635b458c862fb4a9f0937f554a8dc6348c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-push-closed.png",
+      "sha256": "83bc305982f847d7d313fdc620b44549f87d046f6a4131e428173b19a9765633",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-push-mid.png",
+      "sha256": "bc94c93d751c88c4a31e21fd1f116f77c93541ae93bab695e9b0bb241f39de89",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-0.png",
+      "sha256": "6211a6506e5e1a521d12798773e17bd2ed6daa8462fa6987bcf3309e5612af8b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-1.png",
+      "sha256": "9050c50020b10bdbd41af6660d9d66c82db9e56fd8e9585251d947a8317510cd",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-theme-2.png",
+      "sha256": "ba1a063d6ec59a102b53378f84bc60ab2fcad4a23ffdc060a7777bc7eafd6f8d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-00.png",
+      "sha256": "ce1853aefddcb64333770765e38269e86f4307a2e9ec8242fd43213514478e89",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-01.png",
+      "sha256": "36031f46dd3ab2f64f79de7eac8445e5d85beb030b00e3cffa0c3244abedc53d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v4-unlock-02.png",
+      "sha256": "793ae956e0df3302637b9db1acb067efc2ae0e96995888c7446aa1856dd80589",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-00.png",
+      "sha256": "03af47f0b97e330ff76b41a1ea14a201f2bfae1a3e72a51ff1a2ba856990fa4c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-01.png",
+      "sha256": "c66df324a589bdac9f8453d960b98e556870f0ea5684a48a72ee5b916ef278d3",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-02.png",
+      "sha256": "fa36960038942bfa664f5f44496628acc087b0347d3bd7cf048daba9909ccb8d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-03.png",
+      "sha256": "99d12fc7b66b77dee73730874d4ade966bc02503997307b5b521938dd430fdd0",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-04.png",
+      "sha256": "3768ac4eb45d53a6a41f69744a58cc20c7c1c186c96cc088cf113dc2f1d83e6d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-05.png",
+      "sha256": "747a72343471da9ec35780dcc1deb073686ed3506066a7dffc1bc386da6a3969",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-06.png",
+      "sha256": "20167e92aa47f169b42bd905396ae9825b102fd25c276de933f791f6c8604d61",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-idle-07.png",
+      "sha256": "23d09218f704d2baed65bb3b06a86a3fd39c10a48356298233b93834da1ca95b",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-restored.png",
+      "sha256": "df2155fcb354cc28ed13dca2b8879b25dd324ddafeb4b42815f229a123ca0bee",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-sleep.png",
+      "sha256": "89fdf76fb04fc6444347f3eb232f8e3fbfdb825a06a382a124c0a8174204e6f1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-00.png",
+      "sha256": "a30da095476591d6275007450be890e3768ea7e1f18ce6ccd42564b48042ba9d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-01.png",
+      "sha256": "01510cd1d431348deb3868657eeba3ff67dfc9a260f9ff91f793920f4e92cf2f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-02.png",
+      "sha256": "e4d3dded23eb541f0f89bbabdf13a3794692be06a7555069545180e5762a6d09",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-03.png",
+      "sha256": "e64b4c8a77a76e1c6f19918978f581442213524e393620535b19925a8c10b8d3",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-04.png",
+      "sha256": "f2805eecbce0e459e5ffbef504c31abc020f3b5c90204b0e7e992f5fdd0efb2c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-05.png",
+      "sha256": "7f848e7a548b95cea8039a10595a78a0fdc073ca21b7dfdacc5f5c3a8ea6a281",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-06.png",
+      "sha256": "bc222f8ce21e9fcab7e4e7cd12337a627abe3c3b70d0a3707950194dad9a70be",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-07.png",
+      "sha256": "449817b5667834b4007a7d066af051b77900674b28ccacf09047969c24c35c81",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-08.png",
+      "sha256": "f521e8816f58c9a4c58a65aa39d91ad3af982ca4a85b13d96449cd282e27745c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-daily-wave-09.png",
+      "sha256": "07ebb52775a23f2fa6df13529e0cffc6410f105aae4e7c2573029c6d2322b23d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-00.png",
+      "sha256": "70bb1da4bca6f19fb8ec9c01512f2e27d0c2a098457aad905716c79f31c7d871",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-01.png",
+      "sha256": "a7bde90ce1b6eb459671e45f5a660bef9a14834fe78865288d454100d01aaeca",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-02.png",
+      "sha256": "adfd9e40e8405813991e66c83a6df115f35f229d78d36c4d58174050bb73c594",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-03.png",
+      "sha256": "94392da0d599fd04956fb491d03b4d2f1490c044d5a40970e85b6edb6517157f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-04.png",
+      "sha256": "eb2670071b3ba152e4834b82d95e5885791b398ccdaa31a668d7bb3a723f4096",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-05.png",
+      "sha256": "91b66986b4f8abf75cb2bfe19b6d9eb0de8c551f80d9c41456d23032f9599144",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-06.png",
+      "sha256": "4ee051b0676dfb33fb9aef4a11cee748126c60898a9d187e40f10ec96a442939",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-reward-07.png",
+      "sha256": "1c2ba3ec2ee5af867e5d2e1f08ab2be682c070dee2faba6e6bd844fe95a7d14e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-00.png",
+      "sha256": "f1ec78a15b7a2ef0506b9c32914f6f48de0d1236386f7cbd2f85dc882c4916c9",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-01.png",
+      "sha256": "ff88946aa1187009eef5d2ab535f8c1bbabdb6588ff7b5951b95c09b8340e264",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-02.png",
+      "sha256": "e9e61c1ec1edfda494d7ef3fdc65169246ef0056a6d695ad71c04ef50497dd33",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-03.png",
+      "sha256": "356f0634232b4ebcdafa9eb5bc39aa8fd0f44d0eda68739b1d6c46d8c9dd0be6",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-04.png",
+      "sha256": "51efdefbf4d3a4dbb8adc3c03e4e1cdfc2fd81f858b089b70016ce4a8dd6ff54",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-05.png",
+      "sha256": "8248ad8bbbe930b67f5def5d2cbdea6b2f758f077cc5c75ae2890e58cec06fca",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-06.png",
+      "sha256": "16c2905ea66060b57c996e43fb9cc4c182a255add65de68f18c73f19bb3e5444",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-07.png",
+      "sha256": "7ae593903743d05b1a9cd5ce862b782ebb0dde067938af21c94c1a30ffc389c1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-08.png",
+      "sha256": "4ed1d378a9ab7ccecbe0c4c71dcd5c911407b8804e91380c112ddb25bc5acdbf",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-09.png",
+      "sha256": "48dbe49a0048b44ed9f54b834a9a469d844a319989597f952ebaca81573a7654",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-10.png",
+      "sha256": "952b7904a12047a16631deba12c5c2adc217cec9308237b51bd947e347114e17",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v42-rpg-walk-11.png",
+      "sha256": "07f915c3e207928a345c3d58346198d1a416e429153b9fc04ec89dc13e3c797e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-close-00.png",
+      "sha256": "6b95be68e2595757684b717633ee2b2dc3390e05ba8c6db7307a2453cc9937be",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-close-01.png",
+      "sha256": "4f2a9f52c610eca9c4949ad00e195df06a2e304e81b66b1a3d7e8a95a81f0c2d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-close-02.png",
+      "sha256": "c0769c7aaee221c3f78103687ea32de4b1a3704d270862d4739d26cba7855b11",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-close-03.png",
+      "sha256": "d7f6235b0cf47e94c151d986b36b22863e64fec7ecfbf596d2d8b47425689b47",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-close-04.png",
+      "sha256": "ddc224b2df0e350451b034bfb72b66d86e561e0c53930dd5645e64b6bd7d81c1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-00.png",
+      "sha256": "0b0aadc4b2e1df98b00d9c992a5c03b0a1f28bb07e2ec6a75060233510ce185c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-01.png",
+      "sha256": "6a996a5cd28f49fbe71623b57afe0b32ff5a459a512ff64b6d71bee6d4bb1339",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-02.png",
+      "sha256": "2c1b08e4e34117367478186a7799d71deb32136577b717f48c1975a8931a0b14",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-03.png",
+      "sha256": "0e04754f0d4cd6fea0332902e76121110883161e2f2a0aa117aa4ca3560968f2",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-04.png",
+      "sha256": "b1117d9e94a60aae416c9f4f7b6980312935514d02d83ebc47c8ba6b1cde9a17",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-05.png",
+      "sha256": "cc85e05045691ee515c0801dcff31dbc193132c5eb3b5125fabc77bbf05f6a80",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-06.png",
+      "sha256": "1ad1f4a83d9cd2bdbf2128528f1fd4246821a5d3c971b6d2b0e689136ce17b2f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-book-open-07.png",
+      "sha256": "b535bb472c9cba7eee3ac59f1e05cd85eaeff9dd936408fd12118c6059f5086d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-daily-dawn.png",
+      "sha256": "d12f703a3ecacf1ffd4d6192ba03b06c6f9df423fbd419c4429e1cd3d768ee1e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-daily-day.png",
+      "sha256": "803fffdf4cb7d94f83d4ba2a0e72bdab521709f789567fa4976acc09959f65cf",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-daily-deep-night.png",
+      "sha256": "aa05aae924bd0360ff27fa988b06e219de7df8840cdfb98fd5bee399274c5af6",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-daily-dusk.png",
+      "sha256": "022a7ca649819c645c56790faef61a1d24a5dae5f13410804b6ac098540b03b1",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-daily-night.png",
+      "sha256": "7c5475de16eec3b19e13e64948b664040f9c4433ef352806c483b7d763913f9f",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-hidden.png",
+      "sha256": "b9a742bbac0a03bca27e1cf2562586597c53a1d45b04566b8d41d3bf92b7970d",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-00.png",
+      "sha256": "f615e8f0c95ba04c4ae5b650c5b9386dd1c12137e907d3853ccb73ab8554c81c",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-01.png",
+      "sha256": "2a41e4be0977f95b63296b232f1c1283989249e3f1187f4ad77419f019f13e25",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-02.png",
+      "sha256": "9a3d0f0daaab5ec0a08f872098edfc68575b14edbf8bbda413043817860674ca",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-03.png",
+      "sha256": "3090f53d0ee500893af9a12b1ec3b7396db5ab18c3c76008e969de78767b1b92",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-04.png",
+      "sha256": "3381bf2d88dd4780ff748cc342145352b77f0d043dbc5f76b77be701b047cfd2",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-05.png",
+      "sha256": "0acd3352005dfb057136af1af0db741fae4b68aef8937241578e1c07751cf6a0",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-06.png",
+      "sha256": "e71b4b1b6a575c66e6a0f8176b70cc4989c8eece1a68cad896361936f6867b3e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-dock-open-07.png",
+      "sha256": "e71b4b1b6a575c66e6a0f8176b70cc4989c8eece1a68cad896361936f6867b3e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-home-dawn.png",
+      "sha256": "8bf81f19118102492c8b1b0da4ee3fbe9c6c80bcf45c5b7c93593a5eab5dd3a6",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-home-day.png",
+      "sha256": "a670f6cb0d2bc3a4dc68b22c7c8926b79bedeb5e385ede2ccc808a1d0b26bbdc",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-home-deep-night.png",
+      "sha256": "e68ad9f0b586f46f5307f4774c4fb1675b15f630ee5269c76b8e6d156c43249e",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-home-dusk.png",
+      "sha256": "b5ac313c11a9193e0ead40d0dd0b7dfa90176964663328d3d96d1788217c5e36",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-home-night.png",
+      "sha256": "339b1e8121c909ad230c1df2608ba8d332d0068a3c93a4ec0c8c65d119cbcf46",
+      "matches_framebuffer": true
+    },
+    {
+      "file": "screenshots/v43-time-settings.png",
+      "sha256": "3710fa8831f62ed78a001bb53ad7213f3f2a6dc5ccc5e2e680c3824ce9274c61",
+      "matches_framebuffer": true
+    }
+  ],
+  "previews": [
+    {
+      "name": "boot",
+      "gif": "previews/boot.gif",
+      "webp": "previews/boot.webp",
+      "source_pngs": [
+        "v4-boot-00.png",
+        "v4-boot-01.png",
+        "v4-boot-02.png",
+        "v4-boot-03.png",
+        "v4-boot-04.png",
+        "v4-boot-05.png",
+        "v4-boot-06.png",
+        "v4-boot-07.png",
+        "v4-boot-08.png",
+        "v4-boot-09.png",
+        "v4-boot-10.png"
+      ],
+      "duration_ms": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "30375f5611b83add3c5683a2b9c70ab16dacdffc1e30414690a243154224918d"
+    },
+    {
+      "name": "control-center",
+      "gif": "previews/control-center.gif",
+      "webp": "previews/control-center.webp",
+      "source_pngs": [
+        "v4-pull-00.png",
+        "v4-pull-01.png",
+        "v4-pull-02.png",
+        "v4-pull-03.png",
+        "v4-pull-open.png",
+        "v4-push-mid.png",
+        "v4-push-closed.png"
+      ],
+      "duration_ms": [
+        40,
+        40,
+        40,
+        40,
+        500,
+        80,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "c81e30800e9cfed1186e1559b23270580a1764404f837db99026ad9df148bc4a"
+    },
+    {
+      "name": "envelope",
+      "gif": "previews/envelope.gif",
+      "webp": "previews/envelope.webp",
+      "source_pngs": [
+        "v4-letter-00.png",
+        "v4-letter-01.png",
+        "v4-letter-02.png",
+        "v4-letter-03.png",
+        "v4-letter-04.png",
+        "v4-letter-closed.png"
+      ],
+      "duration_ms": [
+        160,
+        160,
+        160,
+        160,
+        160,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "befae807a648c5bf14c6e5deeafd1bf79632e7f47623eca8f2d5c0e400949cce"
+    },
+    {
+      "name": "unlock",
+      "gif": "previews/unlock.gif",
+      "webp": "previews/unlock.webp",
+      "source_pngs": [
+        "v4-lock-00.png",
+        "v4-unlock-00.png",
+        "v4-unlock-01.png",
+        "v4-unlock-02.png"
+      ],
+      "duration_ms": [
+        700,
+        160,
+        60,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "0b1cca3eb69cbefb0d394d262d7b135a35c288f427c171e0a25b2a110138bf62"
+    },
+    {
+      "name": "daily-greeting",
+      "gif": "previews/daily-greeting.gif",
+      "webp": "previews/daily-greeting.webp",
+      "source_pngs": [
+        "v42-daily-wave-00.png",
+        "v42-daily-wave-01.png",
+        "v42-daily-wave-02.png",
+        "v42-daily-wave-03.png",
+        "v42-daily-wave-04.png",
+        "v42-daily-wave-05.png",
+        "v42-daily-wave-06.png",
+        "v42-daily-wave-07.png",
+        "v42-daily-wave-08.png",
+        "v42-daily-wave-09.png",
+        "v42-daily-restored.png"
+      ],
+      "duration_ms": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        800
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "8449e51495ed05b2fb8684ee40ef9470f00c461b57e8025af8de4fb80ed66dc6"
+    },
+    {
+      "name": "daily-idle",
+      "gif": "previews/daily-idle.gif",
+      "webp": "previews/daily-idle.webp",
+      "source_pngs": [
+        "v42-daily-idle-00.png",
+        "v42-daily-idle-01.png",
+        "v42-daily-idle-02.png",
+        "v42-daily-idle-03.png",
+        "v42-daily-idle-04.png",
+        "v42-daily-idle-05.png",
+        "v42-daily-idle-06.png",
+        "v42-daily-idle-07.png"
+      ],
+      "duration_ms": [
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        160,
+        800
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "7f858592f98d4a1a2f195f040279de95b217c3a6ff327616cc3e9dc1c41ff599"
+    },
+    {
+      "name": "rpg-reward",
+      "gif": "previews/rpg-reward.gif",
+      "webp": "previews/rpg-reward.webp",
+      "source_pngs": [
+        "v42-rpg-reward-00.png",
+        "v42-rpg-reward-01.png",
+        "v42-rpg-reward-02.png",
+        "v42-rpg-reward-03.png",
+        "v42-rpg-reward-04.png",
+        "v42-rpg-reward-05.png",
+        "v42-rpg-reward-06.png",
+        "v42-rpg-reward-07.png"
+      ],
+      "duration_ms": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        800
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "62179caeb679242ef389881ccaa2ba5c2e4e81df5c2c49deef0687646fcf1f49"
+    },
+    {
+      "name": "rpg-walk",
+      "gif": "previews/rpg-walk.gif",
+      "webp": "previews/rpg-walk.webp",
+      "source_pngs": [
+        "v42-rpg-walk-00.png",
+        "v42-rpg-walk-01.png",
+        "v42-rpg-walk-02.png",
+        "v42-rpg-walk-03.png",
+        "v42-rpg-walk-04.png",
+        "v42-rpg-walk-05.png",
+        "v42-rpg-walk-06.png",
+        "v42-rpg-walk-07.png",
+        "v42-rpg-walk-08.png",
+        "v42-rpg-walk-09.png",
+        "v42-rpg-walk-10.png",
+        "v42-rpg-walk-11.png"
+      ],
+      "duration_ms": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        800
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "bd2b922733c4aa4a1bd32df7be9babda6219c61e11225a4b41a0d21d8715fdf1"
+    },
+    {
+      "name": "dock-reveal",
+      "gif": "previews/dock-reveal.gif",
+      "webp": "previews/dock-reveal.webp",
+      "source_pngs": [
+        "v43-dock-open-00.png",
+        "v43-dock-open-01.png",
+        "v43-dock-open-02.png",
+        "v43-dock-open-03.png",
+        "v43-dock-open-04.png",
+        "v43-dock-open-05.png",
+        "v43-dock-open-06.png",
+        "v43-dock-open-07.png"
+      ],
+      "duration_ms": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "623b194011a82f182323d3eb2cdf6b1a96bb115f62e1707d445e7edfd5c39965"
+    },
+    {
+      "name": "home-day-cycle",
+      "gif": "previews/home-day-cycle.gif",
+      "webp": "previews/home-day-cycle.webp",
+      "source_pngs": [
+        "v43-home-dawn.png",
+        "v43-home-day.png",
+        "v43-home-dusk.png",
+        "v43-home-night.png",
+        "v43-home-deep-night.png"
+      ],
+      "duration_ms": [
+        1400,
+        1400,
+        1400,
+        1400,
+        1400
+      ],
+      "kind": "five actual settings time-preview captures, held 1.4s each; not an accelerated 24-hour recording",
+      "sha256": "162ca85f4c5e21e62d3a2d74473241beed43a16a703c18fae15b63f66b291ea8"
+    },
+    {
+      "name": "daily-day-cycle",
+      "gif": "previews/daily-day-cycle.gif",
+      "webp": "previews/daily-day-cycle.webp",
+      "source_pngs": [
+        "v43-daily-dawn.png",
+        "v43-daily-day.png",
+        "v43-daily-dusk.png",
+        "v43-daily-night.png",
+        "v43-daily-deep-night.png"
+      ],
+      "duration_ms": [
+        1400,
+        1400,
+        1400,
+        1400,
+        1400
+      ],
+      "kind": "five actual settings time-preview captures, held 1.4s each; not an accelerated 24-hour recording",
+      "sha256": "612cbdc3703a2d63819978e4719a0289c2bfefabbc5bddf1c16b4d2d5719a9d4"
+    },
+    {
+      "name": "storybook",
+      "gif": "previews/storybook.gif",
+      "webp": "previews/storybook.webp",
+      "source_pngs": [
+        "v43-book-open-00.png",
+        "v43-book-open-01.png",
+        "v43-book-open-02.png",
+        "v43-book-open-03.png",
+        "v43-book-open-04.png",
+        "v43-book-open-05.png",
+        "v43-book-open-06.png",
+        "v43-book-open-07.png",
+        "28-story-detail.png",
+        "v43-book-close-00.png",
+        "v43-book-close-01.png",
+        "v43-book-close-02.png",
+        "v43-book-close-03.png",
+        "v43-book-close-04.png"
+      ],
+      "duration_ms": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        900,
+        80,
+        80,
+        80,
+        80,
+        900
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "f898eba2ac5f2603280f14fb182c32862f3636dfcc4d8410d74829d06b258754"
+    },
+    {
+      "name": "puppy-in-bed",
+      "gif": "previews/puppy-in-bed.gif",
+      "webp": "previews/puppy-in-bed.webp",
+      "source_pngs": [
+        "component-dog-idle-00.png",
+        "component-dog-idle-01.png",
+        "component-dog-idle-02.png",
+        "component-dog-idle-03.png",
+        "component-dog-idle-04.png",
+        "component-dog-idle-05.png",
+        "component-dog-idle-06.png",
+        "component-dog-idle-07.png"
+      ],
+      "duration_ms": [
+        125,
+        125,
+        125,
+        125,
+        125,
+        125,
+        125,
+        600
+      ],
+      "kind": "real sampled LVGL animation; review playback adds final hold, no generated concept frames",
+      "sha256": "178e30c526026c5fb0919520c09aef30d50610e875c4057f2a00274fad1464b1"
+    }
+  ],
+  "before_after": [
+    {
+      "before": "before/17-rpg-room.png",
+      "after": "screenshots/17-rpg-room.png"
+    },
+    {
+      "before": "before/11-pet-idle.png",
+      "after": "screenshots/11-pet-idle.png"
+    },
+    {
+      "before": "before/14-music.png",
+      "after": "screenshots/14-music.png"
+    },
+    {
+      "before": "before/18-rpg-journal.png",
+      "after": "screenshots/18-rpg-journal.png"
+    },
+    {
+      "before": "before/19-rpg-dialogue.png",
+      "after": "screenshots/19-rpg-dialogue.png"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-26",
+  "python": "3.12.14",
+  "pytest": "8.4.2",
+  "official_test_source": "tests/test_media_download.py",
+  "official_tests": 3,
+  "official_result": "3 passed in 1.77s",
+  "log_sha256": "14a92e02ad855c2e10fe2e317f69af579da946c5d11cd99f09517641d0c1955a",
+  "test_scope": "Official media-download interruption behavior using a local HTTP fixture; no generation endpoints.",
+  "parser_checks": 5,
+  "parser_checks_passed": 5,
+  "feature_entries_compared": 44,
+  "flag_entries_compared": 228,
+  "missing_flags": 0,
+  "new_billable_submissions_during_review": 0,
+  "hardware_operations": 0
+}

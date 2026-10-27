@@ -1,0 +1,91 @@
+{
+  "tested_source_commit": "6c0a4613ee0919adb9227166ed70a932fc9828c8",
+  "baseline": "2765d5733d0b98da4b1b5e56da9893fc66da7800",
+  "branch": "agent/visual-v4-2-polish",
+  "logs": [
+    {
+      "local_log": "reports/logs/v43-verified-host.log",
+      "sha256": "6db327b377b69f99dd2b3ade469eb2bc4db35d8be181abe06a0a049f9f3a2e38",
+      "confirmed": "OS V2: 752 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-fallback.log",
+      "sha256": "86b0bd285b01d87d5f70c6a3460ba4cea152977919cb2d58780f6250748b61da",
+      "confirmed": "OS V2: 678 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-missing-art.log",
+      "sha256": "b2d0bf5178828c780ef62b3d834c3a5988c9facff58b0d7746788a72d4273aa3",
+      "confirmed": "OS V2: 694 checks, 0 failures;"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-resources.log",
+      "sha256": "8289730d405fb97644bb84c5cafa0ce58a0bb76eb48a3a36a330d5f3bf2ae7e0",
+      "confirmed": "94 checks, 0 failures"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-core.log",
+      "sha256": "62272179f2060d436b81204249fab0f2890a97fc492260a0e97f398bfa088796",
+      "confirmed": "142 checks, 0 failure(s)"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-python.log",
+      "sha256": "ccf585bb813266a7ab915643513b4cecd369c194c0b6ea41d52c4c1924514dec",
+      "confirmed": "Ran 18 tests"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-fonts.log",
+      "sha256": "75fee778c20582b8a50aac517914c49ff0185814df8fc2e4efa2f9d04bb277bd",
+      "confirmed": "font outputs are up to date"
+    },
+    {
+      "local_log": "reports/logs/v43-verified-legacy.log",
+      "sha256": "4244392fac4492bfef3093cbe7dd939b1eab3b0a4594feb9bd37b0979eb426ab",
+      "confirmed": "AUTO RUN: PASSED (0 failure(s))"
+    },
+    {
+      "local_log": "reports/logs/v43-final-idf.log",
+      "sha256": "b83b4200b1d96bd07f0f2b7662e3afae928e5262e4b4f3f86d0c60dbf285c5c4",
+      "confirmed": "Project build complete."
+    }
+  ],
+  "artifacts": [
+    {
+      "local_path": "D:\\LittleWorld-V4-2\\build\\host\\LittleWorld.exe",
+      "bytes": 1399296,
+      "sha256": "5583085ed7f978d290516b7a1a81d21101a454b6ba22a7c8ec721ae3cc794304",
+      "published": false
+    },
+    {
+      "local_path": "D:\\build\\visual-v4-2\\little_world.bin",
+      "bytes": 2246512,
+      "sha256": "3141bd72397fb4fdcb98fae1e32ffd11ddfcf645c84df1731c96754b6c1fd2a0",
+      "published": false
+    }
+  ],
+  "framebuffers": 156,
+  "animation_previews": 13,
+  "protected_paths_unchanged": [
+    "firmware/main",
+    "firmware/components/lw_backend",
+    "firmware/components/lw_net",
+    "firmware/components/lw_system",
+    "firmware/components/lw_storage",
+    "firmware/components/lw_core",
+    "firmware/components/lw_duo",
+    "firmware/components/arcade_core",
+    "rpg",
+    "tests/host/test_rpg.c",
+    "firmware/partitions.csv"
+  ],
+  "idf": "5.5.5",
+  "target": "esp32p4",
+  "min_rev": "300",
+  "board_tested": false,
+  "firmware_scope": "Shared UI compilation only; unchanged stable firmware entry. New LWPX/rooms are not embedded or mounted on hardware.",
+  "meowa_time_scenes": 44,
+  "meowa_component_pass": 115,
+  "meowa_cumulative_original_budget": 764,
+  "original_budget_remaining": 236,
+  "device_operations": 0
+}

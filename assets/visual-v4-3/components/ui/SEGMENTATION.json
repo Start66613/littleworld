@@ -1,0 +1,164 @@
+{
+  "image_size": [
+    2048,
+    1536
+  ],
+  "component_count": 11,
+  "parameters": {
+    "alpha_threshold": 128,
+    "background_tolerance": 8,
+    "connectivity": 8,
+    "min_component_area": 2500,
+    "padding_px": 2,
+    "merge_contained_fragments": true,
+    "fragment_max_area": 256,
+    "fragment_max_area_ratio": 0.02
+  },
+  "warnings": [],
+  "components": [
+    {
+      "id": "component_001",
+      "file": "component_001.png",
+      "bbox": [
+        38,
+        791,
+        1453,
+        1438
+      ],
+      "width": 1415,
+      "height": 647,
+      "pixel_count": 832963
+    },
+    {
+      "id": "component_002",
+      "file": "component_002.png",
+      "bbox": [
+        74,
+        79,
+        1809,
+        333
+      ],
+      "width": 1735,
+      "height": 254,
+      "pixel_count": 325668
+    },
+    {
+      "id": "component_003",
+      "file": "component_003.png",
+      "bbox": [
+        1482,
+        362,
+        1982,
+        820
+      ],
+      "width": 500,
+      "height": 458,
+      "pixel_count": 217191
+    },
+    {
+      "id": "component_004",
+      "file": "component_004.png",
+      "bbox": [
+        1802,
+        856,
+        1991,
+        1409
+      ],
+      "width": 189,
+      "height": 553,
+      "pixel_count": 54774
+    },
+    {
+      "id": "component_005",
+      "file": "component_005.png",
+      "bbox": [
+        761,
+        636,
+        1403,
+        729
+      ],
+      "width": 642,
+      "height": 93,
+      "pixel_count": 54618
+    },
+    {
+      "id": "component_006",
+      "file": "component_006.png",
+      "bbox": [
+        515,
+        407,
+        900,
+        557
+      ],
+      "width": 385,
+      "height": 150,
+      "pixel_count": 52382
+    },
+    {
+      "id": "component_007",
+      "file": "component_007.png",
+      "bbox": [
+        74,
+        407,
+        459,
+        557
+      ],
+      "width": 385,
+      "height": 150,
+      "pixel_count": 52371
+    },
+    {
+      "id": "component_008",
+      "file": "component_008.png",
+      "bbox": [
+        952,
+        407,
+        1336,
+        557
+      ],
+      "width": 384,
+      "height": 150,
+      "pixel_count": 52228
+    },
+    {
+      "id": "component_009",
+      "file": "component_009.png",
+      "bbox": [
+        72,
+        636,
+        706,
+        727
+      ],
+      "width": 634,
+      "height": 91,
+      "pixel_count": 52098
+    },
+    {
+      "id": "component_010",
+      "file": "component_010.png",
+      "bbox": [
+        1845,
+        104,
+        1994,
+        323
+      ],
+      "width": 149,
+      "height": 219,
+      "pixel_count": 26863
+    },
+    {
+      "id": "component_011",
+      "file": "component_011.png",
+      "bbox": [
+        1506,
+        1014,
+        1697,
+        1165
+      ],
+      "width": 191,
+      "height": 151,
+      "pixel_count": 24356
+    }
+  ],
+  "elapsed_ms": 3140.486
+}

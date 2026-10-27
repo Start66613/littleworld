@@ -28,13 +28,20 @@ bool lw_ui_clock_read(lw_ui_clock_t *out)
      * loop use, so a phase change and the clock label can never disagree about
      * which millisecond they are in. */
     uint32_t now_ms = lv_tick_get();
-    char hm[6] = "--:--";
-    lw_day_hm(s_day, now_ms, hm);
-    if (hm[0] == '-' || hm[2] != ':') {
+    int year = 0;
+    int month = 0;
+    int day_of_month = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+    if (!lw_day_clock(s_day, now_ms, &year, &month, &day_of_month, &hour, &minute, &second)) {
         return false;
     }
-    out->hour = (unsigned)((hm[0] - '0') * 10 + (hm[1] - '0'));
-    out->minute = (unsigned)((hm[3] - '0') * 10 + (hm[4] - '0'));
+    out->year = year;
+    out->month = (unsigned)month;
+    out->day = (unsigned)day_of_month;
+    out->hour = (unsigned)hour;
+    out->minute = (unsigned)minute;
     out->source = s_day->source;
     out->trusted = s_day->trusted;
     out->stale = s_day->stale;

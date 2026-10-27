@@ -1,0 +1,1262 @@
+{
+  "pixel-gen-template-info": {
+    "count": 58,
+    "templates": [
+      {
+        "template_name": "16_9",
+        "display_name": "大型横版像素",
+        "description": "Middle 16:9 2K pixel reference grid using two style references and two generation slots.",
+        "output_size": "64-128",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "16:9"
+      },
+      {
+        "template_name": "24px_icon",
+        "display_name": "简约像素图标",
+        "description": "5x5 24px pixel icon sprite-pack template.",
+        "output_size": "24",
+        "output_size_px": 24,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "32x64_object",
+        "display_name": "精致像素道具",
+        "description": "3x6 sprite-pack template for fixed 32x64 pixel objects.",
+        "output_size": "32x64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "3_4",
+        "display_name": "大型竖版像素",
+        "description": "Middle 3:4 2K pixel reference grid using two portrait references and two generation slots.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "48px characters",
+        "display_name": "中等像素角色",
+        "description": "4x4 48px pixel character sprite-pack template.",
+        "output_size": "48",
+        "output_size_px": 48,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "4_3",
+        "display_name": "大型横版像素",
+        "description": "Middle 4:3 2K pixel reference grid using two wide references and two generation slots.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      },
+      {
+        "template_name": "9_16",
+        "display_name": "大型竖版像素",
+        "description": "Middle 9:16 2K pixel reference grid using two portrait references and two generation slots.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "9:16"
+      },
+      {
+        "template_name": "Career_Pixel_Characters",
+        "display_name": "简约等身角色",
+        "description": "Directional 5x5 career pixel character reference template.",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "animal",
+        "display_name": "精致像素动物",
+        "description": "采用紧凑的像素点阵和清晰的深色轮廓，结合精致的Q版比例和温柔的像素技法，生动地描绘出各种动物可爱、萌趣的神态",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "animal5x5",
+        "display_name": "简约像素动物",
+        "description": "同风格的像素动物,用于5x5生成",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "animal_2",
+        "display_name": "精致像素简约动物",
+        "description": "采用低分辨率的像素美术，以可爱的Q版形象呈现各种动物伙伴，有清晰的轮廓和鲜明的有限调色板。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "cat",
+        "display_name": "精致像素小猫",
+        "description": "以低分辨率像素为基础，采用柔和的暖色调和奶油色，可以生成一系列呆萌的像素小猫。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "cat_3",
+        "display_name": "精致像素极简小猫",
+        "description": "以最精简的像素点勾勒猫咪的主体轮廓与核心特征，展现出极简并且自带呆萌感的视觉风格。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "cat_4",
+        "display_name": "精致像素简约小猫",
+        "description": "有简约的色块和清晰的轮廓，相较于极简像素猫咪更多的保留猫咪多样化的角色特征，可以生动的呈现各类可爱、具有辨识度的猫咪角色形象。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "dog",
+        "display_name": "精致像素小狗",
+        "description": "采用受限的调色板、清晰的硬边描边，展现了一系列表情生动、特征鲜明、形态软萌的可爱小狗形象。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "dog_2",
+        "display_name": "精致像素简约小狗",
+        "description": "通过清晰的轮廓与明快的色块，可以生成一系列极简但有辨识度的可爱小狗。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "food",
+        "display_name": "精致像素食物",
+        "description": "通过巧妙的像素放置和色块组合，用简约的方式模拟复杂的食材质感，色块鲜艳明快，构图简洁有力，充满童趣和生机。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "general_character_64px",
+        "display_name": "精致像素角色",
+        "description": "64px 通用像素角色素材包，基于 4x4 模板生成 8 个同风格角色。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "large_16_9",
+        "display_name": "超大横版像素",
+        "description": "Large 16:9 2K pixel reference grid using two wide references and two generation slots.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "16:9"
+      },
+      {
+        "template_name": "large_3_4",
+        "display_name": "超大竖版像素",
+        "description": "Large 3:4 2K pixel reference grid using two portrait references and two generation slots.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "large_4_3",
+        "display_name": "超大横版像素",
+        "description": "Large 4:3 2K pixel reference grid using two wide references and two generation slots.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      },
+      {
+        "template_name": "large_9_16",
+        "display_name": "超大竖版像素",
+        "description": "Large 9:16 2K pixel reference grid using two portrait references and two generation slots.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "9:16"
+      },
+      {
+        "template_name": "large_portrait",
+        "display_name": "超大像素角色",
+        "description": "2K large portrait pixel template for polished fantasy characters and full-body character portraits, with crisp silhouettes, ornate costume detail, rich colors, and refined pixel-art rendering.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "monster",
+        "display_name": "大型复古怪物",
+        "description": "暗黑奇幻风格，色彩对比强烈，营造出一种厚重并且具有史诗感的视觉氛围。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "object",
+        "display_name": "精致像素道具",
+        "description": "采用经典的低分辨率像素网格，每个物品外部都带有清晰的深色硬边描边，通过干净的纯色块拼接和极简的明暗交界线，可以精准地刻画出物体特征。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "object_1",
+        "display_name": "简约像素道具",
+        "description": "5x5 object reference template.",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "object_2",
+        "display_name": "精致像素简约道具",
+        "description": "采用极简尺寸的像素画布，摒弃复杂细节，仅保留物品最具代表性的物理形态和色彩符号。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "ore",
+        "display_name": "简约像素矿石",
+        "description": "5x5 ore reference template.",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_1",
+        "display_name": "大型通用角色",
+        "description": "角色拥有干净、锐利的深色边缘轮廓，调色板丰富且鲜艳，不再受限于早期的硬件色彩限制。可以生成经典奇幻主题的高分辨率像素人物。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_10",
+        "display_name": "大型童话角色",
+        "description": "相比基础的像素画，该风格采用了更高的像素密度，在角色面部加入更细腻的五官表达和丰富的细节，整体色调偏向自然、温润的低饱和度色彩，具有独特的艺术气息。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_2",
+        "display_name": "大型奇幻Q版角色",
+        "description": "采用精致复古的点阵艺术，专为奇幻角色而设计，拥有清晰的像素定义，足够精致，能够捕捉复杂的人物特征。人物设计比例可爱，易于识别。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_3",
+        "display_name": "大型国风角色",
+        "description": "人物的轮廓清晰，使用了干净、精确的像素线条，拥有丰富且饱和的调色板，符合中国古代的色彩美学。融入传统装饰图案，使整组作品散发着浓厚的历史沉淀感和东方古典韵味。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_4",
+        "display_name": "大型Q版国风角色",
+        "description": "物设计采用二头身的Q版比例，突出人物的可爱与稚气，极具亲和力。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_5",
+        "display_name": "大型绘本角色",
+        "description": "角色由清晰可见的方形像素块构成，呈现出独特的颗粒感。色彩饱和度适中，不过于刺眼，给人以温暖、舒适的感觉。可以通过简单的线条和表情，传达出纯真、快乐和宁静的情感。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_6",
+        "display_name": "大型治愈角色",
+        "description": "采用适中的像素密度，在保持清晰像素颗粒感的同时，能够细腻地刻画角色。色彩整体偏向高明度、低饱和度的粉嫩色系，营造出一种如棉花糖般轻盈、梦幻且毫无攻击性的视觉体验。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_8",
+        "display_name": "低分辨率中世纪像素人物",
+        "description": "每个角色都拥有非常厚实且闭合的黑色像素外轮廓。色彩应用遵循古典幻想游戏的逻辑，使用高对比度的原色组合赋予了画面干净、利落的视觉质感。",
+        "output_size": "64-128",
+        "output_size_px": 64,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "pixel_char_9",
+        "display_name": "大型极简童话角色",
+        "description": "采用较低的像素分辨率，角色结构被简化为最基础的几何形状，赋予角色一种现代插画的洗练感。",
+        "output_size": "64-128",
+        "output_size_px": 128,
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "template5x5",
+        "display_name": "简约Q版角色",
+        "description": "通用的 5x5 像素参考模板",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "template8x8",
+        "display_name": "极简像素图标",
+        "description": "16px icon sprite pack template using the 8x8 reference workflow.",
+        "output_size": "16",
+        "output_size_px": 16,
+        "default_count": 36,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "weapon",
+        "display_name": "精致像素武器",
+        "description": "通过清晰、准确的像素点呈现出干净、分块、没有平滑过渡的质感。每个像素都各司其职，共同勾勒出兵器的复杂结构、蚀刻铭文和魔法能量光影，赋予图像一种独特的数字手工艺感。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "weapon_2",
+        "display_name": "精致像素简约武器",
+        "description": "较低的分辨率和有限的调色板，能够精确地放置每一个像素，从而创造出清晰且极具辨识度的武器和道具图标。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "weapon_5x5",
+        "display_name": "简约像素武器",
+        "description": "5x5 weapon reference template.",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "wuxia_character_5x5",
+        "display_name": "简约像素角色",
+        "description": "32px 武侠风格像素小人素材包,基于 5x5 模板生成 15 个同风格角色。",
+        "output_size": "32",
+        "output_size_px": 32,
+        "default_count": 15,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "xlarge_1_2",
+        "display_name": "极大竖版像素",
+        "description": "Xlarge 1:2 output from a 1:1 2K fusion canvas with one merged side reference image.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "xlarge_2_1",
+        "display_name": "极大横版像素",
+        "description": "Xlarge 2:1 output from a 1:1 2K fusion canvas with one merged bottom reference image.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "xlarge_2_3",
+        "display_name": "极大竖版像素",
+        "description": "Xlarge 2:3 output from a 4:3 2K fusion canvas with one merged side reference image.",
+        "output_size": "256+",
+        "output_size_px": 2048,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      },
+      {
+        "template_name": "xlarge_3_2",
+        "display_name": "极大横版像素",
+        "description": "Xlarge 3:2 output from a 3:4 2K fusion canvas with one merged bottom reference image.",
+        "output_size": "256+",
+        "output_size_px": 2048,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "xlarge_3_4",
+        "display_name": "极大竖版像素",
+        "description": "Xlarge 3:4 output from a 1:1 2K fusion canvas with one merged side reference image.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "xlarge_4_3",
+        "display_name": "极大横版像素",
+        "description": "Xlarge 4:3 output from a 1:1 2K fusion canvas with one merged bottom reference image.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "无描边人物",
+        "display_name": "精致像素无描边角色",
+        "description": "采用大头小身体比例，最大程度的简化面部特征，仅保留基础的像素点作为眼睛和粉色的晕染作为腮红，呈现纯真、软萌的视觉感受。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "树木",
+        "display_name": "精致像素树木",
+        "description": "聚焦于自然界的各类树木，通过复杂的纹理构建、丰富的色彩层次和细腻的光影过渡，捕捉了每种树木的独特特征。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "树木_2",
+        "display_name": "精致像素简约树木",
+        "description": "采用清晰的像素网格和有限但表现力丰富的调色板，通过清晰的轮廓和团簇叶片的处理，捕捉了每种树木的独特形状和颜色。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "植物",
+        "display_name": "精致像素植物",
+        "description": "采用高度精致且具有强烈怀旧感的像素艺术风格，呈现出一种干净、分块、没有平滑过渡的质感。每个像素都各司其职，共同勾勒出植物特征，赋予图像一种独特的数字手工艺感。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "植物_2",
+        "display_name": "精致像素简约植物",
+        "description": "采用极简主义的低分辨率设计，每一个像素块都清晰可见，赋予了植物以块状、干净的视觉结构，避开复杂的细节，通过简单的形式捕捉植物的神韵。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "盆栽",
+        "display_name": "精致像素盆栽",
+        "description": "一系列精细复古的像素盆栽，有温馨、低饱和度色调和清晰的轮廓，可以生动的呈现各种精致的居家绿植。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "盆栽_2",
+        "display_name": "精致像素简约盆栽",
+        "description": "采用低分辨率像素美术，以柔和、温馨的低饱和度调色板，可爱的呈现各种微型盆栽。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "矿石",
+        "display_name": "精致像素矿石",
+        "description": "由明显的像素方块拼接而成，可以展现出强烈的怀旧感，契合复古沙盒建造或经典RPG游戏中的物品栏图标设计。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "矿石_2",
+        "display_name": "精致像素简约矿石",
+        "description": "采用清晰的像素描边，在有限的低分辨率下生动的体现不同材质的质感，可以用于呈现游戏世界中各种宝石和矿物等。",
+        "output_size": "64",
+        "output_size_px": 64,
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      }
+    ]
+  },
+  "large-pixel-template-info": {
+    "count": 14,
+    "templates": [
+      {
+        "template_name": "16_9",
+        "display_name": "Large Pixel Canvas — 16:9 / 64-128",
+        "description": "A 16:9 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "64-128",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "16:9"
+      },
+      {
+        "template_name": "3_4",
+        "display_name": "Large Pixel Canvas — 3:4 / 128-256",
+        "description": "A 3:4 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "4_3",
+        "display_name": "Large Pixel Canvas — 4:3 / 128-256",
+        "description": "A 4:3 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      },
+      {
+        "template_name": "9_16",
+        "display_name": "Large Pixel Canvas — 9:16 / 128-256",
+        "description": "A 9:16 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "128-256",
+        "output_size_px": 256,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "9:16"
+      },
+      {
+        "template_name": "large_16_9",
+        "display_name": "Large Pixel Canvas — 16:9 / 256+",
+        "description": "A 16:9 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "16:9"
+      },
+      {
+        "template_name": "large_3_4",
+        "display_name": "Large Pixel Canvas — 3:4 / 256+",
+        "description": "A 3:4 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "large_4_3",
+        "display_name": "Large Pixel Canvas — 4:3 / 256+",
+        "description": "A 4:3 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      },
+      {
+        "template_name": "large_9_16",
+        "display_name": "Large Pixel Canvas — 9:16 / 256+",
+        "description": "A 9:16 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "9:16"
+      },
+      {
+        "template_name": "xlarge_1_2",
+        "display_name": "Large Pixel Canvas — 1:2 / 256+",
+        "description": "A 1:2 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:2"
+      },
+      {
+        "template_name": "xlarge_2_1",
+        "display_name": "Large Pixel Canvas — 2:1 / 256+",
+        "description": "A 2:1 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "2:1"
+      },
+      {
+        "template_name": "xlarge_2_3",
+        "display_name": "Large Pixel Canvas — 2:3 / 256+",
+        "description": "A 2:3 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 2048,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "2:3"
+      },
+      {
+        "template_name": "xlarge_3_2",
+        "display_name": "Large Pixel Canvas — 3:2 / 256+",
+        "description": "A 3:2 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 2048,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:2"
+      },
+      {
+        "template_name": "xlarge_3_4",
+        "display_name": "Large Pixel Canvas — 3:4 / 256+",
+        "description": "A 3:4 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "3:4"
+      },
+      {
+        "template_name": "xlarge_4_3",
+        "display_name": "Large Pixel Canvas — 4:3 / 256+",
+        "description": "A 4:3 large-pixel canvas for scenes, illustrations, characters, buildings, and other game assets.",
+        "output_size": "256+",
+        "output_size_px": 512,
+        "default_count": 1,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "4:3"
+      }
+    ]
+  },
+  "hd-gen-template-info": {
+    "count": 15,
+    "templates": [
+      {
+        "template_name": "ancient_minimal_icon",
+        "display_name": "古风简约icon",
+        "description": "古风简约高清图标模板，造型概括、线条清晰，适合生成东方古典题材的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "ancient_watercolor_icon",
+        "display_name": "古风水彩",
+        "description": "古风水彩高清图标模板，结合东方题材与水彩质感，适合生成柔和细腻的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "cute_cartoon_icon",
+        "display_name": "可爱卡通icon",
+        "description": "可爱卡通高清图标模板，造型圆润活泼，适合生成轻松、有亲和力的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_1",
+        "display_name": "二次元Q版人物",
+        "description": "二次元Q版高清人物模板，角色比例可爱，轮廓清晰，适合生成轻幻想或动漫风格的多方向角色立绘。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_2",
+        "display_name": "儿童绘本Q版人物",
+        "description": "儿童绘本Q版高清人物模板，造型亲和，色彩柔和，适合生成温暖、可爱的多方向角色立绘。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_3",
+        "display_name": "古风水彩人物立绘",
+        "description": "古风水彩高清人物模板，结合东方服饰、柔和水彩质感和精致立绘表现，适合生成古典风格角色。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_4",
+        "display_name": "水墨国风人物立绘",
+        "description": "水墨国风高清人物模板，以墨色层次和留白气质塑造角色，适合生成东方水墨风格的多方向人物立绘。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_5",
+        "display_name": "淡雅国风人物立绘",
+        "description": "淡雅国风高清人物模板，色彩克制、线条轻盈，适合生成清爽雅致的东方人物立绘。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_6",
+        "display_name": "温暖治愈水彩人物",
+        "description": "温暖治愈水彩高清人物模板，使用柔和色调和手绘质感，适合生成亲切、轻松的多方向角色。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "hd_char_7",
+        "display_name": "童话治愈水彩人物",
+        "description": "童话治愈水彩高清人物模板，画面氛围梦幻柔和，适合生成童话感和治愈感强的多方向角色立绘。",
+        "output_size": "512-1024",
+        "default_count": 2,
+        "default_resolution": "2K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "ink_wash_icon",
+        "display_name": "水墨icon",
+        "description": "水墨高清图标模板，以墨色层次和东方留白表现物件，适合生成国风感强的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "minimal_pet_icon",
+        "display_name": "简约萌宠",
+        "description": "简约萌宠高清图标模板，使用干净造型和可爱动物特征，适合生成轻量、统一的宠物图标组。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "modern_minimal_icon",
+        "display_name": "现代简约icon",
+        "description": "现代简约高清图标模板，强调清晰形状、克制细节和统一视觉语言，适合生成现代风格图标组。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "storybook_watercolor_icon",
+        "display_name": "童话治愈水彩icon",
+        "description": "童话治愈水彩高清图标模板，色彩柔和、氛围梦幻，适合生成温暖童话感的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      },
+      {
+        "template_name": "warm_healing_watercolor_icon",
+        "display_name": "温暖治愈水彩icon",
+        "description": "温暖治愈水彩高清图标模板，采用柔和笔触和温暖配色，适合生成自然亲切的成组图标。",
+        "output_size": "256",
+        "default_count": 8,
+        "default_resolution": "1K",
+        "default_aspect_ratio": "1:1"
+      }
+    ]
+  },
+  "map-reference-search": {
+    "count": 2145,
+    "types": [
+      {
+        "type": "pixel-isometric",
+        "name": "Pixel Isometric",
+        "count": 1789,
+        "layouts": [
+          {
+            "layout": "2x2",
+            "tile_size": "2x2",
+            "asset_kind": "reference",
+            "count": 209
+          },
+          {
+            "layout": "single",
+            "tile_size": "1x1",
+            "asset_kind": "reference",
+            "count": 1580
+          }
+        ],
+        "themes": [
+          {
+            "theme": "basic",
+            "name": "Pixel Isometric Basic",
+            "description": "Basic 64x32 left-lit isometric pixel tile references.",
+            "count": 56
+          },
+          {
+            "theme": "creative",
+            "name": "Pixel Isometric Creative",
+            "description": "Imaginative 64x32 left-lit isometric pixel tile references.",
+            "count": 61
+          },
+          {
+            "theme": "default",
+            "name": "Pixel Isometric Gen",
+            "description": "Generate two 64x32 left-lit isometric pixel tiles from two references.",
+            "count": 66
+          },
+          {
+            "theme": "desert",
+            "name": "Pixel Isometric Desert",
+            "description": "Desert RPG 64x32 left-lit isometric pixel tile references.",
+            "count": 191
+          },
+          {
+            "theme": "elfland",
+            "name": "Pixel Isometric Elfland",
+            "description": "Fantasy elven homeland 64x32 left-lit isometric pixel tile references.",
+            "count": 210
+          },
+          {
+            "theme": "grassland",
+            "name": "Pixel Isometric Grassland",
+            "description": "Grassland and prairie 64x32 left-lit isometric pixel tile references.",
+            "count": 210
+          },
+          {
+            "theme": "ocean",
+            "name": "Pixel Isometric Ocean",
+            "description": "Ocean RPG 64x32 left-lit isometric pixel tile references.",
+            "count": 182
+          },
+          {
+            "theme": "rainforest",
+            "name": "Pixel Isometric Rainforest",
+            "description": "Fantasy rainforest 64x32 left-lit isometric pixel tile references.",
+            "count": 198
+          },
+          {
+            "theme": "snow",
+            "name": "Pixel Isometric Snow",
+            "description": "Snow and ice 64x32 left-lit isometric pixel tile references.",
+            "count": 196
+          },
+          {
+            "theme": "swamp",
+            "name": "Pixel Isometric Swamp",
+            "description": "Swamp and marsh 64x32 left-lit isometric pixel tile references.",
+            "count": 177
+          },
+          {
+            "theme": "vanilla",
+            "name": "Pixel Isometric Vanilla",
+            "description": "Plain terrain 64x32 left-lit isometric pixel tile references.",
+            "count": 71
+          },
+          {
+            "theme": "volcano",
+            "name": "Pixel Isometric Volcano",
+            "description": "Volcano and infernal RPG 64x32 left-lit isometric pixel tile references.",
+            "count": 171
+          }
+        ]
+      },
+      {
+        "type": "pixel-hex-isometric",
+        "name": "Pixel Hex Isometric",
+        "count": 230,
+        "layouts": [
+          {
+            "layout": "2x2",
+            "tile_size": "2x2",
+            "asset_kind": "reference",
+            "count": 30
+          },
+          {
+            "layout": "7-cell",
+            "tile_size": "7-cell",
+            "asset_kind": "reference",
+            "count": 24
+          },
+          {
+            "layout": "single",
+            "tile_size": "1x1",
+            "asset_kind": "reference",
+            "count": 174
+          },
+          {
+            "layout": "template",
+            "tile_size": "template",
+            "asset_kind": "template",
+            "count": 2
+          }
+        ],
+        "themes": [
+          {
+            "theme": "default",
+            "name": "Pixel Hex Isometric Default",
+            "description": "2K 2:3 four-tile 3D hex isometric workflow template.",
+            "count": 4
+          },
+          {
+            "theme": "desert",
+            "name": "Pixel Hex Isometric Desert",
+            "description": "Desert reference assets for the 2K 2:3 four-tile 3D hex isometric workflow template.",
+            "count": 127
+          },
+          {
+            "theme": "ocean",
+            "name": "Pixel Hex Isometric Ocean",
+            "description": "Ocean reference assets for the 2K 2:3 four-tile 3D hex isometric workflow template.",
+            "count": 99
+          }
+        ]
+      },
+      {
+        "type": "hd-isometric",
+        "name": "HD Isometric",
+        "count": 50,
+        "layouts": [
+          {
+            "layout": "2x2",
+            "tile_size": "2x2",
+            "asset_kind": "reference",
+            "count": 19
+          },
+          {
+            "layout": "single",
+            "tile_size": "1x1",
+            "asset_kind": "reference",
+            "count": 31
+          }
+        ],
+        "themes": [
+          {
+            "theme": "american_comic",
+            "name": "HD Isometric American Comic",
+            "description": "Selected single-tile American Comic references for HD isometric generation.",
+            "count": 4
+          },
+          {
+            "theme": "cartoon",
+            "name": "HD Isometric Cartoon",
+            "description": "Selected single-tile cartoon references for HD isometric generation.",
+            "count": 4
+          },
+          {
+            "theme": "chinese_ink",
+            "name": "HD Isometric Chinese Ink",
+            "description": "Selected single-tile Chinese Ink references for HD isometric generation.",
+            "count": 6
+          },
+          {
+            "theme": "clay",
+            "name": "HD Isometric Clay",
+            "description": "Clay-style RPG block references for HD isometric tile generation.",
+            "count": 6
+          },
+          {
+            "theme": "cyberpunk_neon",
+            "name": "HD Isometric Cyberpunk Neon",
+            "description": "Selected single-tile Cyberpunk Neon references for HD isometric generation.",
+            "count": 6
+          },
+          {
+            "theme": "dark_fairytale",
+            "name": "HD Isometric Dark Fairytale",
+            "description": "Selected single-tile Dark Fairytale references for HD isometric generation.",
+            "count": 6
+          },
+          {
+            "theme": "low_poly_3d",
+            "name": "HD Isometric Low Poly 3d",
+            "description": "Selected single-tile Low Poly 3d references for HD isometric generation.",
+            "count": 5
+          },
+          {
+            "theme": "modern",
+            "name": "HD Isometric Modern",
+            "description": "Modern city building block references for HD isometric tile generation.",
+            "count": 7
+          },
+          {
+            "theme": "steampunk",
+            "name": "HD Isometric Steampunk",
+            "description": "Selected single-tile Steampunk references for HD isometric generation.",
+            "count": 6
+          }
+        ]
+      },
+      {
+        "type": "hd-hex-isometric",
+        "name": "HD Hex Isometric",
+        "count": 74,
+        "layouts": [
+          {
+            "layout": "2x2",
+            "tile_size": "2x2",
+            "asset_kind": "reference",
+            "count": 35
+          },
+          {
+            "layout": "single",
+            "tile_size": "1x1",
+            "asset_kind": "reference",
+            "count": 39
+          }
+        ],
+        "themes": [
+          {
+            "theme": "american_comic",
+            "name": "HD Hex Isometric American Comic",
+            "description": "Selected single-tile American Comic references for HD hex-isometric generation.",
+            "count": 6
+          },
+          {
+            "theme": "baldurs_gate",
+            "name": "HD Hex Isometric Baldurs Gate",
+            "description": "Selected single-tile Baldurs Gate references for HD hex-isometric generation.",
+            "count": 3
+          },
+          {
+            "theme": "cartoon",
+            "name": "HD Hex Isometric Cartoon",
+            "description": "Selected single-tile cartoon references for HD hex-isometric generation.",
+            "count": 3
+          },
+          {
+            "theme": "chinese_ink",
+            "name": "HD Hex Isometric Chinese Ink",
+            "description": "Selected single-tile Chinese Ink references for HD hex-isometric generation.",
+            "count": 7
+          },
+          {
+            "theme": "clay",
+            "name": "HD Hex Isometric Clay",
+            "description": "Clay-style volcano and snow mountain references for HD hex-isometric tile generation.",
+            "count": 15
+          },
+          {
+            "theme": "clean_scifi",
+            "name": "HD Hex Isometric Clean Scifi",
+            "description": "Selected single-tile Clean Scifi references for HD hex-isometric generation.",
+            "count": 7
+          },
+          {
+            "theme": "low_poly_3d",
+            "name": "HD Hex Isometric Low Poly 3d",
+            "description": "Selected single-tile Low Poly 3d references for HD hex-isometric generation.",
+            "count": 5
+          },
+          {
+            "theme": "modern",
+            "name": "HD Hex Isometric Modern",
+            "description": "Modern city seed references for HD hex-isometric tile generation.",
+            "count": 24
+          },
+          {
+            "theme": "steampunk",
+            "name": "HD Hex Isometric Steampunk",
+            "description": "Selected single-tile Steampunk references for HD hex-isometric generation.",
+            "count": 4
+          }
+        ]
+      },
+      {
+        "type": "tileset",
+        "name": "Tileset",
+        "count": 2,
+        "layouts": [
+          {
+            "layout": "template",
+            "tile_size": "tileset-template",
+            "asset_kind": "template",
+            "count": 2
+          }
+        ],
+        "themes": [
+          {
+            "theme": "dual_grid_15",
+            "name": "Dual Grid 15",
+            "description": "Generate a retro pixel-art dual-grid 15 tileset from foreground and background terrain.",
+            "count": 1
+          },
+          {
+            "theme": "tile-15",
+            "name": "Tile 15",
+            "description": "Generate a retro pixel-art tile-15 tileset from foreground and background terrain.",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  },
+  "texture-reference-search": {
+    "texture_size": 64,
+    "dimensions": "64x64",
+    "count": 217,
+    "categories": [
+      {
+        "category": "decorative_special",
+        "category_zh": "装饰/特殊",
+        "count": 58
+      },
+      {
+        "category": "road_floor",
+        "category_zh": "道路/地板",
+        "count": 41
+      },
+      {
+        "category": "terrain",
+        "category_zh": "自然地表",
+        "count": 66
+      },
+      {
+        "category": "wall_structure",
+        "category_zh": "墙体/结构",
+        "count": 15
+      },
+      {
+        "category": "water_lava",
+        "category_zh": "水体/岩浆",
+        "count": 37
+      }
+    ]
+  },
+  "video-prompt-list": {
+    "idle": {
+      "left": "角色原地不动，身体有轻微起伏和动感，纯白色背景，角色位置保持不变。",
+      "right": "角色原地不动，身体有轻微起伏和动感，纯白色背景，角色位置保持不变。",
+      "front": "角色原地不动，身体有轻微起伏和动感，纯白色背景，角色位置保持不变。",
+      "back": "角色原地不动，身体有轻微起伏和动感，纯白色背景，角色位置保持不变。"
+    },
+    "jump": {
+      "left": "角色慢慢跳起然后慢慢落下，没有其他多余动作，角色身体不要超出画面。纯白色背景，固定镜头。",
+      "right": "角色慢慢跳起然后慢慢落下，没有其他多余动作，角色身体不要超出画面。纯白色背景，固定镜头。",
+      "front": "角色慢慢跳起然后慢慢落下，没有其他多余动作，角色身体不要超出画面。纯白色背景，固定镜头。",
+      "back": "角色慢慢跳起然后慢慢落下，没有其他多余动作，角色身体不要超出画面。纯白色背景，固定镜头。"
+    },
+    "walk": {
+      "left": "全程保持向左走动，纯白色背景，角色位置保持不变。",
+      "right": "全程保持向右走动，纯白色背景，角色位置保持不变。",
+      "front": "全程保持向前走动，纯白色背景，角色位置保持不变。",
+      "back": "全程保持向后走动，纯白色背景，角色位置保持不变。"
+    },
+    "run": {
+      "left": "全程保持向左跑动，纯白色背景，角色位置保持不变。",
+      "right": "全程保持向右跑动，纯白色背景，角色位置保持不变。",
+      "front": "全程保持向前跑动，纯白色背景，角色位置保持不变。",
+      "back": "全程保持向后跑动，纯白色背景，角色位置保持不变。"
+    },
+    "other": {
+      "left": "",
+      "right": "",
+      "front": "",
+      "back": ""
+    }
+  }
+}

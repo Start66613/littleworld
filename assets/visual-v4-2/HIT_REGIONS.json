@@ -1,0 +1,27 @@
+{
+  "canvas": [1024, 600],
+  "rpg": {
+    "viewport": [0, 0, 1024, 494],
+    "foot_projection": {"x_origin": 92, "y_origin": 310, "tile_x": 56, "tile_y": 22, "columns": 16, "rows": 8},
+    "walkable": "x>=4, except x<=6 && y<=3 or x>=12 && y<=6; hotspot tiles are solid",
+    "hotspots": [
+      {"id": "photo", "tile": [5, 3], "touch_xywh": [314, 280, 96, 80]},
+      {"id": "letter", "tile": [12, 4], "touch_xywh": [825, 240, 80, 52]},
+      {"id": "plant", "tile": [4, 3], "touch_xywh": [214, 185, 102, 162]}
+    ],
+    "depth": "Residents sorted by foot Y, walking restricted to surveyed clear foreground. No independent furniture mask; cannot walk behind furniture.",
+    "source": "complete Meowa workshop, no handmade furniture slicing or rearrangement"
+  },
+  "daily": {
+    "mount_y": 52,
+    "scene_local_y": -52,
+    "joint_canvas": [320, 320],
+    "joint_sprite_anchor": [160, 274],
+    "joint_global_anchor": [516, 360],
+    "scale_256": 256,
+    "greeting_xywh": [28, 296, 224, 48],
+    "action_buttons": {"first_global_xywh": [152, 430, 168, 48], "x_step": 184, "count": 4},
+    "contact": "Shared Meowa keyframe -> transparent joint sprite, traceable fixed normalization; source extraction was not coordinate aligned."
+  },
+  "acceptance": "Self-reviewed in LVGL; user aesthetic acceptance still pending."
+}

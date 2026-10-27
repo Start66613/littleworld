@@ -1,0 +1,46 @@
+[
+  {
+    "command": [
+      "pixel-gen-template-info"
+    ],
+    "exit_code": 0,
+    "sha256": "f4f7db44187ff32dc918a6ff76c6cbbc158f1b9969f3fa6da6e3b0a83f0935ec"
+  },
+  {
+    "command": [
+      "large-pixel-template-info"
+    ],
+    "exit_code": 0,
+    "sha256": "af8a674a985d2951756370ccb983fb38c904c869f560cb7176ea4e8a2b61c840"
+  },
+  {
+    "command": [
+      "hd-gen-template-info"
+    ],
+    "exit_code": 0,
+    "sha256": "92e9809488f7898cda3b73a571ae4f87b26895c5823a060e909a0574ea3d080f"
+  },
+  {
+    "command": [
+      "map-reference-search",
+      "--categories"
+    ],
+    "exit_code": 0,
+    "sha256": "43da18d08ea9d8ba7c45f76eac0ebb6b1313d0bba8a057af022dd1b633f3c825"
+  },
+  {
+    "command": [
+      "texture-reference-search",
+      "--categories"
+    ],
+    "exit_code": 0,
+    "sha256": "855c8e24c500ada30d120fa72190a4a9c92db096a164ff8fee9eece6e7028da7"
+  },
+  {
+    "command": [
+      "video-prompt-list"
+    ],
+    "exit_code": 0,
+    "sha256": "e9806f837d940cb639e11f2df2abe2d366d96d6089a5b974afb98fd8c7e83393"
+  }
+]

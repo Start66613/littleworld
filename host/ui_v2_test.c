@@ -132,7 +132,7 @@ int lw_ui_v2_test(const char *output_dir)
     int before=timer_count();
     lw_sprite_t *sprite=lw_sprite_create(screen,180,160,256);
     CHECK("sprite owns one timer",sprite && timer_count()==before+1);
-    CHECK("sprite cannot upscale",!lw_sprite_create(screen,0,0,257));
+    CHECK("sprite rejects beyond approved proportion ceiling",!lw_sprite_create(screen,0,0,321));
     CHECK("play loop",lw_sprite_play(sprite,&s_loop));
     CHECK("starts on frame zero",lw_sprite_frame(sprite)==0);
     CHECK("first interval",lw_sprite_seek(sprite,79) && lw_sprite_frame(sprite)==0);

@@ -74,3 +74,15 @@ __pycache__/
 # Release assembly output: rebuilt on demand by tools/package_v4_3_release.ps1.
 # Only dist/littleworld-v4-sd (the verified SD package) is committed.
 /dist/release-v4-3/
+
+/reports/ui-v2/v42-*/
+/assets/visual-v4-2/generated/
+/reports/logs/meowa-skill-review/
+/reports/logs/v42-custom-workflow-catalog.json
+/reports/visual-v4-2/preflight/
+/reports/visual-v4-2/contact-review/
+/reports/visual-v4-2/scale-review/
+/reports/visual-v4-2/interface-check/
+/reports/visual-v4-2/meowa-first/
+/reports/visual-v4-2/meowa-second/
+/reports/ui-v2/v43-*/

@@ -23,7 +23,12 @@ extern "C" {
 #endif
 
 typedef struct {
-    /* Wall clock as the user should see it. */
+    /* Wall clock as the user should see it. The date travels with the time so
+     * the status bar, the lock screen and the anniversary counter can never
+     * straddle a midnight they disagree about. */
+    int year;
+    unsigned month;
+    unsigned day;
     unsigned hour;
     unsigned minute;
     /* Where it came from and whether it may be presented as the real time. */

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 88 px
  * Bpp: 4
- * Opts: --font NotoSansSC-Regular.otf --charset D:\LittleWorld-V4-Visual\build\fontgen\charset-symbols.txt --size 88 --output firmware/components/lw_ui/fonts/lw_font_88.c
+ * Opts: --font NotoSansSC-Regular.otf --charset D:\LittleWorld-V4-2\build\fontgen\charset-symbols.txt --size 88 --output firmware/components/lw_ui/fonts/lw_font_88.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE

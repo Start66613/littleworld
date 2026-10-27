@@ -130,7 +130,7 @@ static void deleted(lv_event_t *event)
 
 lw_sprite_t *lw_sprite_create(lv_obj_t *parent, int x, int y, uint16_t scale)
 {
-    if (!parent || !scale || scale>256) return NULL; /* Export a larger asset rather than upscale. */
+    if (!parent || !scale || scale>320) return NULL; /* User-approved V4.3 proportion correction, bounded to 1.25x. */
     lw_sprite_t *s=lv_malloc_zeroed(sizeof(*s));
     if (!s) return NULL;
     s->image=lv_image_create(parent);
@@ -182,7 +182,7 @@ void lw_sprite_set_enabled(lw_sprite_t *s, bool enabled)
     else { s->epoch=lv_tick_get()-s->elapsed; if (!s->paused && !s->finished && s->clip && !s->external) lv_timer_resume(s->timer); }
 }
 bool lw_sprite_set_pixel_mode(lw_sprite_t *s)
-{ if (!s || s->scale!=256) return false; lv_image_set_antialias(s->image,false); return true; }
+{ if (!s) return false; lv_image_set_antialias(s->image,false); return true; }
 void lw_sprite_set_anchor(lw_sprite_t *s,int x,int y)
 {
     if (!s) return;

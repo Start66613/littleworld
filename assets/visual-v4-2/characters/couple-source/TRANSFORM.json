@@ -1,0 +1,43 @@
+{
+  "source_sha256": "7ff30b8da991414876bee03d2629f534cd76e8056c3e4e25157d024c4fdc069d",
+  "source_bbox": [
+    710,
+    240,
+    1328,
+    911
+  ],
+  "source_canvas": [
+    2048,
+    1152
+  ],
+  "source_was_coordinate_aligned": false,
+  "conversion": "one uniform integer 1/3 sprite reduction (rounding last row), transparent padding; no anatomy edits or room crops",
+  "sprite_canvas": [
+    320,
+    320
+  ],
+  "alpha_bbox": [
+    57,
+    50,
+    263,
+    274
+  ],
+  "anchor": [
+    160,
+    274
+  ],
+  "room_contact_anchor": [
+    516,
+    360
+  ],
+  "source_contact_master": "generated/couple-sofa-contact",
+  "expected_joint_visible_size_from_contact_keyframe": [
+    208,
+    224
+  ],
+  "export_visible_size": [
+    206,
+    224
+  ],
+  "art_acceptance": "requires actual LVGL contact/identity review; not a pixel-identical overlay"
+}

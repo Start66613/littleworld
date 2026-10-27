@@ -13,6 +13,10 @@
 #include "lw_widgets.h"
 #include "lw_ui_content.h"
 #include "lw_os_design.h"
+#include "lw_polish.h"
+#include "lw_os.h"
+#include "lw_skin.h"
+LV_FONT_DECLARE(lw_font_88);
 #include "lw/lw_memories.h"
 #include "lw/lw_time.h"
 
@@ -37,13 +41,20 @@ bool lw_memories_set_source(const lw_memory_t *items,unsigned count)
 
 static void build_tabs(lv_obj_t *content);
 static void build_page(void);
+static void book_fade(void *o,int32_t alpha){lv_obj_set_style_opa(o,(lv_opa_t)alpha,0);}
+static void book_closed(lv_anim_t *a){if(s_detail_overlay==a->var)s_detail_overlay=NULL;lv_obj_delete(a->var);lw_os_scene_focus(false);}
 
 static void close_overlay_cb(lv_event_t *event)
 {
     lv_obj_t *overlay = (lv_obj_t *)lv_event_get_user_data(event);
     if (overlay != NULL) {
+        if(lw_shell_host_active() && lw_os_motion_get()==LW_MOTION_FULL){
+            lv_obj_t *card=lv_obj_get_parent(lv_event_get_target_obj(event));lw_os_motion(card,LW_MOVE_DISMISS);
+            lv_anim_delete(overlay,book_fade);lv_anim_t a;lv_anim_init(&a);lv_anim_set_var(&a,overlay);lv_anim_set_exec_cb(&a,book_fade);lv_anim_set_values(&a,255,0);lv_anim_set_duration(&a,180);lv_anim_set_completed_cb(&a,book_closed);lv_anim_start(&a);return;
+        }
         lv_obj_delete(overlay);
         if (s_detail_overlay==overlay) s_detail_overlay=NULL;
+        lw_os_scene_focus(false);
     }
 }
 
@@ -169,12 +180,13 @@ static void build_tab_today(lv_obj_t *page)
     lw_state_t *state = lw_app_state();
 
     lv_obj_t *hero = lw_card(page, 32, 16, 470, 340);
+    if (lw_shell_host_active()) lw_polish_paper(hero,true);
     lw_os_icon(hero,OS_I_HEART,372,26,58,palette->accent);
     lw_text(hero, "我们在一起", &lw_font_18, palette->dim, 32, 30);
-    s_days_label = lw_text(hero, "--", &lw_font_44, palette->accent_deep, 32, 62);
+    s_days_label = lw_text(hero, "--", lw_shell_host_active() ? &lw_font_88 : &lw_font_44, palette->accent_deep, 32, 62);
     s_days_unit = lw_text(hero, "天", &lw_font_28, palette->accent_deep, 0, 0);
     lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
-    s_next_label = lw_text(hero, "", &lw_font_18, palette->dim, 32, 136);
+    s_next_label = lw_text(hero, "", &lw_font_18, palette->dim, 32, lw_shell_host_active() ? 166 : 136);
     lw_text_wrap(hero,"这张卡片记录一起走过的日子。\n真实故事可以慢慢补进来。",&lw_font_22,palette->text,32,200,400);
 
     lv_obj_t *edit_card = lw_card(page, 522, 16, 470, 208);
@@ -241,24 +253,30 @@ static void memory_clicked(lv_event_t *event)
     lv_obj_remove_style_all(overlay);
     lv_obj_set_size(overlay, LW_SCREEN_W, LW_SCREEN_H);
     lv_obj_set_style_bg_color(overlay, lv_color_hex(0x2A1E26), 0);
-    lv_obj_set_style_bg_opa(overlay, LV_OPA_50, 0);
+    lv_obj_set_style_bg_opa(overlay, 72, 0);
     lv_obj_add_flag(overlay, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_move_foreground(overlay);
     s_detail_overlay=overlay;
+    lw_os_scene_focus(true);
 
-    lv_obj_t *card = lw_card(overlay, 0, 0, 560, 380);
+    bool modern=lw_shell_host_active() && lw_assets_find("v43skin.atlas");
+    lv_obj_t *card = lw_card(overlay, 0, 0, modern ? 528 : 560, modern ? 282 : 380);
+    if (lw_shell_host_active() && !modern) lw_polish_paper(card,true);
     lv_obj_center(card);
-    lw_os_motion(card,LW_MOVE_CARD);
+    bool book=modern ? lw_skin_place(card,SK_BOOK,24,20)!=NULL : lw_shell_host_active() && lw_polish_art(card,1,8,14);
+    if (book) {lv_obj_set_style_bg_opa(card,0,0);lv_obj_set_style_border_width(card,0,0);lv_obj_set_style_shadow_opa(card,0,0);}
+    lw_os_motion(card,LW_MOVE_PAPER);
 
-    lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, 32, 28);
+    lv_obj_t *date = lw_text(card, "", &lw_font_18, palette->dim, modern ? 112 : book ? 92 : 32, modern ? 52 : book ? 60 : 28);
     lv_label_set_text_fmt(date, "%04d-%02d-%02d", memory->date.year, memory->date.month, memory->date.day);
-    lv_obj_t *title=lw_text(card,memory->title,&lw_font_28,palette->text,32,58); lv_obj_set_size(title,496,44); lv_label_set_long_mode(title,LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_t *body=lw_os_box(card,32,110,496,180,0,0,0); lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE); lv_obj_set_scroll_dir(body,LV_DIR_VER); lv_obj_set_scrollbar_mode(body,LV_SCROLLBAR_MODE_AUTO);
-    lw_text_wrap(body,memory->body,&lw_font_22,palette->text,0,0,476);
-    lw_text(card, "照片位：以后放真实照片", &lw_font_18, palette->dim, 32, 300);
+    lv_obj_t *title=lw_text(card,memory->title,book ? &lw_font_22 : &lw_font_28,palette->text,modern ? 102 : book ? 92 : 32,modern ? 90 : book ? 104 : 58); lv_obj_set_size(title,book ? 152 : 496,book ? 66 : 44); lv_label_set_long_mode(title,LV_LABEL_LONG_MODE_DOTS);
+    lv_obj_t *body=lw_os_box(card,modern ? 306 : book ? 310 : 32,modern ? 48 : book ? 60 : 110,modern ? 154 : book ? 180 : 496,modern ? 132 : book ? 176 : 180,0,0,0); lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE); lv_obj_set_scroll_dir(body,LV_DIR_VER); lv_obj_set_scrollbar_mode(body,LV_SCROLLBAR_MODE_AUTO);
+    lw_text_wrap(body,memory->body,book ? &lw_font_18 : &lw_font_22,palette->text,0,0,modern ? 150 : book ? 160 : 476);
+    if(!modern)lw_text_wrap(card, "暂无配图", &lw_font_18, palette->dim,book ? 92 : 32,book ? 206 : 300,book ? 152 : 390);
 
-    lv_obj_t *close = lw_button(card, "收起", 130, 46, palette->accent, 0xFFFFFF, &lw_font_18);
-    lv_obj_align(close, LV_ALIGN_BOTTOM_RIGHT, -28, -24);
+    lv_obj_t *close = lw_button(card, "收起", modern ? 80 : 130, modern ? 48 : 46, palette->accent, modern ? 0x75595c : 0xFFFFFF, &lw_font_18);
+    if(modern){lw_skin_button(close,SK_CLOSE,SK_CLOSE,SK_CLOSE);lw_skin_place(card,SK_BOOKMARK,257,196);}
+    lv_obj_align(close, LV_ALIGN_BOTTOM_RIGHT, modern ? -38 : book ? -68 : -28, modern ? -8 : book ? -48 : -24);
     lv_obj_add_event_cb(close, close_overlay_cb, LV_EVENT_CLICKED, overlay);
 }
 
@@ -281,6 +299,7 @@ static void build_tab_timeline(lv_obj_t *page)
     for (int i = 0; i < count; i++) {
         const lw_memory_t *memory = stories ? &stories[i] : lw_memories_get(i);
         lv_obj_t *row = lw_card(list, 0, 0, 940, 86);
+        if (lw_shell_host_active()) lw_polish_paper(row,false);
         lv_obj_set_style_radius(row, 18, 0);
         lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(row, memory_clicked, LV_EVENT_CLICKED, (void *)memory);
@@ -334,6 +353,8 @@ static void build_tab_surprise(lv_obj_t *page)
     lv_obj_set_style_bg_color(ribbon, lv_color_hex(0xFFFFFF), 0);
     lv_obj_set_style_bg_opa(ribbon, LV_OPA_80, 0);
     lv_obj_remove_flag(ribbon, LV_OBJ_FLAG_CLICKABLE);
+
+    if (lw_shell_host_active() && lw_polish_art(card,4,-36,-82)) lv_obj_add_flag(box,LV_OBJ_FLAG_HIDDEN);
 
     lw_text_wrap(card, lw_surprise_hint(), &lw_font_18, palette->dim, 40, 196, 390);
 
