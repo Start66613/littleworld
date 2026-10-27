@@ -22,7 +22,12 @@ $total = -1
 
 for ($pass = 1; $pass -le $Passes; $pass++) {
     $sp = New-Object System.IO.Ports.SerialPort($Port, $Baud, [System.IO.Ports.Parity]::None, 8, [System.IO.Ports.StopBits]::One)
-    $sp.ReadTimeout = 1500
+    # 4 KiB is the .NET default and it overflows while the board streams base64
+    # at full speed, which loses whole runs of lines (observed: 0..4 and
+    # 1902..1906 missing in one pass). Read in byte batches instead of by line:
+    # ReadLine() also discards the partial line whenever ReadTimeout fires.
+    $sp.ReadBufferSize = 1MB
+    $sp.ReadTimeout = 500
     $sp.NewLine = "`n"
     $sp.DtrEnable = $false
     $sp.RtsEnable = $false
@@ -33,20 +38,29 @@ for ($pass = 1; $pass -le $Passes; $pass++) {
         $sp.WriteLine($Command)
         $deadline = (Get-Date).AddMilliseconds($PassTimeoutMs)
         $sawEnd = $false
+        $pending = New-Object System.Text.StringBuilder
+        $buf = New-Object byte[] 8192
         while (-not $sawEnd -and (Get-Date) -lt $deadline) {
-            $line = $null
-            try { $line = $sp.ReadLine() } catch { continue }
-            if ($null -eq $line) { continue }
-            $line = $line.TrimEnd("`r")
-            if ($line -match '^LCAP END (\d+)$') {
-                $total = [int]$Matches[1]
-                $sawEnd = $true
-                continue
-            }
-            if ($line -match '^LCAP FAIL (.+)$') { throw "board reported: $line" }
-            if ($line -match '^LCAP (\d+) ([A-Za-z0-9+/=]+)$') {
-                $idx = [int]$Matches[1]
-                if (-not $chunks.ContainsKey($idx)) { $chunks[$idx] = $Matches[2] }
+            $n = 0
+            try { $n = $sp.Read($buf, 0, $buf.Length) } catch { $n = 0 }
+            if ($n -le 0) { continue }
+            [void]$pending.Append([System.Text.Encoding]::ASCII.GetString($buf, 0, $n))
+            while ($true) {
+                $text = $pending.ToString()
+                $nl = $text.IndexOf("`n")
+                if ($nl -lt 0) { break }
+                $line = $text.Substring(0, $nl).TrimEnd("`r")
+                [void]$pending.Remove(0, $nl + 1)
+                if ($line -match '^LCAP END (\d+)$') {
+                    $total = [int]$Matches[1]
+                    $sawEnd = $true
+                    break
+                }
+                if ($line -match '^LCAP FAIL (.+)$') { throw "board reported: $line" }
+                if ($line -match '^LCAP (\d+) ([A-Za-z0-9+/=]+)$') {
+                    $idx = [int]$Matches[1]
+                    if (-not $chunks.ContainsKey($idx)) { $chunks[$idx] = $Matches[2] }
+                }
             }
         }
     } finally {
