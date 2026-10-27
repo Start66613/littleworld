@@ -142,10 +142,10 @@ New-Item -ItemType Directory -Force -Path $sdOut | Out-Null
 $sdSource = Join-Path $repoRoot 'dist/littleworld-v4-sd'
 $haveSd = $false
 if ($RepackSd -or -not (Test-Path -LiteralPath (Join-Path $sdSource 'littleworld/littleworld-v4.json'))) {
-    Write-Host 'packaging SD resources from assets/visual-v4/runtime ...'
+    Write-Host 'packaging SD resources from assets/visual-v4-2 + visual-v4-3 + visual-v4 ...'
     $packLog = & $python (Join-Path $PSScriptRoot 'package_v4_sd.py') --out $sdOut 2>&1
     if ($LASTEXITCODE -ne 0) {
-        $gaps.Add('the SD resource package could not be built from assets/visual-v4/runtime; the sdcard section is incomplete')
+        $gaps.Add('the SD resource package could not be built from the V4.3 asset directories; the sdcard section is incomplete')
         $packLog | ForEach-Object { Write-Host "  $_" }
     } else {
         $haveSd = $true

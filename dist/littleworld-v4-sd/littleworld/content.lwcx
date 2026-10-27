@@ -1,8 +1,16 @@
+# Little World 内容文件 —— 示例（不是真实回忆）
+#
+# 这个文件是仓库自带的样板，用来说明格式。里面的每一条都标了「示例」，
+# 请把它复制到你自己的目录再改成真实内容，不要把私人内容提交到仓库。
+#
+# 格式说明见 docs/CONTENT_FORMAT.md，或者直接运行：
+#   python tools/package_v4_content.py --init content
+#
 LWCX0001
 schema=1
 content_version=1
 anniversary=2024-10-25
-welcome=这里收着我们一起走过的日子。\\n慢一点翻。
+welcome=这里收着我们一起走过的日子。\n慢一点翻。
 
 [memory]
 date=2024-10-25

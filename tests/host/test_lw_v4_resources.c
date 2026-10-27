@@ -72,17 +72,22 @@ typedef struct {
 } clip_spec_t;
 
 /* Writes a LWPX pack whose frame payload is a recognisable pattern per frame so
- * the reader can be checked for off-by-one frame addressing. */
-static bool write_pack(const char *fileName, const clip_spec_t *clips, unsigned clip_count,
-                       bool truncate)
+ * the reader can be checked for off-by-one frame addressing.
+ *
+ * Geometry is a parameter, not a constant: the real V4.3 packs are 256x256
+ * (characters), 320x320 (daily/dogbed), 544x352 (UI sheet) and 512x544 (skin
+ * atlas), and a loader that only accepts 256x256 rejects three of the four. */
+static bool write_pack_geometry(const char *fileName, const clip_spec_t *clips, unsigned clip_count,
+                                bool truncate, unsigned width, unsigned height)
 {
     snprintf(s_path, sizeof(s_path), "%s/%s", fixture_dir(), fileName);
     FILE *f = fopen(s_path, "wb");
     if (!f) return false;
+    size_t frame_bytes = (size_t)width * height * 3u;
     uint8_t header[HEADER_BYTES] = {0};
     memcpy(header, "LWPX0001", 8);
-    put16(header + 8, 256);
-    put16(header + 10, 256);
+    put16(header + 8, width);
+    put16(header + 10, height);
     put16(header + 12, clip_count);
     fwrite(header, 1, sizeof(header), f);
 
@@ -91,27 +96,33 @@ static bool write_pack(const char *fileName, const clip_spec_t *clips, unsigned 
         uint8_t record[RECORD_BYTES] = {0};
         memcpy(record, clips[i].name, strlen(clips[i].name));
         put16(record + 32, clips[i].frames);
-        put16(record + 34, 128);
+        put16(record + 34, (unsigned)(width / 2u));
         put16(record + 36, (unsigned)clips[i].anchor_y);
         record[38] = (uint8_t)clips[i].loop;
         put32(record + 40, offset);
         for (unsigned k = 0; k < clips[i].frames && k < 32u; k++) put16(record + 44 + k * 2, clips[i].duration);
         fwrite(record, 1, sizeof(record), f);
-        offset += clips[i].frames * FRAME_BYTES;
+        offset += clips[i].frames * (unsigned)frame_bytes;
     }
 
     unsigned frames = 0;
     for (unsigned i = 0; i < clip_count; i++) frames += clips[i].frames;
-    uint8_t *frame = malloc(FRAME_BYTES);
+    uint8_t *frame = malloc(frame_bytes);
     if (!frame) { fclose(f); return false; }
     for (unsigned n = 0; n < frames; n++) {
-        memset(frame, (int)(n & 0xffu), FRAME_BYTES);
-        size_t write = truncate && n + 1u == frames ? FRAME_BYTES / 2u : FRAME_BYTES;
+        memset(frame, (int)(n & 0xffu), frame_bytes);
+        size_t write = truncate && n + 1u == frames ? frame_bytes / 2u : frame_bytes;
         fwrite(frame, 1, write, f);
     }
     free(frame);
     fclose(f);
     return true;
+}
+
+static bool write_pack(const char *fileName, const clip_spec_t *clips, unsigned clip_count,
+                       bool truncate)
+{
+    return write_pack_geometry(fileName, clips, clip_count, truncate, 256u, 256u);
 }
 
 static bool write_scene(const char *fileName, unsigned width, unsigned height)
@@ -394,7 +405,170 @@ static void test_pack_rejections(void)
     lw_pack_registry_reset();
 }
 
+/* ------------------------------------------------- dynamic geometry tests --- */
+
+/* The four geometries the V4.3 art actually uses. Before the loader read the
+ * header, three of these were rejected as bad-geometry on hardware while the
+ * Windows build - which always read the header - showed the art fine. That
+ * asymmetry is the bug this test locks down. */
+static void test_pack_geometry(void)
+{
+    static const struct { const char *file; const char *actor; const char *clip;
+                          unsigned width, height; int anchor; } shapes[] = {
+        {"g-char.lwp", "male", "idle", 256u, 256u, 225},
+        {"g-daily.lwp", "v42", "couple.seated", 320u, 320u, 274},
+        {"g-ui.lwp", "v42ui", "sheet", 544u, 352u, 176},
+        {"g-skin.lwp", "v43skin", "atlas", 512u, 544u, 272},
+    };
+    lw_pack_registry_reset();
+    for (unsigned i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++) {
+        clip_spec_t clip = {shapes[i].clip, 1, shapes[i].anchor, 0, 100};
+        char label[64];
+        snprintf(label, sizeof(label), "geometry %ux%u written", shapes[i].width, shapes[i].height);
+        CHECK(label, write_pack_geometry(shapes[i].file, &clip, 1, false, shapes[i].width,
+                                         shapes[i].height));
+        snprintf(label, sizeof(label), "geometry %ux%u accepted", shapes[i].width, shapes[i].height);
+        CHECK(label, lw_pack_registry_add(fixture_dir(), shapes[i].file, shapes[i].actor, NULL,
+                                          NULL) == LW_PACK_OK);
+    }
+
+    /* All four geometries co-exist in one registry: the pack families are
+     * different actors, so nothing collides. Nothing is visible through
+     * lw_assets_find() until the pending table is published. */
+    CHECK("four pack families publish", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+
+    for (unsigned i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++) {
+        char id[64];
+        snprintf(id, sizeof(id), "%s.%s", shapes[i].actor, shapes[i].clip);
+        const lw_asset_spec_t *spec = lw_assets_find(id);
+        char label[64];
+        snprintf(label, sizeof(label), "geometry %ux%u in spec", shapes[i].width, shapes[i].height);
+        CHECK(label, spec && spec->width == shapes[i].width && spec->height == shapes[i].height);
+        /* The frame stride is derived from the spec, so a loader that stored the
+         * right width and height but a constant stride still fails here. */
+        size_t expect = (size_t)shapes[i].width * shapes[i].height * 3u;
+        snprintf(label, sizeof(label), "geometry %ux%u frame bytes", shapes[i].width, shapes[i].height);
+        CHECK(label, lw_asset_frame_bytes(spec) == expect);
+    }
+
+    const lw_asset_spec_t *skin = lw_assets_find("v43skin.atlas");
+    CHECK("skin atlas registered", skin != NULL && skin->width == 512u && skin->height == 544u);
+    /* The atlas is 835,584 B; the old 786,432 B budget refused exactly this.
+     * One acquire, one release: a leaked lease would block the reset below and
+     * poison every later test in the file. */
+    lw_asset_lease_t *lease = lw_asset_acquire("v43skin.atlas", 0);
+    CHECK("skin atlas is acquirable", lease != NULL);
+    if (lease) lw_asset_release(lease);
+    lw_pack_registry_reset();
+
+    /* A pack that claims more than the registry accepts must fail at parse
+     * time, not at register time, so the reason names the file. */
+    static const clip_spec_t wide = {"wide", 1, 10, 0, 100};
+    CHECK("over-wide fixture", write_pack_geometry("g-wide.lwp", &wide, 1, false, 2000u, 64u));
+    CHECK("over-wide refused", lw_pack_registry_add(fixture_dir(), "g-wide.lwp", "male", NULL,
+                                                    NULL) == LW_PACK_ERR_GEOMETRY);
+    static const clip_spec_t tall = {"tall", 1, 10, 0, 100};
+    CHECK("over-tall fixture", write_pack_geometry("g-tall.lwp", &tall, 1, false, 64u, 700u));
+    CHECK("over-tall refused", lw_pack_registry_add(fixture_dir(), "g-tall.lwp", "male", NULL,
+                                                    NULL) == LW_PACK_ERR_GEOMETRY);
+    /* Zero geometry is the classic uninitialised header. */
+    static const clip_spec_t empty = {"empty", 1, 0, 0, 100};
+    CHECK("zero-geometry fixture", write_pack_geometry("g-zero.lwp", &empty, 1, false, 0u, 0u));
+    CHECK("zero geometry refused", lw_pack_registry_add(fixture_dir(), "g-zero.lwp", "male", NULL,
+                                                        NULL) == LW_PACK_ERR_GEOMETRY);
+    lw_pack_registry_reset();
+}
+
 /* --------------------------------------------------------- resource tests --- */
+
+static void test_pack_clip_budget(void)
+{
+    /* The frozen V4.3 character set is six files: male.lwp (7 clips),
+     * qianqian-base.lwp (13 clips), qianqian-wave.lwp (1), daily.lwp (8),
+     * ui.lwp (1) and skin.lwp (1) - 31 ids in 5 actor slots. Both caps used to
+     * be too small for that: MAX_CLIPS 8 refused qianqian's base pack outright
+     * (bad-clip-count, so she silently fell back to one embedded idle frame)
+     * and MAX_ACTORS 2 refused the three visual packs. This test writes packs
+     * with the real record counts and insists every one of them parses and is
+     * addressable, because "the pack is on the card" and "the pack is usable"
+     * are different claims and only the second one shows up on screen. */
+    lw_pack_registry_reset();
+
+    /* 13 clips with the real names and frame counts of qianqian-base.lwp. */
+    static const clip_spec_t base[] = {
+        {"idle",            8, 226, 1, 125},
+        {"sleep",           4, 216, 1, 200},
+        {"sleep_enter",    13, 226, 0, 100},
+        {"sleep_idle",      8, 216, 1, 200},
+        {"sleep_turn",     16, 216, 0, 120},
+        {"walk_down",       8, 226, 1, 100},
+        {"walk_down_left",  8, 226, 1, 100},
+        {"walk_down_right", 8, 226, 1, 100},
+        {"walk_left",       8, 226, 1, 100},
+        {"walk_right",      8, 226, 1, 100},
+        {"walk_up",         8, 226, 1, 100},
+        {"walk_up_left",    8, 226, 1, 100},
+        {"walk_up_right",   8, 226, 1, 100},
+    };
+    CHECK("13-clip base pack written",
+          write_pack_geometry("c-base.lwp", base, 13, false, 256u, 256u));
+    CHECK("13-clip base pack accepted",
+          lw_pack_registry_add(fixture_dir(), "c-base.lwp", "qianqian", NULL, NULL) == LW_PACK_OK);
+    unsigned count = 0;
+    const lw_named_clip_t *clips = lw_pack_registry_clips("qianqian", &count);
+    CHECK("13-clip base pack keeps all clips", count == 13);
+    CHECK("last base clip addressable", clips && !strcmp(clips[12].name, "walk_up_right"));
+
+    /* The wave pack appends to the same actor: 13 + 1 must still fit, which is
+     * the case the old cap could not represent at all. */
+    static const clip_spec_t extra[] = {{"wave", 16, 226, 0, 100}};
+    CHECK("wave append written", write_pack_geometry("c-wave.lwp", extra, 1, false, 256u, 256u));
+    CHECK("wave append accepted",
+          lw_pack_registry_add(fixture_dir(), "c-wave.lwp", "qianqian", NULL, NULL) == LW_PACK_OK);
+    clips = lw_pack_registry_clips("qianqian", &count);
+    CHECK("base plus wave is 14 clips", count == 14);
+
+    /* Five actor slots: two characters plus the three visual namespaces. Each
+     * gets its own geometry, exactly like the real files. */
+    static const clip_spec_t one[] = {{"only", 1, 100, 0, 100}};
+    static const struct { const char *file, *actor; unsigned w, h; } families[] = {
+        {"c-male.lwp", "male", 256u, 256u},
+        {"c-v42.lwp", "v42", 320u, 320u},
+        {"c-v42ui.lwp", "v42ui", 544u, 352u},
+        {"c-v43skin.lwp", "v43skin", 512u, 544u},
+    };
+    for (unsigned i = 0; i < sizeof(families) / sizeof(families[0]); i++) {
+        char label[72];
+        snprintf(label, sizeof(label), "%s written", families[i].file);
+        CHECK(label, write_pack_geometry(families[i].file, one, 1, false, families[i].w,
+                                         families[i].h));
+        snprintf(label, sizeof(label), "%s accepted", families[i].file);
+        CHECK(label, lw_pack_registry_add(fixture_dir(), families[i].file, families[i].actor, NULL,
+                                          NULL) == LW_PACK_OK);
+    }
+    CHECK("all 31 specs publish", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+    CHECK("base idle resolvable", lw_assets_find("qianqian.idle") != NULL);
+    CHECK("base walk resolvable", lw_assets_find("qianqian.walk_up_right") != NULL);
+    CHECK("wave still resolvable", lw_assets_find("qianqian.wave") != NULL);
+    CHECK("daily family resolvable", lw_assets_find("v42.only") != NULL);
+    CHECK("ui family resolvable", lw_assets_find("v42ui.only") != NULL);
+    CHECK("skin family resolvable", lw_assets_find("v43skin.only") != NULL);
+
+    /* A pack that still exceeds the clip cap must be refused by name, not
+     * silently truncated: truncation would leave an actor with a partial clip
+     * table and no error anywhere. */
+    lw_pack_registry_reset();
+    static clip_spec_t too_many[33];
+    for (unsigned i = 0; i < 33; i++) {
+        static char names[33][16];
+        snprintf(names[i], sizeof(names[i]), "clip%u", i);
+        too_many[i] = (clip_spec_t){names[i], 1, 10, 0, 100};
+    }
+    CHECK("33-clip pack written", write_pack_geometry("c-over.lwp", too_many, 33, false, 64u, 64u));
+    CHECK("33 clips refused", lw_pack_registry_add(fixture_dir(), "c-over.lwp", "male", NULL, NULL)
+                                  == LW_PACK_ERR_CLIP_COUNT);
+    lw_pack_registry_reset();
+}
 
 static void test_resource_ok(void)
 {
@@ -671,6 +845,8 @@ int main(void)
     test_pack_append_reads_right_file();
     test_pack_reset_refuses_live_lease();
     test_pack_rejections();
+    test_pack_geometry();
+    test_pack_clip_budget();
     test_resource_ok();
     test_resource_version_gate();
     test_resource_missing_and_broken();

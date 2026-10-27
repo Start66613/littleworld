@@ -86,3 +86,6 @@ __pycache__/
 /reports/visual-v4-2/meowa-first/
 /reports/visual-v4-2/meowa-second/
 /reports/ui-v2/v43-*/
+
+# Private card build (contains the private qianqian-base.lwp; never publish)
+/dist/littleworld-v4-sd-private/

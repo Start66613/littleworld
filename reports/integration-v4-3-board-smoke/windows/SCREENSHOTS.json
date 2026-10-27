@@ -1,0 +1,82 @@
+[
+  {
+    "file": "01-desktop.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 357405,
+    "sha256": "848e97f0b72b0bd155e7b5892c1e0b41280ffb11165f6f776129c665536fa2d0",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "02-control-center.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 260777,
+    "sha256": "d8373b7646715e6a366b2955ac339b0db56265afbb76a95f52d612b2df2a9809",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "06-lockscreen.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 172178,
+    "sha256": "975ab229f5c7f72f987ecf27f358a56f85cf8a5b8a8753e493b31be02e425d92",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "07-pixel-world.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 348080,
+    "sha256": "0ed0711526c8bf2927d3fa4e40c3b4a0c423e596f68dce02b65f260e4effe050",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "11-pet-idle.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 447697,
+    "sha256": "7f962d12aa60e867cca1631be692b750380199f7d0490cb37aa191a14fd45675",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "17-rpg-room.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 470246,
+    "sha256": "efa16bc69f6d0da258e280b382e95021ecf0308bddf94fdaabc5253645e759f1",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "v4-greet-00.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 351627,
+    "sha256": "76854135f830746149acd5f24fcd14229d1f15852252a574cf1498bf9dd54a14",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "v43-book-open-00.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 174394,
+    "sha256": "0a9ee0ed3667660123e4daa49cfe1b34a01bdc909d5857c286fbf73e6932aee8",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "20-rpg-reward.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 387320,
+    "sha256": "86b367af5b894e7894a241834fb9abc2a4e6c26bdc7492f67ce46d6d340a31f8",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "21-album-empty.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 142638,
+    "sha256": "d186230350dc8056538c83a6b4f9e2c3003799ecd1fcafa4c9fe2df19b9d4190",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  }
+]

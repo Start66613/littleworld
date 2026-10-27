@@ -21,7 +21,7 @@ Usage:
     python tools/package_v4_sd.py                      # build dist/littleworld-v4-sd
     python tools/package_v4_sd.py --verify-only        # verify the built package
     python tools/package_v4_sd.py --verify-only --target <dir>
-    python tools/package_v4_sd.py --source <dir> --out <dir> [--json]
+    python tools/package_v4_sd.py --source <dir> [--source <dir2>] --out <dir> [--json]
 """
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ import struct
 import subprocess
 import sys
 from pathlib import Path
+from typing import Sequence
 
 # ---------------------------------------------------------------------------
 # Contract constants — keep in sync with firmware/lw_storage/include/lw_resource.h
@@ -50,23 +51,65 @@ SCENE_W, SCENE_H = 1024, 600
 THUMB_W, THUMB_H = 256, 150
 
 PACK_MAGIC = b"LWPX0001"
-PACK_W, PACK_H = 256, 256
+# The canvas size is NOT fixed: characters ship 256x256, the daily/dogbed pack
+# 320x320, the component sheet 544x352 and the skin atlas 512x544. The firmware
+# reads the geometry from the file header and bounds-checks it (lw_pack.c:
+# width<=1024, height<=600, frame<=1,250,000), so the packager has to use the
+# same rule or it rejects three of the four real packs.
+PACK_MAX_W, PACK_MAX_H = 1024, 600
+PACK_MAX_FRAME_BYTES = 1250000
 PACK_HEADER = 16
 PACK_RECORD = 108
-PACK_MAX_CLIPS = 6
+PACK_MAX_CLIPS = 32
 PACK_MAX_FRAMES = 32
-PACK_FRAME_BYTES = PACK_W * PACK_H * 3  # RGB565 + A8
 
 SCENE_FILES = [f"scene-{i}.lwr" for i in range(THEMES)] + [
     f"scene-{i}-thumb.lwr" for i in range(THEMES)
 ]
+# Two characters. qianqian arrives as a wave pack for every checkout; her 13-clip
+# base pack is private (see PRIVATE_FILES) and only lands in her one actor slot
+# when the private build is used.
 CHARACTER_FILES = ["male.lwp", "qianqian-wave.lwp"]
+# Optional visual packs: absent on an older card, but validated when present.
+VISUAL_FILES = ["daily.lwp", "ui.lwp", "skin.lwp"]
+# Auxiliary room scenes for the pet/daily and RPG pages (one full slot, so the
+# firmware loads exactly one of them at a time).
+AUX_SCENE_FILES = [
+    "daily-room.lwr",
+    "daily-room-day.lwr",
+    "daily-room-night.lwr",
+    "rpg-room.lwr",
+]
 REQUIRED = SCENE_FILES + CHARACTER_FILES
+OPTIONAL = VISUAL_FILES + AUX_SCENE_FILES
+# qianqian-base.lwp (22,218,124 B, 13 clips) is a PRIVATE source pack: Codex
+# froze it locally and explicitly asked that it is not published from a public
+# checkout. Without it qianqian still renders — the firmware falls back to its
+# embedded LWFA idle frame and then appends qianqian-wave.lwp — but she loses
+# sleep/walk. `--private` ships it and writes to a separate, gitignored output.
+PRIVATE_FILES = ["qianqian-base.lwp"]
+# Optional text content (memories / album / letters / dialogues). It is built by
+# tools/package_v4_content.py from content/*.lwcx, but the packer copies it in
+# as well so that re-running the packer can never silently drop the card's text.
+CONTENT_NAME = "content.lwcx"
+CONTENT_MAGIC = "LWCX0001"
 DIGEST_NAME = "littleworld-v4.sha256"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = REPO_ROOT / "assets" / "visual-v4" / "runtime"
+# The real V4.3 assets are split across three source directories: the frozen
+# characters live in visual-v4-2, the skin atlas in visual-v4-3, and the older
+# scenes/thumbnails in visual-v4. A single hard-coded source is what made the
+# old packager ship the 3-clip 5 MB male.lwp instead of the frozen 7-clip
+# 17.9 MB one, so every file is looked up across all of them, in this order.
+DEFAULT_SOURCES = [
+    REPO_ROOT / "assets" / "visual-v4-2" / "runtime",
+    REPO_ROOT / "assets" / "visual-v4-3" / "runtime",
+    REPO_ROOT / "assets" / "visual-v4" / "runtime",
+]
 DEFAULT_OUT = REPO_ROOT / "dist" / "littleworld-v4-sd"
+# content.lwcx is produced by tools/package_v4_content.py, not by the art export,
+# so it is resolved from the repo unless a source directory carries one.
+CONTENT_SOURCE = REPO_ROOT / "content" / CONTENT_NAME
 
 
 class Problem(Exception):
@@ -107,7 +150,7 @@ def check_scene(path: Path, w: int, h: int) -> list[str]:
 
 
 def check_lwp(path: Path) -> tuple[list[str], dict]:
-    """Mirror lw_pack_open(): magic, canvas, clip count, per-clip frames, size."""
+    """Mirror lw_pack_open(): magic, per-file geometry, clip count, frames, size."""
     problems: list[str] = []
     info: dict = {"clips": 0, "frames": 0}
     data = path.read_bytes()
@@ -118,8 +161,15 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
 
     w, h = struct.unpack_from("<HH", data, 8)
     clips = struct.unpack_from("<H", data, 12)[0]
-    if (w, h) != (PACK_W, PACK_H):
-        problems.append(f"{path.name}: 画布 {w}x{h}，应为 {PACK_W}x{PACK_H}")
+    if w == 0 or h == 0 or w > PACK_MAX_W or h > PACK_MAX_H:
+        return problems + [
+            f"{path.name}: 画布 {w}x{h}，应在 1x1..{PACK_MAX_W}x{PACK_MAX_H}"
+        ], info
+    frame_bytes = w * h * 3  # RGB565 + A8
+    if frame_bytes > PACK_MAX_FRAME_BYTES:
+        return problems + [
+            f"{path.name}: 单帧 {frame_bytes} 字节，超过固件上限 {PACK_MAX_FRAME_BYTES}"
+        ], info
     if clips == 0 or clips > PACK_MAX_CLIPS:
         return problems + [f"{path.name}: clip 数 {clips}，应在 1..{PACK_MAX_CLIPS}"], info
 
@@ -135,22 +185,35 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
         if not name:
             problems.append(f"{path.name}: 第 {i} 个 clip 名称为空")
         names.append(name)
-        # Byte 32.. of the record: u16 frames, u16 ?, u16 anchor_x, u16 anchor_y,
-        # u16 dur, ... (see lw_pack.c). Only frame count matters for sizing.
-        frames = struct.unpack_from("<H", data, off + 32)[0]
+        # Byte 32.. of the record: u16 frames, s16 anchor_x, s16 anchor_y,
+        # u8 loop, u32 offset, 32 x u16 durations (see lw_pack.c). The offset
+        # must be validated against the real frame stride, which is exactly the
+        # check that was missing while the canvas was assumed to be 256x256.
+        frames, anchor_x, anchor_y = struct.unpack_from("<Hhh", data, off + 32)
+        offset = struct.unpack_from("<I", data, off + 40)[0]
         if frames == 0 or frames > PACK_MAX_FRAMES:
             problems.append(
                 f"{path.name}: clip {name!r} 帧数 {frames}，应在 1..{PACK_MAX_FRAMES}"
             )
+        if anchor_x < 0 or anchor_y < 0 or anchor_x > w or anchor_y > h:
+            problems.append(
+                f"{path.name}: clip {name!r} 锚点 ({anchor_x},{anchor_y}) 超出 {w}x{h}"
+            )
+        if offset < PACK_HEADER + PACK_RECORD * clips:
+            problems.append(f"{path.name}: clip {name!r} 数据偏移 {offset} 落入记录区")
+        elif offset + frames * frame_bytes > len(data):
+            problems.append(
+                f"{path.name}: clip {name!r} 数据越界（{offset}+{frames}x{frame_bytes}）"
+            )
         total_frames += frames
 
-    expected = PACK_HEADER + PACK_RECORD * clips + total_frames * PACK_FRAME_BYTES
+    expected = PACK_HEADER + PACK_RECORD * clips + total_frames * frame_bytes
     if len(data) != expected:
         problems.append(
             f"{path.name}: 文件大小 {len(data)} 字节，按 {clips} clip / {total_frames} 帧"
-            f" 应为 {expected}（可能截断或帧数据损坏）"
+            f" / {w}x{h} 应为 {expected}（可能截断或帧数据损坏）"
         )
-    info = {"clips": clips, "frames": total_frames, "names": names}
+    info = {"clips": clips, "frames": total_frames, "names": names, "width": w, "height": h}
     return problems, info
 
 
@@ -206,17 +269,22 @@ def check_manifest(path: Path) -> tuple[list[str], dict]:
 # ---------------------------------------------------------------------------
 # Manifest / digest generation
 # ---------------------------------------------------------------------------
-def build_manifest(source: Path, digests: dict[str, str]) -> bytes:
-    """Firmware-compatible manifest: tiny, ASCII, schema/version first."""
+def build_manifest(root: Path, shipped: Sequence[str]) -> bytes:
+    """Firmware-compatible manifest: tiny, ASCII, schema/version first.
+
+    payloadBytes must describe what is actually on the card, so it is summed
+    over the shipped payload files (never over a fixed list: optional packs are
+    absent on older cards and the firmware compares this against the bytes it
+    can actually see).
+    """
+    payload = sum((root / name).stat().st_size for name in shipped)
     doc = {
         "schema": SCHEMA,
         "version": PACK_VERSION,
         "pack": "littleworld-v4",
         "themes": 3,
         "characters": 2,
-        "payloadBytes": sum(
-            (source / name).stat().st_size for name in REQUIRED
-        ),
+        "payloadBytes": payload,
     }
     text = json.dumps(doc, ensure_ascii=True, separators=(",", ":"), indent=2)
     raw = (text + "\n").encode("utf-8")
@@ -224,87 +292,126 @@ def build_manifest(source: Path, digests: dict[str, str]) -> bytes:
         raise Problem(
             f"生成的清单 {len(raw)} 字节超过 {MANIFEST_MAX_BYTES}，固件无法完整读取"
         )
-    del digests  # digests travel in the side-car file, not inside the manifest
     return raw
 
 
-def build_digest_file(entries: dict[str, str]) -> bytes:
-    lines = [f"{entries[name]}  {name}" for name in REQUIRED if name in entries]
+def build_digest_file(entries: dict[str, str], shipped: Sequence[str]) -> bytes:
+    lines = [f"{entries[name]}  {name}" for name in shipped if name in entries]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
 # ---------------------------------------------------------------------------
 # Package / verify
 # ---------------------------------------------------------------------------
-def validate_source(source: Path) -> tuple[list[str], dict[str, dict]]:
+def resolve_source(name: str, sources: Sequence[Path]) -> Path | None:
+    """Return the first source directory that actually contains `name`."""
+    for source in sources:
+        candidate = source / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def collect_files(
+    sources: Sequence[Path], include_private: bool = False
+) -> tuple[dict[str, Path], list[str], list[str]]:
+    """Resolve every required/optional file across the source directories."""
+    found: dict[str, Path] = {}
+    wanted = REQUIRED + OPTIONAL + (PRIVATE_FILES if include_private else [])
+    for name in wanted:
+        hit = resolve_source(name, sources)
+        if hit is not None:
+            found[name] = hit
+    missing_required = [n for n in REQUIRED if n not in found]
+    missing_optional = [n for n in (OPTIONAL + PRIVATE_FILES) if n not in found]
+    return found, missing_required, missing_optional
+
+
+def _check_by_kind(path: Path) -> tuple[list[str], dict]:
+    """Pick the right validator from the file name."""
+    if path.suffix == ".lwr":
+        w, h = (SCENE_W, SCENE_H) if "-thumb" not in path.name else (THUMB_W, THUMB_H)
+        return check_scene(path, w, h), {"bytes": path.stat().st_size, "kind": "scene"}
+    problems, info = check_lwp(path)
+    if path.name in CHARACTER_FILES or path.name in PRIVATE_FILES:
+        kind = "character"
+    else:
+        kind = "visual"
+    return problems, {"bytes": path.stat().st_size, "kind": kind, **info}
+
+
+def validate_source(
+    sources: Sequence[Path], include_private: bool = False
+) -> tuple[list[str], dict[str, dict]]:
     problems: list[str] = []
     details: dict[str, dict] = {}
-    if not source.is_dir():
-        return [f"资源目录不存在: {source}"], details
+    sources = [s for s in sources]
+    if not sources:
+        return ["没有提供资源目录"], details
+    existing = [s for s in sources if s.is_dir()]
+    if not existing:
+        return [f"资源目录不存在: {', '.join(str(s) for s in sources)}"], details
 
-    for name in REQUIRED:
-        if not (source / name).is_file():
-            problems.append(f"缺少资源文件: {name}")
+    found, missing_required, _missing_optional = collect_files(sources, include_private)
+    for name in missing_required:
+        problems.append(f"缺少资源文件: {name}")
 
-    for i in range(THEMES):
-        scene = source / f"scene-{i}.lwr"
-        thumb = source / f"scene-{i}-thumb.lwr"
-        if scene.is_file():
-            p = check_scene(scene, SCENE_W, SCENE_H)
-            problems += p
-            details[scene.name] = {"bytes": scene.stat().st_size, "kind": "scene"}
-        if thumb.is_file():
-            p = check_scene(thumb, THUMB_W, THUMB_H)
-            problems += p
-            details[thumb.name] = {"bytes": thumb.stat().st_size, "kind": "thumb"}
-
-    for name in CHARACTER_FILES:
-        path = source / name
-        if not path.is_file():
-            continue
-        p, info = check_lwp(path)
+    for name, path in found.items():
+        p, meta = _check_by_kind(path)
         problems += p
-        details[name] = {"bytes": path.stat().st_size, "kind": "character", **info}
+        details[name] = {**meta, "source": str(path.parent)}
 
     # 主题编号：只允许 scene-0/1/2，且不能多出 scene-3 之类
-    problems += check_theme_numbering(source)
+    for source in existing:
+        problems += check_theme_numbering(source)
     return problems, details
 
 
-def package(source: Path, out: Path) -> dict:
-    problems, details = validate_source(source)
+def package(sources: Sequence[Path], out: Path, include_private: bool = False) -> dict:
+    problems, details = validate_source(sources, include_private)
     if problems:
         raise Problem("\n".join(problems))
+    found, _missing_required, missing_optional = collect_files(sources, include_private)
+    # content.lwcx is produced by tools/package_v4_content.py, not by the art
+    # export, so it is resolved from the repo unless a source dir carries one.
+    if CONTENT_NAME not in found and CONTENT_SOURCE.is_file():
+        found[CONTENT_NAME] = CONTENT_SOURCE
 
     root = out / "littleworld"
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
 
-    for name in REQUIRED:
-        shutil.copy2(source / name, root / name)
+    shipped: list[str] = []
+    order = REQUIRED + OPTIONAL + PRIVATE_FILES + [CONTENT_NAME]
+    for name in order:
+        if name in found:
+            shutil.copy2(found[name], root / name)
+            shipped.append(name)
 
-    digests = {name: sha256_file(root / name) for name in REQUIRED}
-    manifest = build_manifest(source, digests)
+    digests = {name: sha256_file(root / name) for name in shipped}
+    manifest = build_manifest(root, shipped)
     (root / MANIFEST_NAME).write_bytes(manifest)
     digests[MANIFEST_NAME] = sha256_file(root / MANIFEST_NAME)
-    (root / DIGEST_NAME).write_bytes(build_digest_file(digests))
+    (root / DIGEST_NAME).write_bytes(build_digest_file(digests, shipped))
 
     # 清单本身也要过一次校验，确保固件读得懂
     mp, _ = check_manifest(root / MANIFEST_NAME)
     if mp:
         raise Problem("\n".join(mp))
 
-    manifest_problems, _ = validate_source(source)
+    manifest_problems, _ = validate_source([root], include_private=True)
     report = {
         "generatedAt": _dt.datetime.now().astimezone().isoformat(timespec="seconds"),
         "gitCommit": _git_commit(),
         "schema": SCHEMA,
         "packVersion": PACK_VERSION,
-        "source": str(source),
+        "sources": [str(s) for s in sources],
         "target": str(root),
+        "private": include_private,
         "manifestBytes": len(manifest),
         "totalBytes": sum((root / n).stat().st_size for n in digests),
+        "missingOptional": missing_optional,
         "files": {
             name: {
                 "bytes": (root / name).stat().st_size,
@@ -340,19 +447,24 @@ def verify(target: Path, require_manifest: bool = True) -> tuple[list[str], dict
     mp, mobj = check_manifest(root / MANIFEST_NAME)
     problems += mp
 
-    for i in range(THEMES):
-        s = root / f"scene-{i}.lwr"
-        t = root / f"scene-{i}-thumb.lwr"
-        if s.is_file():
-            problems += check_scene(s, SCENE_W, SCENE_H)
-        if t.is_file():
-            problems += check_scene(t, THUMB_W, THUMB_H)
+    for name in REQUIRED + OPTIONAL + PRIVATE_FILES:
+        path = root / name
+        if not path.is_file():
+            continue
+        if path.suffix == ".lwr":
+            w, h = (SCENE_W, SCENE_H) if "-thumb" not in name else (THUMB_W, THUMB_H)
+            problems += check_scene(path, w, h)
+            continue
+        probs, _info = check_lwp(path)
+        problems += probs
 
-    for name in CHARACTER_FILES:
-        p = root / name
-        if p.is_file():
-            probs, _info = check_lwp(p)
-            problems += probs
+    content = root / CONTENT_NAME
+    if content.is_file():
+        # content.lwcx is a *text* container: the magic is a line after the
+        # leading '#' comments, not the first eight bytes of the file.
+        text = content.read_text(encoding="utf-8", errors="replace")
+        if CONTENT_MAGIC not in text.splitlines():
+            problems.append(f"{CONTENT_NAME}: 缺少 {CONTENT_MAGIC} 行")
 
     problems += check_theme_numbering(root)
 
@@ -399,18 +511,27 @@ def _git_commit() -> str:
 
 def _readme_text() -> str:
     return (
-        "Little World V4.1 TF 卡资源包\n"
+        "Little World V4.3 TF 卡资源包\n"
         "================================\n\n"
         "把本目录下的 littleworld 文件夹整个复制到 TF 卡根目录，\n"
-        "插回设备后开机会自动校验并启用新的场景与角色动画。\n\n"
+        "插回设备后开机会自动校验并启用新的场景与角色动画。\n"
+        "最终卡上的路径必须是   /sdcard/littleworld/  （littleworld 并列于卡根，\n"
+        "不要再套一层 littleworld，即不存在 /sdcard/littleworld/littleworld）。\n\n"
         "目录结构（不要改名、不要改层级）：\n"
-        "  littleworld/littleworld-v4.json\n"
-        "  littleworld/scene-0.lwr  scene-0-thumb.lwr\n"
-        "  littleworld/scene-1.lwr  scene-1-thumb.lwr\n"
-        "  littleworld/scene-2.lwr  scene-2-thumb.lwr\n"
-        "  littleworld/male.lwp\n"
-        "  littleworld/qianqian-wave.lwp\n"
-        "  littleworld/littleworld-v4.sha256   （校验清单，可留在卡上）\n\n"
+        "  /sdcard/littleworld/littleworld-v4.json        （清单，固件先读它）\n"
+        "  /sdcard/littleworld/scene-0.lwr  scene-0-thumb.lwr\n"
+        "  /sdcard/littleworld/scene-1.lwr  scene-1-thumb.lwr\n"
+        "  /sdcard/littleworld/scene-2.lwr  scene-2-thumb.lwr\n"
+        "  /sdcard/littleworld/male.lwp              （男方 7 段动画）\n"
+        "  /sdcard/littleworld/qianqian-base.lwp     （千千 13 段动画）\n"
+        "  /sdcard/littleworld/qianqian-wave.lwp     （千千招手）\n"
+        "  以下为可选，缺了不会崩，只是少一层美术：\n"
+        "  /sdcard/littleworld/daily.lwp             （双人坐姿与狗窝 8 段）\n"
+        "  /sdcard/littleworld/ui.lwp                （Meowa 组件图集）\n"
+        "  /sdcard/littleworld/skin.lwp              （17 种皮肤的图集）\n"
+        "  /sdcard/littleworld/daily-room.lwr  daily-room-day.lwr\n"
+        "  /sdcard/littleworld/daily-room-night.lwr  rpg-room.lwr\n"
+        "  /sdcard/littleworld/littleworld-v4.sha256  （校验清单，可留在卡上）\n\n"
         "说明：\n"
         "1. 如果卡上已经存在 littleworld 文件夹，复制时会提示是否覆盖；\n"
         "   建议先备份旧文件夹再覆盖。\n"
@@ -432,12 +553,22 @@ def _force_utf8_stdout() -> None:
 def main(argv: list[str] | None = None) -> int:
     _force_utf8_stdout()
     ap = argparse.ArgumentParser(description="Little World V4 TF 卡资源打包/校验")
-    ap.add_argument("--source", type=Path, default=DEFAULT_SOURCE, help="资源源目录")
+    ap.add_argument(
+        "--source",
+        type=Path,
+        action="append",
+        help="资源源目录（可重复；默认按 visual-v4-2 → visual-v4-3 → visual-v4 顺序查找）",
+    )
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT, help="输出目录")
     ap.add_argument("--target", type=Path, help="校验目标（默认与 --out 相同）")
     ap.add_argument("--verify-only", action="store_true", help="只校验，不写文件")
     ap.add_argument("--raw-source", action="store_true", help="校验原始资源目录（不要求清单）")
     ap.add_argument("--json", action="store_true", help="输出机器可读 JSON")
+    ap.add_argument(
+        "--private",
+        action="store_true",
+        help="把私有的 qianqian-base.lwp 也打进去（只用于本地卡，禁止提交/发布）",
+    )
     args = ap.parse_args(argv)
 
     try:
@@ -458,7 +589,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"      文件 {len(files)} 个，清单与哈希全部匹配")
             return 0 if not problems else 2
 
-        report = package(args.source, args.out)
+        report = package(args.source or DEFAULT_SOURCES, args.out, args.private)
         if args.json:
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
@@ -469,6 +600,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  清单大小: {report['manifestBytes']} 字节（固件上限 1023）")
             for name, meta in report["files"].items():
                 print(f"   - {name:<28} {meta['bytes']:>9,}  {meta['sha256'][:16]}…")
+            if report["missingOptional"]:
+                print(
+                    "  提示：可选资源未找到（不影响启动）："
+                    + ", ".join(report["missingOptional"])
+                )
         return 0
     except Problem as exc:
         print("[FAIL] 资源不满足固件要求：", file=sys.stderr)

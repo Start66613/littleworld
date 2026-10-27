@@ -2,8 +2,11 @@
 /* Hardware-side LWPX pack loader.
  *
  * The LWPX container is NOT the embedded LWFA pack and is not treated as one:
- * it has its own header, 108-byte clip records and a 256x256 RGB565+A8 frame
- * layout. What it shares with the old pack is the contract the UI already
+ * it has its own header and 108-byte clip records. Frame geometry is read from
+ * the header (u16 width at +8, u16 height at +10; a frame is width*height RGB565
+ * pixels plus the same count of alpha bytes), which is what lets one loader
+ * serve the 256x256 character packs, the 320x320 daily/dogbed pack, the 544x352
+ * UI sheet and the 512x544 skin atlas without a transcode step. What it shares with the old pack is the contract the UI already
  * depends on: lw_assets registers a pointer-only spec table, every frame is
  * fetched through a lease (lw_asset_acquire -> spec->read -> lw_asset_release)
  * and lw_sprite owns the visible image. So this file only supplies specs that
@@ -20,8 +23,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LW_PACK_MAX_ACTORS 2u
-#define LW_PACK_MAX_SPECS (LW_PACK_MAX_ACTORS * LW_PACK_MAX_CLIPS)
+/* One actor slot per pack family, not one per character: the visual packs are
+ * registered under their own names ("v43skin" for the UI atlas, "v42" for the
+ * daily/dogbed clips, "v42ui" for the component sheet) because that is the id
+ * prefix their consumers already look up. Two slots only ever covered the two
+ * characters, which is why nothing else could be registered.
+ *   male(7) + qianqian-base(13) + qianqian-wave(1) + v42(8) + v42ui(1)
+ *   + v43skin(1) = 31 specs, which is why the spec table is a fixed 64 and no
+ *   longer the product of the two caps (that product would tie the legal clip
+ *   count of one actor to the total the registry can hold). */
+#define LW_PACK_MAX_ACTORS 5u /* male, qianqian, v42, v42ui, v43skin */
+#define LW_PACK_MAX_SPECS 64u /* same bound as lw_assets' MAX_ASSETS */
 #define LW_PACK_PATH_BYTES 768u
 #define LW_PACK_ID_BYTES 48u
 #define LW_PACK_FILE_BYTES 128u
@@ -31,15 +43,16 @@
  * would otherwise overwrite the buffer the first pack's frames still read
  * through, and every frame of the first clip would be fetched from the second
  * file at the first clip's offsets — wrong art, no error, no log. */
-#define LW_PACK_MAX_FILES 4u
+#define LW_PACK_MAX_FILES 8u
 
 typedef struct {
     char id[LW_PACK_ID_BYTES];
     char file[LW_PACK_FILE_BYTES]; /* basename, kept stable: lw_assets stores &id */
     uint32_t offset;
-    /* Bytes per frame. LWPX is always 256x256x3, but the embedded LWFA pack
-     * stores its own geometry (male 108x212, qianqian 104x202), so the size
-     * belongs to the source and must not be assumed at read time. */
+    /* Bytes per frame. Both containers carry their own geometry: LWPX in the
+     * header, LWFA per clip record (male 108x212, qianqian 104x202, skin
+     * 512x544), so the size belongs to the source and must not be assumed at
+     * read time. */
     uint32_t frame_bytes;
     uint16_t frames;
     /* Non-NULL for an embedded blob: frames are copied straight out of the
@@ -218,7 +231,18 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     uint8_t header[LW_PACK_HEADER_BYTES];
     if (fread(header, 1, sizeof(header), f) != sizeof(header)) { fclose(f); return LW_PACK_ERR_TRUNCATED; }
     if (memcmp(header, "LWPX0001", 8) != 0) { fclose(f); return LW_PACK_ERR_MAGIC; }
-    if (u16(header + 8) != LW_PACK_SIDE || u16(header + 10) != LW_PACK_SIDE) {
+    /* Geometry comes from the file, not from a compile-time constant. Each
+     * frame is width*height RGB565 pixels followed by the same count of alpha
+     * bytes, so the stride the offsets are validated against is derived here
+     * and then carried in the source record for every later frame read. */
+    unsigned width = u16(header + 8);
+    unsigned height = u16(header + 10);
+    if (width == 0 || height == 0 || width > LW_PACK_MAX_WIDTH || height > LW_PACK_MAX_HEIGHT) {
+        fclose(f);
+        return LW_PACK_ERR_GEOMETRY;
+    }
+    uint64_t frame_bytes = (uint64_t)width * height * 3u;
+    if (frame_bytes == 0 || frame_bytes > LW_PACK_MAX_FRAME_BYTES) {
         fclose(f);
         return LW_PACK_ERR_GEOMETRY;
     }
@@ -266,13 +290,13 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         unsigned loop = record[38];
         uint32_t offset = u32(record + 40);
         if (frames == 0 || frames > LW_PACK_MAX_FRAMES) { status = LW_PACK_ERR_FRAMES; break; }
-        if (anchor_x < 0 || anchor_y < 0 || anchor_x > (int)LW_PACK_SIDE || anchor_y > (int)LW_PACK_SIDE) {
+        if (anchor_x < 0 || anchor_y < 0 || anchor_x > (int)width || anchor_y > (int)height) {
             status = LW_PACK_ERR_ANCHOR;
             break;
         }
         if (loop > 1u) { status = LW_PACK_ERR_LOOP; break; }
         if (offset < payload_start ||
-            (uint64_t)offset + (uint64_t)frames * LW_PACK_FRAME_BYTES > (uint64_t)size) {
+            (uint64_t)offset + (uint64_t)frames * frame_bytes > (uint64_t)size) {
             status = LW_PACK_ERR_OFFSET;
             break;
         }
@@ -292,14 +316,14 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         snprintf(s_sources[spec].id, sizeof(s_sources[spec].id), "%s.%s", actor_name, name);
         memcpy(s_sources[spec].file, file, strlen(file) + 1);
         s_sources[spec].offset = offset;
-        s_sources[spec].frame_bytes = LW_PACK_FRAME_BYTES;
+        s_sources[spec].frame_bytes = (uint32_t)frame_bytes;
         s_sources[spec].memory = NULL;
         s_sources[spec].frames = (uint16_t)frames;
         s_sources[spec].cache = cache;
         s_sources[spec].raw = (lw_asset_raw_file_t){
-            s_file_paths[file_slot], offset, LW_PACK_FRAME_BYTES, (uint16_t)frames};
-        s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)LW_PACK_SIDE,
-                                          (uint16_t)LW_PACK_SIDE, (uint16_t)frames, (int16_t)anchor_x,
+            s_file_paths[file_slot], offset, (uint32_t)frame_bytes, (uint16_t)frames};
+        s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)width,
+                                          (uint16_t)height, (uint16_t)frames, (int16_t)anchor_x,
                                           (int16_t)anchor_y, LV_COLOR_FORMAT_RGB565A8, read_frame,
                                           &s_sources[spec]};
         /* Clip names stay exactly as the pack spells them: the UI looks up
@@ -433,7 +457,7 @@ lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
     if (loop > 1u) return LW_PACK_ERR_LOOP;
     if (duration < 20 || duration > 2000) return LW_PACK_ERR_DURATION;
     uint64_t frame_bytes = (uint64_t)width * height * 3u;
-    if (frame_bytes == 0 || frame_bytes > LW_PACK_FRAME_BYTES) return LW_PACK_ERR_GEOMETRY;
+    if (frame_bytes == 0 || frame_bytes > LW_PACK_MAX_FRAME_BYTES) return LW_PACK_ERR_GEOMETRY;
     if (offset < LW_FA_HEADER_BYTES + (uint64_t)LW_FA_RECORD_BYTES * clips) return LW_PACK_ERR_OFFSET;
     if ((uint64_t)offset + frame_bytes * frames > size) return LW_PACK_ERR_TRUNCATED;
 

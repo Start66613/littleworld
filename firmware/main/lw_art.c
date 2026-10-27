@@ -12,15 +12,21 @@
 #include "lw_storage.h"
 #include "lw_visual_assets.h"
 
-/* Two actors, and the desktop and the lock screen each hold one live frame per
- * actor, so four 256x256 RGB565+A8 frames is the honest ceiling. lw_assets
- * refuses a budget above 2 MiB, and 4 x 196608 = 786432 fits comfortably. */
-#define LW_ART_LEASE_BUDGET (4u * LW_PACK_FRAME_BYTES)
+/* The packs now differ in size (characters 256x256, dogbed 320x320, UI sheet
+ * 544x352, skin atlas 512x544), so the lease budget can no longer be a multiple
+ * of one frame size. The desktop holds two character frames, the pet page holds
+ * the atlas plus a couple frame plus a dog frame, and the lock screen holds two
+ * more; lw_assets refuses any budget above 2 MiB, which is the ceiling used
+ * here. Leaving it at 4x196608 = 786,432 B would make the 835,584 B atlas
+ * unacquirable ("budget" in the failure counter, no visual error). */
+#define LW_ART_LEASE_BUDGET (2u * 1024u * 1024u)
 
-/* Read-ahead cache for the card. Four frames of 256x256x3 = 786,432 B, which
- * is what lw_file_cache keeps resident; without it every frame change is a
- * blocking card read on the LVGL thread. Only opened when a card verified. */
-#define LW_ART_CACHE_BUDGET (4u * LW_PACK_FRAME_BYTES)
+/* Read-ahead cache for the card. Six frames of the largest geometry in use
+ * (320x320x3 = 307,200 B) plus one skin atlas would be far too much to keep
+ * resident, and the cache is not a lease: it is capped at 1.5 MiB so a couple
+ * frame, a dog frame and the 835,584 B atlas can co-exist without thrashing.
+ * Only opened when a card verified. */
+#define LW_ART_CACHE_BUDGET (1536u * 1024u)
 
 static lw_actor_art_t s_art[2];
 static lw_file_cache_t *s_cache;
@@ -60,27 +66,76 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
             strncat(s_report, "scenes: configure failed",
                     sizeof(s_report) - strlen(s_report) - 1);
         }
+        /* The auxiliary slot holds the room scenes (daily-room / rpg-room),
+         * which are 1024x600 LWSR images that live in the same verified root.
+         * Without this call they are simply never found and the pet page keeps
+         * the flat colour background even though the card has them. One slot
+         * only, so the two rooms are mutually exclusive by design. */
+        (void)lw_visual_aux_configure(root);
         /* The cache owns its own read-ahead worker, so opening it is what makes
          * the card path non-blocking. A NULL cache still works but reads every
          * frame synchronously inside the LVGL timer, which is the exact stall
          * this exists to avoid; the log says so when it happens. */
         s_cache = lw_file_cache_open(root, LW_ART_CACHE_BUDGET);
         lw_pack_t info;
-        /* male.lwp carries idle + blink + wave; qianqian-wave.lwp only appends
-         * wave, so her base idle still comes from the embedded pack below. */
-        lw_pack_status_t male = lw_pack_registry_add(root, "male.lwp", "male", s_cache, &info);
-        if (male != LW_PACK_OK) {
-            (void)snprintf(s_report, sizeof(s_report), "card: male.lwp %s", lw_pack_status_text(male));
-        } else {
-            lw_pack_status_t qian = lw_pack_registry_add(root, "qianqian-wave.lwp", "qianqian",
-                                                         s_cache, &info);
-            if (qian != LW_PACK_OK) {
-                (void)snprintf(s_report, sizeof(s_report), "card: qianqian-wave.lwp %s",
-                               lw_pack_status_text(qian));
-            } else {
-                card = true;
-                (void)snprintf(s_report, sizeof(s_report), "card: male.lwp + qianqian-wave.lwp");
+        /* Every pack is added on its own and judged on its own return code. The
+         * V4.3 set is six files: two characters, the daily/dogbed clips, the
+         * component sheet and the skin atlas. Losing one must cost exactly that
+         * one - the consumers all check lw_assets_find() and fall back - so a
+         * single shared "did it work" flag would hide which file actually
+         * failed. qianqian arrives in TWO files on purpose: base carries the 13
+         * original clips, wave only appends the greeting, and both land in her
+         * one actor slot.
+         *
+         * The id prefixes below are the contract the visual code already looks
+         * up, so they are NOT derived from the file names:
+         *   male.lwp          -> "male.*"
+         *   qianqian-base.lwp -> "qianqian.*"   (13 clips)
+         *   qianqian-wave.lwp -> "qianqian.wave"
+         *   daily.lwp         -> "v42.*"        (lw_polish.c)
+         *   ui.lwp            -> "v42ui.sheet"  (lw_polish_art)
+         *   skin.lwp          -> "v43skin.atlas"(lw_skin.c)
+         *
+         * skin.lwp goes through the cache like the rest: one 835,584 B frame
+         * against a 1.5 MiB card cache is affordable, and a NULL cache would
+         * make every component read the atlas synchronously inside the LVGL
+         * timer. The atlas is still leased once and shared, which is what keeps
+         * the residency bounded. */
+        static const struct { const char *file, *actor; bool required; } packs[] = {
+            {"male.lwp", "male", true},
+            {"qianqian-base.lwp", "qianqian", false},
+            {"qianqian-wave.lwp", "qianqian", false},
+            {"daily.lwp", "v42", false},
+            {"ui.lwp", "v42ui", false},
+            {"skin.lwp", "v43skin", false},
+        };
+        unsigned loaded = 0;
+        for (unsigned i = 0; i < sizeof(packs) / sizeof(packs[0]); i++) {
+            lw_pack_status_t status = lw_pack_registry_add(root, packs[i].file, packs[i].actor,
+                                                           s_cache, &info);
+            if (status == LW_PACK_OK) {
+                loaded++;
+                continue;
             }
+            /* A missing optional file is normal (an older card holds only the
+             * two character packs) and is not worth a log line. A missing
+             * REQUIRED file, or any present-but-broken pack, must be named:
+             * that is the difference between "no art on the card" and "the card
+             * is there but this build cannot read it". */
+            if (status == LW_PACK_ERR_OPEN && !packs[i].required) continue;
+            char tail[96];
+            (void)snprintf(tail, sizeof(tail), "%s%s:%s",
+                           s_report[0] ? "; " : "card: ", packs[i].file,
+                           lw_pack_status_text(status));
+            strncat(s_report, tail, sizeof(s_report) - strlen(s_report) - 1);
+        }
+        /* Both characters count as covered only when the card actually supplied
+         * a usable clip table for them; the embedded fill-in below re-checks
+         * per clip name, so a half-loaded actor still gets its idle frame. */
+        card = loaded > 0;
+        if (card && !s_report[0]) {
+            (void)snprintf(s_report, sizeof(s_report), "card: %u/%u packs", loaded,
+                           (unsigned)(sizeof(packs) / sizeof(packs[0])));
         }
         if (!s_cache) {
             strncat(s_report, " (no cache: blocking reads)",
