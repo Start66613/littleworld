@@ -1,7 +1,14 @@
 # 烧录记录 —— 未执行写入
 
-**结论：本轮没有任何字节被写入。** 板子当前没有连接，`-ListPorts` 与默认 dry run 都显示
-`serial ports found: 0`，所以只做了只读的镜像/分区/地址校验。
+**结论：本轮没有任何字节被写入。** 板子当前没有连接：`-ListPorts` 与默认 dry run 都显示
+`serial ports found: 0`；后来系统出现过 `COM7` / `COM8`，经设备名核对是
+「蓝牙链接上的标准串行」，不是开发板，工具按名字拒绝自动选用。
+所以只做了只读的镜像/分区/地址校验。
+
+> **镜像已更新（2026-10-27 17:39）**：为了让板子读得到 `littleworld-v4.json` 等长文件名，
+> `firmware/sdkconfig.os` 打开了 `CONFIG_FATFS_LFN_HEAP=y` 并重编，app 变成
+> **2,352,784 B / `0114fe684c636d144a88b988ab3232a29d4ef7f87b1fb00d9d13be3d235c9f51`**。
+> 下文表格已按新镜像更新；bootloader 与分区表未变。
 
 ## 已完成的只读检查（8 项）
 
@@ -9,14 +16,14 @@
 
 | # | 项目 | 实测结果 |
 | --- | --- | --- |
-| 1 | COM 端口列表 | **0 个**（`(no serial port present)`） |
+| 1 | COM 端口列表 | **0 个可用**（`(no serial port present)`；系统里的 COM7/COM8 是蓝牙串行，不是板子） |
 | 2 | ESP32-P4 芯片识别 | 未做——需要端口；镜像头部声明 `esp32p4 (id 0x0012)`，rev v3.0(300)..v3.99(399) |
 | 3 | Flash 配置 | 镜像声明 32 MB、mode DIO（与设备 32 MB 一致，历史探针已确认） |
 | 4 | 现有固件与分区兼容性 | 新分区表 sha256 `8404023636b162d4c94c1911a9ba1f152968769e86a683bbe2134e4fcf828fc6`，**与上次 V3.1 刷入的完全相同** → 兼容 |
 | 5 | 旧版备份是否可恢复 | 存在：`D:\Espressif\LittleWorld\private\backups\LittleWorld\20261025-005021`（`p4-full-A.bin` / `p4-full-B.bin` 各 33,554,432 B + `flash_id.txt` + `manifest.json`） |
-| 6 | 预计写入地址 | `0x002000` bootloader 22,016 B / `0x008000` 分区表 3,072 B / `0x010000` app 2,347,472 B |
-| 7 | 新镜像 SHA-256 | app `92c05c2d26922935178bb5996cefcca1649c464964A7b77fa4a2faba5da19036`（校验器输出小写） |
-| 8 | 是否需要更新 TF 卡 | **需要**：V4.3 新增 `daily.lwp` / `ui.lwp` / `skin.lwp` / 四个房间场景，旧卡没有 |
+| 6 | 预计写入地址 | `0x002000` bootloader 22,016 B / `0x008000` 分区表 3,072 B / `0x010000` app 2,352,784 B |
+| 7 | 新镜像 SHA-256 | app `0114fe684c636d144a88b988ab3232a29d4ef7f87b1fb00d9d13be3d235c9f51`（校验器输出小写） |
+| 8 | 是否需要更新 TF 卡 | **已更新**：V4.3 的 `daily.lwp` / `ui.lwp` / `skin.lwp` / 四个房间场景 + 私有 `qianqian-base.lwp` 已写入 FAT32 新卡，见 `SD_DEPLOY.md` |
 
 镜像校验原样输出：
 
@@ -26,7 +33,7 @@ PASS  bootloader.bin
 INFO  partition-table.bin   nvs 0x9000/0x6000  phy_init 0xF000/0x1000
                             factory 0x10000/0x600000  storage 0x610000/0x400000
 3 image(s), 0 failure(s)
-[partitions] app fits: 2347472 / 6291456 B (37.3% of factory)
+[partitions] app fits: 2352784 / 6291456 B (37.4% of factory)
 [partitions] partition layout: ascending, no overlap
 ```
 

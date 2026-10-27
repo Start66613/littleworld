@@ -18,10 +18,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Set-Location D:\Litt
 | --- | --- | --- | --- | --- |
 | bootloader | `0x002000` | `firmware/build/os/bootloader/bootloader.bin` | 22,016 B | `624d7f4b461a6d5dc05e3dfc30ab0152a241b63c692a49d84fca656121d240d1` |
 | partition table | `0x008000` | `firmware/build/os/partition_table/partition-table.bin` | 3,072 B | `8404023636b162d4c94c1911a9ba1f152968769e86a683bbe2134e4fcf828fc6` |
-| **app** | `0x010000` | `firmware/build/os/little_world.bin` | **2,347,472 B** | **`92c05c2d26922935178bb5996cefcca1649c464964a7b77fa4a2faba5da19036`** |
+| **app** | `0x010000` | `firmware/build/os/little_world.bin` | **2,352,784 B** | **`0114fe684c636d144a88b988ab3232a29d4ef7f87b1fb00d9d13be3d235c9f51`** |
 
-`idf.py` 报 `little_world.bin binary size 0x23d1d0 bytes`（= 2,347,472），
-`Smallest app partition is 0x600000 bytes. 0x3c2e30 bytes (63%) free`。
+`idf.py` 报 `little_world.bin binary size 0x23e690 bytes`（= 2,352,784），
+`Smallest app partition is 0x600000 bytes. 0x3c1970 bytes (63%) free`。
+
+> **这一版与前一轮 2,347,472 B / `92c05c2d…` 的差异原因**：`firmware/sdkconfig.os` 打开了
+> `CONFIG_FATFS_LFN_HEAP=y` + `CONFIG_FATFS_MAX_LFN=255` + `CONFIG_FATFS_API_ENCODING_UTF_8=y`
+> （原来是 `CONFIG_FATFS_LFN_NONE=y`）。没有这一项，板上 FatFs 只认 8.3 短名，
+> `littleworld-v4.json`（主名 12 字符）等文件 `fopen` 直接返回 `FR_INVALID_NAME`，
+> TF 卡等于没插。代码零改动，纯 Kconfig + 重编，+5,312 B。
 
 ## 分区适配
 
@@ -36,7 +42,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Set-Location D:\Litt
   storage    1      130      0x610000   0x400000
 ```
 
-app 2,347,472 / 6,291,456 B = **37.3% of factory**，放得下。
+app 2,352,784 / 6,291,456 B = **37.4% of factory**，放得下。
 NVS（`0x9000..0xF000`）与 `phy_init` 不在写入计划里。
 
 镜像校验（`tools/check_v3_images.ps1` 的 image_check，由 `flash_v4_safe.ps1` 在 dry run 中调用）：

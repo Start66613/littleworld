@@ -1,0 +1,11 @@
+[
+    {
+        "config":  "os",
+        "build_dir":  "firmware/build/os",
+        "bytes":  2352784,
+        "sha256":  "0114fe684c636d144a88b988ab3232a29d4ef7f87b1fb00d9d13be3d235c9f51",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v43-board/build-os.log",
+        "status":  "built"
+    }
+]
