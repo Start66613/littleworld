@@ -275,6 +275,36 @@ void lw_rpg_tick(lw_rpg_state_t *state, uint32_t dt_ms)
     update_partner(state);
 }
 
+void lw_rpg_actor_point(const lw_rpg_state_t *state, int index, float *x, float *y)
+{
+    float fx = 0.0f;
+    float fy = 0.0f;
+    if (state != NULL && index >= 0 && index < LW_RPG_MAX_ACTORS) {
+        const lw_rpg_actor_t *actor = &state->actors[index];
+        fx = (float)actor->pos.x;
+        fy = (float)actor->pos.y;
+        /* step_actor() consumes path[path_index] and then advances path_index,
+         * so the direction still in flight is the one at path_index. The
+         * leftover step_accum_ms is exactly the fraction of that step already
+         * elapsed once the while loop in lw_rpg_tick() has run. */
+        if (actor->moving && actor->path_index < actor->path_len && actor->step_accum_ms > 0u) {
+            unsigned dir = actor->path[actor->path_index];
+            float t = (float)actor->step_accum_ms / (float)LW_RPG_STEP_MS;
+            if (t > 1.0f) {
+                t = 1.0f;
+            }
+            fx += (float)s_dx[dir] * t;
+            fy += (float)s_dy[dir] * t;
+        }
+    }
+    if (x != NULL) {
+        *x = fx;
+    }
+    if (y != NULL) {
+        *y = fy;
+    }
+}
+
 /* --- dialogue ------------------------------------------------------------ */
 
 static const lw_rpg_dialogue_t *find_dialogue(const lw_rpg_world_t *w, uint32_t id)

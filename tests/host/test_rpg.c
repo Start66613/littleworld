@@ -229,6 +229,62 @@ static void test_reset(void)
     CHECK(!state.dialogue_active);
 }
 
+/* The MVP fluidity fix: the render point must advance in sub-tile amounts
+ * between the core's fixed 140 ms logic steps. Before this, hosts only saw the
+ * tile index and had to fake motion with a translate animation that restarted
+ * at every tile boundary. */
+static void test_render_interpolation(void)
+{
+    lw_rpg_state_t state;
+    lw_rpg_init(&state, lw_rpg_demo_world());
+    float x, y;
+    lw_rpg_actor_point(&state, LW_RPG_ACTOR_PLAYER, &x, &y);
+    /* Standing still reports the exact logical tile. */
+    CHECK_EQ((int)(x + 0.5f), 6);
+    CHECK_EQ((int)(y + 0.5f), 5);
+
+    CHECK(lw_rpg_tap_tile(&state, 10, 7)); /* 5 tiles right, 4 down: 9 steps */
+    float px = x, py = y;
+    int sub_tile_frames = 0;
+    float worst = 0.0f;
+    /* 7 frames of 20 ms is one logic step, so 80 frames covers a 9-step walk. */
+    for (int i = 0; i < 80; i++) {
+        lw_rpg_tick(&state, 20);
+        lw_rpg_actor_point(&state, LW_RPG_ACTOR_PLAYER, &x, &y);
+        float dx = x - px, dy = y - py;
+        if (dx < 0.0f) dx = -dx;
+        if (dy < 0.0f) dy = -dy;
+        float step = dx > dy ? dx : dy;
+        if (step > worst) worst = step;
+        /* A 20 ms frame may cross one logic-step boundary, so the largest legal
+         * jump is about one step plus a frame: 1/7 tile. Whole-tile jumps mean
+         * the host is snapping again. */
+        CHECK(step <= 0.16f);
+        if (step > 0.0f && step < 0.99f) sub_tile_frames++;
+        /* Never past the target tile. */
+        CHECK(x <= 10.0f + 0.001f && x >= 5.0f - 0.001f);
+        CHECK(y <= 7.0f + 0.001f && y >= 3.0f - 0.001f);
+        px = x; py = y;
+    }
+    /* (6,5) -> (10,7) is six steps, so ~42 of the 80 frames are walking. Every
+     * one of them must land on a sub-tile position; a snapping host would show
+     * only six distinct whole-tile positions here. */
+    CHECK(sub_tile_frames > 30);
+    CHECK(!state.actors[LW_RPG_ACTOR_PLAYER].moving);
+    CHECK_EQ((int)(x + 0.5f), 10);
+    CHECK_EQ((int)(y + 0.5f), 7);
+    CHECK(worst > 0.0f); /* the walk really moved */
+
+    /* Path bookkeeping: the direction in flight must be the one still to come,
+     * otherwise the interpolated walk always trails one tile behind. */
+    CHECK(lw_rpg_tap_tile(&state, 10, 5));
+    lw_rpg_tick(&state, 140);
+    lw_rpg_tick(&state, 70);
+    lw_rpg_actor_point(&state, LW_RPG_ACTOR_PLAYER, &x, &y);
+    CHECK(state.actors[LW_RPG_ACTOR_PLAYER].moving);
+    CHECK(y < 7.0f && y > 5.0f); /* halfway up, not still on y==7 */
+}
+
 int main(void)
 {
 #define RUN(fn)                                                                         \
@@ -241,6 +297,7 @@ int main(void)
     RUN(test_grid);
     RUN(test_movement);
     RUN(test_partner_follow);
+    RUN(test_render_interpolation);
     RUN(test_interaction_and_quest);
     RUN(test_choices);
     RUN(test_save_roundtrip);

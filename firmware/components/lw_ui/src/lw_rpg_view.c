@@ -16,13 +16,18 @@ struct lw_rpg_view {
     lv_timer_t *timer; uint32_t last,reward_seen; unsigned theme;
     bool suspended,dirty; int pending,last_progress; uint32_t marker_ms;
     int actor_x[2],actor_y[2];
+    float sep; uint32_t dt; int last_near;
     lw_sprite_t *players[2]; const lw_clip_t *clips[2];
     lw_rpg_hotspot_t hotspots[3];
     lw_rpg_world_t world; lw_rpg_room_t room; uint8_t floor[128];
     uint32_t animation_ms,reaction_ms; int queued_spot; bool art;
 };
 enum { ACT_INTERACT=1,ACT_NEXT,ACT_CHOICE0,ACT_CHOICE1,ACT_JOURNAL,ACT_CLOSE };
-void lw_rpg_view_tile_point(int x,int y,int *px,int *py) { *px=64+x*56+28; *py=310+y*22; }
+/* Fractional tile -> pixel. Integer tiles round to exactly the old constants
+ * (px = 64 + x*56 + 28, py = 310 + y*22), so nothing that used to line up moves. */
+static void tile_point_frac(float fx,float fy,int *px,int *py)
+{ *px=(int)(64.0f+fx*56.0f+28.0f+0.5f); *py=(int)(310.0f+fy*22.0f+0.5f); }
+void lw_rpg_view_tile_point(int x,int y,int *px,int *py) { tile_point_frac((float)x,(float)y,px,py); }
 static void dialog_render(lw_rpg_view_t *v);
 static const lw_os_palette_t *colors(lw_rpg_view_t *v) { return lw_os_palette(v->theme); }
 static void action(lv_event_t *e)
@@ -51,31 +56,51 @@ static const lw_clip_t *resident_clip(lw_rpg_view_t *v,unsigned i,const char *na
 }
 static void refresh(lw_rpg_view_t *v)
 {
+    float fx[2],fy[2]; int px[2],py[2];
+    for (unsigned i=0;i<2;i++) lw_rpg_actor_point(&v->state,(int)i,&fx[i],&fy[i]);
+    /* Couple spacing. The core keeps the partner LW_RPG_FOLLOW_DISTANCE away
+     * while walking, but a stopped pair can share a tile. The old code pushed
+     * the partner 128 px sideways the instant the two got close, which read as
+     * teleporting to the other side of the screen. The same offset is kept,
+     * just eased in over a few ticks (~80 ms) instead of applied in one frame. */
+    float sep_target=0.0f;
+    { int ax,ay,bx,by; tile_point_frac(fx[0],fy[0],&ax,&ay); tile_point_frac(fx[1],fy[1],&bx,&by);
+      if (abs(bx-ax)<118 && abs(ay-by)<44) {
+          int right=ax+128,left=ax-128;
+          if (lw_rpg_walkable(&v->room,(right-64)/56,(ay-299)/22)) sep_target=(float)(right-bx);
+          else if (lw_rpg_walkable(&v->room,(left-64)/56,(ay-299)/22)) sep_target=(float)(left-bx);
+      } }
+    v->sep+=(sep_target-v->sep)*0.25f;
+    if (v->sep>-0.5f && v->sep<0.5f) v->sep=0.0f;
     for (unsigned i=0;i<2;i++) {
-        lw_rpg_tile_t t=v->state.actors[i].pos; int x,y; lw_rpg_view_tile_point(t.x,t.y,&x,&y);
-        if (i) {
-            int px,py;lw_rpg_view_tile_point(v->state.actors[0].pos.x,v->state.actors[0].pos.y,&px,&py);
-            if (abs(x-px)<118 && abs(y-py)<44) {
-                int right=px+128,left=px-128;
-                if (lw_rpg_walkable(&v->room,(right-64)/56,(y-299)/22)) x=right;
-                else if (lw_rpg_walkable(&v->room,(left-64)/56,(y-299)/22)) x=left;
-            }
-        }
+        int x,y; tile_point_frac(fx[i],fy[i],&x,&y);
+        if (i && v->sep!=0.0f) x+=(int)(v->sep<0.0f ? v->sep-0.5f : v->sep+0.5f);
+        px[i]=x; py[i]=y;
+        bool moving=v->state.actors[i].moving!=0;
         if (v->players[i]) {
             const char *name="idle";
             if (v->reaction_ms) name="wave";
-            else if (v->state.actors[i].moving) { static const char *const walks[]={"walk_down","walk_left","walk_right","walk_up"}; name=walks[v->state.actors[i].dir]; }
+            else if (moving) { static const char *const walks[]={"walk_down","walk_left","walk_right","walk_up"}; name=walks[v->state.actors[i].dir]; }
             const lw_clip_t *clip=resident_clip(v,i,name);
             if (clip && clip!=v->clips[i]) { lw_sprite_play(v->players[i],clip); v->clips[i]=clip; }
-            int oldx=lv_obj_get_x(v->actor[i]),oldy=lv_obj_get_y(v->actor[i]); lw_sprite_set_anchor(v->players[i],x,y);
-            int nx=lv_obj_get_x(v->actor[i]),ny=lv_obj_get_y(v->actor[i]);
-            if (v->actor_x[i]!=x || v->actor_y[i]!=y) { lv_obj_set_pos(v->actor[i],oldx,oldy); lw_os_motion_step(v->actor[i],nx,ny,140); }
-            if (lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(v->players[i],v->reaction_ms ? 1600-v->reaction_ms : v->animation_ms);
+            /* Continuous position, written straight into the widget. The old
+             * path snapped to the tile and then chased it with a 140 ms
+             * translate animation, which restarted from the tile boundary on
+             * every step (stutter) and degraded to a plain jump whenever the
+             * decorative animation switch was off. */
+            lw_sprite_set_anchor(v->players[i],x,y);
+            /* Walking is gameplay, not decoration: keep it animating even when
+             * settings.animations is off. */
+            if (moving || lw_os_motion_get()!=LW_MOTION_OFF)
+                lw_sprite_seek(v->players[i],v->reaction_ms ? 1600-v->reaction_ms : v->animation_ms);
         } else lv_obj_set_pos(v->actor[i],x-18,y-48);
-        if (v->actor_x[i]!=x || v->actor_y[i]!=y) { v->actor_x[i]=x; v->actor_y[i]=y; v->dirty=true; }
+        /* Save bookkeeping follows the logical tile, not the sub-tile pixel
+         * position, or a walk would mark the save dirty on every repaint. */
+        lw_rpg_tile_t t=v->state.actors[i].pos;
+        if (v->actor_x[i]!=t.x || v->actor_y[i]!=t.y) { v->actor_x[i]=t.x; v->actor_y[i]=t.y; v->dirty=true; }
     }
     /* Residents stay on the surveyed clear floor; no fake furniture cutouts. */
-    if (v->actor_y[0]>v->actor_y[1]) lv_obj_move_to_index(v->actor[0],-1);
+    if (py[0]>py[1]) lv_obj_move_to_index(v->actor[0],-1);
     else lv_obj_move_to_index(v->actor[1],-1);
     int progress=lw_rpg_quest_progress(&v->state);
     if (progress!=v->last_progress) {
@@ -85,7 +110,9 @@ static void refresh(lw_rpg_view_t *v)
         if (v->last_progress>=0) v->reaction_ms=1600;
         v->last_progress=progress;
     }
-    lv_label_set_text(v->action_label,lw_rpg_hotspot_near(&v->state)>=0 ? "查看身边物品" : "先走到物品旁边");
+    /* Setting the same string still runs a full label re-layout, and refresh()
+     * runs at the 20 ms tick. Only write when the wording actually changes. */
+    { bool near=lw_rpg_hotspot_near(&v->state)>=0; if (near!=(bool)v->last_near) { v->last_near=near; lv_label_set_text(v->action_label,near ? "查看身边物品" : "先走到物品旁边"); } }
 }
 static void walk_to_spot(lw_rpg_view_t *v,unsigned i)
 {
@@ -169,7 +196,10 @@ static void tick(lv_timer_t *timer)
         lw_rpg_tick(&v->state,dt);
         if (v->queued_spot>=0 && !v->state.actors[0].moving && lw_rpg_hotspot_near(&v->state)==v->queued_spot) { v->queued_spot=-1; if (lw_rpg_interact(&v->state)) dialog_render(v); }
     }
-    if (lw_os_motion_get()!=LW_MOTION_OFF) v->animation_ms+=dt;
+    /* The walk clock runs regardless of the decorative animation switch: the
+     * clip frames are gameplay feedback, and freezing them while the actor
+     * keeps sliding looked like a frozen sprite. */
+    v->animation_ms+=dt; v->dt=dt;
     if (v->reaction_ms) v->reaction_ms=v->reaction_ms>dt ? v->reaction_ms-dt : 0;
     refresh(v);
 }

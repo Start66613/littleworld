@@ -133,6 +133,12 @@ bool lw_rpg_walkable(const lw_rpg_room_t *room, int x, int y);
 int lw_rpg_hotspot_at(const lw_rpg_state_t *state, int x, int y); /* index or -1 */
 int lw_rpg_hotspot_near(const lw_rpg_state_t *state);            /* index or -1 */
 
+/* Continuous render position in tile units. `x`/`y` are the logical tile plus
+ * the fraction of the step currently in flight (0..1), so a host can draw a
+ * walk that stays smooth between the fixed LW_RPG_STEP_MS logic steps instead
+ * of snapping once per tile. Returns the logical tile when the actor stands. */
+void lw_rpg_actor_point(const lw_rpg_state_t *state, int index, float *x, float *y);
+
 /* --- input --------------------------------------------------------------- */
 /* Tap a tile: the player walks there (BFS). Returns false when unreachable. */
 bool lw_rpg_tap_tile(lw_rpg_state_t *state, int x, int y);

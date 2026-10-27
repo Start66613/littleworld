@@ -431,6 +431,36 @@ static int cmd_anim(int argc, char **argv)
     return 0;
 }
 
+static int cmd_rpg(int argc, char **argv)
+{
+    /* The acceptance question for RPG motion is not "did the tile counter move"
+     * but "did the pixel position on the glass move continuously". So print all
+     * three layers at once: the logical tile, the interpolated tile point, and
+     * the x/y the LVGL object actually carries. A teleporting actor shows a
+     * screen jump equal to a whole tile (56 px horizontally, 22 px vertically);
+     * a smooth one never moves more than a fraction of that per frame. */
+    (void)argc;
+    (void)argv;
+    const lw_rpg_state_t *state = lw_os_rpg_state();
+    if (!state) {
+        printf("rpg: page not open\n");
+        fflush(stdout);
+        return 0;
+    }
+    for (int i = 0; i < LW_RPG_MAX_ACTORS; i++) {
+        float fx = 0.0f, fy = 0.0f;
+        lw_rpg_actor_point(state, i, &fx, &fy);
+        lv_obj_t *o = lw_os_rpg_actor((unsigned)i);
+        printf("rpg %d: tile=%d,%d point=%.2f,%.2f screen=%d,%d moving=%d\n",
+               i, (int)state->actors[i].pos.x, (int)state->actors[i].pos.y,
+               (double)fx, (double)fy,
+               o ? (int)lv_obj_get_x(o) : -1, o ? (int)lv_obj_get_y(o) : -1,
+               (int)state->actors[i].moving);
+    }
+    fflush(stdout);
+    return 0;
+}
+
 static int cmd_sched(int argc, char **argv)
 {
     /* How often the OS tick really ran. The OS timer is registered for 20 ms;
@@ -576,6 +606,9 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_sched = { .command = "sched",
                                         .help = "OS tick gaps: is the LVGL task starved?",
                                         .func = &cmd_sched };
+    const esp_console_cmd_t c_rpg = { .command = "rpg",
+                                      .help = "rpg: tile, interpolated point and real screen position",
+                                      .func = &cmd_rpg };
     const esp_console_cmd_t c_anim = { .command = "anim",
                                        .help = "actor clip, frame index and model clock",
                                        .func = &cmd_anim };
@@ -586,6 +619,7 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_clock);
     esp_console_cmd_register(&c_fps);
     esp_console_cmd_register(&c_sched);
+    esp_console_cmd_register(&c_rpg);
     esp_console_cmd_register(&c_anim);
 #endif
 #if CONFIG_LW_FAULT_INJECT
