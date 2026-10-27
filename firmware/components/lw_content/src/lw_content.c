@@ -532,7 +532,16 @@ bool lw_content_load(const char *path)
     FILE *f = fopen(path, "rb");
     if (!f) return false;
 
-    char buffer[LW_CONTENT_MAX_BYTES + 1u];
+    /* LW_CONTENT_MAX_BYTES is 32 KiB, which is bigger than the whole main task
+     * stack (CONFIG_ESP_MAIN_TASK_STACK_SIZE = 12288). A stack frame of that
+     * size trips the FreeRTOS stack canary the moment a card is actually
+     * mounted, which is exactly the case the no-card path never reaches: the
+     * board rebooted in a loop with
+     *   Guru Meditation Error: Core 0 panic'ed (Stack protection fault)
+     *   lw_content_load at lw_content.c:521
+     * Reads happen once at boot before the UI task starts, so a single static
+     * buffer is enough and it cannot be entered concurrently. */
+    static char buffer[LW_CONTENT_MAX_BYTES + 1u];
     size_t got = fread(buffer, 1, sizeof(buffer), f);
     bool more = fgetc(f) != EOF;
     fclose(f);

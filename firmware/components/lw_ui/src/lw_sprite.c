@@ -78,6 +78,15 @@ static uint32_t clip_length(const lw_clip_t *clip)
 static bool present(lw_sprite_t *s, const lw_clip_t *clip, uint16_t frame)
 {
     if (s->lease && s->frame==frame && !strcmp(s->shown_id,clip->asset_id)) return true;
+    /* Same asset, next frame: refill the lease's existing pixel buffer and just
+     * invalidate the widget. Allocating and freeing a frame buffer (plus
+     * lv_image_cache_drop) on every animation frame was the main cause of the
+     * stutter - a 196 KB buffer churned 8-16 times per second per actor. */
+    if (s->lease && !strcmp(s->shown_id,clip->asset_id) && lw_asset_refill(s->lease,frame)) {
+        s->frame=frame;
+        lv_obj_invalidate(s->image);
+        return true;
+    }
     lw_asset_lease_t *next=lw_asset_acquire(clip->asset_id,frame);
     if (!next) return false; /* Keep the previous frame alive, including its decoder source. */
     const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);

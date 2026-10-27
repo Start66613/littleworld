@@ -21,12 +21,17 @@
  * unacquirable ("budget" in the failure counter, no visual error). */
 #define LW_ART_LEASE_BUDGET (2u * 1024u * 1024u)
 
-/* Read-ahead cache for the card. Six frames of the largest geometry in use
- * (320x320x3 = 307,200 B) plus one skin atlas would be far too much to keep
- * resident, and the cache is not a lease: it is capped at 1.5 MiB so a couple
- * frame, a dog frame and the 835,584 B atlas can co-exist without thrashing.
- * Only opened when a card verified. */
-#define LW_ART_CACHE_BUDGET (1536u * 1024u)
+/* Read-ahead cache for the card. This has to hold a whole animation cycle per
+ * actor or the cache is worse than useless: the two desktop characters are
+ * eight 196,608 B frames each, so 16 frames = 3,145,728 B and a 1.5 MiB budget
+ * can hold one actor exactly. Measured on the board with 1.5 MiB: resident
+ * pinned at the budget, 222 evictions in ten seconds, and LVGL timer gaps of
+ * 428 ms average against a 20 ms period, because every frame fell back to a
+ * blocking card read on the LVGL thread. 4 MiB covers both cycles plus the
+ * 320x320 dog frames and the 835,584 B skin atlas. Only opened when a card
+ * verified; lw_assets' lease budget (2 MiB) still bounds what stays resident in
+ * the draw path, so this only controls the read-ahead cache. */
+#define LW_ART_CACHE_BUDGET (4u * 1024u * 1024u)
 
 static lw_actor_art_t s_art[2];
 static lw_file_cache_t *s_cache;

@@ -769,6 +769,26 @@ static void test_embedded_pack(void)
     }
     CHECK("embedded frame past end refused", lw_asset_acquire("qianqian.idle", 8u) == NULL);
 
+    /* Refill reuses the lease's pixel buffer: same pointer, new contents, and
+     * the live-lease accounting must not move (that is the whole point of the
+     * fix - a 196 KB frame buffer was allocated and freed per animation frame). */
+    lw_asset_lease_t *live = lw_asset_acquire("qianqian.idle", 3u);
+    CHECK("refill fixture leased", live != NULL);
+    if (live) {
+        uint32_t leases_before = lw_assets_stats().live_leases;
+        size_t bytes_before = lw_assets_stats().live_bytes;
+        const uint8_t *pixels_before = lw_asset_image(live)->data;
+        CHECK("refill accepted", lw_asset_refill(live, 6u));
+        CHECK("refill reuses the same buffer", lw_asset_image(live)->data == pixels_before);
+        CHECK("refill actually reloaded the frame", lw_asset_image(live)->data[0] == 6u);
+        CHECK("refill keeps the lease accounting", lw_assets_stats().live_leases == leases_before &&
+                                                  lw_assets_stats().live_bytes == bytes_before);
+        CHECK("refill past the end refused", !lw_asset_refill(live, 8u));
+        CHECK("refused refill leaves the frame intact", lw_asset_image(live)->data[0] == 6u);
+        lw_asset_release(live);
+    }
+    CHECK("refill rejects a null lease", !lw_asset_refill(NULL, 0u));
+
     /* Rejections: each must fail without disturbing the table already built. */
     lw_pack_registry_reset();
     lw_pack_t rejected;

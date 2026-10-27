@@ -43,3 +43,10 @@ uint16_t lw_os_actor_frame(unsigned);
 bool lw_os_dock_expanded(void);
 /* UI-only attention hint; no saved preference or backend operation. */
 void lw_os_scene_focus(bool focused);
+/* Scheduler evidence for the performance work. The OS tick is an LVGL timer
+ * registered for 20 ms; the gap between two calls is the real latency the user
+ * feels. A gap far above 20 ms means the LVGL task is starved (slow draw, slow
+ * flush or a blocking call inside a timer), not that the animation is too slow.
+ * Returns the number of ticks and the worst/average gap in milliseconds. */
+void lw_os_tick_stats(uint32_t *calls, uint32_t *max_gap_ms, uint32_t *avg_gap_ms);
+void lw_os_tick_stats_reset(void);

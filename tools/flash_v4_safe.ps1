@@ -441,6 +441,10 @@ $stderrPath = Join-Path $logDir "flash-$stamp-stderr.log"
 $watch = [System.Diagnostics.Stopwatch]::StartNew()
 $proc = Start-Process -FilePath 'python' -ArgumentList $esptoolArgs -NoNewWindow -PassThru `
     -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+# Touching .Handle forces PowerShell to cache the process handle. Without it
+# $proc.ExitCode is empty after WaitForExit(), so a write that esptool verified
+# gets reported as "flash failed (esptool exit )" (seen on 2026-10-27).
+$null = $proc.Handle
 $finished = $proc.WaitForExit($TimeoutSec * 1000)
 $watch.Stop()
 if (-not $finished) {

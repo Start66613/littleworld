@@ -4,6 +4,7 @@
  *   shot [name]   render the active screen to a BMP, emit it base64-encoded
  *   tap X Y       synthesise one press/release at screen coordinates
  *   status        print heap, display size and the last captured frame
+ *   sched         OS tick gaps: whether the LVGL task is being starved
  *
  * Protocol, one record per line, every line numbered so a lost line can be
  * recovered by re-running the command and merging by index:
@@ -38,6 +39,9 @@
 #include "lw_content.h"
 #include "lw_content_boot.h"
 #include "lw_time_boot.h"
+#include "lw_os.h"
+#include "lw_os_design.h"
+#include "esp_lv_adapter.h"
 #if CONFIG_LW_FAULT_INJECT
 #include "lw_fault.h"
 #endif
@@ -379,6 +383,101 @@ static int cmd_clock(int argc, char **argv)
     fflush(stdout);
     return 0;
 }
+
+static int cmd_anim(int argc, char **argv)
+{
+    /* Actor animation truth: which clip is playing, which frame index is
+     * displayed, and how far the model clock has advanced. "sprites=2 running=2"
+     * in diag only says the sprite objects are enabled; it cannot tell a frozen
+     * animation (frame index stuck) from one whose frames happen to look alike. */
+    if (argc > 1) {
+        /* Repair path: the saved settings can carry animations=0, which freezes
+         * every actor at frame 0 and makes all page transitions snap instead of
+         * animating. That state survives reflashing because NVS is not erased,
+         * so a console switch is the only way to undo it without a full reset. */
+        if (strcmp(argv[1], "on") == 0 || strcmp(argv[1], "off") == 0) {
+            bool on = strcmp(argv[1], "on") == 0;
+            lw_os_animations_set(on);
+            printf("anim: animations %s (saved)\n", on ? "on" : "off");
+        } else {
+            printf("usage: anim [on|off]\n");
+        }
+        fflush(stdout);
+        return 0;
+    }
+    const lw_duo_t *duo = lw_os_duo_state();
+    /* Motion mode 2 (OFF) makes update_actors() feed seek() a constant time of 0
+     * for an idle actor, so the frame index never leaves 0 even though the model
+     * clock keeps advancing. Printing it here separates "the animation is frozen"
+     * from "the animation was deliberately switched off in settings". */
+    printf("anim: motion_mode=%u animations_enabled=%u raw_mode=%u\n", (unsigned)lw_os_motion_get(),
+           lw_os_animations_enabled(), lw_os_motion_mode_raw());
+    for (unsigned i = 0; i < 2; i++) {
+        const char *clip = lw_os_actor_clip(i);
+        uint16_t frame = lw_os_actor_frame(i);
+        printf("anim %u: clip=%s frame=%u motion=%u animation_ms=%u phase=%u\n", (unsigned)i,
+               clip ? clip : "(none)", (unsigned)frame,
+               duo ? (unsigned)duo->actors[i].motion : 0u,
+               duo ? (unsigned)duo->actors[i].animation_ms : 0u,
+               duo ? (unsigned)duo->phase : 0u);
+    }
+    fflush(stdout);
+    return 0;
+}
+
+static int cmd_sched(int argc, char **argv)
+{
+    /* How often the OS tick really ran. The OS timer is registered for 20 ms;
+     * if the average gap is 120 ms the LVGL task is starved and every animation
+     * is being sampled that much slower - which is what "frames are missing"
+     * actually looks like on the panel. "sched reset" starts a fresh window. */
+    if (argc >= 2 && strcmp(argv[1], "reset") == 0) {
+        lw_os_tick_stats_reset();
+        printf("sched: reset ok\n");
+        fflush(stdout);
+        return 0;
+    }
+    uint32_t calls = 0, worst = 0, avg = 0;
+    lw_os_tick_stats(&calls, &worst, &avg);
+    printf("sched: ticks=%u avg_gap=%u ms max_gap=%u ms (timer period 20 ms)\n",
+           (unsigned)calls, (unsigned)avg, (unsigned)worst);
+    fflush(stdout);
+    return 0;
+}
+
+static int cmd_fps(int argc, char **argv)
+{
+    /* Real frame rate, measured by the LVGL adapter once a second. Without this
+     * a performance claim is only an impression: the same screen can feel
+     * "slow" because of one 300 ms repaint while the average is fine, or the
+     * other way round. Reset with "fps reset" to measure a window. */
+    lv_display_t *disp = s_snap_display ? s_snap_display : lv_display_get_default();
+    if (disp == NULL) {
+        printf("fps: no display\n");
+        return 1;
+    }
+#if CONFIG_ESP_LVGL_ADAPTER_ENABLE_FPS_STATS
+    if (argc >= 2 && strcmp(argv[1], "reset") == 0) {
+        esp_err_t reset = esp_lv_adapter_fps_stats_reset(disp);
+        printf("fps: reset %s\n", reset == ESP_OK ? "ok" : "failed");
+        return reset == ESP_OK ? 0 : 1;
+    }
+    uint32_t fps = 0;
+    esp_err_t err = esp_lv_adapter_get_fps(disp, &fps);
+    if (err != ESP_OK) {
+        printf("fps: unavailable (%s)\n", esp_err_to_name(err));
+        return 1;
+    }
+    printf("fps: %u\n", (unsigned)fps);
+#else
+    (void)argc;
+    (void)argv;
+    printf("fps: statistics not compiled in (CONFIG_ESP_LVGL_ADAPTER_ENABLE_FPS_STATS)\n");
+    return 1;
+#endif
+    fflush(stdout);
+    return 0;
+}
 #endif /* CONFIG_LW_DIAG_CONSOLE */
 
 #if CONFIG_LW_FAULT_INJECT
@@ -465,11 +564,23 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_clock = { .command = "clock",
                                         .help = "effective clock: source, phase, next boundary",
                                         .func = &cmd_clock };
+    const esp_console_cmd_t c_fps = { .command = "fps",
+                                      .help = "measured frame rate (fps reset to start a window)",
+                                      .func = &cmd_fps };
+    const esp_console_cmd_t c_sched = { .command = "sched",
+                                        .help = "OS tick gaps: is the LVGL task starved?",
+                                        .func = &cmd_sched };
+    const esp_console_cmd_t c_anim = { .command = "anim",
+                                       .help = "actor clip, frame index and model clock",
+                                       .func = &cmd_anim };
     esp_console_cmd_register(&c_diag);
     esp_console_cmd_register(&c_diagjson);
     esp_console_cmd_register(&c_diagerr);
     esp_console_cmd_register(&c_content);
     esp_console_cmd_register(&c_clock);
+    esp_console_cmd_register(&c_fps);
+    esp_console_cmd_register(&c_sched);
+    esp_console_cmd_register(&c_anim);
 #endif
 #if CONFIG_LW_FAULT_INJECT
     const esp_console_cmd_t c_fault = { .command = "fault",
@@ -481,6 +592,6 @@ bool lw_capture_console_start(void)
         ESP_LOGW(TAG, "console REPL failed to start");
         return false;
     }
-    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson / content / clock)");
+    ESP_LOGI(TAG, "console ready on UART0 (shot / tap / status / diag / diagjson / content / clock / fps / sched)");
     return true;
 }

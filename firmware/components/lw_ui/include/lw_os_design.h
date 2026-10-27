@@ -15,6 +15,14 @@ typedef enum { LW_MOTION_FULL,LW_MOTION_REDUCED,LW_MOTION_OFF } lw_motion_mode_t
 typedef enum { LW_MOVE_PAGE,LW_MOVE_CONTROL,LW_MOVE_DIALOG,LW_MOVE_TOAST,LW_MOVE_REWARD,LW_MOVE_THEME,LW_MOVE_RETURN,LW_MOVE_BOOT,LW_MOVE_ACTOR,LW_MOVE_PAPER,LW_MOVE_PHOTO,LW_MOVE_CARD,LW_MOVE_LOCK,LW_MOVE_FLAP,LW_MOVE_DISMISS } lw_motion_kind_t;
 void lw_os_motion_mode(lw_motion_mode_t);
 lw_motion_mode_t lw_os_motion_get(void);
+/* Read-only halves of lw_os_motion_get() for board diagnostics. */
+unsigned lw_os_animations_enabled(void);
+unsigned lw_os_motion_mode_raw(void);
+/* Turn the saved animation switch on or off and persist it. Saved settings can
+ * carry animations=0 from an earlier session; that freezes every actor at frame
+ * 0 and makes page transitions snap, and it survives reflashing because NVS is
+ * not erased. Returns the new state. */
+bool lw_os_animations_set(bool on);
 void lw_os_motion(lv_obj_t *,lw_motion_kind_t);
 void lw_os_motion_exit(lv_obj_t *);
 void lw_os_motion_touch(lv_obj_t *);

@@ -89,3 +89,6 @@ __pycache__/
 
 # Private card build (contains the private qianqian-base.lwp; never publish)
 /dist/littleworld-v4-sd-private/
+
+/reports/board/*.bmp
+/reports/board-v43/

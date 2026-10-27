@@ -28,6 +28,11 @@ bool lw_assets_register(const lw_asset_spec_t *specs, size_t count, size_t budge
 const lw_asset_spec_t *lw_assets_find(const char *id);
 size_t lw_asset_frame_bytes(const lw_asset_spec_t *spec);
 lw_asset_lease_t *lw_asset_acquire(const char *id, uint16_t frame);
+/* Re-read one more frame of the same asset into an existing lease. The pixel
+ * buffer is reused, so an animation no longer allocates and frees a frame
+ * buffer (and drops the LVGL image cache entry) on every single frame. The
+ * caller owns the detach/invalidate step; lw_sprite does it right after. */
+bool lw_asset_refill(lw_asset_lease_t *lease, uint16_t frame);
 const lv_image_dsc_t *lw_asset_image(const lw_asset_lease_t *lease);
 void lw_asset_release(lw_asset_lease_t *lease);
 lw_asset_stats_t lw_assets_stats(void);

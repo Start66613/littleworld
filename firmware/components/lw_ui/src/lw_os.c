@@ -39,6 +39,8 @@ typedef struct {
     int pull_start,pull_distance; bool pull_active,pull_opening,pull_moved,reverse_page;
     uint32_t suppress_control_until,boot_ms,lock_ms;
     lv_obj_t *dock,*dock_handle,*light;uint32_t dock_idle;bool dock_expanded;lw_day_phase_t phase;
+    /* Tick gap accounting for lw_os_tick_stats(); see lw_os.h. */
+    uint32_t tick_calls,tick_last,tick_max_gap,tick_gap_sum;
 } os_t;
 static os_t *s;
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
@@ -632,18 +634,39 @@ static void clock_fields(unsigned *hour, unsigned *minute, char *qualifier, size
 
 static void refresh(void)
 {
-    if (s->net_icon) lv_obj_set_style_opa(s->net_icon,s->system->wifi==LW_WIFI_CONNECTED ? 255 : s->system->wifi==LW_WIFI_OFF ? 50 : 125,0);
+    /* Labels are only rewritten when their text actually changes. lv_label_set_text_fmt()
+     * always frees and re-formats its buffer and invalidates the widget, so doing it
+     * every second for five labels (plus the badge/slider churn below) forced a full
+     * page repaint once a second even while nothing changed on screen. */
+    static unsigned last_refresh_brightness=UINT32_MAX,last_refresh_volume=UINT32_MAX;
+    static char last_refresh_wifi[64];
+    static unsigned last_refresh_hour=UINT32_MAX,last_refresh_minute=UINT32_MAX;
+    static int last_refresh_day=INT32_MIN,last_refresh_month=INT32_MIN,last_refresh_year=INT32_MIN;
+    static unsigned last_refresh_days=UINT32_MAX;
+    static char last_refresh_qualifier[24];
+    static bool last_refresh_demo=true,last_refresh_have_clock=false;
+    static unsigned last_refresh_muted=UINT32_MAX;
+    static unsigned last_refresh_wifi_opa=UINT32_MAX;
+    unsigned wifi_opa=s->system->wifi==LW_WIFI_CONNECTED ? 255 : s->system->wifi==LW_WIFI_OFF ? 50 : 125;
+    if (s->net_icon && wifi_opa!=last_refresh_wifi_opa) { last_refresh_wifi_opa=wifi_opa; lv_obj_set_style_opa(s->net_icon,wifi_opa,0); }
     if (s->volume_icon && s->mute_badge) {
-        if (s->system->prefs.muted) { lv_obj_add_flag(s->volume_icon,LV_OBJ_FLAG_HIDDEN); lv_obj_remove_flag(s->mute_badge,LV_OBJ_FLAG_HIDDEN); }
-        else { lv_obj_remove_flag(s->volume_icon,LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(s->mute_badge,LV_OBJ_FLAG_HIDDEN); }
+        unsigned muted=s->system->prefs.muted ? 1u : 0u;
+        if (muted!=last_refresh_muted) {
+            last_refresh_muted=muted;
+            if (s->system->prefs.muted) { lv_obj_add_flag(s->volume_icon,LV_OBJ_FLAG_HIDDEN); lv_obj_remove_flag(s->mute_badge,LV_OBJ_FLAG_HIDDEN); }
+            else { lv_obj_remove_flag(s->volume_icon,LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(s->mute_badge,LV_OBJ_FLAG_HIDDEN); }
+        }
     }
     for (unsigned layer=0;layer<2;layer++) {
         lv_obj_t **controls=layer ? s->over_controls : s->base_controls;
         if (controls[OC_BRIGHTNESS]) {lv_slider_set_value(controls[OC_BRIGHTNESS],s->system->prefs.brightness,LV_ANIM_OFF);lv_obj_send_event(controls[OC_BRIGHTNESS],LV_EVENT_REFRESH,NULL);}
         if (controls[OC_VOLUME]) {lv_slider_set_value(controls[OC_VOLUME],s->system->prefs.volume,LV_ANIM_OFF);lv_obj_send_event(controls[OC_VOLUME],LV_EVENT_REFRESH,NULL);}
-        if (controls[OC_BRIGHT_VALUE]) { if (available(OC_BRIGHTNESS)) lv_label_set_text_fmt(controls[OC_BRIGHT_VALUE],"%u%%",s->system->prefs.brightness); else lv_label_set_text(controls[OC_BRIGHT_VALUE],"不可用"); }
-        if (controls[OC_VOLUME_VALUE]) { if (available(OC_VOLUME)) lv_label_set_text_fmt(controls[OC_VOLUME_VALUE],"%u%%",s->system->prefs.volume); else lv_label_set_text(controls[OC_VOLUME_VALUE],"不可用"); }
-        if (controls[OC_WIFI_STATUS] && s->overlay!=OS_OVER_PASSWORD) lv_label_set_text(controls[OC_WIFI_STATUS],wifi_text());
+        if (controls[OC_BRIGHT_VALUE] && s->system->prefs.brightness!=last_refresh_brightness) { last_refresh_brightness=s->system->prefs.brightness; if (available(OC_BRIGHTNESS)) lv_label_set_text_fmt(controls[OC_BRIGHT_VALUE],"%u%%",s->system->prefs.brightness); else lv_label_set_text(controls[OC_BRIGHT_VALUE],"不可用"); }
+        if (controls[OC_VOLUME_VALUE] && s->system->prefs.volume!=last_refresh_volume) { last_refresh_volume=s->system->prefs.volume; if (available(OC_VOLUME)) lv_label_set_text_fmt(controls[OC_VOLUME_VALUE],"%u%%",s->system->prefs.volume); else lv_label_set_text(controls[OC_VOLUME_VALUE],"不可用"); }
+        if (controls[OC_WIFI_STATUS] && s->overlay!=OS_OVER_PASSWORD) {
+            const char *text=wifi_text();
+            if (strcmp(text,last_refresh_wifi)!=0) { snprintf(last_refresh_wifi,sizeof(last_refresh_wifi),"%s",text); lv_label_set_text(controls[OC_WIFI_STATUS],text); }
+        }
     }
     /* Both skins reflect their toggle, Codex's contribution, kept. */
     lw_skin_select(s->over_controls[OC_DND],s->system->prefs.dnd);lw_skin_select(s->over_controls[OC_MUTE],s->system->prefs.muted);
@@ -653,10 +676,23 @@ static void refresh(void)
     clock_fields(&hour,&minute,qualifier,sizeof(qualifier),&demo);
     lw_ui_clock_t clock; bool have_clock=lw_ui_clock_read(&clock);
     lw_date_t d=have_clock ? (lw_date_t){clock.year,(int)clock.month,(int)clock.day} : lw_today();
-    if (s->clock) lv_label_set_text_fmt(s->clock,"%02u:%02u   %d 月 %d 日%s",hour,minute,d.month,d.day,qualifier);
-    if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",hour,minute);
-    if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,(demo || !have_clock) ? " · 演示日期" : "");
-    if (s->over_controls[OC_LOCK_LOVE]) { int days=lw_days_between(lw_app_state()->anniversary,d)+1; lv_label_set_text_fmt(s->over_controls[OC_LOCK_LOVE],"在一起的第 %d 天，晚安也想对你说。",days<1 ? 1 : days); }
+    bool clock_changed = hour!=last_refresh_hour || minute!=last_refresh_minute ||
+        d.day!=last_refresh_day || d.month!=last_refresh_month || d.year!=last_refresh_year ||
+        demo!=last_refresh_demo || have_clock!=last_refresh_have_clock ||
+        strcmp(qualifier,last_refresh_qualifier)!=0;
+    if (clock_changed) {
+        last_refresh_hour=hour; last_refresh_minute=minute; last_refresh_day=d.day;
+        last_refresh_month=d.month; last_refresh_year=d.year; last_refresh_demo=demo;
+        last_refresh_have_clock=have_clock;
+        snprintf(last_refresh_qualifier,sizeof(last_refresh_qualifier),"%s",qualifier);
+        if (s->clock) lv_label_set_text_fmt(s->clock,"%02u:%02u   %d 月 %d 日%s",hour,minute,d.month,d.day,qualifier);
+        if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",hour,minute);
+        if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,(demo || !have_clock) ? " · 演示日期" : "");
+    }
+    if (s->over_controls[OC_LOCK_LOVE]) {
+        int days=lw_days_between(lw_app_state()->anniversary,d)+1; if (days<1) days=1;
+        if ((unsigned)days!=last_refresh_days) { last_refresh_days=(unsigned)days; lv_label_set_text_fmt(s->over_controls[OC_LOCK_LOVE],"在一起的第 %d 天，晚安也想对你说。",days); }
+    }
 }
 void lw_os_open(lw_os_page_t page)
 {
@@ -738,6 +774,18 @@ static void act(int id)
 static void tick(lv_timer_t *timer)
 {
     (void)timer; uint32_t now=lv_tick_get(),dt=now-s->last_tick; s->last_tick=now; if (dt>200) dt=200;
+    /* Scheduler evidence. The gap is measured before dt is clamped: a 400 ms
+     * gap means the LVGL task did not run for 400 ms, which is exactly what
+     * makes a 125 ms-per-frame animation look like it "skips" or never plays. */
+    {
+        uint32_t gap=now-s->tick_last;
+        s->tick_last=now;
+        if (s->tick_calls) {
+            if (gap>s->tick_max_gap) s->tick_max_gap=gap;
+            s->tick_gap_sum+=gap;
+        }
+        s->tick_calls++;
+    }
     if (s->navigation>=0) { if (s->navigation_ms>dt) s->navigation_ms-=dt; else { int page=s->navigation; lw_os_open((lw_os_page_t)page); } }
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt);
@@ -760,13 +808,23 @@ static void tick(lv_timer_t *timer)
     if(touching || s->overlay!=OS_OVER_NONE || s->boot)s->dock_idle=0;else s->dock_idle+=dt;
     if(s->dock_idle>4500 && (s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG))dock_set(false);
     s->last_clock+=dt; if (s->last_clock>=1000) {
-        s->last_clock=0; refresh(); lw_ambience_refresh(s->light);
+        s->last_clock=0; refresh();
         /* Repaint only when the band actually changes: a per-second render()
          * would rebuild every page 60x more often than the UI needs and is
          * itself a flicker source. lw_ambience_phase() reads the effective
-         * clock, so this is the same phase the status bar shows. */
+         * clock, so this is the same phase the status bar shows.
+         *
+         * lw_ambience_refresh() is inside the same test on purpose: it sets the
+         * TINT style and invalidates the whole 1024x600 layer, so calling it
+         * every second repainted the entire screen once per second even when
+         * the tint never changed - measured as the dominant per-second repaint
+         * cost on the board. */
         lw_day_phase_t phase=lw_ambience_phase();
-        if(s->phase!=phase && s->overlay==OS_OVER_NONE && !s->boot && (s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET)){s->phase=phase;render();}
+        if (phase!=s->phase) {
+            s->phase=phase;
+            if (s->overlay==OS_OVER_NONE && !s->boot && (s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET)) render();
+            else if (s->light) lw_ambience_refresh(s->light);
+        }
     }
     if (s->last_wifi!=s->system->wifi) {
         lw_wifi_status_t prior=s->last_wifi; s->last_wifi=s->system->wifi;
@@ -812,6 +870,25 @@ lv_obj_t *lw_os_control_panel(void) { return s ? s->control_panel : NULL; }
 const lw_duo_t *lw_os_duo_state(void) { return s ? &s->duo : NULL; }
 const char *lw_os_actor_clip(unsigned i) { return s && i<2 && s->clips[i] ? s->clips[i]->asset_id : NULL; }
 uint16_t lw_os_actor_frame(unsigned i) { return s && i<2 && s->sprites[i] ? lw_sprite_frame(s->sprites[i]) : UINT16_MAX; }
+void lw_os_tick_stats(uint32_t *calls, uint32_t *max_gap_ms, uint32_t *avg_gap_ms)
+{
+    /* calls counts every tick; the first one only establishes the baseline, so
+     * there are calls-1 measured gaps. Printing calls-1 as the gap count keeps
+     * "average gap" and "worst gap" describing the same set of samples. */
+    uint32_t total = s ? s->tick_calls : 0;
+    uint32_t samples = total > 0 ? total - 1 : 0;
+    if (calls) *calls = samples;
+    if (max_gap_ms) *max_gap_ms = s ? s->tick_max_gap : 0;
+    if (avg_gap_ms) *avg_gap_ms = (s && samples) ? s->tick_gap_sum / samples : 0;
+}
+void lw_os_tick_stats_reset(void)
+{
+    if (!s) return;
+    s->tick_calls = 0;
+    s->tick_max_gap = 0;
+    s->tick_gap_sum = 0;
+    s->tick_last = lv_tick_get();
+}
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;

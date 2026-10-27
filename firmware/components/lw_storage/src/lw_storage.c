@@ -15,7 +15,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-#define ENTRIES 4
+/* Frame slots. Four was enough for the old static desktop, where only two
+ * images were ever shown, but the animated characters cycle eight 196 KB frames
+ * each. With four slots the cache evicted on every frame change, so each sprite
+ * frame fell back to a synchronous ~9 ms read from the TF card on the LVGL
+ * thread - measured as cache misses=666 evictions=610 over ten seconds of an
+ * idle desktop, and as LVGL timer gaps of 128 ms average against a 20 ms period.
+ * Sixteen slots cover two full eight-frame cycles. The byte budget in lw_art.c
+ * still bounds total memory, so a larger slot count cannot over-allocate. */
+#define ENTRIES 16
 #define QUEUE 8
 #define MAX_FRAME (4u*1024u*1024u)
 typedef struct { char file[128]; uint64_t offset; size_t bytes; uint32_t generation; } cache_key_t;

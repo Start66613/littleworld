@@ -43,6 +43,14 @@ void app_main(void)
     }
     bsp_display_backlight_on();
 
+#if CONFIG_ESP_LVGL_ADAPTER_ENABLE_FPS_STATS
+    /* Frame counter for acceptance measurements (< 2 microseconds per frame,
+     * per the adapter's Kconfig). The "fps" console command reads it. */
+    if (esp_lv_adapter_fps_stats_enable(display, true) != ESP_OK) {
+        ESP_LOGW(TAG, "FPS statistics unavailable");
+    }
+#endif
+
     if (!bsp_display_lock(-1)) {
         ESP_LOGE(TAG, "cannot take the LVGL lock");
         return;

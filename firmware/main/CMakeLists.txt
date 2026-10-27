@@ -9,7 +9,8 @@ idf_component_register(
     # esp_app_format provides esp_app_desc.h for lw_diag_board.c.
     # lw_content is the V4.2 content container read at boot (lw_content_boot.c).
     # lw_engine provides lw_day, the single effective clock used by lw_time_boot.c.
-    REQUIRES esp32_p4_wifi6_touch_lcd_7b lvgl__lvgl lw_ui lw_system lw_backend lw_net lw_storage lw_content lw_engine nvs_flash esp_timer console esp_app_format
+    # espressif__esp_lvgl_adapter provides the frame-rate counter used by the "fps" command.
+    REQUIRES esp32_p4_wifi6_touch_lcd_7b lvgl__lvgl lw_ui lw_system lw_backend lw_net lw_storage lw_content lw_engine nvs_flash esp_timer console esp_app_format espressif__esp_lvgl_adapter
 )
 
 idf_component_get_property(LVGL_LIB lvgl__lvgl COMPONENT_LIB)

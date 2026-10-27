@@ -15,6 +15,21 @@ static void animate(lv_obj_t *o,lv_anim_exec_xcb_t exec,int from,int to,unsigned
     lv_anim_set_duration(&a,duration); lv_anim_set_path_cb(&a,spring ? lv_anim_path_overshoot : lv_anim_path_ease_out); lv_anim_start(&a);
 }
 lw_motion_mode_t lw_os_motion_get(void) { return !lw_app_state()->settings.animations ? LW_MOTION_OFF : motion_mode; }
+/* Diagnostics only: lw_os_motion_get() collapses "the saved setting says no
+ * animation" and "the session mode was switched off" into one value, and those
+ * two have completely different fixes. This exposes the halves separately. */
+unsigned lw_os_animations_enabled(void) { return lw_app_state()->settings.animations ? 1u : 0u; }
+unsigned lw_os_motion_mode_raw(void) { return (unsigned)motion_mode; }
+bool lw_os_animations_set(bool on)
+{
+    lw_state_t *state = lw_app_state();
+    state->settings.animations = on ? 1u : 0u;
+    /* The session mode is separate from the saved switch; leaving it at OFF
+     * would keep the UI static even after the switch is turned back on. */
+    if (on && motion_mode == LW_MOTION_OFF) motion_mode = LW_MOTION_FULL;
+    lw_app_state_save();
+    return on;
+}
 void lw_os_motion_mode(lw_motion_mode_t mode) { motion_mode=mode; }
 void lw_os_motion_cancel(lv_obj_t *o)
 { lv_anim_delete(o,move); lv_anim_delete(o,move_x); lv_anim_delete(o,appear); lv_anim_delete(o,scale); lv_anim_delete(o,progress); move(o,0); move_x(o,0); appear(o,255); scale(o,256); progress(o,0); }

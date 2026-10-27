@@ -32,6 +32,11 @@ static lw_sprite_t *dog; static const lw_clip_t *dog_clip;
 static bool polished; static uint32_t room_clock,room_last,reaction_until;
 static bool joint_bed;static uint32_t empty_until;
 
+/* The couple's wave clip is 16 frames at 100 ms = 1600 ms. A 1600 ms reaction
+ * window ended exactly on the last frame, so on the board the greeting was over
+ * before it registered. 2600 ms plays the whole clip and holds the final pose. */
+#define LW_PET_WAVE_MS 2600u
+
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
@@ -44,7 +49,7 @@ static void refresh(void)
             const char *name=pet->sleeping ? "v42.couple.rest" : room_clock<reaction_until ? "v42.couple.wave" : "v42.couple.seated";
             const lw_clip_t *clip=lw_polish_clip(name); if (!clip) clip=lw_polish_clip("v42.couple.seated");
             if (clip && clip!=couple_clip) {lw_sprite_play(couple,clip);couple_clip=clip;}
-            if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock<reaction_until ? 1600-(reaction_until-room_clock) : room_clock);
+            if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock<reaction_until ? LW_PET_WAVE_MS-(reaction_until-room_clock) : room_clock);
         }
         if (dog) {const char *id=joint_bed ? (pet->sleeping ? "v42.dogbed.sleep" : room_clock<empty_until ? "v42.dogbed.empty" : "v42.dogbed.look") : pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle";const lw_clip_t *clip=lw_polish_clip(id);if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
     }
@@ -95,7 +100,7 @@ static void do_action(lw_pet_action_t action, const char *message)
     s_feedback_until = now + 4;
     if(polished)lw_os_scene_focus(true);
     if(polished && action==LW_PET_ACTION_PLAY && !state->pet.sleeping)empty_until=room_clock+2000;
-    if (polished && !state->pet.sleeping && action!=LW_PET_ACTION_SLEEP && action!=LW_PET_ACTION_WAKE) reaction_until=room_clock+1600;
+    if (polished && !state->pet.sleeping && action!=LW_PET_ACTION_SLEEP && action!=LW_PET_ACTION_WAKE) reaction_until=room_clock+LW_PET_WAVE_MS;
     refresh();
 }
 

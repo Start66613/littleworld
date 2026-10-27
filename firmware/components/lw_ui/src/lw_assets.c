@@ -8,7 +8,7 @@
 
 #define MAX_ASSETS 64u
 #define MAX_FRAME_BYTES 1250000u
-struct lw_asset_lease { lv_image_dsc_t image; uint8_t *pixels; };
+struct lw_asset_lease { lv_image_dsc_t image; uint8_t *pixels; const lw_asset_spec_t *spec; };
 static const lw_asset_spec_t *s_specs;
 static size_t s_count;
 static lw_asset_stats_t s_stats;
@@ -64,9 +64,20 @@ lw_asset_lease_t *lw_asset_acquire(const char *id, uint16_t frame)
     lease->image.header.w=spec->width; lease->image.header.h=spec->height;
     lease->image.header.stride=spec->width*2;
     lease->image.data_size=(uint32_t)bytes; lease->image.data=lease->pixels;
+    lease->spec=spec;
     s_stats.live_bytes+=bytes; s_stats.live_leases++; s_stats.loaded_frames++;
     if (s_stats.live_bytes>s_stats.peak_bytes) s_stats.peak_bytes=s_stats.live_bytes;
     return lease;
+}
+
+bool lw_asset_refill(lw_asset_lease_t *lease, uint16_t frame)
+{
+    if (!lease || !lease->spec || frame>=lease->spec->frames) { s_stats.failures++; return false; }
+    if (lw_fault_should_fail(LW_FAULT_ASSET_ACQUIRE)) { s_stats.failures++; return false; }
+    size_t bytes=lease->image.data_size;
+    if (!lease->spec->read(lease->spec->context,frame,lease->pixels,bytes)) { s_stats.failures++; return false; }
+    s_stats.loaded_frames++;
+    return true;
 }
 
 const lv_image_dsc_t *lw_asset_image(const lw_asset_lease_t *lease) { return lease ? &lease->image : NULL; }

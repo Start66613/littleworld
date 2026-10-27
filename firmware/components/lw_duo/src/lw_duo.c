@@ -4,7 +4,11 @@
 #include <string.h>
 
 static const lw_interaction_def_t s_catalog[]={
-    {LW_DUO_GREET,"Meet and wave",LW_ACTOR_WAVE,1600},
+    /* The wave clip is 16 frames at 100 ms, i.e. exactly 1600 ms, so a 1600 ms
+     * interaction ended on the frame where the last pose appears - on the board
+     * the greeting was over before it could be seen. 2600 ms lets the whole
+     * animation play and hold the final pose for about a second. */
+    {LW_DUO_GREET,"Meet and wave",LW_ACTOR_WAVE,2600},
     {LW_DUO_STAND,"Side by side",LW_ACTOR_IDLE,2200},
     {LW_DUO_SIT,"Sit together",LW_ACTOR_SIT,2800},
     {LW_DUO_LETTER,"Exchange a letter",LW_ACTOR_LETTER,2400},
