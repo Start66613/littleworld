@@ -77,6 +77,30 @@ FAT32 长名在卡上已实测：写入 `littleworld-v4.json` → `dir /x` 显�
 - 公开包 18 文件：robocopy 后逐文件 SHA-256 比对，**18/18 全部一致**。
 - 私有包 19 文件：**19/19 全部一致**，`qianqian-base.lwp` SHA-256 `FD38DCA4CF666B2611FD49088660A29A3A036874A28AAF22CE7AB619138BD8F5`。
 - 卡上实物用固件侧打包器只读复核：`package_v4_sd.py --verify-only --target F:\littleworld` → `"ok": true`，19 个文件全部通过几何与哈希检查，EXIT 0。
+- `chkdsk F:`（只读）：`Windows has scanned the file system and found no problems.`，1,948,003 个分配单元，其中 1,945,695 可用，与 FSInfo 记录的 1,945,695 完全一致。
+- 引导扇区结构抽查（裸卷读取）：`MSWIN4.1` / 512 B 扇区 / 64 扇区每簇 / 32 保留扇区 / 2 个 FAT / FAT32 大小 15,219 扇区 / 根目录簇 2 / FSInfo 扇区 1 / 备份引导扇区 6 / `0x55AA` 签名 / 备份引导与主引导逐字节相同。
+
+### 用固件自己的判定逻辑复核卡（不是用打包器的逻辑）
+
+`lw_resource_verify()` 只做三件事：读 `littleworld-v4.json` 取 `schema` 与 `version`，然后对 3 个主题各查 `scene-N.lwr`（须 `LWSR0001` + 1024×600）与 `scene-N-thumb.lwr`（须 `LWSR0001` + 256×150）。按同一套规则在卡上跑了一遍：
+
+```
+manifest exists   : True
+schema            : 1 (firmware needs 1)
+version           : 4 (firmware accepts 1..4)
+scene-0.lwr           magic=True 1024x600 want=1024x600 -> OK
+scene-0-thumb.lwr     magic=True  256x150  want= 256x150 -> OK
+scene-1.lwr           magic=True 1024x600 want=1024x600 -> OK
+scene-1-thumb.lwr     magic=True  256x150  want= 256x150 -> OK
+scene-2.lwr           magic=True 1024x600 want=1024x600 -> OK
+scene-2-thumb.lwr     magic=True  256x150  want= 256x150 -> OK
+themes bitmask    : 111
+status would be   : LW_RESOURCE_OK / 资源已验证
+```
+
+也就是说：**只要固件这一版带 LFN，卡挂载成功后资源校验会通过**，`lw_resource_fallback()` 返回 false，美术不会退化成内置资源。
+
+注意 `lw_resource.c` **不校验** `littleworld-v4.sha256`（固件里没有这个逻辑），清单文件的消费方是打包器与人工核对，不是设备。设备只认 manifest 的 schema/version 与 6 个场景文件头。
 
 ## 5. 私有素材边界
 
