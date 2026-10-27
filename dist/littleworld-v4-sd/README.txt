@@ -12,7 +12,8 @@ Little World V4.3 TF 卡资源包
   /sdcard/littleworld/scene-1.lwr  scene-1-thumb.lwr
   /sdcard/littleworld/scene-2.lwr  scene-2-thumb.lwr
   /sdcard/littleworld/male.lwp              （男方 7 段动画）
-  /sdcard/littleworld/qianqian-base.lwp     （千千 13 段动画）
+  qianqian-base.lwp 不在本包内：它含私有素材，只打进私有包。
+  没有它时千千用内置待机帧 + 招手包，画面正常但动作少。
   /sdcard/littleworld/qianqian-wave.lwp     （千千招手）
   以下为可选，缺了不会崩，只是少一层美术：
   /sdcard/littleworld/daily.lwp             （双人坐姿与狗窝 8 段）

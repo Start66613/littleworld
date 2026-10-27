@@ -48,6 +48,22 @@
     "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
   },
   {
+    "file": "20-rpg-reward.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 387320,
+    "sha256": "86b367af5b894e7894a241834fb9abc2a4e6c26bdc7492f67ce46d6d340a31f8",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "21-album-empty.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 142638,
+    "sha256": "d186230350dc8056538c83a6b4f9e2c3003799ecd1fcafa4c9fe2df19b9d4190",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
     "file": "v4-greet-00.png",
     "width": 1024,
     "height": 600,
@@ -64,19 +80,43 @@
     "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
   },
   {
-    "file": "20-rpg-reward.png",
+    "file": "v43-dock-open-03.png",
     "width": 1024,
     "height": 600,
-    "bytes": 387320,
-    "sha256": "86b367af5b894e7894a241834fb9abc2a4e6c26bdc7492f67ce46d6d340a31f8",
+    "bytes": 374389,
+    "sha256": "eb413c3e06f41ba78dcf68e6273a861bb03e525dd6a9acb5e8d7ef7f980c93ca",
     "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
   },
   {
-    "file": "21-album-empty.png",
+    "file": "v43-home-night.png",
     "width": 1024,
     "height": 600,
-    "bytes": 142638,
-    "sha256": "d186230350dc8056538c83a6b4f9e2c3003799ecd1fcafa4c9fe2df19b9d4190",
+    "bytes": 349249,
+    "sha256": "97deb2463924db8fc453c67d2be50e1321e875ddbb1021ceedf48a31cd9650fb",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "v43-daily-night.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 423910,
+    "sha256": "614f54f469d799ac56b8435cea7ea4f91451801d7f7dc1c468cd5bd0e9c588b9",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "v43-time-settings.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 128392,
+    "sha256": "cb9961b68b72e7ad505c2c4532900d805d67bbaf0cd55d31bab27a5c03ead52b",
+    "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
+  },
+  {
+    "file": "component-dog-sleep.png",
+    "width": 1024,
+    "height": 600,
+    "bytes": 463862,
+    "sha256": "a07047e4bf2485252013f7a7a991cf7b478b595cd413ece254ae6db8eb627738",
     "source": "real Windows LVGL framebuffer (build/host/LittleWorld.exe --os-v2-test)"
   }
 ]

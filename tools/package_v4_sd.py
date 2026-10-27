@@ -425,7 +425,7 @@ def package(sources: Sequence[Path], out: Path, include_private: bool = False) -
     (out / "PACKAGE.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    (out / "README.txt").write_text(_readme_text(), encoding="utf-8")
+    (out / "README.txt").write_text(_readme_text(include_private), encoding="utf-8")
     return report
 
 
@@ -509,8 +509,8 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def _readme_text() -> str:
-    return (
+def _readme_text(include_private: bool = False) -> str:
+    base = (
         "Little World V4.3 TF 卡资源包\n"
         "================================\n\n"
         "把本目录下的 littleworld 文件夹整个复制到 TF 卡根目录，\n"
@@ -523,8 +523,20 @@ def _readme_text() -> str:
         "  /sdcard/littleworld/scene-1.lwr  scene-1-thumb.lwr\n"
         "  /sdcard/littleworld/scene-2.lwr  scene-2-thumb.lwr\n"
         "  /sdcard/littleworld/male.lwp              （男方 7 段动画）\n"
-        "  /sdcard/littleworld/qianqian-base.lwp     （千千 13 段动画）\n"
-        "  /sdcard/littleworld/qianqian-wave.lwp     （千千招手）\n"
+    )
+    if include_private:
+        qianqian = (
+            "  /sdcard/littleworld/qianqian-base.lwp     （千千 13 段动画，私有素材）\n"
+        )
+    else:
+        qianqian = (
+            "  qianqian-base.lwp 不在本包内：它含私有素材，只打进私有包。\n"
+            "  没有它时千千用内置待机帧 + 招手包，画面正常但动作少。\n"
+        )
+    return (
+        base
+        + qianqian
+        + "  /sdcard/littleworld/qianqian-wave.lwp     （千千招手）\n"
         "  以下为可选，缺了不会崩，只是少一层美术：\n"
         "  /sdcard/littleworld/daily.lwp             （双人坐姿与狗窝 8 段）\n"
         "  /sdcard/littleworld/ui.lwp                （Meowa 组件图集）\n"

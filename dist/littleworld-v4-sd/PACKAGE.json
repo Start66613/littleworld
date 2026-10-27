@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-27T15:42:57+08:00",
-  "gitCommit": "e70042b",
+  "generatedAt": "2026-10-27T15:54:59+08:00",
+  "gitCommit": "041bf46",
   "schema": 1,
   "packVersion": 4,
   "sources": [
@@ -8,7 +8,7 @@
     "D:\\LittleWorld-V43-Board\\assets\\visual-v4-3\\runtime",
     "D:\\LittleWorld-V43-Board\\assets\\visual-v4\\runtime"
   ],
-  "target": "D:\\LittleWorld-V43-Board\\dist\\littleworld-v4-sd\\littleworld",
+  "target": "dist\\littleworld-v4-sd\\littleworld",
   "private": false,
   "manifestBytes": 118,
   "totalBytes": 52854586,
