@@ -1,0 +1,9 @@
+# P0-E benchmark variant: one software draw unit instead of two.
+#
+# The `os` image runs CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT=2, i.e. two software
+# renderer threads. On a two-core P4 the LVGL task and the draw threads compete
+# for the same cores; this variant halves the draw threads so the comparison
+# isolates "more parallel draw threads" from "the draw work itself".
+#
+# Measurement build only.
+CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT=1

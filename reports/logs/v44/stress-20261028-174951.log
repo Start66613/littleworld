@@ -1,0 +1,37 @@
+﻿# V4.4 soak: 30 minutes, port COM5, started 2026-10-28T17:49:51.8555050+08:00
+minute  1  page desktop   heap 16244175  psram 16199940  resident 8681472  evict 31  avg_gap 20 ms  last_error none
+minute  2  page world     heap 16249011  psram 16199940  resident 8681472  evict 31  avg_gap 20 ms  last_error none
+minute  3  page music     heap 16048515  psram 16003336  resident 8681472  evict 31  avg_gap 21 ms  last_error none
+minute  4  page pet       heap 14736603  psram 14725376  resident 8681472  evict 38  avg_gap 21 ms  last_error none
+minute  5  page rpg       heap 15537455  psram 15511808  resident 8146944  evict 62  avg_gap 23 ms  last_error none
+minute  6  page memories  heap 17193915  psram 17150220  resident 8146944  evict 62  avg_gap 23 ms  last_error none
+minute  7  page desktop   heap 16809323  psram 16756996  resident 8146944  evict 62  avg_gap 23 ms  last_error none
+minute  8  page world     heap 16806559  psram 16740620  resident 8146944  evict 62  avg_gap 24 ms  last_error none
+minute  9  page music     heap 17446371  psram 17412352  resident 6291456  evict 90  avg_gap 25 ms  last_error none
+minute 10  page pet       heap 15775211  psram 15741184  resident 7815168  evict 131  avg_gap 26 ms  last_error none
+minute 11  page rpg       heap 15537515  psram 15511808  resident 8146944  evict 159  avg_gap 27 ms  last_error none
+minute 12  page memories  heap 17193947  psram 17150220  resident 8146944  evict 159  avg_gap 28 ms  last_error none
+minute 13  page desktop   heap 16800507  psram 16756996  resident 8146944  evict 159  avg_gap 28 ms  last_error none
+minute 14  page world     heap 16797335  psram 16756996  resident 8146944  evict 159  avg_gap 29 ms  last_error none
+minute 15  page music     heap 16048519  psram 16003336  resident 8681472  evict 161  avg_gap 29 ms  last_error none
+minute 16  page pet       heap 14747431  psram 14725376  resident 8524800  evict 172  avg_gap 30 ms  last_error none
+minute 17  page rpg       heap 15079295  psram 15053056  resident 8589312  evict 193  avg_gap 31 ms  last_error none
+minute 18  page memories  heap 17193967  psram 17150220  resident 8146944  evict 197  avg_gap 31 ms  last_error none
+minute 19  page desktop   heap 16800495  psram 16756996  resident 8146944  evict 197  avg_gap 32 ms  last_error none
+minute 20  page world     heap 16797599  psram 16756996  resident 8146944  evict 197  avg_gap 32 ms  last_error none
+minute 21  page music     heap 16048535  psram 16003336  resident 8681472  evict 199  avg_gap 33 ms  last_error none
+minute 22  page pet       heap 14739375  psram 14725376  resident 8681472  evict 207  avg_gap 33 ms  last_error none
+minute 23  page rpg       heap 15431519  psram 15397120  resident 8257536  evict 234  avg_gap 34 ms  last_error none
+minute 24  page memories  heap 17079187  psram 17035532  resident 8257536  evict 234  avg_gap 35 ms  last_error none
+minute 25  page desktop   heap 16694623  psram 16642308  resident 8257536  evict 234  avg_gap 35 ms  last_error none
+minute 26  page world     heap 16797315  psram 16756996  resident 8146944  evict 235  avg_gap 35 ms  last_error none
+minute 27  page music     heap 16048539  psram 16003336  resident 8681472  evict 237  avg_gap 35 ms  last_error none
+minute 28  page pet       heap 14747491  psram 14725376  resident 8902656  evict 248  avg_gap 36 ms  last_error none
+minute 29  page rpg       heap 15537475  psram 15511808  resident 8146944  evict 268  avg_gap 37 ms  last_error none
+minute 30  page memories  heap 17193947  psram 17150220  resident 8146944  evict 268  avg_gap 37 ms  last_error none
+# soak finished after 2.8 minutes, 30 samples
+heap_free first=16244175 last=17193947 delta=949772 min=14736603
+psram_free first=16199940 last=17150220 delta=950280
+cache_evictions first=31 last=268
+samples with non-none last_error: 0
+samples with safe_mode true: 0

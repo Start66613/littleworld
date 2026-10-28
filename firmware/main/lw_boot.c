@@ -324,6 +324,14 @@ static bool hw_volume(void *context, unsigned value, bool muted)
 
 static void start_os(void)
 {
+    /* V4.4 P0-D: boot phase timing. Everything below runs inside the LVGL lock
+     * and before the first frame, so the sum of these stamps is the real
+     * "power-on to first frame" budget the user waits through. Printed as one
+     * line at the end so a serial capture can read it without scrolling.
+     * esp_timer is microseconds since boot and is already running here. */
+    const int64_t t_start = esp_timer_get_time();
+    int64_t t_mark = t_start;
+
     s_prefs_io = *lw_store_nvs_io(&s_prefs_key);
     s_rpg_io = *lw_store_nvs_io(&s_rpg_key);
 
@@ -334,6 +342,7 @@ static void start_os(void)
 #endif
     lw_hw_caps_t caps = lw_hw_begin(want_audio);
     s_hw_caps = caps;
+    const int64_t t_hw = esp_timer_get_time();
 
     lw_system_backend_t backend = {0};
     backend.simulated = false;
@@ -387,6 +396,7 @@ static void start_os(void)
     const lw_actor_art_t *art = lw_art_boot(characters_lwfa_start,
                                             (size_t)(characters_lwfa_end - characters_lwfa_start));
     ESP_LOGI(TAG, "art: %s", lw_art_report());
+    const int64_t t_art = esp_timer_get_time();
     if (!art) {
         ESP_LOGW(TAG, "art: %s", "no character source loaded, using the labelled fallback");
     }
@@ -395,6 +405,7 @@ static void start_os(void)
      * from. This has to happen after lw_art_boot() (which resolves the root)
      * but before lw_os_start() (which builds the pages that borrow it). */
     (void)lw_content_boot();
+    const int64_t t_content = esp_timer_get_time();
 
     publish_capabilities();
     if (!lw_os_start(&s_system, art)) {
@@ -404,12 +415,25 @@ static void start_os(void)
         lw_art_release();
         lw_ui_start();
     } else {
+        const int64_t t_ui = esp_timer_get_time();
         /* Later capability changes are applied from the LVGL task only. */
         lv_timer_create(caps_timer_cb, 1000, NULL);
         /* The desktop exists now, so the anniversary is live and the memories
          * page has been built with the built-in table; installing the source
          * here is the one moment it is still closed. */
         lw_content_boot_apply();
+        const int64_t t_apply = esp_timer_get_time();
+        /* Boot phase budget, one line, milliseconds. "hw" is codec/LEDC/SD
+         * bring-up, "art" is the card mount plus six pack headers plus the
+         * read-ahead cache open, "content" is the user content file, "ui" is
+         * the whole first screen build (pages, sprites, fonts), "apply" is the
+         * memories/anniversary install. Anything above ~100 ms is worth its own
+         * investigation in BOOT_ANIMATION.md. */
+        ESP_LOGI(TAG, "boot phases: hw=%lld art=%lld content=%lld ui=%lld apply=%lld total=%lld ms",
+                 (t_hw - t_mark) / 1000, (t_art - t_hw) / 1000,
+                 (t_content - t_art) / 1000, (t_ui - t_content) / 1000,
+                 (t_apply - t_ui) / 1000, (t_apply - t_start) / 1000);
+        t_mark = t_apply;
     }
 
     /* The diagnostics need the live objects, and they must be registered after

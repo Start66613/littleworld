@@ -1,0 +1,25 @@
+﻿# desktop slow-burst probe: 7 min, port COM5, started 2026-10-28T18:53:10.8068354+08:00
+18:53:24 #  1 page 0 sched 32/60 ticks 212  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:53:38 #  2 page 0 sched 33/75 ticks 207  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:53:52 #  3 page 0 sched 33/60 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:54:05 #  4 page 0 sched 32/60 ticks 216  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:54:19 #  5 page 0 sched 32/60 ticks 215  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:54:33 #  6 page 0 sched 33/79 ticks 207  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:54:47 #  7 page 0 sched 33/60 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:55:00 #  8 page 0 sched 31/60 ticks 217  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:55:14 #  9 page 0 sched 32/60 ticks 215  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:55:28 # 10 page 0 sched 33/62 ticks 207  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:55:42 # 11 page 0 sched 33/68 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:55:55 # 12 page 0 sched 31/60 ticks 217  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:56:09 # 13 page 0 sched 32/62 ticks 216  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:56:23 # 14 page 0 sched 33/74 ticks 209  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:56:37 # 15 page 0 sched 33/62 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:56:51 # 16 page 0 sched 31/60 ticks 217  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:57:04 # 17 page 0 sched 32/69 ticks 216  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:57:18 # 18 page 0 sched 33/79 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:57:32 # 19 page 0 sched 33/62 ticks 207  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:57:46 # 20 page 0 sched 32/60 ticks 217  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:57:59 # 21 page 0 sched 32/77 ticks 216  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:58:13 # 22 page 0 sched 33/72 ticks 208  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:58:27 # 23 page 0 sched 33/74 ticks 207  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?
+18:58:41 # 24 page 0 sched 31/60 ticks 216  sprites 2 running 2  leases 3 bytes 1228800  resident 8681472 evict 2044  a0 ?  a1 ?

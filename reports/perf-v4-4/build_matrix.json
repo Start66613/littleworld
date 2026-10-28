@@ -1,0 +1,74 @@
+[
+    {
+        "config":  "os",
+        "build_dir":  "firmware/build/os",
+        "bytes":  2359248,
+        "sha256":  "35cc2611db8cc383644bfa83806ad8e70b72a230122a4fb958a8a873bb39ec8e",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v44/build-os.log",
+        "status":  "built",
+        "effective":  {
+                          "CONFIG_LW_TEAR_AVOID_TRIPLE_PARTIAL":  "y",
+                          "CONFIG_LV_DRAW_BUF_ALIGN":  "4",
+                          "CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT":  "2"
+                      }
+    },
+    {
+        "config":  "perf-ppa",
+        "build_dir":  "firmware/build/perf-ppa",
+        "bytes":  2360784,
+        "sha256":  "3dffb637fb775c170d0472a55191dbf4adb9419e7c7639ba83724ac58b311f39",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.perf-ppa",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v44/build-perf-ppa.log",
+        "status":  "built",
+        "effective":  {
+                          "CONFIG_LW_TEAR_AVOID_TRIPLE_PARTIAL":  "y",
+                          "CONFIG_LV_DRAW_BUF_ALIGN":  "128",
+                          "CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT":  "2",
+                          "CONFIG_LV_USE_PPA":  "y",
+                          "CONFIG_LV_USE_PPA_IMG":  "y"
+                      }
+    },
+    {
+        "config":  "perf-unit1",
+        "build_dir":  "firmware/build/perf-unit1",
+        "bytes":  2358896,
+        "sha256":  "d802532927b268eead969c50b035c4054b4c27fdfcf13d766163f7f3dcf2570c",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.perf-unit1",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v44/build-perf-unit1.log",
+        "status":  "built",
+        "effective":  {
+                          "CONFIG_LW_TEAR_AVOID_TRIPLE_PARTIAL":  "y",
+                          "CONFIG_LV_DRAW_BUF_ALIGN":  "4",
+                          "CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT":  "1"
+                      }
+    },
+    {
+        "config":  "perf-double",
+        "build_dir":  "firmware/build/perf-double",
+        "bytes":  2359248,
+        "sha256":  "d4cb20079599fc3c344d41739665e2eb2a763c8edb5d6bdc11c91de2997c3d89",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.perf-double",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v44/build-perf-double.log",
+        "status":  "built",
+        "effective":  {
+                          "CONFIG_LW_TEAR_AVOID_DOUBLE_PARTIAL":  "y",
+                          "CONFIG_LV_DRAW_BUF_ALIGN":  "4",
+                          "CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT":  "2"
+                      }
+    },
+    {
+        "config":  "perf-full",
+        "build_dir":  "firmware/build/perf-full",
+        "bytes":  2359248,
+        "sha256":  "615feb34b0ae48ea7008709ca10cb11e22773aef3c3a61e620df30b9977f0ff2",
+        "defaults":  "sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os;sdkconfig.extra.perf-full",
+        "log":  "D:/LittleWorld-V43-Board/reports/logs/v44/build-perf-full.log",
+        "status":  "built",
+        "effective":  {
+                          "CONFIG_LW_TEAR_AVOID_TRIPLE_FULL":  "y",
+                          "CONFIG_LV_DRAW_BUF_ALIGN":  "4",
+                          "CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT":  "2"
+                      }
+    }
+]

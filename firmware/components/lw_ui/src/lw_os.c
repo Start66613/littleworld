@@ -41,6 +41,8 @@ typedef struct {
     lv_obj_t *dock,*dock_handle,*light;uint32_t dock_idle;bool dock_expanded;lw_day_phase_t phase;
     /* Tick gap accounting for lw_os_tick_stats(); see lw_os.h. */
     uint32_t tick_calls,tick_last,tick_max_gap,tick_gap_sum;
+    /* Boot overlay evidence for lw_os_boot_stats(); see lw_os.h. */
+    uint32_t boot_frames,boot_started_tick,boot_visible_ms,boot_elapsed_ms; bool boot_skipped;
 } os_t;
 static os_t *s;
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
@@ -789,7 +791,7 @@ static void tick(lv_timer_t *timer)
     if (s->navigation>=0) { if (s->navigation_ms>dt) s->navigation_ms-=dt; else { int page=s->navigation; lw_os_open((lw_os_page_t)page); } }
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt);
-    if (s->boot) { s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); } update_actors(dt);
+    if (s->boot) { s->boot_frames++; s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); } update_actors(dt);
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no
@@ -842,13 +844,31 @@ static void tick(lv_timer_t *timer)
     }
     if (s->toast) { s->toast_ms=s->toast_ms>dt ? s->toast_ms-dt : 0; if (!s->toast_ms) { lv_obj_delete(s->toast); s->toast=NULL; } }
 }
-static void boot_deleted(lv_event_t *e) { if (s && s->boot==lv_event_get_target_obj(e)) { s->boot=NULL; s->boot_sprites[0]=s->boot_sprites[1]=NULL; } }
+static void boot_deleted(lv_event_t *e)
+{
+    if (s && s->boot==lv_event_get_target_obj(e)) {
+        /* Freeze the wall clock at the moment the overlay really disappeared:
+         * lv_anim's own duration is a plan, this is what the user waited. */
+        s->boot_elapsed_ms=lv_tick_get()-s->boot_started_tick;
+        s->boot=NULL; s->boot_sprites[0]=s->boot_sprites[1]=NULL;
+    }
+}
 static void boot_complete(lv_anim_t *a) { lv_obj_delete(a->var); }
-static void boot_skip(lv_event_t *e) { (void)e; if (s && s->boot) lv_obj_delete(s->boot); }
+static void boot_skip(lv_event_t *e) { (void)e; if (s && s->boot) { s->boot_skipped=true; lv_obj_delete(s->boot); } }
+static void boot_fade_start(lv_anim_t *a)
+{
+    /* The fade animation only begins after its delay, so this callback is the
+     * last moment the logo and leaves were fully visible. */
+    (void)a;
+    if (s && s->boot_visible_ms==0) s->boot_visible_ms=lv_tick_get()-s->boot_started_tick;
+}
 void lw_os_boot(void)
 {
     if (!s || lw_os_motion_get()==LW_MOTION_OFF) return;
     if (s->boot) lv_obj_delete(s->boot);
+    /* Evidence reset: a re-entered boot (theme change, wake) starts a new window. */
+    s->boot_frames=0; s->boot_visible_ms=0; s->boot_elapsed_ms=0; s->boot_skipped=false;
+    s->boot_started_tick=lv_tick_get();
     s->boot_ms=0; s->boot=lw_os_box(s->root,0,0,1024,600,palette()->bg,0,255); lv_obj_add_flag(s->boot,LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(s->boot,boot_deleted,LV_EVENT_DELETE,NULL); lv_obj_add_event_cb(s->boot,boot_skip,LV_EVENT_CLICKED,NULL);
     lw_os_wallpaper(s->boot,s->painted_wallpaper,0,0,1024,600);
@@ -863,7 +883,7 @@ void lw_os_boot(void)
         if (s->boot_sprites[i]) { lw_sprite_set_pixel_mode(s->boot_sprites[i]); lw_sprite_set_external_clock(s->boot_sprites[i],true); lw_sprite_play(s->boot_sprites[i],clip); lw_os_motion_vector(lw_sprite_object(s->boot_sprites[i]),i ? 84 : -84,10,900,300+i*160); }
     }
     lw_os_label(s->boot,"轻触跳过",&lw_font_18,888,24,120,palette()->muted);
-    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,s->boot); lv_anim_set_exec_cb(&a,fade); lv_anim_set_values(&a,255,0); lv_anim_set_delay(&a,lw_os_motion_get()==LW_MOTION_FULL ? 1740 : 80); lv_anim_set_duration(&a,lw_os_motion_get()==LW_MOTION_FULL ? 260 : 90); lv_anim_set_completed_cb(&a,boot_complete); lv_anim_start(&a);
+    lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,s->boot); lv_anim_set_exec_cb(&a,fade); lv_anim_set_values(&a,255,0); lv_anim_set_delay(&a,lw_os_motion_get()==LW_MOTION_FULL ? 1740 : 80); lv_anim_set_duration(&a,lw_os_motion_get()==LW_MOTION_FULL ? 260 : 90); lv_anim_set_start_cb(&a,boot_fade_start); lv_anim_set_completed_cb(&a,boot_complete); lv_anim_start(&a);
 }
 bool lw_os_boot_active(void) { return s && s->boot; }
 lv_obj_t *lw_os_control_panel(void) { return s ? s->control_panel : NULL; }
@@ -888,6 +908,19 @@ void lw_os_tick_stats_reset(void)
     s->tick_max_gap = 0;
     s->tick_gap_sum = 0;
     s->tick_last = lv_tick_get();
+}
+void lw_os_boot_stats(lw_os_boot_stats_t *out)
+{
+    if (!out) return;
+    out->frames = s ? s->boot_frames : 0;
+    out->active = s && s->boot;
+    out->skipped = s && s->boot_skipped;
+    if (!s) { out->elapsed_ms = 0; out->visible_ms = 0; return; }
+    /* While the overlay is up the numbers are live; once it is gone they are
+     * frozen by boot_deleted(), so a capture taken seconds later still reports
+     * what actually happened. */
+    out->elapsed_ms = s->boot ? (lv_tick_get() - s->boot_started_tick) : s->boot_elapsed_ms;
+    out->visible_ms = s->boot_visible_ms;
 }
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {

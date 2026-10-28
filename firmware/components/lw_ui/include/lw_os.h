@@ -50,3 +50,21 @@ void lw_os_scene_focus(bool focused);
  * Returns the number of ticks and the worst/average gap in milliseconds. */
 void lw_os_tick_stats(uint32_t *calls, uint32_t *max_gap_ms, uint32_t *avg_gap_ms);
 void lw_os_tick_stats_reset(void);
+
+/* Boot-animation evidence (V4.4 P0-D). The boot overlay is the first thing the
+ * user sees, and it is also the first frame the LVGL task has to produce while
+ * the card read-ahead worker and the character sprites are already running.
+ *
+ * `frames` counts OS ticks that ran while the boot overlay existed, so
+ * frames/elapsed is the rate the overlay was actually animated at - a 2000 ms
+ * animation at 20 ms/tick is 100 frames, and anything far below that is the
+ * scheduler, not the animation, deciding the look.
+ *
+ * `elapsed_ms` is wall clock from lw_os_boot() to the overlay being deleted
+ * (or to now, while it is still up). `visible_ms` is the same but stops at the
+ * fade-out start, i.e. how long the logo and leaves were fully visible. */
+typedef struct {
+    uint32_t frames, elapsed_ms, visible_ms;
+    bool active, skipped;
+} lw_os_boot_stats_t;
+void lw_os_boot_stats(lw_os_boot_stats_t *out);

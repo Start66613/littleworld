@@ -1,0 +1,8 @@
+# P0-E benchmark variant: double-buffered partial refresh.
+#
+# Two DPI frame buffers instead of three. The flush has one fewer buffer to
+# rotate through, so a frame that used to wait for the buffer two frames back
+# now waits for the one just before it - the trade is latency against memory.
+#
+# Measurement build only; the shipping image keeps TRIPLE_PARTIAL.
+CONFIG_LW_TEAR_AVOID_DOUBLE_PARTIAL=y

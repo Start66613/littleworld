@@ -16,7 +16,7 @@ struct lw_rpg_view {
     lv_timer_t *timer; uint32_t last,reward_seen; unsigned theme;
     bool suspended,dirty; int pending,last_progress; uint32_t marker_ms;
     int actor_x[2],actor_y[2];
-    float sep; uint32_t dt; int last_near;
+    float sep; uint32_t dt; int last_near; int front_actor;
     lw_sprite_t *players[2]; const lw_clip_t *clips[2];
     lw_rpg_hotspot_t hotspots[3];
     lw_rpg_world_t world; lw_rpg_room_t room; uint8_t floor[128];
@@ -56,7 +56,7 @@ static const lw_clip_t *resident_clip(lw_rpg_view_t *v,unsigned i,const char *na
 }
 static void refresh(lw_rpg_view_t *v)
 {
-    float fx[2],fy[2]; int px[2],py[2];
+    float fx[2],fy[2]; int py[2];
     for (unsigned i=0;i<2;i++) lw_rpg_actor_point(&v->state,(int)i,&fx[i],&fy[i]);
     /* Couple spacing. The core keeps the partner LW_RPG_FOLLOW_DISTANCE away
      * while walking, but a stopped pair can share a tile. The old code pushed
@@ -75,7 +75,7 @@ static void refresh(lw_rpg_view_t *v)
     for (unsigned i=0;i<2;i++) {
         int x,y; tile_point_frac(fx[i],fy[i],&x,&y);
         if (i && v->sep!=0.0f) x+=(int)(v->sep<0.0f ? v->sep-0.5f : v->sep+0.5f);
-        px[i]=x; py[i]=y;
+        py[i]=y;
         bool moving=v->state.actors[i].moving!=0;
         if (v->players[i]) {
             const char *name="idle";
@@ -99,9 +99,14 @@ static void refresh(lw_rpg_view_t *v)
         lw_rpg_tile_t t=v->state.actors[i].pos;
         if (v->actor_x[i]!=t.x || v->actor_y[i]!=t.y) { v->actor_x[i]=t.x; v->actor_y[i]=t.y; v->dirty=true; }
     }
-    /* Residents stay on the surveyed clear floor; no fake furniture cutouts. */
-    if (py[0]>py[1]) lv_obj_move_to_index(v->actor[0],-1);
-    else lv_obj_move_to_index(v->actor[1],-1);
+    /* Residents stay on the surveyed clear floor; no fake furniture cutouts.
+     * Only reorder when the front actor actually changes. lv_obj_move_to_index
+     * already returns early on an unchanged index, but the desktop page learned
+     * this the hard way too (lw_os.c:282 keeps a front_actor guard): a real
+     * reorder sends LV_EVENT_CHILD_CHANGED on the map and invalidates the whole
+     * 1024x494 map, so the cost is one full-room repaint, not a tree shuffle. */
+    { int front=py[0]>py[1] ? 0 : 1;
+      if (front!=v->front_actor) { lv_obj_move_to_index(v->actor[front],-1); v->front_actor=front; } }
     int progress=lw_rpg_quest_progress(&v->state);
     if (progress!=v->last_progress) {
         lv_label_set_text_fmt(v->progress,"整理回忆盒\n已找到 %d / %d",progress,lw_rpg_quest_total(&v->state));
@@ -208,7 +213,7 @@ static void destroyed(lv_event_t *e)
 lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *host,unsigned theme,const lw_actor_art_t art[2])
 {
     lw_rpg_view_t *v=lv_malloc_zeroed(sizeof(*v)); if (!v) return NULL;
-    v->residents=art; v->theme=theme; v->queued_spot=-1; v->last_progress=-1; v->actor_x[0]=v->actor_x[1]=v->actor_y[0]=v->actor_y[1]=-1; if (host) v->host=*host;
+    v->residents=art; v->theme=theme; v->queued_spot=-1; v->last_progress=-1; v->front_actor=-1; v->actor_x[0]=v->actor_x[1]=v->actor_y[0]=v->actor_y[1]=-1; if (host) v->host=*host;
     if (!lw_rpg_init(&v->state,lw_rpg_demo_world())) { lv_free(v); return NULL; }
     uint8_t bytes[LW_RPG_SAVE_BYTES];
     if (v->host.load && v->host.load(v->host.user,bytes)) {

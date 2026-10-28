@@ -21,9 +21,20 @@
  * frame fell back to a synchronous ~9 ms read from the TF card on the LVGL
  * thread - measured as cache misses=666 evictions=610 over ten seconds of an
  * idle desktop, and as LVGL timer gaps of 128 ms average against a 20 ms period.
- * Sixteen slots cover two full eight-frame cycles. The byte budget in lw_art.c
- * still bounds total memory, so a larger slot count cannot over-allocate. */
-#define ENTRIES 16
+ * Sixteen slots cover two full eight-frame cycles of the 256x256 characters.
+ *
+ * V4.4: sixteen was still derived from 256x256 only. The pet page's daily.lwp
+ * is 320x320, i.e. 307,200 B/frame, and its live set is couple.seated 16 +
+ * dog.idle 8 = 24 frames (the dog is either on the floor or on the bed, never
+ * both - joint_bed in lw_app_pet.c picks one branch for the whole run). 24
+ * frames cannot fit in 16 slots no matter how large the byte budget is. The
+ * slot count - not the budget - was the binding constraint there, so every pet
+ * frame evicted and re-read. 32 slots hold the whole pet live set (24) plus
+ * headroom, and the byte budget in
+ * lw_art.c still bounds total memory, so a larger slot count cannot
+ * over-allocate: reserve() refuses to place a frame unless both a free slot and
+ * the remaining byte budget allow it. */
+#define ENTRIES 32
 #define QUEUE 8
 #define MAX_FRAME (4u*1024u*1024u)
 typedef struct { char file[128]; uint64_t offset; size_t bytes; uint32_t generation; } cache_key_t;

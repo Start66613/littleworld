@@ -1,0 +1,5 @@
+﻿# V4.4 soak: 1 minutes, port COM5, started 2026-10-28T17:49:27.9107275+08:00
+minute  1  page desktop   heap   psram   resident   evict   avg_gap  ms  last_error parse-fail
+# soak finished after 0.1 minutes, 1 samples
+samples with non-none last_error: 0
+samples with safe_mode true: 0

@@ -481,6 +481,27 @@ static int cmd_sched(int argc, char **argv)
     return 0;
 }
 
+static int cmd_boot(int argc, char **argv)
+{
+    /* Boot animation evidence. The overlay is designed for ~2000 ms in FULL
+     * motion mode (1740 ms hold + 260 ms fade); what the panel actually showed
+     * is this. frames/elapsed is the rate the overlay was really animated at:
+     * 100 frames over 2000 ms means it ran at the intended 20 ms cadence, and
+     * 20 frames means the scheduler stretched a 2 s intro into 2 s of stutter.
+     * Numbers freeze when the overlay is deleted, so this can be read at any
+     * time after boot. "boot" while it is still up reports live values. */
+    (void)argc;
+    (void)argv;
+    lw_os_boot_stats_t st = {0};
+    lw_os_boot_stats(&st);
+    unsigned rate = st.elapsed_ms ? (unsigned)((uint64_t)st.frames * 1000u / st.elapsed_ms) : 0u;
+    printf("boot: frames=%u elapsed=%u ms visible=%u ms fps=%u active=%d skipped=%d\n",
+           (unsigned)st.frames, (unsigned)st.elapsed_ms, (unsigned)st.visible_ms,
+           rate, st.active ? 1 : 0, st.skipped ? 1 : 0);
+    fflush(stdout);
+    return 0;
+}
+
 static int cmd_fps(int argc, char **argv)
 {
     /* Real frame rate, measured by the LVGL adapter once a second. Without this
@@ -609,6 +630,9 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_rpg = { .command = "rpg",
                                       .help = "rpg: tile, interpolated point and real screen position",
                                       .func = &cmd_rpg };
+    const esp_console_cmd_t c_boot = { .command = "boot",
+                                       .help = "boot: overlay frames, wall clock and real rate",
+                                       .func = &cmd_boot };
     const esp_console_cmd_t c_anim = { .command = "anim",
                                        .help = "actor clip, frame index and model clock",
                                        .func = &cmd_anim };
@@ -620,6 +644,7 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_fps);
     esp_console_cmd_register(&c_sched);
     esp_console_cmd_register(&c_rpg);
+    esp_console_cmd_register(&c_boot);
     esp_console_cmd_register(&c_anim);
 #endif
 #if CONFIG_LW_FAULT_INJECT

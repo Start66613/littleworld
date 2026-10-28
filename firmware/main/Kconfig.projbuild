@@ -73,6 +73,39 @@ menu "Little World diagnostics (build-time only)"
                 charge pump run at their smallest load.
     endchoice
 
+    # V4.4 display benchmark: the tear-avoid mode is what decides how many
+    # frame buffers the panel path rotates through and how a flush is handed to
+    # the DPI peripheral. It used to be hard-coded to TRIPLE_PARTIAL in
+    # app_main.c, which made "is the refresh path or the draw path the
+    # bottleneck?" impossible to answer without editing source between builds.
+    # The choice stays compile-time on purpose: a runtime switch would leave
+    # frame buffers allocated and make two runs indistinguishable.
+    choice LW_TEAR_AVOID
+        prompt "Display tear-avoid mode (benchmark)"
+        default LW_TEAR_AVOID_TRIPLE_PARTIAL
+
+        config LW_TEAR_AVOID_TRIPLE_PARTIAL
+            bool "Triple buffering, partial refresh (shipping default)"
+            help
+                Three frame buffers, LVGL flushes dirty areas only. This is the
+                configuration every measurement in reports/perf-v4-4 was taken
+                with before V4.4.
+
+        config LW_TEAR_AVOID_DOUBLE_PARTIAL
+            bool "Double buffering, partial refresh"
+            help
+                Two frame buffers instead of three. Fewer buffers means the
+                flush must wait for the previous transfer to land sooner, but
+                it also frees ~2.4 MB of PSRAM and shortens the rotation.
+
+        config LW_TEAR_AVOID_TRIPLE_FULL
+            bool "Triple buffering, full-frame refresh"
+            help
+                Every flush covers the whole 1024x600 frame. This is the upper
+                bound of flush cost: if full-frame flushing is still fast, the
+                panel path is not the bottleneck.
+    endchoice
+
     config LW_DIAG_STATIC_UI
         bool "Diagnostic C: static UI, no animation or per-frame updates"
         default n

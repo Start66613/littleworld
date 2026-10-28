@@ -1,0 +1,24 @@
+# P0-E benchmark variant: Espressif PPA hardware acceleration enabled.
+#
+# This is a measurement build, not a shipping configuration. It exists so the
+# display benchmark can answer "does the ESP32-P4 PPA help this workload?"
+# with a real image instead of an opinion.
+#
+# What it switches on:
+#   - LV_USE_PPA      the PPA draw unit (SRM / fill / blend clients)
+#   - LV_USE_PPA_IMG  let PPA take image draw tasks too, not only fills
+#   - LV_DRAW_BUF_ALIGN
+#                     PPA hard-refuses to compile unless this equals
+#                     CONFIG_CACHE_L2_CACHE_LINE_SIZE (128 here, was 4).
+#                     lv_draw_ppa_private.h raises
+#                     "CONFIG_LV_DRAW_BUF_ALIGN must be equal to
+#                     CONFIG_CACHE_L2_CACHE_LINE_SIZE!" at build time.
+#                     This is itself a P0-E finding: PPA is not a drop-in
+#                     toggle, it forces every LVGL draw buffer onto cache-line
+#                     boundaries.
+#
+# Everything else stays byte-identical to the `os` configuration so the only
+# difference between the two images is the accelerator.
+CONFIG_LV_USE_PPA=y
+CONFIG_LV_USE_PPA_IMG=y
+CONFIG_LV_DRAW_BUF_ALIGN=128

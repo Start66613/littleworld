@@ -66,6 +66,13 @@ __pycache__/
 /reports/logs/v4/
 /reports/diagnostics/
 
+# V4.4 perf evidence: the 5 idf.py build logs are ~660 KB of toolchain chatter
+# and add nothing the build_matrix.json does not already record (bytes, sha256,
+# effective symbols, pass/fail). The soak and probe logs ARE kept - they are the
+# only evidence behind the 30-minute stress result and the desktop dual-state
+# finding in reports/perf-v4-4/.
+/reports/logs/v44/build-*.log
+
 # Content: the committed sample is deliberately not personal. Real memories go
 # in content/private/ (or anywhere outside the repo) and must never be pushed.
 /content/private/

@@ -18,6 +18,17 @@ void lw_boot_start(void);
 
 static const char *TAG = "littleworld";
 
+/* V4.4 display benchmark: the tear-avoid mode is a build-time choice so two
+ * images differ in exactly one display-path parameter (see Kconfig.projbuild).
+ * The shipping image is TRIPLE_PARTIAL, the adapter's MIPI-DSI default. */
+#if CONFIG_LW_TEAR_AVOID_DOUBLE_PARTIAL
+#define LW_TEAR_AVOID_MODE ESP_LV_ADAPTER_TEAR_AVOID_MODE_DOUBLE_PARTIAL
+#elif CONFIG_LW_TEAR_AVOID_TRIPLE_FULL
+#define LW_TEAR_AVOID_MODE ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_FULL
+#else
+#define LW_TEAR_AVOID_MODE ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_PARTIAL
+#endif
+
 void app_main(void)
 {
     ESP_LOGI(TAG, "boot: reset reason %d, free heap %u B", (int)esp_reset_reason(),
@@ -28,7 +39,7 @@ void app_main(void)
     bsp_display_cfg_t cfg = {
         .lv_adapter_cfg = ESP_LV_ADAPTER_DEFAULT_CONFIG(),
         .rotation = ESP_LV_ADAPTER_ROTATE_180,
-        .tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_PARTIAL,
+        .tear_avoid_mode = LW_TEAR_AVOID_MODE,
         .touch_flags = {
             .swap_xy = 0,
             .mirror_x = 0,

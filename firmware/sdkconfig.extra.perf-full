@@ -1,0 +1,9 @@
+# P0-E benchmark variant: triple-buffered full-frame refresh.
+#
+# Every flush covers the whole 1024x600 panel instead of only the dirty area.
+# This is the worst case of the flush path: if the panel still reaches a usable
+# rate here, the DPI/flush side is not what starves the LVGL task, and the cost
+# must be in draw (invalidation area / draw units) instead.
+#
+# Measurement build only.
+CONFIG_LW_TEAR_AVOID_TRIPLE_FULL=y

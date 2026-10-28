@@ -27,11 +27,26 @@
  * can hold one actor exactly. Measured on the board with 1.5 MiB: resident
  * pinned at the budget, 222 evictions in ten seconds, and LVGL timer gaps of
  * 428 ms average against a 20 ms period, because every frame fell back to a
- * blocking card read on the LVGL thread. 4 MiB covers both cycles plus the
- * 320x320 dog frames and the 835,584 B skin atlas. Only opened when a card
+ * blocking card read on the LVGL thread.
+ *
+ * V4.4: 4 MiB was sized for the 256x256 character packs only and is too small
+ * for the pet page, whose daily.lwp is 320x320 (307,200 B/frame, see lw_pack's
+ * frame_bytes = w*h*3). One "v42.couple.seated" cycle alone is 16 frames =
+ * 4,915,200 B, i.e. larger than the whole 4 MiB budget, so every single frame
+ * of the pet page was an LRU eviction plus a blocking read on the LVGL thread -
+ * the measured 777 ms timer gap. Budget it per page instead:
+ *   pet   : couple 16*307200 = 4,915,200 + dog 8*307200 = 2,457,600
+ *           = 7,372,800 B (24 frames; the dog is either on the floor or on
+ *           the bed, never both - joint_bed in lw_app_pet.c picks one branch)
+ *   rpg   : male 8*196608 = 1,572,864 + qianqian 8*196608 = 3,145,728 B
+ *   desk  : male 8 + qianqian 8                            = 3,145,728 B
+ *   skin  : the 512x544 atlas is 835,584 B and is leased, not cached here.
+ * 12 MiB leaves the pet page ~4.6 MiB of slack for the walk/sleep cycles while
+ * staying far below the ~21 MB of free PSRAM measured on the board
+ * (reports/integration-v4-3-board-smoke/BOARD_TEST.md). Only opened when a card
  * verified; lw_assets' lease budget (2 MiB) still bounds what stays resident in
  * the draw path, so this only controls the read-ahead cache. */
-#define LW_ART_CACHE_BUDGET (4u * 1024u * 1024u)
+#define LW_ART_CACHE_BUDGET (12u * 1024u * 1024u)
 
 static lw_actor_art_t s_art[2];
 static lw_file_cache_t *s_cache;

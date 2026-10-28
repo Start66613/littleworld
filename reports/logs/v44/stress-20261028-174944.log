@@ -1,0 +1,5 @@
+﻿# V4.4 soak: 1 minutes, port COM5, started 2026-10-28T17:49:44.0820931+08:00
+minute  1  page desktop   heap 16252951  psram 16199940  resident 8681472  evict 31  avg_gap 20 ms  last_error none
+# soak finished after 0 minutes, 1 samples
+samples with non-none last_error: 0
+samples with safe_mode true: 0

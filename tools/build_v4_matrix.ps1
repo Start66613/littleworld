@@ -21,6 +21,17 @@ param(
     # location so older reports' `log` fields stay valid; a new round passes its
     # own directory instead of inheriting v41 by accident.
     [string]$LogDir = 'reports\logs\v41',
+    # Delete each config's generated sdkconfig before building.
+    #
+    # Needed whenever a fragment gains a symbol that the existing sdkconfig
+    # already carries with a different value: idf.py treats build/<dir>/sdkconfig
+    # as the user's own config, so it silently keeps the old value and the
+    # fragment line never takes effect. This bit perf-ppa exactly once -
+    # CONFIG_LV_DRAW_BUF_ALIGN stayed 4 while the fragment asked for 128, and the
+    # build died in lv_draw_ppa_private.h with
+    # "CONFIG_LV_DRAW_BUF_ALIGN must be equal to CONFIG_CACHE_L2_CACHE_LINE_SIZE!".
+    # Costs a full rebuild, so it is opt-in rather than the default.
+    [switch]$Fresh,
     [switch]$KeepGoing
 )
 
@@ -46,11 +57,44 @@ $matrix = @{
     'nocard'  = @{ fragment = ';sdkconfig.extra.nocard';  dir = 'nocard';  wifi = $false }
     'wifi'    = @{ fragment = ';sdkconfig.extra.wifi';    dir = 'wifi';    wifi = $true  }
     'diag-e'  = @{ fragment = ';sdkconfig.extra.diag-e';  dir = 'diag-e';  wifi = $false }
+    # V4.4 P0-E display benchmark variants. Each differs from `os` in exactly
+    # one display-path parameter so the sched/fps numbers can be compared.
+    'perf-ppa'    = @{ fragment = ';sdkconfig.extra.perf-ppa';    dir = 'perf-ppa';    wifi = $false }
+    'perf-unit1'  = @{ fragment = ';sdkconfig.extra.perf-unit1';  dir = 'perf-unit1';  wifi = $false }
+    'perf-double' = @{ fragment = ';sdkconfig.extra.perf-double'; dir = 'perf-double'; wifi = $false }
+    'perf-full'   = @{ fragment = ';sdkconfig.extra.perf-full';   dir = 'perf-full';   wifi = $false }
 }
 
 $base = 'sdkconfig.defaults;sdkconfig.defaults.rev3_x;sdkconfig.os'
 $results = @()
 $failed = @()
+
+# Which symbols each perf variant is supposed to change. The build report records
+# their effective values so a variant that quietly kept the baseline config is
+# visible in the JSON instead of only in a build failure.
+$variantSymbols = @(
+    'CONFIG_LV_USE_PPA',
+    'CONFIG_LV_USE_PPA_IMG',
+    'CONFIG_LV_DRAW_BUF_ALIGN',
+    'CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT',
+    'CONFIG_LW_TEAR_AVOID_DOUBLE_PARTIAL',
+    'CONFIG_LW_TEAR_AVOID_TRIPLE_FULL',
+    'CONFIG_LW_TEAR_AVOID_TRIPLE_PARTIAL'
+)
+
+function Get-VariantConfig {
+    param([string]$BuildDir)
+    $path = Join-Path $BuildDir 'sdkconfig'
+    if (-not (Test-Path $path)) { return $null }
+    $values = [ordered]@{}
+    foreach ($line in Get-Content $path) {
+        foreach ($symbol in $variantSymbols) {
+            if ($line -eq "$symbol=y") { $values[$symbol] = 'y' }
+            elseif ($line -match "^$symbol=(.+)$") { $values[$symbol] = $Matches[1] }
+        }
+    }
+    return $values
+}
 
 foreach ($name in $Configs) {
     if (-not $matrix.ContainsKey($name)) {
@@ -64,6 +108,14 @@ foreach ($name in $Configs) {
     Write-Output "=== $name -> build/$($cfg.dir) ==="
     $overlay = $false
     try {
+        if ($Fresh) {
+            # Only the generated config, never the source tree or the build
+            # output: ninja reuses whatever objects still match.
+            foreach ($stale in @('sdkconfig', 'sdkconfig.old')) {
+                $path = Join-Path $buildDir $stale
+                if (Test-Path $path) { Remove-Item $path -Force }
+            }
+        }
         if ($cfg.wifi) {
             & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'setup_wifi_components.ps1')
             if ($LASTEXITCODE -ne 0) { throw "wifi component overlay failed ($LASTEXITCODE)" }
@@ -91,6 +143,10 @@ foreach ($name in $Configs) {
             defaults = $defaults
             log      = "$logLabel/build-$name.log"
             status   = 'built'
+            # Proof that the fragment actually landed. Reading the generated
+            # sdkconfig back is the only way to tell a real variant from one the
+            # stale-config trap silently ignored.
+            effective = Get-VariantConfig $buildDir
         }
         Write-Output ("    {0} B  {1}" -f $item.Length, $sha)
     } catch {

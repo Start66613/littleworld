@@ -31,6 +31,16 @@ static lw_sprite_t *couple; static const lw_clip_t *couple_clip;
 static lw_sprite_t *dog; static const lw_clip_t *dog_clip;
 static bool polished; static uint32_t room_clock,room_last,reaction_until;
 static bool joint_bed;static uint32_t empty_until;
+/* Last values written by refresh(). The pet page ticks every 40 ms, and every
+ * lv_label_set_text() re-allocates the text, marks the label dirty and defers a
+ * full re-layout to LV_EVENT_UPDATE_LAYOUT_COMPLETED, and every lw_bar_set()
+ * writes a style width. None of the mood/bars/button text changes more than a
+ * few times a minute, so cache the inputs and only touch the widgets when the
+ * value actually differs. This is the same "guard on the state, not the widget"
+ * pattern the RPG page already uses for progress/near. */
+static const char *s_mood_shown; static bool s_mood_shown_set;
+static int s_fullness_shown=-1,s_energy_shown=-1,s_affection_shown=-1;
+static int s_sleep_shown=-1;
 
 /* The couple's wave clip is 16 frames at 100 ms = 1600 ms. A 1600 ms reaction
  * window ended exactly on the last frame, so on the board the greeting was over
@@ -57,15 +67,22 @@ static void refresh(void)
         lw_pet_view_refresh(s_view, pet, now);
     }
     if (s_mood_label != NULL) {
-        lv_label_set_text(s_mood_label, lw_pet_mood_name(lw_pet_mood(pet, now)));
+        const char *mood = lw_pet_mood_name(lw_pet_mood(pet, now));
+        if (!s_mood_shown_set || mood != s_mood_shown) {
+            s_mood_shown = mood; s_mood_shown_set = true;
+            lv_label_set_text(s_mood_label, mood);
+        }
     }
-    if (s_fullness_bar != NULL) {
+    if (s_fullness_bar != NULL && pet->fullness != s_fullness_shown) {
+        s_fullness_shown = pet->fullness;
         lw_bar_set(s_fullness_bar, pet->fullness);
     }
-    if (s_energy_bar != NULL) {
+    if (s_energy_bar != NULL && pet->energy != s_energy_shown) {
+        s_energy_shown = pet->energy;
         lw_bar_set(s_energy_bar, pet->energy);
     }
-    if (s_affection_bar != NULL) {
+    if (s_affection_bar != NULL && pet->affection != s_affection_shown) {
+        s_affection_shown = pet->affection;
         lw_bar_set(s_affection_bar, pet->affection);
     }
     if (s_feedback != NULL && s_feedback_until != 0 && now > s_feedback_until) {
@@ -73,8 +90,12 @@ static void refresh(void)
         s_feedback_until = 0;
     }
     if (s_sleep_button_label != NULL) {
-        lv_label_set_text(s_sleep_button_label, pet->sleeping ? "叫醒" : "休息");
-        if(polished)lw_skin_select(s_sleep_button,pet->sleeping);
+        int sleeping = pet->sleeping ? 1 : 0;
+        if (sleeping != s_sleep_shown) {
+            s_sleep_shown = sleeping;
+            lv_label_set_text(s_sleep_button_label, pet->sleeping ? "叫醒" : "休息");
+            if(polished)lw_skin_select(s_sleep_button,pet->sleeping);
+        }
     }
 }
 
