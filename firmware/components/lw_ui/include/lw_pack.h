@@ -44,6 +44,33 @@ extern "C" {
 #define LW_PACK_ID_BYTES 48u
 #define LW_PACK_FILE_BYTES 128u
 
+/* ---- optional geometry trailer (V4.5) ------------------------------------
+ * The 108-byte clip record is completely full (name 32 + frames 2 + anchor 4 +
+ * loop 1 + offset 4 + 32 durations x 2 = 107, padded to 108), and frame offsets
+ * are absolute from the start of the file, so new per-clip metadata cannot be
+ * inserted between the records and the payload without rewriting every offset
+ * in every existing pack.
+ *
+ * So the content box travels in a TRAILER at the end of the file instead, and
+ * the header's reserved u16 at offset 14 says whether one is present:
+ *
+ *   u16 at +14 == 0  ->  legacy pack, no trailer, whole canvas is content
+ *   u16 at +14 == 1  ->  trailer present, must end exactly at EOF
+ *
+ *   trailer = "LWTR0001" (8) + u16 clips + u16 reserved
+ *             + clips x 10 bytes { u16 bbox_x, bbox_y, bbox_w, bbox_h,
+ *                                 u16 prescaled }
+ *
+ * Trailer records are in the same order as the clip records, so a reader that
+ * skips the trailer sees exactly the pack it saw before this change. A pack
+ * without a trailer keeps working, which is what lets the six packs already on
+ * the card stay readable while the tooling catches up. */
+#define LW_PACK_TRAILER_MAGIC "LWTR0001"
+#define LW_PACK_TRAILER_HEADER_BYTES 12u
+#define LW_PACK_TRAILER_RECORD_BYTES 10u
+#define LW_PACK_TRAILER_NONE 0u
+#define LW_PACK_TRAILER_GEOMETRY 1u
+
 /* Frame geometry is per FILE and comes from the header (u16 width at offset 8,
  * u16 height at offset 10, frame = width*height*3 for RGB565+A8). It used to be
  * the compile-time constant LW_PACK_SIDE 256, which silently rejected every
@@ -83,6 +110,7 @@ typedef enum {
     LW_PACK_ERR_LOOP,
     LW_PACK_ERR_ACTORS,
     LW_PACK_ERR_REGISTER,
+    LW_PACK_ERR_TRAILER, /* V4.5: geometry trailer present but malformed */
 } lw_pack_status_t;
 
 typedef struct {

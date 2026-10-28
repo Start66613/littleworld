@@ -252,7 +252,17 @@ static void actors(void)
         lw_os_motion_stagger(lw_sprite_object(s->sprites[i]),i*2);
     }
 }
-static void update_actors(uint32_t dt)
+/* paint=false still advances the duo state machine but touches no widget.
+ *
+ * The boot overlay is an opaque 1024x600 box over the desktop, so while it is up
+ * the two 288-scale sprite transforms and their shadows were being blended on
+ * every intro frame for nothing: on the board the overlay only managed 5 frames
+ * in 2047 ms, and each of those frames also paid for two invisible sprite
+ * redraws. Skipping only the widget writes keeps the simulation identical, so
+ * the actors are exactly where they would have been when the overlay is
+ * deleted - skipping lw_duo_tick() as well changed 35 of 156 reference
+ * screenshots, which is how this distinction was caught. */
+static void update_actors_paint(uint32_t dt, bool paint)
 {
     if (!s->art || !s->sprites[0] || !s->sprites[1]) return;
 #ifdef CONFIG_LW_DIAG_STATIC_UI
@@ -272,6 +282,7 @@ static void update_actors(uint32_t dt)
         bool blink=a->motion==LW_ACTOR_IDLE && lw_os_motion_get()!=LW_MOTION_OFF && a->animation_ms%blink_period>=blink_period-500 && art_clip(i,"blink");
         if (blink) snprintf(clipname,sizeof(clipname),"blink");
         const lw_clip_t *clip=art_clip(i,clipname); if (!clip) clip=art_clip(i,"idle");
+        if (!paint) continue;
         if (clip && clip!=s->clips[i] && lw_sprite_play(s->sprites[i],clip)) s->clips[i]=clip;
         if (clip) { uint32_t time=s->duo.phase==LW_DUO_ACT ? s->duo.interaction_ms : a->animation_ms; if (blink) time=a->animation_ms%blink_period-(blink_period-500); else if (lw_os_motion_get()==LW_MOTION_OFF && a->motion==LW_ACTOR_IDLE) time=0; else if (lw_os_motion_get()==LW_MOTION_REDUCED && a->motion==LW_ACTOR_IDLE) time/=2; lw_sprite_seek(s->sprites[i],time); }
         int x=(int)lroundf(a->x),y=(int)lroundf(a->y); lw_sprite_set_anchor(s->sprites[i],x,y);
@@ -281,10 +292,12 @@ static void update_actors(uint32_t dt)
         if (hit) { lv_obj_set_pos(hit,x-(lying ? 126 : 62),y-(lying ? 112 : 238)); lv_obj_set_size(hit,lying ? 252 : 124,lying ? 112 : 242); }
     }
     unsigned near=s->duo.actors[0].y>s->duo.actors[1].y ? 0 : 1;
+    if (!paint) return;
     if (s->front_actor!=near) { lv_obj_move_to_index(lw_sprite_object(s->sprites[1-near]),-1); lv_obj_move_to_index(lw_sprite_object(s->sprites[near]),-1); s->front_actor=near; }
     if (s->foreground) lv_obj_move_foreground(s->foreground);
 #endif /* CONFIG_LW_DIAG_STATIC_UI */
 }
+static void update_actors(uint32_t dt) { update_actors_paint(dt, true); }
 static void build_desktop(bool world)
 {
     const lw_os_palette_t *c=palette();
@@ -791,7 +804,15 @@ static void tick(lv_timer_t *timer)
     if (s->navigation>=0) { if (s->navigation_ms>dt) s->navigation_ms-=dt; else { int page=s->navigation; lw_os_open((lw_os_page_t)page); } }
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt);
-    if (s->boot) { s->boot_frames++; s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); } update_actors(dt);
+    if (s->boot) { s->boot_frames++; s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); }
+    /* While the boot overlay is fully opaque the desktop cannot be seen, so the
+     * duo state machine advances without repainting two 288-scale sprites and
+     * their shadows underneath it. From the moment the fade starts
+     * (boot_fade_start() stamps boot_visible_ms) the desktop shows through, so
+     * painting resumes and the pixels are exactly what they always were - gating
+     * on s->boot alone left the sprites at a stale frame and they visibly
+     * snapped into place as the overlay disappeared. */
+    update_actors_paint(dt, s->boot==NULL || s->boot_visible_ms!=0);
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no

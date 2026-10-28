@@ -39,6 +39,61 @@ lw_file_cache_stats_t lw_pixel_pack_cache_stats(const lw_pixel_pack_t *p)
 }
 static uint16_t u16(const uint8_t *p) { return (uint16_t)(p[0]|(uint16_t)p[1]<<8); }
 static uint32_t u32(const uint8_t *p) { return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24; }
+/* V4.5 geometry trailer, mirroring lw_pack.c.
+ *
+ * A pack may carry, after the payload, "LWTR0001" + u16 clip count + u16
+ * reserved, then one 10-byte record per clip holding the union alpha bbox and a
+ * prescaled flag. Without it the host loader would treat a baked pack as an
+ * unbaked one: the canvas is already 137x239 at final size, but the sprite would
+ * still ask LVGL to scale it by 288, drawing the character about 1.125x too
+ * large. The firmware parses this; the host must agree or the screenshots
+ * disagree for reasons that have nothing to do with the code under test. */
+#define TRAILER_MAGIC "LWTR0001"
+#define TRAILER_HEADER_BYTES 12u
+#define TRAILER_RECORD_BYTES 10u
+#define TRAILER_NONE 0u
+#define TRAILER_GEOMETRY 1u
+typedef struct { uint16_t bbox_x,bbox_y,bbox_w,bbox_h,prescaled; } trailer_record_t;
+
+/* Read the trailer when present. Returns false only when the trailer exists but
+ * is malformed; an absent trailer is a legitimate legacy pack and yields kind
+ * TRAILER_NONE with payload_end = file_size.
+ *
+ * The kind lives in the LWPX header at +14, not in the trailer: the trailer
+ * header is magic + clip count + reserved. Reading the kind out of the trailer
+ * made every baked pack look like "unknown kind 7" and the male pack was
+ * rejected outright, which showed up as six unrelated animation failures. */
+static bool read_trailer(FILE *file,long file_size,unsigned clips,unsigned width,unsigned height,
+                         unsigned header_kind,trailer_record_t records[MAX_CLIPS],
+                         unsigned *kind,long *payload_end)
+{
+    *kind=TRAILER_NONE; *payload_end=file_size;
+    if (header_kind==TRAILER_NONE) return true;          /* legacy pack, no trailer */
+    if (header_kind!=TRAILER_GEOMETRY) return false;    /* unknown kind */
+    const long span=(long)TRAILER_HEADER_BYTES+(long)TRAILER_RECORD_BYTES*(long)clips;
+    if (file_size<16+108L*(long)clips+span) return false;
+    if (fseek(file,file_size-span,SEEK_SET)) return false;
+    uint8_t head[TRAILER_HEADER_BYTES];
+    if (fread(head,1,sizeof(head),file)!=sizeof(head)) return false;
+    if (memcmp(head,TRAILER_MAGIC,8)) return false;     /* header claims a trailer that is not there */
+    if (u16(head+8)!=clips || u16(head+10)!=0) return false;
+    for (unsigned i=0;i<clips;i++) {
+        uint8_t rec[TRAILER_RECORD_BYTES];
+        if (fread(rec,1,sizeof(rec),file)!=sizeof(rec)) return false;
+        trailer_record_t *r=&records[i];
+        r->bbox_x=u16(rec+0); r->bbox_y=u16(rec+2);
+        r->bbox_w=u16(rec+4); r->bbox_h=u16(rec+6);
+        r->prescaled=u16(rec+8);
+        if (r->prescaled>TRAILER_GEOMETRY) return false;
+        /* A record must describe a box inside the decoded canvas, and a
+         * prescaled pack must not claim a box at all: the canvas is the box. */
+        if ((r->bbox_x || r->bbox_y || r->bbox_w || r->bbox_h) &&
+            ((unsigned)r->bbox_x+(unsigned)r->bbox_w>width || (unsigned)r->bbox_y+(unsigned)r->bbox_h>height)) return false;
+        if (r->prescaled && (r->bbox_w!=width || r->bbox_h!=height)) return false;
+    }
+    *kind=header_kind; *payload_end=file_size-span;
+    return true;
+}
 static bool test_actor(void *context,uint16_t frame,uint8_t *data,size_t bytes)
 {
     (void)context; if (bytes!=196608 || frame>=4) return false;
@@ -75,6 +130,13 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
         if (slash) { size_t n=(size_t)(slash-path); memcpy(directory,path,n); directory[n]=0; }
         pack->cache=lw_file_cache_open(directory,budget);
     }
+    unsigned kind=TRAILER_NONE; long payload_end=file_size;
+    trailer_record_t records[MAX_CLIPS];
+    memset(records,0,sizeof(records));
+    if (!read_trailer(file,file_size,pack->count,width,height,u16(header+14),records,&kind,&payload_end)) {
+        lw_file_cache_close(pack->cache); free(pack); fclose(file); return NULL;
+    }
+    if (fseek(file,16,SEEK_SET)) { lw_file_cache_close(pack->cache); free(pack); fclose(file); return NULL; }
     bool ok=true;
     for (unsigned i=0;i<pack->count && ok;i++) {
         uint8_t record[108]; if (fread(record,1,sizeof(record),file)!=sizeof(record)) { ok=false; break; }
@@ -82,10 +144,18 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
         if (!memchr(record,0,32) || !pack->names[i][0]) { ok=false; break; }
         unsigned frames=u16(record+32); int ax=(int16_t)u16(record+34),ay=(int16_t)u16(record+36); uint32_t offset=u32(record+40);
         if (!frames || frames>32 || ax<0 || (unsigned)ax>width || ay<0 || (unsigned)ay>height || record[38]>1 ||
-            offset<16+108*pack->count || (uint64_t)offset+(uint64_t)frames*stride>(uint64_t)file_size) { ok=false; break; }
+            offset<16+108*pack->count || (uint64_t)offset+(uint64_t)frames*stride>(uint64_t)payload_end) { ok=false; break; }
         snprintf(pack->ids[i],64,"qianqian.%s",pack->names[i]);
         pack->sources[i]=(frame_source_t){{pack->path,offset,stride,(uint16_t)frames},pack->cache,pack->basename};
-        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],(uint16_t)width,(uint16_t)height,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,read_frame,&pack->sources[i]};
+        /* Geometry is per clip: a baked pack prescales every clip and stores the
+         * frame already cropped, so the canvas is the box and no offset is
+         * needed. A pack with bbox metadata but no prescale would need both, and
+         * none exists yet - reject rather than silently draw it wrong. */
+        const trailer_record_t *tr=&records[i];
+        const bool has_box=tr->bbox_w && tr->bbox_h;
+        if (kind==TRAILER_GEOMETRY && has_box && !tr->prescaled) { ok=false; break; }
+        pack->specs[i]=(lw_asset_spec_t){pack->ids[i],(uint16_t)width,(uint16_t)height,(uint16_t)frames,(int16_t)ax,(int16_t)ay,LV_COLOR_FORMAT_RGB565A8,
+                                         tr->bbox_x,tr->bbox_y,tr->bbox_w,tr->bbox_h,tr->prescaled,read_frame,&pack->sources[i]};
         for (unsigned f=0;f<frames;f++) {
             pack->sequences[i][f]=(uint16_t)f; pack->durations[i][f]=u16(record+44+f*2);
             if (pack->durations[i][f]<20 || pack->durations[i][f]>2000) ok=false;
@@ -96,7 +166,7 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
     fclose(file);
     if (ok) {
         for (unsigned i=0;i<4;i++) { pack->test_seq[i]=(uint16_t)i; pack->test_time[i]=125; }
-        pack->specs[pack->count]=(lw_asset_spec_t){"test_male.idle",256,256,4,128,226,LV_COLOR_FORMAT_RGB565A8,test_actor,NULL};
+        pack->specs[pack->count]=(lw_asset_spec_t){"test_male.idle",256,256,4,128,226,LV_COLOR_FORMAT_RGB565A8,0,0,0,0,0,test_actor,NULL};
         pack->test_clip=(lw_named_clip_t){"idle",{"test_male.idle",pack->test_seq,pack->test_time,4,true}};
         pack->art[0]=(lw_actor_art_t){"TEST A",&pack->test_clip,1,true};
         pack->art[1]=(lw_actor_art_t){"qianqian",pack->clips,pack->count,false};

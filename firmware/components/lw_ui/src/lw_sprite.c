@@ -10,6 +10,9 @@ struct lw_sprite {
     const char *shown_id;
     uint32_t epoch, elapsed, total;
     int anchor_x, anchor_y;
+    /* V4.5: how far the object origin sits from the anchor, which depends on the
+     * asset's content box and is therefore no longer "anchor * scale / 256". */
+    int anchor_dx, anchor_dy;
     uint16_t scale, frame;
     bool enabled, paused, finished, external;
     struct lw_sprite *prev, *next;
@@ -75,6 +78,41 @@ static uint32_t clip_length(const lw_clip_t *clip)
     return total;
 }
 
+/* Re-apply the asset's draw geometry: object box, offset and position.
+ *
+ * V4.5: this used to hardcode "object = whole canvas, scale = s->scale,
+ * position = anchor - spec->anchor*scale/256". LVGL clips to obj->coords, so
+ * that made every frame blend the full 256x256 / 320x320 canvas - about 67% of
+ * it fully transparent - and, because the scale was 288 or 282 rather than
+ * LV_SCALE_NONE, it also forced the per-pixel transform_and_recolor() path.
+ * Both are decided once in lw_asset_draw_geometry() now. */
+/* A pack without bbox metadata or prescaling must render exactly as V4.4 did,
+ * so that path keeps the original call sequence: no explicit size, no offset.
+ * Only the two new asset shapes touch the object box. */
+static bool has_geometry(const lw_asset_spec_t *spec)
+{
+    return spec->prescaled || (spec->bbox_w && spec->bbox_h);
+}
+
+static void apply_geometry(lw_sprite_t *s, const lw_asset_spec_t *spec)
+{
+    lw_asset_draw_t g;
+    lw_asset_draw_geometry(spec, s->scale, &g);
+    if (has_geometry(spec)) {
+        lv_obj_set_size(s->image, g.obj_w, g.obj_h);
+        lv_image_set_pivot(s->image, 0, 0);
+        lv_image_set_scale(s->image, g.scale);
+        lv_image_set_offset_x(s->image, g.offset_x);
+        lv_image_set_offset_y(s->image, g.offset_y);
+    }
+    else {
+        lv_image_set_pivot(s->image, 0, 0);
+        lv_image_set_scale(s->image, g.scale);
+    }
+    s->anchor_dx = g.anchor_dx;
+    s->anchor_dy = g.anchor_dy;
+}
+
 static bool present(lw_sprite_t *s, const lw_clip_t *clip, uint16_t frame)
 {
     if (s->lease && s->frame==frame && !strcmp(s->shown_id,clip->asset_id)) return true;
@@ -90,11 +128,10 @@ static bool present(lw_sprite_t *s, const lw_clip_t *clip, uint16_t frame)
     lw_asset_lease_t *next=lw_asset_acquire(clip->asset_id,frame);
     if (!next) return false; /* Keep the previous frame alive, including its decoder source. */
     const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);
+    if (!spec) { lw_asset_release(next); return false; }
     lv_image_set_src(s->image,lw_asset_image(next));
-    lv_image_set_pivot(s->image,0,0);
-    lv_image_set_scale(s->image,s->scale);
-    lv_obj_set_pos(s->image,s->anchor_x-spec->anchor_x*s->scale/256,
-                   s->anchor_y-spec->anchor_y*s->scale/256);
+    apply_geometry(s,spec);
+    lv_obj_set_pos(s->image, s->anchor_x - s->anchor_dx, s->anchor_y - s->anchor_dy);
     lv_obj_remove_flag(s->image,LV_OBJ_FLAG_HIDDEN);
     lw_asset_release(s->lease); s->lease=next; s->shown_id=spec->id; s->frame=frame;
     return true;
@@ -196,8 +233,10 @@ void lw_sprite_set_anchor(lw_sprite_t *s,int x,int y)
 {
     if (!s) return;
     s->anchor_x=x; s->anchor_y=y;
-    const lw_asset_spec_t *spec=lw_assets_find(s->shown_id);
-    if (spec) lv_obj_set_pos(s->image,x-spec->anchor_x*s->scale/256,y-spec->anchor_y*s->scale/256);
+    /* The object origin is no longer "anchor - spec->anchor*scale/256": with a
+     * content box the image sits at the box origin, so the distance to the
+     * anchor is what lw_asset_draw_geometry() computed. */
+    lv_obj_set_pos(s->image,x-s->anchor_dx,y-s->anchor_dy);
 }
 void lw_sprite_set_external_clock(lw_sprite_t *s,bool external)
 {

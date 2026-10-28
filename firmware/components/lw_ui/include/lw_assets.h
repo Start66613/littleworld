@@ -14,6 +14,24 @@ typedef struct {
     uint16_t width, height, frames;
     int16_t anchor_x, anchor_y;
     lv_color_format_t format;
+    /* V4.5: content box of this clip, in source pixels, unioned over all of its
+     * frames. width/height stay the full source canvas so providers and the
+     * packer keep their existing geometry; only the draw path uses the box.
+     *
+     * A zero-size box means "no metadata, treat the whole canvas as content",
+     * which keeps every legacy pack and the embedded fallback valid.
+     *
+     * Why: LVGL clips to obj->coords, so an image object sized to the content
+     * box blends the content instead of the mostly-transparent canvas. Host
+     * measurement (reports/perf-v4-5/render_bench.txt) says the box alone is
+     * worth 1.35-2.21x and, combined with baking the scale into the asset,
+     * 5.6-6.0x, with the rendered pixels unchanged. */
+    uint16_t bbox_x, bbox_y, bbox_w, bbox_h;
+    /* V4.5: nonzero when the provider already stores this clip at its final
+     * on-screen size, i.e. the 1.125x correction was baked into the asset. The
+     * sprite then draws it with LV_SCALE_NONE, which is what avoids LVGL's
+     * per-pixel transform_and_recolor() path. */
+    uint16_t prescaled;
     lw_asset_read_fn read;
     void *context;
 } lw_asset_spec_t;
@@ -27,6 +45,24 @@ typedef struct {
 bool lw_assets_register(const lw_asset_spec_t *specs, size_t count, size_t budget_bytes);
 const lw_asset_spec_t *lw_assets_find(const char *id);
 size_t lw_asset_frame_bytes(const lw_asset_spec_t *spec);
+
+/* Draw geometry for one spec at one requested scale.
+ *
+ * This is the single place that decides how an asset maps onto an lv_image, so
+ * lw_sprite.c cannot drift between "first present" and "move the anchor".
+ *
+ * The object is sized to the content box because LVGL clips to obj->coords;
+ * offset_x/y cancels both LV_ALIGN_CENTER's centring term and the in-canvas
+ * content origin, so the pixels land exactly where the full-canvas draw put
+ * them. For a prescaled asset the scale collapses to LV_SCALE_NONE and the
+ * offset is zero, which is what keeps LVGL out of transform_and_recolor(). */
+typedef struct {
+    uint16_t scale;        /* LV_SCALE_NONE when spec->prescaled */
+    uint16_t obj_w, obj_h; /* content box at that scale, >= 1 */
+    int32_t offset_x, offset_y;
+    int32_t anchor_dx, anchor_dy; /* subtract from the anchor to get obj pos */
+} lw_asset_draw_t;
+void lw_asset_draw_geometry(const lw_asset_spec_t *spec, uint16_t scale, lw_asset_draw_t *out);
 lw_asset_lease_t *lw_asset_acquire(const char *id, uint16_t frame);
 /* Re-read one more frame of the same asset into an existing lease. The pixel
  * buffer is reused, so an animation no longer allocates and frees a frame

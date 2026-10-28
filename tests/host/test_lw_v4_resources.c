@@ -125,6 +125,59 @@ static bool write_pack(const char *fileName, const clip_spec_t *clips, unsigned 
     return write_pack_geometry(fileName, clips, clip_count, truncate, 256u, 256u);
 }
 
+/* ---- V4.5 geometry trailer ------------------------------------------------
+ * The 108-byte clip record is full and frame offsets are absolute, so the
+ * content box travels in a trailer instead. These helpers write it, and the
+ * tests below insist that both the trailer-present and trailer-absent paths
+ * still read frames correctly - the six packs already on the card have no
+ * trailer and must keep working. */
+#define TRAILER_HEADER_BYTES 12u
+#define TRAILER_RECORD_BYTES 10u
+
+typedef struct { unsigned x, y, w, h, prescaled; } bbox_spec_t;
+
+static bool append_trailer(const char *fileName, const bbox_spec_t *boxes, unsigned clip_count,
+                           unsigned kind)
+{
+    snprintf(s_path, sizeof(s_path), "%s/%s", fixture_dir(), fileName);
+    FILE *f = fopen(s_path, "r+b");
+    if (!f) return false;
+    uint8_t tag[2];
+    put16(tag, kind);
+    if (fseek(f, 14, SEEK_SET) != 0 || fwrite(tag, 1, sizeof(tag), f) != sizeof(tag)) {
+        fclose(f);
+        return false;
+    }
+    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return false; }
+    uint8_t header[TRAILER_HEADER_BYTES] = {0};
+    memcpy(header, "LWTR0001", 8);
+    put16(header + 8, clip_count);
+    if (fwrite(header, 1, sizeof(header), f) != sizeof(header)) { fclose(f); return false; }
+    for (unsigned i = 0; i < clip_count; i++) {
+        uint8_t record[TRAILER_RECORD_BYTES] = {0};
+        put16(record + 0, boxes[i].x);
+        put16(record + 2, boxes[i].y);
+        put16(record + 4, boxes[i].w);
+        put16(record + 6, boxes[i].h);
+        put16(record + 8, boxes[i].prescaled);
+        if (fwrite(record, 1, sizeof(record), f) != sizeof(record)) { fclose(f); return false; }
+    }
+    fclose(f);
+    return true;
+}
+
+/* Overwrite bytes counted back from EOF, so a test can corrupt exactly one field
+ * of the trailer without rebuilding the whole fixture. */
+static bool patch_tail(const char *fileName, long offset_from_end, const uint8_t *data, size_t bytes)
+{
+    snprintf(s_path, sizeof(s_path), "%s/%s", fixture_dir(), fileName);
+    FILE *f = fopen(s_path, "r+b");
+    if (!f) return false;
+    bool ok = fseek(f, offset_from_end, SEEK_END) == 0 && fwrite(data, 1, bytes, f) == bytes;
+    fclose(f);
+    return ok;
+}
+
 static bool write_scene(const char *fileName, unsigned width, unsigned height)
 {
     snprintf(s_path, sizeof(s_path), "%s/%s", fixture_dir(), fileName);
@@ -476,6 +529,150 @@ static void test_pack_geometry(void)
     CHECK("zero-geometry fixture", write_pack_geometry("g-zero.lwp", &empty, 1, false, 0u, 0u));
     CHECK("zero geometry refused", lw_pack_registry_add(fixture_dir(), "g-zero.lwp", "male", NULL,
                                                         NULL) == LW_PACK_ERR_GEOMETRY);
+    lw_pack_registry_reset();
+}
+
+/* ---- V4.5: geometry trailer ---------------------------------------------- */
+
+static void test_pack_geometry_trailer(void)
+{
+    lw_pack_registry_reset();
+
+    /* One clip whose content box is a small corner of the canvas. The trailer is
+     * what turns "blend the whole 256x256 canvas" into "blend 40x30 pixels", so
+     * the spec has to carry it verbatim. */
+    static const clip_spec_t clips[] = {
+        {"idle", 2, 225, 1, 100},
+        {"wave", 1, 226, 0, 100},
+    };
+    static const bbox_spec_t boxes[] = {
+        {75u, 17u, 105u, 208u, 0u},
+        {0u, 0u, 256u, 256u, 1u},
+    };
+    CHECK("trailer fixture written", write_pack("t-geom.lwp", clips, 2, false));
+    CHECK("trailer appended", append_trailer("t-geom.lwp", boxes, 2, 1u));
+    CHECK("trailer pack accepted",
+          lw_pack_registry_add(fixture_dir(), "t-geom.lwp", "male", NULL, NULL) == LW_PACK_OK);
+    CHECK("trailer pack published", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+
+    const lw_asset_spec_t *idle = lw_assets_find("male.idle");
+    CHECK("bbox x", idle && idle->bbox_x == 75u);
+    CHECK("bbox y", idle && idle->bbox_y == 17u);
+    CHECK("bbox w", idle && idle->bbox_w == 105u);
+    CHECK("bbox h", idle && idle->bbox_h == 208u);
+    CHECK("bbox not prescaled", idle && idle->prescaled == 0u);
+    const lw_asset_spec_t *wave = lw_assets_find("male.wave");
+    CHECK("prescale flag", wave && wave->prescaled == 1u);
+
+    /* Frames must still be readable: the trailer sits past the payload, and a
+     * reader that forgot to bound clips by the trailer start would read bbox
+     * bytes as pixels. */
+    lw_asset_lease_t *lease = lw_asset_acquire("male.idle", 0);
+    CHECK("trailer pack serves frames", lease != NULL);
+    if (lease) lw_asset_release(lease);
+
+    /* Geometry the draw path derives from the box. */
+    lw_asset_draw_t g = {0};
+    lw_asset_draw_geometry(idle, 288u, &g);
+    CHECK("bbox draw keeps scale", g.scale == 288u);
+    /* 105*288/256 = 118.1 -> 118, 208*288/256 = 234 exactly. */
+    CHECK("bbox draw width", g.obj_w == 118u);
+    CHECK("bbox draw height", g.obj_h == 234u);
+    /* The object origin sits at the content origin, so the anchor distance is
+     * scaled(anchor) - scaled(bbox_x) = 144 - 84 = 60, NOT the unscaled anchor
+     * minus the box origin. Getting this wrong moves the sprite by the scale
+     * correction on the desktop and nowhere else, which is why it is pinned. */
+    CHECK("bbox draw anchor dx", g.anchor_dx == 60);
+    CHECK("bbox draw anchor dy", g.anchor_dy == (int32_t)((225 * 288 + 128) >> 8) -
+                                               (int32_t)((17 * 288 + 128) >> 8));
+    /* LV_ALIGN_CENTER adds obj_w/2 - img_w/2 = 59 - 128 = -69, and the content
+     * sits 84 px into the image, so the offset has to cancel both: -84 + 69. */
+    CHECK("bbox draw offset x", g.offset_x == -15);
+    CHECK("bbox draw offset y", g.offset_y == -(int32_t)((17 * 288 + 128) >> 8) -
+                                               (234 / 2 - 256 / 2));
+
+    /* A prescaled asset must draw at 1:1 with no offset, whatever scale the
+     * sprite asks for: that is the whole point of baking the correction in. */
+    lw_asset_draw_geometry(wave, 282u, &g);
+    CHECK("prescaled forces 1x", g.scale == 256u);
+    CHECK("prescaled full box", g.obj_w == 256u && g.obj_h == 256u);
+    CHECK("prescaled no offset", g.offset_x == 0 && g.offset_y == 0);
+    CHECK("prescaled no anchor shift", g.anchor_dx == 128 && g.anchor_dy == 226);
+
+    /* No metadata at all: exactly the V4.4 draw. The object stays at the decoded
+     * canvas size and no offset is applied, because LVGL clips to obj->coords and
+     * V4.4 relied on that: a 288/256 sprite had its rightmost and bottom 32
+     * destination columns clipped away. Sizing the object to 288 here instead
+     * would reveal pixels V4.4 never drew, which is what made 125 of 156 host
+     * screenshots differ from HEAD. */
+    static const clip_spec_t plain[] = {{"idle", 1, 225, 1, 100}};
+    CHECK("legacy fixture written", write_pack("t-plain.lwp", plain, 1, false));
+    lw_pack_registry_reset();
+    CHECK("legacy pack accepted",
+          lw_pack_registry_add(fixture_dir(), "t-plain.lwp", "male", NULL, NULL) == LW_PACK_OK);
+    CHECK("legacy pack published", lw_pack_registry_register(LW_PACK_LEASE_BUDGET));
+    const lw_asset_spec_t *legacy = lw_assets_find("male.idle");
+    CHECK("legacy has no bbox", legacy && legacy->bbox_w == 0u && legacy->bbox_h == 0u);
+    lw_asset_draw_geometry(legacy, 288u, &g);
+    CHECK("legacy keeps canvas-sized object", g.obj_w == 256u && g.obj_h == 256u);
+    CHECK("legacy applies no offset", g.offset_x == 0 && g.offset_y == 0);
+    CHECK("legacy keeps requested scale", g.scale == 288u);
+    CHECK("legacy anchor is plain scale", g.anchor_dx == 144 && g.anchor_dy == 253);
+
+    /* ---- rejection paths ------------------------------------------------- */
+    lw_pack_registry_reset();
+    static const clip_spec_t one[] = {{"idle", 1, 225, 1, 100}};
+    static const bbox_spec_t outside[] = {{200u, 17u, 105u, 208u, 0u}}; /* 200+105 > 256 */
+    CHECK("outside-box fixture", write_pack("t-outside.lwp", one, 1, false));
+    CHECK("outside-box trailer", append_trailer("t-outside.lwp", outside, 1, 1u));
+    CHECK("outside box refused", lw_pack_registry_add(fixture_dir(), "t-outside.lwp", "male", NULL,
+                                                      NULL) == LW_PACK_ERR_TRAILER);
+
+    static const bbox_spec_t good[] = {{75u, 17u, 105u, 208u, 0u}};
+    CHECK("bad-magic fixture", write_pack("t-badmagic.lwp", one, 1, false));
+    CHECK("bad-magic trailer", append_trailer("t-badmagic.lwp", good, 1, 1u));
+    static const uint8_t junk[8] = {'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'};
+    /* The trailer header is the last 12 + 1*10 = 22 bytes; its first 8 are the
+     * magic. */
+    CHECK("bad-magic patched", patch_tail("t-badmagic.lwp", -(long)(22), junk, sizeof(junk)));
+    CHECK("bad magic refused", lw_pack_registry_add(fixture_dir(), "t-badmagic.lwp", "male", NULL,
+                                                    NULL) == LW_PACK_ERR_TRAILER);
+
+    CHECK("clip-count-mismatch fixture", write_pack("t-count.lwp", one, 1, false));
+    CHECK("clip-count-mismatch trailer", append_trailer("t-count.lwp", good, 1, 1u));
+    static const uint8_t wrong_count[2] = {2u, 0u}; /* says 2 clips, trailer holds 1 */
+    CHECK("clip-count patched", patch_tail("t-count.lwp", -(long)(22) + 8, wrong_count, 2u));
+    CHECK("clip-count mismatch refused", lw_pack_registry_add(fixture_dir(), "t-count.lwp", "male",
+                                                              NULL, NULL) == LW_PACK_ERR_TRAILER);
+
+    /* An unknown trailer kind must be refused rather than ignored: a future
+     * trailer may change how frames are interpreted. */
+    CHECK("unknown-kind fixture", write_pack("t-kind.lwp", one, 1, false));
+    CHECK("unknown-kind trailer", append_trailer("t-kind.lwp", good, 1, 2u));
+    CHECK("unknown trailer kind refused", lw_pack_registry_add(fixture_dir(), "t-kind.lwp", "male",
+                                                               NULL, NULL) == LW_PACK_ERR_TRAILER);
+
+    /* A clip that claims to start inside the trailer is corrupt, not merely
+     * odd: it would read bbox bytes as pixels. */
+    CHECK("overlap fixture", write_pack("t-overlap.lwp", one, 1, false));
+    CHECK("overlap trailer", append_trailer("t-overlap.lwp", good, 1, 1u));
+    static const uint8_t shifted_offset[4] = {0x00u, 0x10u, 0x00u, 0x00u}; /* 0x1000, past EOF */
+    CHECK("overlap offset patched",
+          patch_tail("t-overlap.lwp", -(long)(22) - (long)(RECORD_BYTES) + 40 + (long)0, NULL, 0));
+    {
+        snprintf(s_path, sizeof(s_path), "%s/%s", fixture_dir(), "t-overlap.lwp");
+        FILE *f = fopen(s_path, "r+b");
+        CHECK("overlap reopen", f != NULL);
+        if (f) {
+            /* The single clip record starts at 16; its offset field is at +40. */
+            bool ok = fseek(f, 16 + 40, SEEK_SET) == 0 &&
+                      fwrite(shifted_offset, 1, sizeof(shifted_offset), f) == sizeof(shifted_offset);
+            fclose(f);
+            CHECK("overlap offset written", ok);
+        }
+    }
+    CHECK("offset into trailer refused", lw_pack_registry_add(fixture_dir(), "t-overlap.lwp", "male",
+                                                              NULL, NULL) == LW_PACK_ERR_OFFSET);
     lw_pack_registry_reset();
 }
 
@@ -866,6 +1063,7 @@ int main(void)
     test_pack_reset_refuses_live_lease();
     test_pack_rejections();
     test_pack_geometry();
+    test_pack_geometry_trailer();
     test_pack_clip_budget();
     test_resource_ok();
     test_resource_version_gate();

@@ -1,0 +1,4035 @@
+{
+  "results": [
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "idle",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "blink",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "blink",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "blink",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "blink",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "wave",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_down",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_left",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_right",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "male",
+      "clip": "walk_up",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        137,
+        239
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "idle",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_enter",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_idle",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "sleep_turn",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_down",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_left",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_right",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-base",
+      "clip": "walk_up",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        246,
+        229
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "qianqian-wave",
+      "clip": "wave",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        256,
+        256
+      ],
+      "baked_canvas": [
+        132,
+        225
+      ],
+      "scale": 288
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.seated",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 8,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 9,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 10,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 11,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 12,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 13,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 14,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.wave",
+      "frame": 15,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "couple.rest",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.idle",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 0,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 1,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 2,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 3,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 4,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 5,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 6,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    },
+    {
+      "pack": "daily",
+      "clip": "dog.sleep",
+      "frame": 7,
+      "identical": true,
+      "diff_pixels": 0,
+      "worst_delta": 0,
+      "src_canvas": [
+        320,
+        320
+      ],
+      "baked_canvas": [
+        276,
+        252
+      ],
+      "scale": 282
+    }
+  ],
+  "frames_checked": 237,
+  "failures": 0
+}

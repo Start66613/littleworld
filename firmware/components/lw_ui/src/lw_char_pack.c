@@ -99,7 +99,13 @@ bool lw_char_pack_register(const lw_char_pack_blob_t *blob)
         s_sources[i] = (lw_char_source_t){data, blob->size, offset, (uint16_t)frames,
                                           (uint16_t)width, (uint16_t)height, (uint32_t)frame_bytes};
         s_specs[i] = (lw_asset_spec_t){s_ids[i], (uint16_t)width, (uint16_t)height, (uint16_t)frames,
-                                     anchor_x, anchor_y, LV_COLOR_FORMAT_RGB565A8, read_frame, &s_sources[i]};
+                                     anchor_x, anchor_y, LV_COLOR_FORMAT_RGB565A8,
+                                     /* This container stores each clip already cropped to its
+                                      * union box, so the whole frame is content and there is
+                                      * nothing left to crop. Zero bbox keeps the V4.4 draw
+                                      * (canvas-sized object, no offset). */
+                                     0, 0, 0, 0, 0,
+                                     read_frame, &s_sources[i]};
         for (unsigned f = 0; f < frames; f++) {
             s_sequences[i][f] = (uint16_t)f;
             s_durations[i][f] = (uint16_t)duration;

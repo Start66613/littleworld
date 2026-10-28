@@ -1,0 +1,1099 @@
+{
+  "identical": 156,
+  "differ": 0,
+  "missing": [],
+  "rows": [
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "01-desktop.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "02-control-center.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "03-wifi-list.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "04-settings.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "05-themes.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "06-lockscreen.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "07-pixel-world.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "08-wifi-password.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "09-moonlight-desktop.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "10-envelope.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "11-pet-idle.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "12-pet-interaction.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "13-album-viewer.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "14-music.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "15-anniversary.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "16-2048.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "17-rpg-room.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "18-rpg-journal.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "19-rpg-dialogue.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "20-rpg-reward.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "21-album-empty.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "22-dock-pressed.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "23-services-unavailable.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "24-dnd.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "25-motion-settings.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "26-album-local-photo.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "27-album-load-error.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "28-story-detail.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "29-music-simulated.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "30-game-pause.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "31-rpg-move-feedback.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-empty.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-idle-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-look.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-return.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "component-dog-sleep.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-08.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-09.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-boot-10.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-greet-restored.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-letter-closed.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-lock-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-pull-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-pull-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-pull-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-pull-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-pull-open.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-push-closed.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-push-mid.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-theme-0.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-theme-1.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-theme-2.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-unlock-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-unlock-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v4-unlock-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-idle-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-restored.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-sleep.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-08.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-daily-wave-09.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-reward-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-08.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-09.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-10.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v42-rpg-walk-11.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-close-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-close-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-close-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-close-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-close-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-book-open-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-daily-dawn.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-daily-day.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-daily-deep-night.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-daily-dusk.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-daily-night.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-hidden.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-00.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-01.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-02.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-03.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-04.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-05.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-06.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-dock-open-07.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-home-dawn.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-home-day.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-home-deep-night.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-home-dusk.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-home-night.bmp"
+    },
+    {
+      "diff": 0,
+      "total": 614400,
+      "worst": 0,
+      "bbox": null,
+      "name": "v43-time-settings.bmp"
+    }
+  ]
+}

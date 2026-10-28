@@ -1,0 +1,62 @@
+﻿RenderBench - LVGL 9.5.0 software draw cost of ONE sprite frame
+host MSVC Release, LV_DRAW_SW_DRAW_UNIT_CNT=1 (firmware uses 2), 40 iterations
+A = what the firmware does today (full canvas + lv_image_set_scale 288/282)
+F = prescaled + precropped asset drawn at LV_SCALE_NONE (the proposal)
+
+############ male.idle ############
+render_bench: canvas 256x256, content 105x208 at (75,17), scale 288, 40 iterations
+render_bench: art = build/bench/male_idle.rgb565a8
+render_bench: LVGL 9.5.0, host DRAW_UNIT_CNT=1 (firmware uses 2)
+
+config                   ms/frame       vs A     obj px    diff px
+A full-canvas/scale         0.426      1.00x      65536          0
+B bbox-clip/scale           0.286      1.49x      27965          0
+C full-canvas/1x            0.108      3.93x      65536      15304
+D bbox-clip/1x              0.090      4.72x      21840      15304
+E prescaled-1x bbox         0.087      4.87x      27965       3923
+F prescaled+cropped         0.077      5.54x      27965          0
+
+fastest: 0.077 ms/frame (5.54x faster than the current full-canvas path)
+B bbox-clip identical to A:      yes
+F prescaled+cropped identical:   yes - ship this as the new asset layout
+E prescaled-1x identical to A:   no - differs in resampling only (expected for nearest-neighbour)
+C/D 1x differ from A:            yes, expected: 1x is 12.5% smaller than scale 288
+
+############ couple.seated ############
+render_bench: canvas 320x320, content 206x229 at (57,47), scale 282, 40 iterations
+render_bench: art = build/bench/couple_seated.rgb565a8
+render_bench: LVGL 9.5.0, host DRAW_UNIT_CNT=1 (firmware uses 2)
+
+config                   ms/frame       vs A     obj px    diff px
+A full-canvas/scale         0.651      1.00x     102400          0
+B bbox-clip/scale           0.438      1.49x      57684        144
+C full-canvas/1x            0.145      4.49x     102400      37961
+D bbox-clip/1x              0.105      6.20x      47174      37961
+E prescaled-1x bbox         0.115      5.67x      57684      15048
+F prescaled+cropped         0.091      7.13x      57684          0
+
+fastest: 0.091 ms/frame (7.13x faster than the current full-canvas path)
+B bbox-clip identical to A:      NO - geometry mismatch, do not ship as-is
+F prescaled+cropped identical:   yes - ship this as the new asset layout
+E prescaled-1x identical to A:   no - differs in resampling only (expected for nearest-neighbour)
+C/D 1x differ from A:            yes, expected: 1x is 12.5% smaller than scale 288
+
+############ dog.idle ############
+render_bench: canvas 320x320, content 54x47 at (132,211), scale 256, 40 iterations
+render_bench: art = build/bench/dog_idle.rgb565a8
+render_bench: LVGL 9.5.0, host DRAW_UNIT_CNT=1 (firmware uses 2)
+
+config                   ms/frame       vs A     obj px    diff px
+A full-canvas/scale         0.138      1.00x     102400          0
+B bbox-clip/scale           0.060      2.31x       2640          0
+C full-canvas/1x            0.126      1.09x     102400          0
+D bbox-clip/1x              0.060      2.28x       2538          0
+E prescaled-1x bbox         0.062      2.23x       2640        606
+F prescaled+cropped         0.062      2.21x       2640          0
+
+fastest: 0.060 ms/frame (2.31x faster than the current full-canvas path)
+B bbox-clip identical to A:      yes
+F prescaled+cropped identical:   yes - ship this as the new asset layout
+E prescaled-1x identical to A:   no - differs in resampling only (expected for nearest-neighbour)
+C/D 1x differ from A:            no - unexpected
+

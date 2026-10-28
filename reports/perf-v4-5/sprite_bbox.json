@@ -1,0 +1,326 @@
+[
+  {
+    "clip": "male.idle",
+    "frames": 8,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      75,
+      17,
+      180,
+      225
+    ],
+    "bbox_px": [
+      105,
+      208
+    ],
+    "drawn_px": [
+      118,
+      234
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 27612,
+    "padding_ratio": 3.004,
+    "waste_pct": 66.7
+  },
+  {
+    "clip": "male.blink",
+    "frames": 4,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      76,
+      17,
+      179,
+      225
+    ],
+    "bbox_px": [
+      103,
+      208
+    ],
+    "drawn_px": [
+      115,
+      234
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 26910,
+    "padding_ratio": 3.082,
+    "waste_pct": 67.6
+  },
+  {
+    "clip": "male.wave",
+    "frames": 16,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      60,
+      17,
+      180,
+      225
+    ],
+    "bbox_px": [
+      120,
+      208
+    ],
+    "drawn_px": [
+      135,
+      234
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 31590,
+    "padding_ratio": 2.626,
+    "waste_pct": 61.9
+  },
+  {
+    "clip": "male.walk_down",
+    "frames": 16,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      76,
+      17,
+      181,
+      229
+    ],
+    "bbox_px": [
+      105,
+      212
+    ],
+    "drawn_px": [
+      118,
+      238
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 28084,
+    "padding_ratio": 2.953,
+    "waste_pct": 66.1
+  },
+  {
+    "clip": "male.walk_left",
+    "frames": 15,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      74,
+      17,
+      177,
+      227
+    ],
+    "bbox_px": [
+      103,
+      210
+    ],
+    "drawn_px": [
+      115,
+      236
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 27140,
+    "padding_ratio": 3.056,
+    "waste_pct": 67.3
+  },
+  {
+    "clip": "male.walk_right",
+    "frames": 16,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      76,
+      17,
+      181,
+      228
+    ],
+    "bbox_px": [
+      105,
+      211
+    ],
+    "drawn_px": [
+      118,
+      237
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 27966,
+    "padding_ratio": 2.966,
+    "waste_pct": 66.3
+  },
+  {
+    "clip": "male.walk_up",
+    "frames": 16,
+    "canvas": [
+      256,
+      256
+    ],
+    "scale": 288,
+    "bbox": [
+      78,
+      19,
+      181,
+      227
+    ],
+    "bbox_px": [
+      103,
+      208
+    ],
+    "drawn_px": [
+      115,
+      234
+    ],
+    "canvas_draw_px": 82944,
+    "content_draw_px": 26910,
+    "padding_ratio": 3.082,
+    "waste_pct": 67.6
+  },
+  {
+    "clip": "couple.seated",
+    "frames": 16,
+    "canvas": [
+      320,
+      320
+    ],
+    "scale": 282,
+    "bbox": [
+      57,
+      47,
+      263,
+      276
+    ],
+    "bbox_px": [
+      206,
+      229
+    ],
+    "drawn_px": [
+      226,
+      252
+    ],
+    "canvas_draw_px": 123904,
+    "content_draw_px": 56952,
+    "padding_ratio": 2.176,
+    "waste_pct": 54.0
+  },
+  {
+    "clip": "couple.wave",
+    "frames": 16,
+    "canvas": [
+      320,
+      320
+    ],
+    "scale": 282,
+    "bbox": [
+      34,
+      48,
+      284,
+      274
+    ],
+    "bbox_px": [
+      250,
+      226
+    ],
+    "drawn_px": [
+      275,
+      248
+    ],
+    "canvas_draw_px": 123904,
+    "content_draw_px": 68200,
+    "padding_ratio": 1.817,
+    "waste_pct": 45.0
+  },
+  {
+    "clip": "couple.rest",
+    "frames": 2,
+    "canvas": [
+      320,
+      320
+    ],
+    "scale": 282,
+    "bbox": [
+      58,
+      47,
+      266,
+      276
+    ],
+    "bbox_px": [
+      208,
+      229
+    ],
+    "drawn_px": [
+      229,
+      252
+    ],
+    "canvas_draw_px": 123904,
+    "content_draw_px": 57708,
+    "padding_ratio": 2.147,
+    "waste_pct": 53.4
+  },
+  {
+    "clip": "dog.idle",
+    "frames": 8,
+    "canvas": [
+      320,
+      320
+    ],
+    "scale": 256,
+    "bbox": [
+      132,
+      211,
+      186,
+      258
+    ],
+    "bbox_px": [
+      54,
+      47
+    ],
+    "drawn_px": [
+      54,
+      47
+    ],
+    "canvas_draw_px": 102400,
+    "content_draw_px": 2538,
+    "padding_ratio": 40.347,
+    "waste_pct": 97.5
+  },
+  {
+    "clip": "dog.sleep",
+    "frames": 8,
+    "canvas": [
+      320,
+      320
+    ],
+    "scale": 256,
+    "bbox": [
+      129,
+      231,
+      190,
+      259
+    ],
+    "bbox_px": [
+      61,
+      28
+    ],
+    "drawn_px": [
+      61,
+      28
+    ],
+    "canvas_draw_px": 102400,
+    "content_draw_px": 1708,
+    "padding_ratio": 59.953,
+    "waste_pct": 98.3
+  }
+]

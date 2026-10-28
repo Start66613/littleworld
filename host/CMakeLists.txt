@@ -69,6 +69,24 @@ target_compile_definitions(LittleWorld PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_
 if(MSVC)
     target_compile_options(LittleWorld PRIVATE /utf-8)
 endif()
+# V4.5 P0: sprite draw-cost benchmark. Measures the LVGL software draw cost of
+# one sprite frame with and without a content-bbox clip, so the P0 decision is
+# backed by numbers from the same renderer the device runs instead of by
+# arithmetic on pixel counts. No SD card, no pack file, no asset cache.
+add_executable(RenderBench render_bench.c)
+target_include_directories(RenderBench PRIVATE "${LVGL_DIR}")
+target_compile_definitions(RenderBench PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
+target_link_libraries(RenderBench PRIVATE lvgl)
+
+# V4.5 P0: the baked-pack claim is "same picture, cheaper draw". This proves the
+# first half by rendering the shipped frame and the baked frame through the same
+# renderer and diffing the framebuffer; a nonzero diff means the bake does not
+# reproduce LVGL's fixed-point mapping and must not ship.
+add_executable(PrescaleVerify prescale_verify.c)
+target_include_directories(PrescaleVerify PRIVATE "${LVGL_DIR}")
+target_compile_definitions(PrescaleVerify PRIVATE LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
+target_link_libraries(PrescaleVerify PRIVATE lvgl user32 gdi32)
+
 add_executable(StorageTests ../tests/host/test_storage.c ../firmware/components/lw_storage/src/lw_storage.c ../firmware/components/lw_core/src/lw_fault.c ../firmware/components/lw_core/src/lw_path.c)
 target_include_directories(StorageTests PRIVATE ../firmware/components/lw_storage/include ../firmware/components/lw_core/include)
 if(MSVC)

@@ -200,16 +200,40 @@ static void experience_tests(lw_system_t *system,const char *out)
 }
 static void capture_now(const char *out,const char *name)
 { char path[600]; snprintf(path,sizeof(path),"%s/%s.bmp",out,name); lv_refr_now(NULL); CHECK("V4 real animation framebuffer",lw_host_screenshot_bmp(path)==0); }
-static const lv_image_dsc_t *sprite_image(lv_obj_t *o,unsigned width)
+/* V4.5: the canvas is no longer a constant 256 or 320. A pack may carry a
+ * geometry trailer that bakes the proportion correction into the pixels and
+ * crops the frame to its content box (tools/lwp_prescale.py), which shrinks the
+ * decoded canvas while leaving the artwork identical. Asking "is this the
+ * formal art?" must therefore compare against the registered asset spec, not
+ * against a hard-coded square. Both dimensions are checked because baked
+ * canvases are not square (male is 137x239, daily is 276x252). */
+static const lv_image_dsc_t *sprite_image(lv_obj_t *o,unsigned width,unsigned height)
 {
     if (lv_obj_check_type(o,&lv_image_class)) {
         const void *src=lv_image_get_src(o);
         if (src && lv_image_src_get_type(src)==LV_IMAGE_SRC_VARIABLE) {
-            const lv_image_dsc_t *d=src; if (d->header.w==width && d->header.h==width) return d;
+            const lv_image_dsc_t *d=src; if (d->header.w==width && d->header.h==height) return d;
         }
     }
-    for (unsigned i=0;i<lv_obj_get_child_count(o);i++) { const lv_image_dsc_t *d=sprite_image(lv_obj_get_child(o,(int)i),width); if (d) return d; }
+    for (unsigned i=0;i<lv_obj_get_child_count(o);i++) { const lv_image_dsc_t *d=sprite_image(lv_obj_get_child(o,(int)i),width,height); if (d) return d; }
     return NULL;
+}
+/* Canvas of the registered asset, or 0 when the asset is absent. */
+static unsigned asset_canvas(const char *asset_id,unsigned *height)
+{
+    const lw_asset_spec_t *spec=lw_assets_find(asset_id);
+    if (!spec) { if (height) *height=0; return 0; }
+    if (height) *height=spec->height;
+    return spec->width;
+}
+/* First image in the tree whose source canvas is the canvas of `asset_id`.
+ * Resolving the size through the asset table is what makes this survive baking:
+ * a baked pack decodes to 137x239 instead of 256x256 while drawing the same
+ * character, so a hard-coded 256 would report "no formal art" for correct art. */
+static const lv_image_dsc_t *asset_image(lv_obj_t *o,const char *asset_id)
+{
+    unsigned h=0; const unsigned w=asset_canvas(asset_id,&h);
+    return w ? sprite_image(o,w,h) : NULL;
 }
 static uint32_t pixel_hash(const lv_image_dsc_t *d)
 { uint32_t h=2166136261u; if (!d) return 0; for (unsigned i=0;i<d->data_size;i++) h=(h^d->data[i])*16777619u; return h; }
@@ -219,31 +243,31 @@ static void polish_v42_tests(const char *out)
     lv_area_t group;lv_obj_get_coords(lw_os_control(OC_CONTROL),&group);CHECK("status icons are a bounded right-aligned group",group.x1==900 && group.x2<=1012);
     if (lw_assets_find("v42.couple.seated")) {
         lw_os_open(OS_PET); advance(500); if (lw_app_state()->pet.sleeping) tap_text("叫醒");
-        const lv_image_dsc_t *d=sprite_image(lw_shell_content(),320);
+        const lv_image_dsc_t *d=asset_image(lw_shell_content(),"v42.couple.seated");
         CHECK("joint interaction keeps native 320 canvas",d!=NULL);
-        uint32_t h=pixel_hash(d); advance(380); CHECK("joint idle really changes decoded frames",pixel_hash(sprite_image(lw_shell_content(),320))!=h);
+        uint32_t h=pixel_hash(d); advance(380); CHECK("joint idle really changes decoded frames",pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated"))!=h);
         for (unsigned i=0;i<8;i++) {char n[64];snprintf(n,sizeof(n),"v42-daily-idle-%02u",i);capture_now(out,n);advance(160);}
-        lw_os_show(OS_OVER_CONTROL); advance(400); h=pixel_hash(sprite_image(lw_shell_content(),320)); advance(700);
-        CHECK("covered daily room suspends frame advancement",pixel_hash(sprite_image(lw_shell_content(),320))==h); lw_os_show(OS_OVER_NONE); advance(400);
+        lw_os_show(OS_OVER_CONTROL); advance(400); h=pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated")); advance(700);
+        CHECK("covered daily room suspends frame advancement",pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated"))==h); lw_os_show(OS_OVER_NONE); advance(400);
         tap_text("打招呼");
         for (unsigned i=0;i<10;i++) { char n[64]; snprintf(n,sizeof(n),"v42-daily-wave-%02u",i); capture_now(out,n); advance(120); }
         advance(500); capture_now(out,"v42-daily-restored");
         tap_text("休息"); CHECK("daily rest uses existing saved pet state",lw_app_state()->pet.sleeping); capture_now(out,"v42-daily-sleep");
-        h=pixel_hash(sprite_image(lw_shell_content(),320)); tap_text("打招呼"); advance(700);
-        CHECK("a greeting never wakes sleeping residents",lw_app_state()->pet.sleeping && pixel_hash(sprite_image(lw_shell_content(),320))==h);
+        h=pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated")); tap_text("打招呼"); advance(700);
+        CHECK("a greeting never wakes sleeping residents",lw_app_state()->pet.sleeping && pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated"))==h);
         tap_text("叫醒"); CHECK("wake restores existing pet state",!lw_app_state()->pet.sleeping);
         if(lw_assets_find("v42.dogbed.look")){
             capture_now(out,"component-dog-look");
             for(unsigned i=0;i<8;i++){char n[64];snprintf(n,sizeof(n),"component-dog-idle-%02u",i);capture_now(out,n);advance(125);}
             tap_text("休息");capture_now(out,"component-dog-sleep");tap_text("叫醒");tap_text("玩耍");capture_now(out,"component-dog-empty");advance(2300);capture_now(out,"component-dog-return");
         }
-        lw_os_motion_mode(LW_MOTION_OFF); advance(400); h=pixel_hash(sprite_image(lw_shell_content(),320)); advance(700);
-        CHECK("motion off freezes daily scene frames",pixel_hash(sprite_image(lw_shell_content(),320))==h);
+        lw_os_motion_mode(LW_MOTION_OFF); advance(400); h=pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated")); advance(700);
+        CHECK("motion off freezes daily scene frames",pixel_hash(asset_image(lw_shell_content(),"v42.couple.seated"))==h);
         lw_os_motion_mode(LW_MOTION_FULL); lw_os_open(OS_DESKTOP); advance(600);
         CHECK("daily scene exit releases objects and timers",objects(lw_os_root())==base && timers()==tb);
     }
     lw_os_open(OS_RPG); advance(500);
-    lv_obj_t *actor=lw_os_rpg_actor(0); const lv_image_dsc_t *d=actor ? sprite_image(actor,256) : NULL;
+    lv_obj_t *actor=lw_os_rpg_actor(0); const lv_image_dsc_t *d=actor ? asset_image(actor,"male.walk_right") : NULL;
     if (lw_assets_find("male.walk_right")) CHECK("RPG renders formal native 256 actor",d!=NULL);
     rpg_tile(7,5);
     lw_host_pointer_t *p=lw_host_pointer(); p->x=64+10*56+28; p->y=310+5*22; p->pressed=1; advance(60); p->pressed=0;

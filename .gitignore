@@ -100,3 +100,4 @@ __pycache__/
 /reports/board/*.bmp
 /reports/board-v43/
 /reports/board/*.png
+/COMMIT_MSG_V45.txt

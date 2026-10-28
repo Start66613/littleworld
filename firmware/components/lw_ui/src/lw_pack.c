@@ -109,6 +109,7 @@ const char *lw_pack_status_text(lw_pack_status_t status)
     case LW_PACK_ERR_LOOP: return "bad-loop-flag";
     case LW_PACK_ERR_ACTORS: return "actor-table-full";
     case LW_PACK_ERR_REGISTER: return "register-rejected";
+    case LW_PACK_ERR_TRAILER: return "bad-geometry-trailer";
     }
     return "unknown";
 }
@@ -258,6 +259,56 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         return LW_PACK_ERR_TRUNCATED;
     }
 
+    /* Optional geometry trailer (see lw_pack.h). When it is present the trailer
+     * occupies the tail of the file, so the payload must end before it: a clip
+     * whose frames ran into the trailer would read bbox bytes as pixels, which
+     * looks like corrupted art rather than an error. */
+    uint64_t payload_end = (uint64_t)size;
+    uint16_t trailer_bbox_x[LW_PACK_MAX_CLIPS] = {0};
+    uint16_t trailer_bbox_y[LW_PACK_MAX_CLIPS] = {0};
+    uint16_t trailer_bbox_w[LW_PACK_MAX_CLIPS] = {0};
+    uint16_t trailer_bbox_h[LW_PACK_MAX_CLIPS] = {0};
+    uint16_t trailer_prescaled[LW_PACK_MAX_CLIPS] = {0};
+    if (u16(header + 14) == LW_PACK_TRAILER_GEOMETRY) {
+        uint64_t trailer_bytes = LW_PACK_TRAILER_HEADER_BYTES +
+                                 (uint64_t)LW_PACK_TRAILER_RECORD_BYTES * clips;
+        if ((uint64_t)size < payload_start + trailer_bytes) { fclose(f); return LW_PACK_ERR_TRAILER; }
+        uint64_t trailer_start = (uint64_t)size - trailer_bytes;
+        if (fseek(f, (long)trailer_start, SEEK_SET) != 0) { fclose(f); return LW_PACK_ERR_TRAILER; }
+        uint8_t trailer_header[LW_PACK_TRAILER_HEADER_BYTES];
+        if (fread(trailer_header, 1, sizeof(trailer_header), f) != sizeof(trailer_header) ||
+            memcmp(trailer_header, LW_PACK_TRAILER_MAGIC, 8) != 0 ||
+            u16(trailer_header + 8) != clips) {
+            fclose(f);
+            return LW_PACK_ERR_TRAILER;
+        }
+        for (unsigned i = 0; i < clips; i++) {
+            uint8_t rec[LW_PACK_TRAILER_RECORD_BYTES];
+            if (fread(rec, 1, sizeof(rec), f) != sizeof(rec)) { fclose(f); return LW_PACK_ERR_TRAILER; }
+            trailer_bbox_x[i] = (uint16_t)u16(rec + 0);
+            trailer_bbox_y[i] = (uint16_t)u16(rec + 2);
+            trailer_bbox_w[i] = (uint16_t)u16(rec + 4);
+            trailer_bbox_h[i] = (uint16_t)u16(rec + 6);
+            trailer_prescaled[i] = (uint16_t)u16(rec + 8);
+            /* A box that starts or ends outside the canvas is a packing bug, not
+             * a hint: refuse it here rather than clamping it silently at draw
+             * time, where it would shift the sprite and look like a code fault. */
+            if (trailer_bbox_w[i] && trailer_bbox_h[i] &&
+                ((unsigned)trailer_bbox_x[i] + trailer_bbox_w[i] > width ||
+                 (unsigned)trailer_bbox_y[i] + trailer_bbox_h[i] > height)) {
+                fclose(f);
+                return LW_PACK_ERR_TRAILER;
+            }
+        }
+        payload_end = trailer_start;
+        if (fseek(f, LW_PACK_HEADER_BYTES, SEEK_SET) != 0) { fclose(f); return LW_PACK_ERR_TRUNCATED; }
+    } else if (u16(header + 14) != LW_PACK_TRAILER_NONE) {
+        /* An unknown trailer kind must not be ignored: a future pack may store
+         * something whose absence would change how frames are interpreted. */
+        fclose(f);
+        return LW_PACK_ERR_TRAILER;
+    }
+
     /* A second pack for the same actor APPENDS: qianqian keeps her base clips
      * and gains wave, instead of one pack silently replacing the other. */
     unsigned existing = 0;
@@ -296,7 +347,7 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         }
         if (loop > 1u) { status = LW_PACK_ERR_LOOP; break; }
         if (offset < payload_start ||
-            (uint64_t)offset + (uint64_t)frames * frame_bytes > (uint64_t)size) {
+            (uint64_t)offset + (uint64_t)frames * frame_bytes > payload_end) {
             status = LW_PACK_ERR_OFFSET;
             break;
         }
@@ -324,7 +375,10 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
             s_file_paths[file_slot], offset, (uint32_t)frame_bytes, (uint16_t)frames};
         s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)width,
                                           (uint16_t)height, (uint16_t)frames, (int16_t)anchor_x,
-                                          (int16_t)anchor_y, LV_COLOR_FORMAT_RGB565A8, read_frame,
+                                          (int16_t)anchor_y, LV_COLOR_FORMAT_RGB565A8,
+                                          trailer_bbox_x[i], trailer_bbox_y[i],
+                                          trailer_bbox_w[i], trailer_bbox_h[i],
+                                          trailer_prescaled[i], read_frame,
                                           &s_sources[spec]};
         /* Clip names stay exactly as the pack spells them: the UI looks up
          * "idle", "blink", "wave" and "walk_<dir>" by name, so a silent rename
@@ -476,7 +530,17 @@ lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
     s_sources[spec].raw = (lw_asset_raw_file_t){NULL, 0, 0, 0};
     s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)width, (uint16_t)height,
                                       (uint16_t)frames, (int16_t)anchor_x, (int16_t)anchor_y,
-                                      LV_COLOR_FORMAT_RGB565A8, read_frame, &s_sources[spec]};
+                                      LV_COLOR_FORMAT_RGB565A8,
+                                      /* LWFA is already stored cropped to the union box
+                                       * (tools/build_character_pack.py), so the whole frame
+                                       * is content and there is nothing left to crop. Zero
+                                       * bbox means "no metadata": the draw then keeps V4.4's
+                                       * canvas-sized object, which is what the screenshots
+                                       * were captured against. Declaring the full canvas as a
+                                       * bbox would instead resize the object to
+                                       * scale_px(width) and shift every actor. */
+                                      0, 0, 0, 0, 0,
+                                      read_frame, &s_sources[spec]};
 
     for (unsigned k = 0; k < frames; k++) {
         s_sequences[slot][existing][k] = (uint16_t)k;
