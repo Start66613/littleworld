@@ -13,7 +13,12 @@
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
+/* uxTaskGetStackHighWaterMark() below turns the boot build's stack budget into
+ * one log line per phase instead of a guess after a panic. */
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
@@ -322,6 +327,17 @@ static bool hw_volume(void *context, unsigned value, bool muted)
     return lw_hw_volume_set(value, muted);
 }
 
+/* Internal-RAM head-room at a boot phase: free bytes and the largest single
+ * block. Everything the console REPL needs (UART driver, its own task stack) has
+ * to come out of this pool, so when the REPL fails to start these two numbers say
+ * whether the pool was short or just fragmented. */
+static void boot_ram_report(const char *phase)
+{
+    ESP_LOGI(TAG, "boot ram after %s: stack %u B free, internal %u B free, largest %u B",
+             phase, (unsigned)uxTaskGetStackHighWaterMark(NULL),
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+}
 static void start_os(void)
 {
     /* V4.4 P0-D: boot phase timing. Everything below runs inside the LVGL lock
@@ -343,6 +359,7 @@ static void start_os(void)
     lw_hw_caps_t caps = lw_hw_begin(want_audio);
     s_hw_caps = caps;
     const int64_t t_hw = esp_timer_get_time();
+    boot_ram_report("hw");
 
     lw_system_backend_t backend = {0};
     backend.simulated = false;
@@ -397,6 +414,12 @@ static void start_os(void)
                                             (size_t)(characters_lwfa_end - characters_lwfa_start));
     ESP_LOGI(TAG, "art: %s", lw_art_report());
     const int64_t t_art = esp_timer_get_time();
+    /* Main-task stack headroom after each phase. uxTaskGetStackHighWaterMark()
+     * reports the smallest gap the task has ever had, so a phase that drops it
+     * is the phase whose call depth owns the limit. The device panicked with a
+     * stack protection fault inside the boot build, and this is the cheapest
+     * way to see which of these five steps actually eats the stack. */
+    boot_ram_report("art");
     if (!art) {
         ESP_LOGW(TAG, "art: %s", "no character source loaded, using the labelled fallback");
     }
@@ -406,6 +429,7 @@ static void start_os(void)
      * but before lw_os_start() (which builds the pages that borrow it). */
     (void)lw_content_boot();
     const int64_t t_content = esp_timer_get_time();
+    boot_ram_report("content");
 
     publish_capabilities();
     if (!lw_os_start(&s_system, art)) {
@@ -416,6 +440,7 @@ static void start_os(void)
         lw_ui_start();
     } else {
         const int64_t t_ui = esp_timer_get_time();
+        boot_ram_report("ui");
         /* Later capability changes are applied from the LVGL task only. */
         lv_timer_create(caps_timer_cb, 1000, NULL);
         /* The desktop exists now, so the anniversary is live and the memories
@@ -423,6 +448,7 @@ static void start_os(void)
          * here is the one moment it is still closed. */
         lw_content_boot_apply();
         const int64_t t_apply = esp_timer_get_time();
+        boot_ram_report("apply");
         /* Boot phase budget, one line, milliseconds. "hw" is codec/LEDC/SD
          * bring-up, "art" is the card mount plus six pack headers plus the
          * read-ahead cache open, "content" is the user content file, "ui" is

@@ -172,9 +172,10 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
 static const uint8_t *borrow_frame(void *context, uint16_t frame, size_t bytes)
 {
     lw_pack_source_t *source = context;
-    if (!source || !source->cache || frame >= source->frames || bytes != source->frame_bytes) return NULL;
-    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
-    return lw_file_cache_borrow(source->cache, source->file, offset, bytes);
+    if (!source || !source->cache || !bytes) return NULL;
+    return lw_file_cache_borrow(source->cache, source->file,
+                                (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes,
+                                bytes);
 }
 
 static void unborrow_frame(void *context, const uint8_t *pixels)

@@ -242,3 +242,108 @@ esp-brookesia 的分阶段 init 是这一机制的参照（`OPEN_SOURCE_RESEARCH
 | `boot phases` 的 `ui` | 烧后启动日志 | 不变（本轮未动 `render()`） |
 | 桌面首帧是否正确 | 肉眼看 + `shot` 命令 | 与烧前一致 |
 | 动画 OFF 时开机是否仍跳过 | `anim off` 后重启 | 是（`lw_os_boot()` 的 `LW_MOTION_OFF` 早退未改） |
+
+---
+
+## 7. 真正的绑定约束是内部 RAM，不是时间（2026-10-30 追加）
+
+这一节记录的是一次**排错了三轮的定位**：前六轮都在找「谁慢了」，而板子
+的崩溃来自「首帧之后内部 RAM 只剩几个 KB」。时序数据没问题，问题在内存。
+
+### 7.1 现象
+
+有卡启动（`art: card: 6/6 packs [card]`、`ui = 1728~2297 ms`）时，板子在
+`lw_capture: synthetic pointer ready` 之后约 400 ms 崩溃，三种形态随镜像变化：
+
+| 镜像 | 崩溃形态 | 位置 |
+|---|---|---|
+| 原始 | `Guru Meditation Error ... (Stack protection fault)` | `lock_acquire_generic`（`locks.c:138`） |
+| 主任务栈 64 KB | `abort() was called at PC 0x4ff41519` | `xQueueCreateMutex` 失败（`locks.c:75-78`） |
+| 加 `WATCHPOINT_END_OF_STACK` | `panic'ed (Breakpoint)`、`MTVAL 0x4ff825dc` | 对栈底的 store |
+
+三者是同一个事实的不同表现：**内存分配失败**走在 `printf` 取 stdout 递归锁
+的路径上。无卡（safe mode）启动从不复现，因为 `ui = 68 ms`、内部池充裕。
+
+### 7.2 量化
+
+`firmware/main/lw_boot.c` 新增 `boot_ram_report(phase)`，每次打印栈水位与
+内部堆：
+
+```c
+ESP_LOGI(TAG, "boot ram after %s: stack %u B free, internal %u B free, largest %u B",
+         phase, (unsigned)uxTaskGetStackHighWaterMark(NULL),
+         (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+         (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+```
+
+真机读数（卡在场，控制台仍放在启动末尾的那版）：
+
+| 阶段 | 栈空闲 | 内部 RAM 空闲 | 最大连续块 |
+|---|---|---|---|
+| `hw`（含 SD 挂载前） | 30,332 | 97,743 | 55,296 |
+| `art`（SD 挂载 + 六包打开） | 28,984 | **44,223** | 30,720 |
+| `content` | 28,984 | 44,223 | — |
+| `ui`（`render()` + `lw_os_boot()`） | 28,984 | **6,179** | 5,888 |
+| `apply` | 28,984 | 6,139 | — |
+
+⇒ **SD 挂载 + 六包打开吃约 53 KB**（其中 `lw_sd: sdmmc staging buffer: 32768 B`
+是单项最大），**首屏构建再吃约 38 KB**，内部池从 97 KB 压到 6 KB。
+此时 `largest block` 只有 5,888 B，控制台 REPL 需要的 12 KB 任务栈
+必然失败（实测 `W ... no stack for the console task; the REPL stays off`）。
+
+**栈不是问题**：整段 2.1 s 的首屏构建只用了 3,784 B（32,768 − 28,984）。
+崩溃时 SP 比栈下界低 24 B 而水位仍有 28,984 B ⇒ 是**帧指针被踩**，
+不是栈耗尽。这条读数同时否掉了「把栈加大」和「把栈缩小」之外的两种误解。
+
+### 7.3 修复一：控制台提到首屏之前
+
+`firmware/main/app_main.c` 把控制台任务从启动末尾移到
+`bsp_display_backlight_on()` 之后、`lw_boot_start()` 之前，并前置打印一行
+内部堆实测值。真机读数变化：
+
+| 时刻 | free | largest |
+|---|---|---|
+| 控制台之后、`lw_boot_start()` 之前 | 107,759 | 55,296 |
+| `art` 之后（控制台已在跑） | 31,039 | 16,384 |
+| `ui` 之后 | **23** | **0** |
+
+板子由此**稳定**：`lw_capture: console ready on UART0`、`Type 'help' ...`
+正常打印，`status` 可应答，20 秒观察无重启（`boots=0`），
+`boot phases: hw=30 art=164 content=9 ui=1728 apply=1 total=1934 ms`。
+
+### 7.4 修复二：主任务栈 32 KB → 16 KB（未上机验证）
+
+`firmware/sdkconfig.os` 的 `CONFIG_ESP_MAIN_TASK_STACK_SIZE` 与
+`CONFIG_MAIN_TASK_STACK_SIZE` 从 32768 改为 16384。依据是上面的水位：
+实测只用 3,784 B，16 KB 仍有 4 倍余量；而主任务栈是静态占用的**内部 RAM**，
+缩掉 16 KB 等于直接把 16 KB 还给内部堆。镜像 `0x240fd0`（2,363,344 B）构建通过，
+**烧录时板子从 USB 掉线，此改动尚未上机验证**。
+
+### 7.5 副作用：RPG 页打不开
+
+`ui` 之后内部 RAM 只剩 23 B，于是进 RPG 页失败：世界页（`page 1`）正常，
+但 `tap 866 372` 之后 `status` 仍是 `page 1`，`rpg` 命令回 `rpg: page not open`。
+这是**同一个内存问题的用户可见后果**，不是 RPG 页自身缺陷——无卡启动
+（内部池 57,891 B）从未出现。
+
+### 7.6 已排除的候选
+
+每一项都单独出过一次固件并烧录，全部仍崩：
+
+| 候选 | 怎么排除 | 结果 |
+|---|---|---|
+| 宠物页探针 | 两次 `git stash` 掉 `lw_os.h`/`lw_app_pet.c`/`lw_capture.c` 改动 | 仍崩 |
+| per-clip 子窗口几何 | `spec_bbox()` 临时恒返回整画布 | 仍崩 |
+| 零拷贝借用 | `borrow_frame()` 临时恒 `return NULL` | 仍崩 |
+| 主任务栈太小 | 提到 64 KB | 换成 `xQueueCreateMutex` 失败 |
+| 未持锁 attach | `bsp_display_lock(0)` → `-1` | 是真实 bug，但不是崩溃主因 |
+| 整段 clip 预取 | `if (0 && clip->count > 1)` | `ui` 1728→1405 ms，但内部 RAM 仍 23 B |
+
+### 7.7 待确认
+
+| 项 | 怎么测 | 预期 |
+|---|---|---|
+| 16 KB 主任务栈后内部池 | 烧后启动日志 `boot ram after ui` | `internal` 从 23 B 升到约 16 KB |
+| RPG 页能否打开 | `tap 866 372` + `status` | `page 9` |
+| 内部池与 `ui` 段的关系 | 同一镜像跑有卡/无卡 | 无卡 57,891 B、有卡 23 B |
+| per-clip 几何上机后的宠物页 | `pet` 命令 | 绘制面积按 clip 收窄 |

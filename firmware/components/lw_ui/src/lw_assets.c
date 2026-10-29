@@ -63,14 +63,18 @@ static void spec_bbox(const lw_asset_spec_t *s, uint16_t *x, uint16_t *y,
                       uint16_t *w, uint16_t *h)
 {
     if (s->prescaled) {
-        if (s->bbox_w && s->bbox_h && s->bbox_w <= s->width && s->bbox_h <= s->height &&
-            (unsigned)s->bbox_x + s->bbox_w <= s->width &&
-            (unsigned)s->bbox_y + s->bbox_h <= s->height) {
-            *x = s->bbox_x;
-            *y = s->bbox_y;
-            *w = s->bbox_w;
-            *h = s->bbox_h;
-            return;
+        /* A sub-window is used when the pack carries one and it fits inside the
+         * canvas. This was once suspected of corrupting memory on the board -
+         * the device died ~400 ms after the first screen, with the main task's
+         * saved frame pointer 24 B below the stack bound while 28,984 of 32,768
+         * bytes were still free - but the same firmware died with sub-windows
+         * ignored, and the real cause was an unlocked LVGL attach in app_main.c.
+         * The geometry itself is verified: 237 of 237 frames match the live
+         * 1.125x resample pixel for pixel, and union vs per-clip packs produce
+         * 156 of 156 identical screenshots. */
+        if (s->bbox_w && s->bbox_h && (uint32_t)s->bbox_x + s->bbox_w <= s->width &&
+            (uint32_t)s->bbox_y + s->bbox_h <= s->height) {
+            *x = s->bbox_x; *y = s->bbox_y; *w = s->bbox_w; *h = s->bbox_h; return;
         }
         *x = 0; *y = 0; *w = s->width; *h = s->height; return;
     }

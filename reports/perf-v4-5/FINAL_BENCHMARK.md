@@ -143,6 +143,7 @@ rpg perf: refill calls=286 borrowed=286
 | 4 | `ui = 1373 ms` 首帧延迟（机制 4） | 烘焙包已把 1543 → 1373 ms | `boot phases` |
 | 5 | 皮肤九宫格 9 个 `lv_image`（机制 5） | 未做 | `lw_skin_panel()` |
 | 6 | 30 分钟长测重跑 | V4.4 做过 32.1 分钟，V4.5 未重跑 | — |
+| 7 | **内部 RAM 只剩 23 B，RPG 页打不开** | 控制台已提到首屏前（板子稳定），主任务栈 32→16 KB 已改但**烧录时板子掉 USB，未上机验证** | `BOOT_OPTIMIZATION.md` §7：`ui` 之后 `internal 23 B / largest 0 B`；`rpg` 回 `page not open` |
 
 ---
 
