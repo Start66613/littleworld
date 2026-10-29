@@ -23,6 +23,10 @@ struct lw_rpg_view {
     uint32_t animation_ms,reaction_ms; int queued_spot; bool art;
 };
 enum { ACT_INTERACT=1,ACT_NEXT,ACT_CHOICE0,ACT_CHOICE1,ACT_JOURNAL,ACT_CLOSE };
+/* Counters behind lw_rpg_view_perf(); see lw_rpg_view.h for why they exist. */
+static lw_rpg_perf_t s_perf;
+void lw_rpg_view_perf(lw_rpg_perf_t *out) { if (out) *out=s_perf; }
+void lw_rpg_view_perf_reset(void) { memset(&s_perf,0,sizeof(s_perf)); }
 /* Fractional tile -> pixel. Integer tiles round to exactly the old constants
  * (px = 64 + x*56 + 28, py = 310 + y*22), so nothing that used to line up moves. */
 static void tile_point_frac(float fx,float fy,int *px,int *py)
@@ -56,6 +60,7 @@ static const lw_clip_t *resident_clip(lw_rpg_view_t *v,unsigned i,const char *na
 }
 static void refresh(lw_rpg_view_t *v)
 {
+    const uint32_t started=lv_tick_get();
     float fx[2],fy[2]; int py[2];
     for (unsigned i=0;i<2;i++) lw_rpg_actor_point(&v->state,(int)i,&fx[i],&fy[i]);
     /* Couple spacing. The core keeps the partner LW_RPG_FOLLOW_DISTANCE away
@@ -72,6 +77,7 @@ static void refresh(lw_rpg_view_t *v)
       } }
     v->sep+=(sep_target-v->sep)*0.25f;
     if (v->sep>-0.5f && v->sep<0.5f) v->sep=0.0f;
+    s_perf.state_ms+=lv_tick_get()-started;
     for (unsigned i=0;i<2;i++) {
         int x,y; tile_point_frac(fx[i],fy[i],&x,&y);
         if (i && v->sep!=0.0f) x+=(int)(v->sep<0.0f ? v->sep-0.5f : v->sep+0.5f);
@@ -88,11 +94,15 @@ static void refresh(lw_rpg_view_t *v)
              * translate animation, which restarted from the tile boundary on
              * every step (stutter) and degraded to a plain jump whenever the
              * decorative animation switch was off. */
-            lw_sprite_set_anchor(v->players[i],x,y);
-            /* Walking is gameplay, not decoration: keep it animating even when
-             * settings.animations is off. */
-            if (moving || lw_os_motion_get()!=LW_MOTION_OFF)
-                lw_sprite_seek(v->players[i],v->reaction_ms ? 1600-v->reaction_ms : v->animation_ms);
+            { uint32_t mark=lv_tick_get();
+              lw_sprite_set_anchor(v->players[i],x,y);
+              uint32_t moved=lv_tick_get();
+              /* Walking is gameplay, not decoration: keep it animating even when
+               * settings.animations is off. */
+              if (moving || lw_os_motion_get()!=LW_MOTION_OFF)
+                  lw_sprite_seek(v->players[i],v->reaction_ms ? 1600-v->reaction_ms : v->animation_ms);
+              uint32_t sought=lv_tick_get();
+              s_perf.anchor_ms+=moved-mark; s_perf.seek_ms+=sought-moved; }
         } else lv_obj_set_pos(v->actor[i],x-18,y-48);
         /* Save bookkeeping follows the logical tile, not the sub-tile pixel
          * position, or a walk would mark the save dirty on every repaint. */
@@ -104,9 +114,27 @@ static void refresh(lw_rpg_view_t *v)
      * already returns early on an unchanged index, but the desktop page learned
      * this the hard way too (lw_os.c:282 keeps a front_actor guard): a real
      * reorder sends LV_EVENT_CHILD_CHANGED on the map and invalidates the whole
-     * 1024x494 map, so the cost is one full-room repaint, not a tree shuffle. */
+     * 1024x494 map, so the cost is one full-room repaint, not a tree shuffle.
+     *
+     * Overlap is what decides the cost/benefit, so test it: two characters that
+     * do not share a screen pixel look identical whichever way they are stacked,
+     * and while walking they are usually a couple of tiles apart. Repainting the
+     * room to fix an ordering nobody can see is the single largest hitch this
+     * page produces, so the swap waits until the sprites actually overlap. */
     { int front=py[0]>py[1] ? 0 : 1;
-      if (front!=v->front_actor) { lv_obj_move_to_index(v->actor[front],-1); v->front_actor=front; } }
+      lv_area_t fa, ba;
+      bool overlap=false;
+      if (v->actor[0] && v->actor[1]) {
+          lv_obj_get_coords(v->actor[0],&fa);
+          lv_obj_get_coords(v->actor[1],&ba);
+          overlap = fa.x1 <= ba.x2 && ba.x1 <= fa.x2 && fa.y1 <= ba.y2 && ba.y1 <= fa.y2;
+      }
+      if (overlap && front!=v->front_actor) {
+          const uint32_t order_started=lv_tick_get();
+          lv_obj_move_to_index(v->actor[front],-1);
+          s_perf.order_ms+=lv_tick_get()-order_started; s_perf.orders++;
+          v->front_actor=front;
+      } }
     int progress=lw_rpg_quest_progress(&v->state);
     if (progress!=v->last_progress) {
         lv_label_set_text_fmt(v->progress,"整理回忆盒\n已找到 %d / %d",progress,lw_rpg_quest_total(&v->state));
@@ -118,6 +146,10 @@ static void refresh(lw_rpg_view_t *v)
     /* Setting the same string still runs a full label re-layout, and refresh()
      * runs at the 20 ms tick. Only write when the wording actually changes. */
     { bool near=lw_rpg_hotspot_near(&v->state)>=0; if (near!=(bool)v->last_near) { v->last_near=near; lv_label_set_text(v->action_label,near ? "查看身边物品" : "先走到物品旁边"); } }
+    { const uint32_t cost=lv_tick_get()-started;
+      s_perf.frames++; s_perf.refresh_ms+=cost;
+      if (cost>s_perf.refresh_max_ms) s_perf.refresh_max_ms=cost;
+      if (cost>=25) s_perf.slow_frames++; }
 }
 static void walk_to_spot(lw_rpg_view_t *v,unsigned i)
 {
@@ -140,8 +172,16 @@ static void map_click(lv_event_t *e)
     int x=(p.x-a.x1-64)/56,y=(p.y-a.y1-299)/22; if (p.x<a.x1+64 || p.x>=a.x1+960 || p.y<a.y1+299 || y>=8) return;
     int px,py; lw_rpg_view_tile_point(x,y,&px,&py); lv_obj_set_pos(v->marker,px-16,py-7); lv_obj_remove_flag(v->marker,LV_OBJ_FLAG_HIDDEN); v->marker_ms=700;
     int h=lw_rpg_hotspot_at(&v->state,x,y); if (h>=0) { walk_to_spot(v,(unsigned)h); return; } v->queued_spot=-1;
-    if (lw_rpg_tap_tile(&v->state,x,y)) { v->dirty=true; lv_label_set_text(v->status,"慢慢走过去…"); }
+    /* Time the two calls that can plausibly block: the frozen core's path search
+     * and the status label's re-layout (a CJK label relayout is not free). */
+    uint32_t t0=lv_tick_get();
+    bool walked=lw_rpg_tap_tile(&v->state,x,y);
+    uint32_t t1=lv_tick_get();
+    if (walked) { v->dirty=true; lv_label_set_text(v->status,"慢慢走过去…"); }
     else lv_label_set_text(v->status,"这里暂时不能走，试试木地板。");
+    uint32_t t2=lv_tick_get();
+    s_perf.taps++; s_perf.core_ms+=t1-t0; s_perf.label_ms+=t2-t1; s_perf.tap_ms+=t2-t0;
+    if (t2-t0>s_perf.tap_max_ms) s_perf.tap_max_ms=t2-t0;
 }
 static lv_obj_t *panel(lw_rpg_view_t *v,const char *title,unsigned art)
 {

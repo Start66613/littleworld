@@ -75,6 +75,12 @@ typedef struct {
     uint32_t cache_misses;
     uint32_t cache_evictions;
     uint32_t cache_queue_drops;
+    /* V4.5 zero-copy: how often the sprite drew straight out of the cache and
+     * how often the borrow fell through to a copy. Borrows that miss mean the
+     * working set does not fit, which is the difference between "the copy is
+     * expensive" and "the card read is expensive". */
+    uint32_t cache_borrows;
+    uint32_t cache_borrow_misses;
     size_t cache_resident;
     size_t cache_peak;
     size_t cache_budget;
@@ -127,7 +133,8 @@ typedef struct {
     int (*theme)(void);
     /* Frame cache counters, NULL when no cache is open (no card). */
     void (*cache)(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
-                  uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget);
+                  uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget,
+                  uint32_t *borrows, uint32_t *borrow_misses);
     /* Effective clock, one line, from the same source the UI reads. */
     void (*clock)(char *text, size_t len);
     /* UI asset cache and animation state. */

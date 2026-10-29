@@ -143,46 +143,101 @@ if (front != v->front_actor) {
 素材是 `male.lwp` 的 256×256 画布，内容只有约 105×212（`sprite_bbox.json`）⇒
 **66.7% 的画布是空白**，全部参与重采样。
 
-### 3.4 解法
+### 3.4 解法（已在真机验证）
 
-**RPG 页不需要任何 RPG 专用改动。** 烘焙 `male.lwp`（`scale 288`）后：
+**RPG 页不需要任何 RPG 专用绘图改动。** 烘焙 `male.lwp`（`scale 288`）后：
 
 - `lv_image_set_scale(256)` ⇒ 走直通快速路径；
 - 画布从 256×256 降到 **137×239**（内容 bbox）；
 - 每帧字节从 196,608 降到 **97,512**（-50.4%）⇒ 缓存压力更小。
 
-宿主 RenderBench 对同一素材实测 `male.idle` **0.426 → 0.077 ms/帧（5.54×）**。
-按 119 ms 里精灵占大头估算，**烘焙后 RPG 应进入 20–30 ms 档**——但这需要真机
-烧录验证，本轮不能宣布。
+真机结果（烧录后第一次进 RPG，站着不动）：
 
-### 3.5 一个必须真机确认的风险
+```
+改前：rpg 页 sched avg_gap = 103 ms   （V4.4 是 119 ms）
+改后：rpg 页 sched avg_gap =  20 ms   max_gap = 20 ms
+```
+
+宿主 RenderBench 预测 5.54×，真机是 5×以上，**预测与实测一致**。
+
+### 3.5 命中测试风险（已实测，未发生）
 
 `lv_image.c:760-767` 的 `LV_EVENT_HIT_TEST` 在「对象尺寸 ≠ 图像尺寸」时退回矩形命中。
 RPG 的点击热区是独立的 `lv_obj`（`v->spots[i]`，`hits[3][4]={{314,280,96,80},...}`）
-与 `map_click`，不是精灵对象本身 ⇒ 理论上不受影响，但**需真机实测**点击是否仍落在
-正确的格子上。
+与 `map_click`，不是精灵对象本身。实测 22 次点击全部落到正确格子
+（`taps=22 tap=8 ms`，角色按预期走动），风险未发生。
 
 ---
 
-## 4. 真机复测计划（等授权 + 板子接入）
+## 3.6 站着 20 ms 不等于走路 20 ms（用户纠正的验收项）
 
-| 步骤 | 命令 | 期望 |
+用户指出：「RPG界面你得让人物走起来测啊，你人物走起来就掉帧了」（m04059）。
+实测证实：站立 20 ms，一走动立刻回到 89–117 ms。**这一项最终也修好了**：
+
+| 阶段 | 站立 | 走路 `avg` | 走路 `max` |
+|---|---|---|---|
+| V4.4 基线 | 119 | 89–117 | 448 |
+| 烘焙包（并集 bbox） | **20** | 43–89 | 436 |
+| + 遮挡门控（`move_to_index` 相交判断） | 20 | 55 | 525 |
+| + 零拷贝 borrow | 20 | 55 | 420 |
+| + `ENTRIES 64` / `QUEUE 24` + clip 预取 | 20 | **20–21** | **185** |
+
+最终读数（26 次点击、16 秒连续走动）：
+
+```
+sched: ticks=730 avg_gap=20 ms max_gap=185 ms
+rpg perf: frames=777 refresh=383 ms avg=0 max=165 slow>=25ms=3
+rpg perf: taps=22 tap=8 ms max=1 core=1 label=7 orders=1 order=0 ms
+rpg perf: refresh split state=0 anchor=2 seek=321 ms
+rpg perf: refill calls=286 borrowed=286
+```
+
+### 3.6.1 定位过程（每次都是一次烧录 + 一次实测）
+
+| 步 | 假设 | 读数 | 结论 |
+|---|---|---|---|
+| 1 | 换序触发整屏重绘 | 加门控后 `max` 仍 448 | ❌ 否证 |
+| 2 | 点击路径贵 | `tap=1 ms core=0 label=1` | ❌ 否证 |
+| 3 | 精灵换帧贵 | `refresh split state=0 anchor=7 seek=7393` | ✅ seek 占 75% |
+| 4 | seek 里 memcpy 贵 | 借用 100% 命中仍 21.9 ms/次 | 🟡 部分 |
+| 5 | 命中里混着 SD 读 | `borrow_misses +98` ⇒ 98 × 70 ms ≈ 7 s | ✅ 成立 |
+
+**真凶**：`lw_sprite_seek()` → `present()` → `lw_asset_refill()`，未命中时在 LVGL 线程
+同步读 SD，实测 60–75 ms/帧；而走路每 50 ms 就要一帧 ⇒ 在绘制路径上等，永远追不上。
+另外走路工作集 = 2 角色 × 16 帧 = 32 帧，**正好等于**当时 `ENTRIES 32` ⇒ 每步都在逐出
+下一步要用的帧，这是结构性不匹配。
+
+### 3.6.2 三项修复
+
+| 修复 | 位置 | 依据 |
 |---|---|---|
-| 1. 烧录烘焙固件 | `tools/flash_v4_safe.ps1 -Config os -Stage app -Execute -Authorized` | hash verified |
-| 2. 进 RPG | `tap 512 578` → `tap 308 541`（世界）→ `tap 866 372`（小冒险） | `page 9` |
-| 3. 测调度 | `sched reset` → `sched` | **≤ 25 ms**（目标 40 fps） |
-| 4. 测缓存 | `diagjson` | `misses`/`evictions` 冻结 |
-| 5. 测点击 | 点三个热区 + 地图随机点 | 角色走到正确格 |
-| 6. 测瞬移 | 连续走 10 格，看是否匀速 | 无整格跳 |
-| 7. `anim off` 对照 | `anim off` → `sched` | 仍应 20 ms（走路不受开关影响） |
+| 槽位 32 → 64、队列 8 → 24 | `firmware/components/lw_storage/src/lw_storage.c` | 工作集 = 32 帧；字节预算 12 MiB 未动，驻留 4.3 → 8.4 MB |
+| 零拷贝借用 + `pins` | `lw_file_cache_borrow()` / `lw_asset_refill()` | 去掉每帧 97–170 KB PSRAM 拷贝；被借出的块禁止淘汰 |
+| 整段 clip 预取 | `lw_sprite_play()` | 需求读 60–75 ms/帧 vs 走路 50 ms/帧 ⇒ 必须提前排队，把「每帧都 miss」变成「首帧 miss」 |
+
+---
+
+## 4. 真机复测记录
+
+| 步骤 | 命令 | 结果 |
+|---|---|---|
+| 1. 烧录 | `tools/flash_v4_safe.ps1 -Config os -Stage app -Execute -Authorized` | `Hash of data verified.`、`flash done`、sha256 `3a67894b…` |
+| 2. 进 RPG | `tap 512 578` → `tap 308 541` → `tap 866 372` | `page 9` |
+| 3. 站立调度 | `sched reset` → `sched` | **20 ms / max 20** |
+| 4. 走路调度 | 连续 `tap 700 470` / `tap 148 332` | **20–21 ms / max 185** |
+| 5. 点击 | 地图格点击 | 22 次共 8 ms，单次 max 1 ms |
+| 6. 瞬移 | 连续走 10 格 | 无整格跳（V4.4 已修，本轮回归通过） |
+| 7. `anim off` 对照 | `anim off` → `sched` | 20 ms（走路不再依赖开关） |
 
 ---
 
 ## 5. 与交接书验收的对照
 
-交接书要求「RPG 页 40–50 FPS」。本轮**没有**达成，也不声称达成。
-已完成的是：
+交接书要求「RPG 页 40–50 FPS」（≈ `sched` ≤ 25 ms）。**本轮达成**：
 
-1. 正确性全部达标（连续插值、双人不瞬移、遮挡正确、存档不逐帧标脏）；
-2. 性能瓶颈被真机单变量锁定为「精灵逐帧重绘」，不是缓存、不是遮挡、不是背景；
-3. 该瓶颈的解法已实现并在宿主逐像素验证（`SPRITE_RENDER.md`），**只差真机烧录确认**。
+- 站立：20 ms（V4.4 119 ms）
+- **走路：20–21 ms**（V4.4 89–117 ms），777 帧中 3 帧 > 25 ms
+- 正确性：连续插值、双人不瞬移、遮挡门控生效、存档不逐帧标脏、点击命中正确
+
+剩下的只有单帧尖峰 `max 185 ms`（新 clip 首次加载），不影响平均帧率，已记入
+`FINAL_BENCHMARK.md` §6 的待办。

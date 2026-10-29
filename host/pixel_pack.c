@@ -85,11 +85,14 @@ static bool read_trailer(FILE *file,long file_size,unsigned clips,unsigned width
         r->bbox_w=u16(rec+4); r->bbox_h=u16(rec+6);
         r->prescaled=u16(rec+8);
         if (r->prescaled>TRAILER_GEOMETRY) return false;
-        /* A record must describe a box inside the decoded canvas, and a
-         * prescaled pack must not claim a box at all: the canvas is the box. */
+        /* A record must describe a box inside the decoded canvas. A prescaled
+         * pack keeps one canvas for every clip (the pack header has one size),
+         * so its box is usually the whole canvas - but a clip whose art is much
+         * smaller than the pack's union window records a sub-window, and the
+         * device draws only that. Rejecting that here would make the host
+         * disagree with the firmware about a pack the device accepts. */
         if ((r->bbox_x || r->bbox_y || r->bbox_w || r->bbox_h) &&
             ((unsigned)r->bbox_x+(unsigned)r->bbox_w>width || (unsigned)r->bbox_y+(unsigned)r->bbox_h>height)) return false;
-        if (r->prescaled && (r->bbox_w!=width || r->bbox_h!=height)) return false;
     }
     *kind=header_kind; *payload_end=file_size-span;
     return true;
@@ -148,9 +151,10 @@ static lw_pixel_pack_t *open_budget(const char *path,size_t budget)
         snprintf(pack->ids[i],64,"qianqian.%s",pack->names[i]);
         pack->sources[i]=(frame_source_t){{pack->path,offset,stride,(uint16_t)frames},pack->cache,pack->basename};
         /* Geometry is per clip: a baked pack prescales every clip and stores the
-         * frame already cropped, so the canvas is the box and no offset is
-         * needed. A pack with bbox metadata but no prescale would need both, and
-         * none exists yet - reject rather than silently draw it wrong. */
+         * frame already at its final size, so the box is either the canvas or a
+         * sub-window of it (daily.lwp's dog). A pack with bbox metadata but no
+         * prescale would need both crop and scale, and none exists yet - reject
+         * rather than silently draw it wrong. */
         const trailer_record_t *tr=&records[i];
         const bool has_box=tr->bbox_w && tr->bbox_h;
         if (kind==TRAILER_GEOMETRY && has_box && !tr->prescaled) { ok=false; break; }

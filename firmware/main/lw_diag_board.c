@@ -161,7 +161,8 @@ static int prov_theme(void)
 }
 
 static void prov_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
-                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget)
+                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget,
+                       uint32_t *borrows, uint32_t *borrow_misses)
 {
     lw_file_cache_t *cache = lw_art_cache();
     if (cache == NULL) {
@@ -177,6 +178,8 @@ static void prov_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32
     *resident = stats.resident_bytes;
     *peak = stats.peak_bytes;
     *budget = stats.budget_bytes;
+    *borrows = stats.borrows;
+    *borrow_misses = stats.borrow_misses;
 }
 
 static void prov_clock(char *text, size_t len)

@@ -67,6 +67,8 @@ void lw_os_rpg_storage(const lw_rpg_view_host_t *host) { if (!s) { memset(&rpg_s
 const lw_rpg_state_t *lw_os_rpg_state(void) { return s ? lw_rpg_view_state(s->rpg) : NULL; }
 bool lw_os_rpg_has_art(void) { return s && lw_rpg_view_has_art(s->rpg); }
 lv_obj_t *lw_os_rpg_actor(unsigned i) { return s ? lw_rpg_view_actor(s->rpg,i) : NULL; }
+void lw_os_rpg_perf(lw_rpg_perf_t *out) { if (s && s->rpg) lw_rpg_view_perf(out); else if (out) memset(out,0,sizeof(*out)); }
+void lw_os_rpg_perf_reset(void) { lw_rpg_view_perf_reset(); }
 static const char *const section_names[]={"网络","显示与亮度","声音","个性化","日期与时间","存储","关于设备"};
 static const lw_os_palette_t *palette(void) { return lw_os_palette(s->page==OS_THEMES ? s->preview_theme : s->system->prefs.theme); }
 static void render(void); static void show_overlay(lw_os_overlay_t); static void refresh(void);
@@ -293,7 +295,18 @@ static void update_actors_paint(uint32_t dt, bool paint)
     }
     unsigned near=s->duo.actors[0].y>s->duo.actors[1].y ? 0 : 1;
     if (!paint) return;
-    if (s->front_actor!=near) { lv_obj_move_to_index(lw_sprite_object(s->sprites[1-near]),-1); lv_obj_move_to_index(lw_sprite_object(s->sprites[near]),-1); s->front_actor=near; }
+    /* Stacking only matters where the two characters overlap. A real reorder
+     * invalidates their parent, which on this page is the whole wallpaper, so
+     * swapping them while they stand apart costs a full 1024x600 repaint to fix
+     * an ordering that cannot be seen. */
+    lv_area_t fa, ba;
+    bool overlap=false;
+    if (lw_sprite_object(s->sprites[0]) && lw_sprite_object(s->sprites[1])) {
+        lv_obj_get_coords(lw_sprite_object(s->sprites[0]),&fa);
+        lv_obj_get_coords(lw_sprite_object(s->sprites[1]),&ba);
+        overlap = fa.x1 <= ba.x2 && ba.x1 <= fa.x2 && fa.y1 <= ba.y2 && ba.y1 <= fa.y2;
+    }
+    if (overlap && s->front_actor!=near) { lv_obj_move_to_index(lw_sprite_object(s->sprites[1-near]),-1); lv_obj_move_to_index(lw_sprite_object(s->sprites[near]),-1); s->front_actor=near; }
     if (s->foreground) lv_obj_move_foreground(s->foreground);
 #endif /* CONFIG_LW_DIAG_STATIC_UI */
 }

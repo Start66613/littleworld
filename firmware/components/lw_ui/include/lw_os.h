@@ -28,6 +28,9 @@ void lw_os_rpg_storage(const lw_rpg_view_host_t *);
 const lw_rpg_state_t *lw_os_rpg_state(void);
 bool lw_os_rpg_has_art(void);
 lv_obj_t *lw_os_rpg_actor(unsigned);
+/* RPG page cost counters; zeroed when the page is closed. */
+void lw_os_rpg_perf(lw_rpg_perf_t *out);
+void lw_os_rpg_perf_reset(void);
 /* UI-thread capability snapshot; no driver initialization. Call before start
  * or after a backend capability change. NULL derives existing backend callbacks. */
 typedef enum { LW_SERVICE_UNAVAILABLE,LW_SERVICE_SIMULATED,LW_SERVICE_READY } lw_service_state_t;

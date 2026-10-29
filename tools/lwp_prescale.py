@@ -199,7 +199,15 @@ def scaled(v, scale):
     return (v * scale + 0x80) >> 8
 
 
-def build(raw, width, height, records, scale, mode):
+def safe_clip_box(raw, width, height, rec):
+    """This clip's own alpha union, or None when nothing in it is opaque."""
+    try:
+        return union_box(raw, width, height, [rec])
+    except SystemExit:
+        return None
+
+
+def build(raw, width, height, records, scale, mode, per_clip=False):
     box = union_box(raw, width, height, records)
     # The window is measured on LVGL's lattice, so the baked canvas is a whole
     # number of destination pixels wide and the anchor is expressed in the same
@@ -221,7 +229,19 @@ def build(raw, width, height, records, scale, mode):
         payload = bytearray()
         for frame in range(rec['frames']):
             payload += resample(raw, width, height, rec, frame, box, scale, mode)
-        new_records.append((rec, ax, ay, offset, bytes(payload)))
+        # The pack has one canvas, so every clip's frame bytes are dest_w x
+        # dest_h. The trailer can still say that this clip only occupies a
+        # smaller box inside it, which is what stops a 54x47 dog from being
+        # blended over a 276x252 union window every frame.
+        bx, by, bw, bh = 0, 0, dest_w, dest_h
+        if per_clip:
+            own = safe_clip_box(raw, width, height, rec)
+            if own is not None:
+                cxs, cx0 = crop_axis(width, own[0], own[2], scale, mode)
+                cys, cy0 = crop_axis(height, own[1], own[3], scale, mode)
+                bx, by, bw, bh = cx0 - dx0, cy0 - dy0, len(cxs), len(cys)
+        new_records.append((rec, ax, ay, offset, bytes(payload),
+                            (bx, by, bw, bh)))
         offset += len(payload)
         bodies.append(bytes(payload))
 
@@ -229,15 +249,14 @@ def build(raw, width, height, records, scale, mode):
     # Trailer kind 1 in the header's reserved u16 is what makes lw_pack.c look
     # for the geometry block at EOF.
     out += HEADER.pack(b'LWPX0001', dest_w, dest_h, len(records), 1)
-    for rec, ax, ay, off, _payload in new_records:
+    for rec, ax, ay, off, _payload, _bbox in new_records:
         out += CLIP.pack(rec['name'].encode(), rec['frames'], ax, ay, rec['loop'],
                          0, off, *rec['durations'])
     for body in bodies:
         out += body
-    # bbox covers the whole baked image: it is content, not a sub-window.
     out += TRAILER_HEADER.pack(TRAILER_MAGIC, len(records), 0)
-    for _rec, _ax, _ay, _off, _payload in new_records:
-        out += TRAILER_RECORD.pack(0, 0, dest_w, dest_h, 1)
+    for _rec, _ax, _ay, _off, _payload, bbox in new_records:
+        out += TRAILER_RECORD.pack(bbox[0], bbox[1], bbox[2], bbox[3], 1)
     return bytes(out), box, dest_w, dest_h
 
 
@@ -264,6 +283,11 @@ def main():
                     help='half reproduces LVGL; trunc is the naive variant kept '
                          'for comparison runs')
     ap.add_argument('--inspect', action='store_true')
+    ap.add_argument('--per-clip', action='store_true',
+                    help='record each clip\'s own content box in the trailer; the '
+                         'pack canvas stays the union window, but the runtime '
+                         'blends only the box. Needs firmware that reads a '
+                         'prescaled sub-window (V4.5 onwards).')
     args = ap.parse_args()
 
     if args.inspect or args.dest is None:
@@ -281,7 +305,7 @@ def main():
         raise SystemExit('%s: already prescaled; rebuild from the original pack'
                          % args.source)
     data, box, dest_w, dest_h = build(raw, width, height, records, args.scale,
-                                      args.round)
+                                      args.round, args.per_clip)
     args.dest.write_bytes(data)
     before = width * height * 3 * sum(r['frames'] for r in records)
     after = dest_w * dest_h * 3 * sum(r['frames'] for r in records)

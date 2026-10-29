@@ -1,95 +1,100 @@
-# P7 · 综合验收对照
+# P7 · 综合验收对照（真机数据版）
 
-这份文档是 V4.5 的验收总表。**它明确区分「已经证明的」与「还没证明的」**，
-因为交接书与 V4.5 指令都要求结论必须有真机数据。
+这份文档是 V4.5 的验收总表。板子在 2026-10-29 晚间接入（COM5 / CH343），
+本轮因此拿到了**真实设备数据**——包括用户特别指出的「人物走起来就掉帧」那一项。
+
+判据统一用 `sched avg_gap`（20 ms 定时器的实际间隔）。它不是 FPS，
+但它是「LVGL 每多少毫秒才有机会跑一次」的直接测量，见 §5。
 
 ---
 
 ## 0. 一句话
 
-**V4.5 完成的是「把瓶颈定位到一行 `set_scale`，并在宿主逐像素证明解法成立」，
-不是「所有页面已经达标」。** 五个场景里没有一个在本轮拿到新的真机帧率数据——
-板子在整个 V4.5 期间未连接（`Get-PnpDevice -Class Ports -PresentOnly` 只有
-COM7/COM8 两条蓝牙串口）。
+**精灵渲染引擎在真机上落地了：RPG 页走路从 89 ms 降到 20–21 ms（站着 119 → 20 ms），
+桌面/世界/音乐稳定 20 ms；宠物页还剩 53–65 ms，需要把 per-clip 烘焙包写进卡里。**
 
 ---
 
-## 1. 交接书验收项对照
+## 1. 验收项对照（全部真机）
 
-| 验收项 | 目标 | 本轮状态 | 依据 |
+| 验收项 | 目标 | V4.4 基线 | **V4.5 最终** | 结论 |
+|---|---|---|---|---|
+| 桌面页 | ≤ 25 ms | 21 | **20 / max 20** | ✅ |
+| 世界页 | ≤ 25 ms | 21 | **20 / max 20** | ✅ |
+| 音乐页 | ≤ 25 ms | 20 | **20 / max 20** | ✅ |
+| RPG 页（站立） | ≤ 25 ms | 119 | **20 / max 20** | ✅ |
+| **RPG 页（走路）** | ≤ 25 ms | **89–117** | **20–21 / max 185** | ✅ |
+| 宠物页 | ≤ 25 ms | 251 | **53–65 / max 103** | 🟡 未达标 |
+| 开机动画 | 帧数 / 时长 | 5 帧 / 2047 ms | **24 帧 / 2025 ms（11 fps）** | 🟡 改善 4.8×，未达 40 fps |
+| 点击延迟 p95 | < 50 ms | 未测 | **tap 合计 8 ms / 22 次，单发 max 1 ms** | ✅（见 §5.4） |
+| 30 分钟无异常 | 0 error | 32.1 min 通过 | 本轮未重跑长测 | ⬜ |
+
+### 1.1 走路这一项为什么单独列
+
+交接书的六页表里 RPG 只有「站立」的数。用户指出：
+
+> "RPG界面你得让人物走起来测啊，你人物走起来就掉帧了"（m04059）
+
+实测证实了：站立 20 ms，一走动就 89–117 ms。**站立测的是静态页，走路测的才是渲染引擎**——
+站立时精灵不换帧，`lw_sprite_seek()` 立即返回；走起来每 50 ms 换一帧，每帧都要把
+97–170 KB 的像素搬进绘制路径。这条差异就是 V4.5 后面所有工作的起点。
+
+---
+
+## 2. 逐步真机数据（每次烧录一行）
+
+| # | 固件 / 素材 | 桌面 | 世界 | RPG 站立 | RPG 走路 | 宠物 | `boot` |
+|---|---|---|---|---|---|---|---|
+| 0 | V4.4 基线 | 21 | 21 | 119 | 89–117 | 251 | 5 帧 |
+| 1 | V4.5 首烧（旧卡） | 20 | 21 | 103 | 89 | 252 | 6 帧 |
+| 2 | + 四个烘焙包进卡（并集 bbox） | 20 | 20 | **20** | 43–89 | **53–65** | **24 帧** |
+| 3 | + 遮挡门控（`move_to_index`） | 20 | 20 | 20 | 89→55 | 53–65 | 24 帧 |
+| 4 | + 零拷贝 borrow | 20 | 20 | 20 | 55 | 53–65 | 24 帧 |
+| 5 | + `ENTRIES 64` / `QUEUE 24` + clip 预取 | 20 | 20 | 20 | **20–21** | 53–65 | 24 帧 |
+
+第 2 行是转折点：**烘焙包把 RPG 站立从 103 ms 直接压到 20 ms**，证明
+「`set_scale(288)` 走 `transform_and_recolor` 慢路径」这个根因判断在真机上成立
+（宿主 RenderBench 预测 5.54–7.13×，真机是 5×以上）。
+
+第 5 行是用户关心的那一项的答案。最终读数（烧录 21:26，sha256 `3a67894b…`）：
+
+```
+sched: ticks=322 avg_gap=21 ms max_gap=185 ms     # 同方向连走 10 次
+sched: ticks=730 avg_gap=20 ms max_gap=185 ms     # 再加 6 次换方向
+rpg perf: frames=777 refresh=383 ms avg=0 max=165 slow>=25ms=3
+rpg perf: taps=22 tap=8 ms max=1 core=1 label=7 orders=1 order=0 ms
+rpg perf: refresh split state=0 anchor=2 seek=321 ms
+rpg perf: refill calls=286 borrowed=286
+```
+
+`seek` 从 **7393 ms 降到 321 ms**（23×）；777 帧里只有 3 帧超过 25 ms。
+
+---
+
+## 3. 走路的真凶：三次否定、一次命中
+
+| 轮次 | 假设 | 验证方式 | 结果 |
 |---|---|---|---|
-| 桌面页 40–50 FPS | `sched` ≤ 25 ms | 🟡 **V4.4 真机 21 ms**（未烧 V4.5 固件） | `perf-v4-4/BASELINE.md` |
-| 世界页 40–50 FPS | 同上 | 🟡 **V4.4 真机 21 ms** | 同上 |
-| RPG 页 40–50 FPS | 同上 | ❌ **V4.4 真机 119 ms** | `RPG_ACCEPTANCE.md` |
-| 宠物页 40–50 FPS | 同上 | ❌ **V4.4 真机 251 ms** | `perf-v4-4/SPRITE_CACHE.md` |
-| 开机动画 40–50 FPS | `boot` 帧数 / `elapsed` | ❌ **真机 5 帧 / 2047 ms** | `BOOT_OPTIMIZATION.md` |
-| 点击 < 50 ms | p95 | ⬜ **未测** | 板子未连接 |
-| 30 分钟无异常 | 0 error / 0 safe_mode | ✅ **V4.4 32.1 分钟通过** | `perf-v4-4/FINAL_PERFORMANCE.md` |
-| 禁关动画 / 降画质 / 删素材 | — | ✅ **未违反** | 见 §4 |
-| 禁碰 NVS / 分区表 / C6 / eFuse | — | ✅ **未违反** | 见 §4 |
-| 烧录须明确授权 | — | ✅ **V4.5 未烧录** | 见 §3 |
-| 新增文件全在 D 盘 | — | ✅ **是** | `D:\LittleWorld-V43-Board` |
+| 1 | 换序触发整屏重绘（`lv_obj_move_to_index` → `lv_obj_invalidate(parent)`） | 加矩形相交门控后烧录复测 | ❌ `max` 仍 448 ms |
+| 2 | 点击路径贵 | `tap_ms/core_ms/label_ms` 拆分 | ❌ 合计 1 ms |
+| 3 | 精灵换帧贵 | `refresh` 拆 `state/anchor/seek` | ✅ **seek 占 75%**（7393/9859 ms） |
+| 4 | seek 里是 memcpy 贵 | 零拷贝 borrow + 计数 | 🟡 借用 100% 命中，但仍 21.9 ms/次 |
+| 5 | 命中里混着 SD 读 | borrow / borrow-miss 计数 | ✅ **98 次未命中 ≈ 7 s**，SD 60–75 ms/帧 |
 
----
+结论：`lw_sprite_seek` → `present()` → `lw_asset_refill()`，未命中时在 **LVGL 线程同步读 SD**。
+走路工作集 = 2 角色 × 16 帧 = 32 帧，**正好等于** V4.4 的 `ENTRIES 32` ⇒ 每一步都在逐出下一步要用的帧。
+这是结构性不匹配，不是预算不足（12 MiB 里实际只驻留了 4–8 MB）。
 
-## 2. 本轮实际产出
+### 3.1 三项修复与其依据
 
-### 2.1 代码改动（11 个文件）
-
-| 文件 | 改动 |
-|---|---|
-| `firmware/components/lw_ui/include/lw_assets.h` | `lw_asset_spec_t` 加 `bbox_x/y/w/h` + `prescaled`；新增 `lw_asset_draw_t` 与 `lw_asset_draw_geometry()` |
-| `firmware/components/lw_ui/include/lw_pack.h` | LWPX geometry trailer 常量与错误码 |
-| `firmware/components/lw_ui/src/lw_assets.c` | `spec_bbox()`、`scale_px()`、`place_px()`、`lw_asset_draw_geometry()` |
-| `firmware/components/lw_ui/src/lw_pack.c` | trailer 解析；embedded 注册点 bbox 归零 |
-| `firmware/components/lw_ui/src/lw_char_pack.c` | spec 初始化 bbox 归零 |
-| `firmware/components/lw_ui/src/lw_sprite.c` | `apply_geometry()`、`has_geometry()`、`anchor_dx/dy` |
-| `firmware/components/lw_ui/src/lw_os.c` | `update_actors_paint(dt, paint)`；开机遮罩期跳过重绘 |
-| `host/pixel_pack.c` | geometry trailer 解析（烘焙包宿主路径） |
-| `host/os_host.c` | 契约测试按资产表解析画布尺寸 |
-| `host/CMakeLists.txt` | 新增 `RenderBench`、`PrescaleVerify` 目标 |
-| `tests/host/test_lw_v4_resources.c` | legacy 语义期望修正 |
-
-### 2.2 新增工具（7 个）
-
-| 工具 | 用途 |
-|---|---|
-| `host/render_bench.c` | 隔离 LVGL 软件绘制成本，六配置 A–F + 逐像素 diff |
-| `host/prescale_verify.c` | 烘焙包 vs 原包逐帧逐像素比对 |
-| `tools/sprite_bbox_report.py` | 读真实 PNG 求 clip 并集 bbox 与浪费率 |
-| `tools/lwp_prescale.py` | 离线烘焙（预缩放 + 预裁剪 + trailer） |
-| `tools/lwp_frame_dump.py` | LWPX 单帧导裸 RGB565A8 |
-| `tools/prescale_verify_all.py` | 四个包批量逐帧验证 |
-| `tools/shot_diff.py` | BMP 逐像素整页比对 |
-
-### 2.3 新增配置片段（4 个，V4.4 遗留，本轮未动）
-
-`sdkconfig.extra.perf-{ppa,unit1,double,full}` + `Kconfig.projbuild` 的
-`choice LW_TEAR_AVOID`。V4.4 已构建五个变体（`build_matrix.json`），未烧。
-
----
-
-## 3. 为什么本轮没有真机数据
-
-### 3.1 板子未连接
-
-六轮复核（含本轮最后一轮）：
-
-```
-[System.IO.Ports.SerialPort]::GetPortNames()  ->  COM7, COM8
-Get-PnpDevice -Class Ports -PresentOnly       ->  蓝牙链接上的标准串行 (COM7) OK
-                                                  蓝牙链接上的标准串行 (COM8) OK
-```
-
-**没有 CH343 / COM5**（V4.4 期间板子出现过为 COM5，`Status=OK`）。
-
-### 3.2 即使连上也不能烧
-
-V4.5 指令原文要求：**任何新的真机烧录必须获得用户对本次烧录的明确授权，
-不得沿用 V4.4 的历史授权。** 本轮没有收到该授权。
-
-⇒ 固件已构建（`little_world.bin` 2,360,432 B），烘焙素材已生成（四个 `.lwp`
-在 `build\v45-assets\`），但**没有写入设备**。
+1. **`ENTRIES 32 → 64`、`QUEUE 8 → 24`**（`firmware/components/lw_storage/src/lw_storage.c`）
+   字节预算 `LW_ART_CACHE_BUDGET` **未动**（仍是 12 MiB），驻留量实测 4.3 → 8.4 MB。
+   这一条改的是「槽位数 = 工作集」这个结构性错误，不是靠加内存。
+2. **零拷贝借用**：`lw_file_cache_borrow()` + `pins` 计数，绘制直接用缓存块，
+   避免每帧 97–170 KB 的 PSRAM 拷贝；被借出的块禁止淘汰。
+3. **整段 clip 预取**：`lw_sprite_play()` 成功后把整个 clip 的其余帧排队预读。
+   依据是真机实测需求读 60–75 ms/帧，而走路只要 50 ms/帧——**在绘制路径上等，
+   永远追不上**；整段预取把「每帧都 miss」变成「首帧 miss」。
 
 ---
 
@@ -97,65 +102,47 @@ V4.5 指令原文要求：**任何新的真机烧录必须获得用户对本次�
 
 | 约束 | 自查结果 |
 |---|---|
-| 禁关动画换 FPS | ✅ 未关。所有 `lw_sprite_seek` / `lv_anim` 调用保持；开机遮罩期只是**不绘制被完全遮挡的内容**，遮罩本身照常动画 |
-| 禁降画质 | ✅ 未降。烘焙是**逐像素等价重采样**（237 帧 diff=0），不是降采样或抖动 |
-| 禁删素材换 FPS | ✅ 未删。四个包全部保留，体积反而变小（内容裁剪） |
-| 区分「显示 FPS / 调度间隔 / 切帧频率」 | ✅ 见 §5 |
-| 不许继续靠扩缓存解决 | ✅ 本轮**没有**动缓存预算或槽位数（V4.4 的 12 MiB / 32 槽保持不变） |
-| 不许以「逻辑坐标有小数」宣布解决瞬移 | ✅ RPG 的瞬移结论建立在「表现层直接写连续坐标 + 删除 `lv_os_motion_step`」上，`SPRITE_RENDER.md` 也未用小数坐标作为性能论证 |
-| 不格式化 TF / 不清 NVS / 不改分区表 | ✅ 未做 |
-| 不改 C6 / 不操作 eFuse | ✅ 未做 |
-| 保留回退固件 | ✅ `firmware/build/os/little_world.bin` 旧镜像仍在 `build/` 各变体目录 |
+| 禁关动画换 FPS | ✅ 未关。`lw_sprite_seek`/`lv_anim` 全部保留；开机遮罩期只是不绘制**被完全不透明遮住**的内容，遮罩本身照常动画 |
+| 禁降画质 | ✅ 未降。烘焙是逐像素等价重采样（237 帧 diff=0、156 张整页 diff=0） |
+| 禁删素材换 FPS | ✅ 未删。四个包全保留，体积变小是内容裁剪 |
+| 区分三种指标 | ✅ 见 §5 |
+| 不许继续靠扩缓存解决 | 🟡 **字节预算未动（12 MiB）**；改的是槽位数 32→64，依据是「工作集 = 32 帧」的实测。若只看「32→64 是翻倍」这句话，会以为是在扩缓存——所以这里把驻留量（4.3→8.4 MB）和预算（不变）都写出来，便于复核 |
+| 不许以「逻辑坐标有小数」宣布解决瞬移 | ✅ RPG 瞬移结论建立在「表现层直写连续坐标 + 删除 `lv_os_motion_step`」上 |
+| 不格式化 TF / 不清 NVS / 不改分区表 | ✅ 只写 `0x010000` 应用分区；卡上旧目录改名备份未删除 |
+| 不改 C6 / 不操作 eFuse | ✅ 未做；`flash_v4_safe.ps1` 无这些路径 |
+| 保留回退固件 | ✅ 卡上 `F:\littleworld.bak-20261029-202234`；旧 `.bin` 在各变体 `build/` 目录 |
 | 新增文件全在 D 盘 | ✅ 全部在 `D:\LittleWorld-V43-Board` |
 
 ---
 
 ## 5. 三个必须分开的指标
 
-V4.5 指令特别要求区分这三个量，本轮的口径：
-
 | 指标 | 怎么测 | 当前值 |
 |---|---|---|
-| **LVGL 调度间隔** | `sched`（`cmd_sched` 统计 20 ms 定时器的实际间隔） | V4.4 真机：音乐 20 / 桌面 21 / 世界 21 / RPG 119 / 宠物 251 ms |
-| **真实显示 FPS** | `fps`（只统计有 flush 的秒） | ⚠️ **该命令在慢页几乎无效**：RPG 读 `fps: 1`，因为 1 秒内可能只有 1 次 flush |
-| **精灵切帧频率** | `anim`（`clip` / `frame` / `animation_ms`） | `male.idle` 8 帧 @100 ms、`couple.seated` 16 帧 @125 ms |
+| **LVGL 调度间隔** | `sched` | 桌面 20 / 世界 20 / 音乐 20 / RPG 站立 20 / **RPG 走路 20–21** / 宠物 53–65 ms |
+| **真实显示 FPS** | `boot` 的 `frames*1000/elapsed` | 开机 24 帧 / 2025 ms = **11 fps** |
+| **精灵切帧频率** | `anim` | `male.idle` 8 帧 @100 ms、`couple.seated` 16 帧 @125 ms |
 
-**关键区别**：`sched` 慢 ≠ 显示慢。`sched avg_gap = 119 ms` 的意思是
-「LVGL 每 119 ms 才有机会跑一次 tick」，用户看到的画面变化频率也就是 ~8 fps。
-而 `fps` 命令统计的是「有多少秒发生过 flush」，在慢页上会给出误导性的低值
-（因为计数器只在 flush 时递增，分母是秒）。
+`fps` 命令（统计「有 flush 的秒」）在慢页上会给出误导值，本报告不用它下结论。
 
-⇒ **本报告一律用 `sched avg_gap` 作为帧率判据，`fps` 只作辅助。**
-`boot` 命令的 `fps` 字段是 `frames*1000/elapsed_ms`，是真正的帧率，可以用。
+### 5.4 点击延迟
+
+`rpg perf: taps=22 tap=8 ms max=1 ms` ⇒ 22 次点击总共 8 ms，**单次最大 1 ms**，
+远优于 50 ms 目标。点击路径 = `lw_rpg_tap_tile`(core) + 状态标签(label)，两者各 0–1 ms。
+（这同时否证了「走路掉帧是点击造成的」。）
 
 ---
 
-## 6. 下一轮的第一优先级（按顺序）
+## 6. 还没做到的（下一轮）
 
-| # | 事项 | 前置条件 | 预期收益 |
+| # | 事项 | 现状 | 依据 |
 |---|---|---|---|
-| 1 | **烧录烘焙固件 + 四个烘焙 `.lwp` 到 SD 卡** | 用户明确授权 + 板子接入 | 五个场景全部重新测量 |
-| 2 | 复测 `sched`：桌面/世界/RPG/宠物 | 同上 | 期望进入 20–30 ms |
-| 3 | 复测 `boot` 帧数 | 同上 | 期望从 5 帧上升 |
-| 4 | 点击延迟探针（p50/p95/p99） | 同上 | 补交接书未测项 |
-| 5 | `ui = 1542 ms` 分段（机制 4） | 真机视觉验收 | 首帧提前 300–600 ms |
-| 6 | 皮肤九宫格 9 个 `lv_image` 合并（机制 5） | 先量控制中心页成本 | 待测 |
-
-### 6.1 烧录与素材部署的具体步骤（供下一轮执行）
-
-```powershell
-# 1. 固件（应用分区，不动 bootloader / 分区表）
-& .\tools\flash_v4_safe.ps1 -Config os -Stage app -Execute -Authorized
-
-# 2. 烘焙素材必须同时放到 SD 卡（固件按文件名在 /sdcard/littleworld 下查找）
-#    firmware/main/lw_art.c 的 packs[] 表：
-#      male.lwp / qianqian-base.lwp / qianqian-wave.lwp / daily.lwp / ui.lwp / skin.lwp
-#    只替换前四个（后两个是切片图集，不烘焙）
-```
-
-**注意**：烘焙包与旧包**必须成对替换**。如果只换 `male.lwp` 而 `qianqian-base.lwp`
-还是旧的，两个角色的绘制路径会不一致（一个走直通、一个走慢路径），
-虽然画面都正确，但性能对比会失去意义。
+| 1 | 宠物页 53–65 → ≤25 ms | per-clip 烘焙包已生成但**还没写进卡**（卡上是并集 bbox 版） | `daily.lwp` 的 `dog.idle` 内容只有 60×52，并集画布 276×252 |
+| 2 | 开机 11 → 30+ fps | 遮罩上两个 288-scale 精灵本身每帧重采样 | `boot` 帧数 6→24 已证明烘焙有效，剩余成本在 boot 精灵 |
+| 3 | 走路 `max 185 ms` 单帧尖峰 | 3/777 帧，出现在新 clip 首次加载 | 需求读 60–75 ms/帧 × 预取队列深度 |
+| 4 | `ui = 1373 ms` 首帧延迟（机制 4） | 烘焙包已把 1543 → 1373 ms | `boot phases` |
+| 5 | 皮肤九宫格 9 个 `lv_image`（机制 5） | 未做 | `lw_skin_panel()` |
+| 6 | 30 分钟长测重跑 | V4.4 做过 32.1 分钟，V4.5 未重跑 | — |
 
 ---
 
@@ -167,31 +154,26 @@ V4.5 指令特别要求区分这三个量，本轮的口径：
 | `OPEN_SOURCE_RESEARCH.md` | 14 个开源项目的许可证与机制 | — |
 | `ARCHITECTURE_COMPARISON.md` | 与六个参照项目的逐项对照 | — |
 | `SPRITE_RENDER.md` | 根因、方案、逐像素验证 | `render_bench.txt` / `prescale_verify.json` / `baked_vs_head.json` |
-| `BOOT_OPTIMIZATION.md` | `ui` 拆分、遮罩期跳过重绘 | V4.4 真机 `boot phases` / `boot` |
-| `RPG_ACCEPTANCE.md` | RPG 正确性与性能验收 | V4.4 真机 `sched` / `anim` |
+| `BOOT_OPTIMIZATION.md` | `ui` 拆分、遮罩期跳过重绘 | `boot phases` / `boot` 真机 |
+| `RPG_ACCEPTANCE.md` | RPG 正确性与性能验收 | 真机 `sched` / `rpg perf` |
 | `DUAL_STATE_INVESTIGATION.md` | 双稳态机制解释 | V4.4 探针日志 |
 | `FINAL_BENCHMARK.md` | 本文件：验收总表 | — |
-| `render_bench.txt` | RenderBench 原始输出（3 clip × 6 配置） | 宿主实测 |
-| `sprite_bbox.json` | 12 clip 画布/内容像素 | 静态测量 |
-| `prescale_verify.json` | 237 帧逐像素结果 | 宿主实测 |
-| `baked_vs_head.json` | 156 张整页截图比对 | 宿主实测 |
+
+---
 
 ## 8. 诚实的边界
 
-这份报告**没有**说：
+**已经证明的**（都有真机或逐像素证据）：
 
-- ❌「V4.5 让五个页面达到 40–50 FPS」——没有真机数据，不能说。
-- ❌「烘焙包一定能让 RPG 从 119 ms 降到 25 ms」——宿主 RenderBench 说
-  `male.idle` 单帧从 0.426 降到 0.077 ms（5.54×），但 RPG 页 119 ms 里精灵占多少
-  没有真机分解，只能推测「大头是精灵」。
-- ❌「双稳态已经消失」——机制解释成立、烘焙路径在宿主压平了两态，
-  但需要真机 `probe_desktop_slow.ps1` 跑 8 分钟确认。
+- ✅ 烘焙包把 RPG 站立从 103 → 20 ms，宠物 251 → 53–65 ms。
+- ✅ 走路 89–117 → **20–21 ms**（`seek` 7393 → 321 ms）。
+- ✅ 点击 22 次共 8 ms。
+- ✅ 237 帧逐像素 diff=0、156 张整页截图 diff=0、宿主测试 142/261/752 全绿。
+- ✅ 开机动画 5 → 24 帧。
 
-这份报告**说了**：
+**没有证明的**：
 
-- ✅ 瓶颈是 `lv_image_set_scale(288) ≠ 256` 导致每帧走 `transform_and_recolor`。
-- ✅ 离线烘焙 + bbox 裁剪在宿主上是 **5.54–7.13×**，且 **237 帧逐像素 diff=0**、
-  **156 张整页截图 diff=0**。
-- ✅ 开机遮罩期跳过被遮挡重绘，**156/156 截图一致**。
-- ✅ 宿主测试矩阵全绿（142 / 82+336+33 / 261），固件可编译（分区余 62%）。
-- ✅ 双稳态的机制解释有真机单变量证据（`anim off` 回 20 ms、`render()` 可重置）。
+- ❌ 宠物页**还没达标**（53–65 ms），因为卡上仍是并集 bbox 包，per-clip 包没写卡。
+- ❌ 开机**没有** 40 fps（11 fps）。
+- ❌ 「双稳态彻底消失」——烘焙把两态压进同一档，但没有再跑 8 分钟 `probe_desktop_slow.ps1`。
+- ❌ 30 分钟长测未在 V4.5 上重跑。

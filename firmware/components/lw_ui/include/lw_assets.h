@@ -34,6 +34,18 @@ typedef struct {
     uint16_t prescaled;
     lw_asset_read_fn read;
     void *context;
+    /* V4.5: optional zero-copy provider. When set, a frame that is already in the
+     * file cache is handed over as a pointer instead of being memcpy'd into the
+     * lease buffer; the sprite then draws straight out of the cache. Measured on
+     * the RPG page: copying one 97 KB frame out of PSRAM cost 6-20 ms, and walking
+     * needs a new frame every 50 ms per actor, which was the whole hitch. The
+     * pointer must stay valid until unborrow() is called. NULL = copy as before. */
+    const uint8_t *(*borrow)(void *context, uint16_t frame, size_t bytes);
+    void (*unborrow)(void *context, const uint8_t *pixels);
+    /* V4.5: queue one frame for background read-ahead. Optional; NULL means the
+     * provider has nothing to do (embedded or host packs). A looping sprite asks
+     * for the rest of its clip here so the card is never on the draw path. */
+    void (*prefetch)(void *context, uint16_t frame);
 } lw_asset_spec_t;
 typedef struct lw_asset_lease lw_asset_lease_t;
 typedef struct {
@@ -70,8 +82,18 @@ lw_asset_lease_t *lw_asset_acquire(const char *id, uint16_t frame);
  * caller owns the detach/invalidate step; lw_sprite does it right after. */
 bool lw_asset_refill(lw_asset_lease_t *lease, uint16_t frame);
 const lv_image_dsc_t *lw_asset_image(const lw_asset_lease_t *lease);
+/* Pixels of the frame currently presented: the borrowed cache buffer when the
+ * provider could borrow, otherwise the lease's own copy. */
+const uint8_t *lw_asset_pixels(const lw_asset_lease_t *lease);
 void lw_asset_release(lw_asset_lease_t *lease);
 lw_asset_stats_t lw_assets_stats(void);
+/* Refill cost split, for the diag console: calls, how many of them were served by
+ * the zero-copy borrow, and the total milliseconds spent inside refill. */
+/* Refill counts since the last reset. Deliberately no timing here: this file is
+ * also linked into the host resource test, which has no LVGL clock. The cost of
+ * a refill is visible through lw_rpg_view's seek_ms split instead. */
+void lw_assets_refill_perf(uint32_t *calls, uint32_t *borrowed);
+void lw_assets_refill_perf_reset(void);
 
 /* Optional standard-C/VFS raw-frame provider. Caller mounts storage and maps
  * platform paths; no directory, device, partition or filesystem is created. */

@@ -105,7 +105,8 @@ lw_diag_report_t lw_diag_report(void)
 
     if (s_registered && s_providers.cache != NULL) {
         s_providers.cache(&r.cache_available, &r.cache_hits, &r.cache_misses, &r.cache_evictions,
-                          &r.cache_queue_drops, &r.cache_resident, &r.cache_peak, &r.cache_budget);
+                          &r.cache_queue_drops, &r.cache_resident, &r.cache_peak, &r.cache_budget,
+                          &r.cache_borrows, &r.cache_borrow_misses);
     }
 
     if (s_registered && s_providers.clock != NULL) {
@@ -277,6 +278,7 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         "\"asset_bytes\":%u,\"theme\":%d,"
         "\"cache_open\":%s,\"cache_hits\":%u,\"cache_misses\":%u,\"cache_evictions\":%u,"
         "\"cache_drops\":%u,\"cache_resident\":%u,\"cache_peak\":%u,\"cache_budget\":%u,"
+        "\"cache_borrows\":%u,\"cache_borrow_misses\":%u,"
         "\"clock\":\"%s\",\"ui_assets\":%u,\"ui_asset_bytes\":%u,"
         "\"anim_sprites\":%u,\"anim_running\":%u,"
         "\"medium\":%s,\"medium_reason\":\"%s\",\"wifi\":\"%s\","
@@ -294,8 +296,8 @@ size_t lw_diag_json(const lw_diag_report_t *report, char *buf, size_t len)
         report->cache_available ? "true" : "false", (unsigned)report->cache_hits,
         (unsigned)report->cache_misses, (unsigned)report->cache_evictions,
         (unsigned)report->cache_queue_drops, (unsigned)report->cache_resident,
-        (unsigned)report->cache_peak, (unsigned)report->cache_budget, clock_text,
-        report->ui_assets, (unsigned)report->ui_asset_bytes, report->anim_sprites, report->anim_running,
+        (unsigned)report->cache_peak, (unsigned)report->cache_budget,
+        (unsigned)report->cache_borrows, (unsigned)report->cache_borrow_misses, clock_text,        report->ui_assets, (unsigned)report->ui_asset_bytes, report->anim_sprites, report->anim_running,
         report->medium_mounted ? "true" : "false", medium_reason,
         wifi_text(report->wifi), wifi_reason, report->safe_mode ? "true" : "false", recovery,
         last_error, (unsigned)report->last_error_ms);

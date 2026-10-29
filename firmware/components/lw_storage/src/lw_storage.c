@@ -34,11 +34,11 @@
  * lw_art.c still bounds total memory, so a larger slot count cannot
  * over-allocate: reserve() refuses to place a frame unless both a free slot and
  * the remaining byte budget allow it. */
-#define ENTRIES 32
-#define QUEUE 8
+#define ENTRIES 64
+#define QUEUE 24
 #define MAX_FRAME (4u*1024u*1024u)
 typedef struct { char file[128]; uint64_t offset; size_t bytes; uint32_t generation; } cache_key_t;
-typedef struct { cache_key_t key; uint8_t *data; uint64_t used; unsigned state; } entry_t;
+typedef struct { cache_key_t key; uint8_t *data; uint64_t used; unsigned state; unsigned pins; } entry_t;
 struct lw_file_cache {
     char root[512]; entry_t entries[ENTRIES]; cache_key_t queue[QUEUE]; unsigned head,count;
     uint32_t generation; uint64_t clock; bool stop,active; lw_file_cache_stats_t stats;
@@ -117,7 +117,9 @@ static entry_t *reserve(lw_file_cache_t *c,const cache_key_t *key)
         for (unsigned i=0;i<ENTRIES;i++) {
             entry_t *e=&c->entries[i];
             if (!e->state) slot=e;
-            if (e->state==2 && (!old || e->used<old->used)) old=e;
+            /* A borrowed frame is being drawn from right now: evicting it would
+             * hand the renderer freed bytes. */
+            if (e->state==2 && !e->pins && (!old || e->used<old->used)) old=e;
         }
         if (slot && key->bytes<=c->stats.budget_bytes-c->stats.resident_bytes) break;
         if (!old) return NULL;
@@ -150,8 +152,46 @@ static bool load_key(lw_file_cache_t *c,cache_key_t key,void *dst)
     else { c->stats.resident_bytes-=e->key.bytes; free(e->data); memset(e,0,sizeof(*e)); }
     unlock(c); return ok;
 }
-static void worker_loop(lw_file_cache_t *c)
+const uint8_t *lw_file_cache_borrow(lw_file_cache_t *c,const char *relative,uint64_t offset,size_t bytes)
 {
+    if (!c) return NULL;
+    cache_key_t key;
+    if (!make_key(c,relative,offset,bytes,&key)) return NULL;
+    lock(c); key.generation=c->generation;
+    for (unsigned i=0;i<ENTRIES;i++) {
+        entry_t *e=&c->entries[i];
+        if (e->state==2 && same(&e->key,&key)) {
+            e->pins++; e->used=++c->clock; c->stats.hits++; c->stats.borrows++;
+            const uint8_t *data=e->data; unlock(c); return data;
+        }
+    }
+    /* Not resident. Claim a slot before reading so the bytes can stay pinned;
+     * reserve() only skips pinned and in-flight entries, so a cache that is
+     * entirely borrowed returns NULL here and the caller copies through
+     * lw_file_cache_read as before. */
+    c->stats.misses++; c->stats.borrow_misses++;
+    entry_t *e=reserve(c,&key); unlock(c);
+    if (!e) return NULL;
+    bool ok=read_file(c,&key,e->data);
+    lock(c); c->stats.loading--;
+    if (ok && key.generation==c->generation && !c->stop) {
+        e->state=2; e->pins=1; e->used=++c->clock;
+        unlock(c); return e->data;
+    }
+    c->stats.resident_bytes-=e->key.bytes; free(e->data); memset(e,0,sizeof(*e));
+    unlock(c); return NULL;
+}
+void lw_file_cache_unborrow(lw_file_cache_t *c,const void *data)
+{
+    if (!c || !data) return;
+    lock(c);
+    for (unsigned i=0;i<ENTRIES;i++) {
+        entry_t *e=&c->entries[i];
+        if (e->data==data) { if (e->pins) e->pins--; break; }
+    }
+    unlock(c);
+}
+static void worker_loop(lw_file_cache_t *c){
     for (;;) {
         cache_key_t key={0}; bool work=false;
         lock(c); bool stop=c->stop;

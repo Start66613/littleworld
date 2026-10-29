@@ -8,10 +8,15 @@
 
 #define MAX_ASSETS 64u
 #define MAX_FRAME_BYTES 1250000u
-struct lw_asset_lease { lv_image_dsc_t image; uint8_t *pixels; const lw_asset_spec_t *spec; };
+struct lw_asset_lease { lv_image_dsc_t image; uint8_t *pixels; const lw_asset_spec_t *spec; const uint8_t *borrowed; };
 static const lw_asset_spec_t *s_specs;
 static size_t s_count;
 static lw_asset_stats_t s_stats;
+/* Where refill time actually goes. lw_rpg_view's seek timer covered this call
+ * plus the invalidate, and on the board the two could not be told apart, which
+ * left "is it the card, the copy, or the draw?" unanswered. Milliseconds at
+ * lv_tick_get() resolution; the counters are only read by the diag console. */
+static uint32_t s_refill_calls, s_refill_borrowed;
 
 size_t lw_asset_frame_bytes(const lw_asset_spec_t *s)
 {
@@ -46,13 +51,29 @@ const lw_asset_spec_t *lw_assets_find(const char *id)
 /* Content box in source pixels; the whole canvas when a pack predates bbox
  * metadata or the box would be degenerate.
  *
- * A prescaled asset is stored already cropped to its content and already at the
- * final size, so its whole frame is the content and its origin is 0:0. The
- * packer rewrites anchor_x/anchor_y into those cropped coordinates. */
+ * A prescaled asset is stored already at its final size, so its pixels are
+ * destination pixels. Its bbox is therefore also in destination pixels, and it
+ * is a sub-window only when the packer cropped this clip tighter than the
+ * canvas the whole pack shares - daily.lwp is the case that matters: its union
+ * window is 276x252 because couple.wave is wide, while dog.idle covers 54x47.
+ * Drawing the dog at the union size blends 97% transparent pixels, so the
+ * sub-window is worth carrying even though the frame bytes cannot shrink (one
+ * pack has one canvas). */
 static void spec_bbox(const lw_asset_spec_t *s, uint16_t *x, uint16_t *y,
                       uint16_t *w, uint16_t *h)
 {
-    if (s->prescaled) { *x = 0; *y = 0; *w = s->width; *h = s->height; return; }
+    if (s->prescaled) {
+        if (s->bbox_w && s->bbox_h && s->bbox_w <= s->width && s->bbox_h <= s->height &&
+            (unsigned)s->bbox_x + s->bbox_w <= s->width &&
+            (unsigned)s->bbox_y + s->bbox_h <= s->height) {
+            *x = s->bbox_x;
+            *y = s->bbox_y;
+            *w = s->bbox_w;
+            *h = s->bbox_h;
+            return;
+        }
+        *x = 0; *y = 0; *w = s->width; *h = s->height; return;
+    }
     if (s->bbox_w && s->bbox_h && s->bbox_x < s->width && s->bbox_y < s->height) {
         *x = s->bbox_x;
         *y = s->bbox_y;
@@ -124,10 +145,10 @@ void lw_asset_draw_geometry(const lw_asset_spec_t *spec, uint16_t scale, lw_asse
     }
 
     /* Where the content lands relative to the object, in destination pixels.
-     * For the full-canvas case that is bbox*scale/256; for a prescaled asset
-     * the image *is* the content, so it is zero. */
-    int32_t content_dx = spec->prescaled ? 0 : scale_px((int32_t)bx, use);
-    int32_t content_dy = spec->prescaled ? 0 : scale_px((int32_t)by, use);
+     * A prescaled asset is already in destination pixels, so its bbox origin is
+     * used as-is; a source-resolution bbox has to be scaled first. */
+    int32_t content_dx = spec->prescaled ? (int32_t)bx : scale_px((int32_t)bx, use);
+    int32_t content_dy = spec->prescaled ? (int32_t)by : scale_px((int32_t)by, use);
 
     /* LV_ALIGN_CENTER puts image_area at obj.x1 + (obj_w/2 - img_w/2) and then
      * adds the offset; the content sits content_dx further right. Subtracting
@@ -177,21 +198,55 @@ bool lw_asset_refill(lw_asset_lease_t *lease, uint16_t frame)
     if (!lease || !lease->spec || frame>=lease->spec->frames) { s_stats.failures++; return false; }
     if (lw_fault_should_fail(LW_FAULT_ASSET_ACQUIRE)) { s_stats.failures++; return false; }
     size_t bytes=lease->image.data_size;
+    /* Drop the previous borrow before asking for the next one: two frames of the
+     * same pack can be pinned at once without that costing extra slots, but the
+     * old pin must not outlive the frame that is about to disappear. */
+    if (lease->borrowed) {
+        if (lease->spec->unborrow) lease->spec->unborrow(lease->spec->context,lease->borrowed);
+        lease->borrowed=NULL;
+    }
+    if (lease->spec->borrow) {
+        const uint8_t *pixels=lease->spec->borrow(lease->spec->context,frame,bytes);
+        if (pixels) {
+            /* Zero-copy: the draw reads the cache buffer in place. Nothing is
+             * copied, so a frame that is already resident costs an invalidate. */
+            lease->borrowed=pixels;
+            lease->image.data=(void *)pixels;
+            s_stats.loaded_frames++;
+            s_refill_calls++; s_refill_borrowed++;
+            return true;
+        }
+    }
     if (!lease->spec->read(lease->spec->context,frame,lease->pixels,bytes)) { s_stats.failures++; return false; }
+    lease->image.data=lease->pixels;
     s_stats.loaded_frames++;
+    s_refill_calls++;
     return true;
 }
 
 const lv_image_dsc_t *lw_asset_image(const lw_asset_lease_t *lease) { return lease ? &lease->image : NULL; }
+const uint8_t *lw_asset_pixels(const lw_asset_lease_t *lease)
+{
+    if (!lease) return NULL;
+    return lease->borrowed ? lease->borrowed : lease->pixels;
+}
 void lw_asset_release(lw_asset_lease_t *lease)
 {
     if (!lease) return;
     /* Source must already be detached from every image widget. */
     lv_image_cache_drop(&lease->image);
+    if (lease->borrowed && lease->spec && lease->spec->unborrow)
+        lease->spec->unborrow(lease->spec->context,lease->borrowed);
     s_stats.live_bytes-=lease->image.data_size; s_stats.live_leases--;
     lv_free(lease->pixels); lv_free(lease);
 }
 lw_asset_stats_t lw_assets_stats(void) { return s_stats; }
+void lw_assets_refill_perf(uint32_t *calls, uint32_t *borrowed)
+{
+    if (calls) *calls=s_refill_calls;
+    if (borrowed) *borrowed=s_refill_borrowed;
+}
+void lw_assets_refill_perf_reset(void) { s_refill_calls=s_refill_borrowed=0; }
 
 bool lw_asset_read_raw_file(void *context, uint16_t frame, uint8_t *pixels, size_t bytes)
 {

@@ -63,6 +63,18 @@ PACK_RECORD = 108
 PACK_MAX_CLIPS = 32
 PACK_MAX_FRAMES = 32
 
+# Optional geometry trailer (lw_pack.h). tools/lwp_prescale.py appends it to the
+# packs it bakes: each clip records the alpha bounding box the frames were
+# cropped to and a "prescaled" flag, so the runtime can drop lv_image scaling
+# and take LVGL's non-transformed RGB565A8 blend path. A baked pack is therefore
+# legitimately larger than the raw frame bytes, and this verifier has to know
+# that or it rejects every baked card.
+PACK_TRAILER_MAGIC = b"LWTR0001"
+PACK_TRAILER_NONE = 0
+PACK_TRAILER_GEOMETRY = 1
+PACK_TRAILER_HEADER = 12
+PACK_TRAILER_RECORD = 10
+
 SCENE_FILES = [f"scene-{i}.lwr" for i in range(THEMES)] + [
     f"scene-{i}-thumb.lwr" for i in range(THEMES)
 ]
@@ -173,6 +185,34 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
     if clips == 0 or clips > PACK_MAX_CLIPS:
         return problems + [f"{path.name}: clip 数 {clips}，应在 1..{PACK_MAX_CLIPS}"], info
 
+    # Geometry trailer, mirroring the block in lw_pack.c. The trailer sits at the
+    # tail of the file, so every clip offset is bounded by payload_end rather
+    # than by the file length.
+    kind = struct.unpack_from("<H", data, 14)[0]
+    trailer_bytes = 0
+    payload_end = len(data)
+    if kind == PACK_TRAILER_GEOMETRY:
+        trailer_bytes = PACK_TRAILER_HEADER + PACK_TRAILER_RECORD * clips
+        payload_start = PACK_HEADER + PACK_RECORD * clips
+        if len(data) < payload_start + trailer_bytes:
+            return problems + [f"{path.name}: 几何 trailer 被截断"], info
+        start = len(data) - trailer_bytes
+        if (data[start : start + 8] != PACK_TRAILER_MAGIC
+                or struct.unpack_from("<H", data, start + 8)[0] != clips):
+            return problems + [f"{path.name}: 几何 trailer 头错误（魔数或 clip 数）"], info
+        for i in range(clips):
+            rec = start + PACK_TRAILER_HEADER + i * PACK_TRAILER_RECORD
+            bx, by, bw, bh, prescaled = struct.unpack_from("<HHHHH", data, rec)
+            if prescaled > PACK_TRAILER_GEOMETRY:
+                problems.append(f"{path.name}: clip {i} 的 prescaled={prescaled} 非法")
+            if bw and bh and (bx + bw > w or by + bh > h):
+                problems.append(
+                    f"{path.name}: clip {i} 的 bbox ({bx},{by},{bw},{bh}) 超出 {w}x{h}"
+                )
+        payload_end = start
+    elif kind != PACK_TRAILER_NONE:
+        return problems + [f"{path.name}: 未知 trailer kind {kind}"], info
+
     total_frames = 0
     names: list[str] = []
     for i in range(clips):
@@ -201,13 +241,14 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
             )
         if offset < PACK_HEADER + PACK_RECORD * clips:
             problems.append(f"{path.name}: clip {name!r} 数据偏移 {offset} 落入记录区")
-        elif offset + frames * frame_bytes > len(data):
+        elif offset + frames * frame_bytes > payload_end:
             problems.append(
                 f"{path.name}: clip {name!r} 数据越界（{offset}+{frames}x{frame_bytes}）"
             )
         total_frames += frames
 
-    expected = PACK_HEADER + PACK_RECORD * clips + total_frames * frame_bytes
+    expected = (PACK_HEADER + PACK_RECORD * clips + total_frames * frame_bytes
+                + trailer_bytes)
     if len(data) != expected:
         problems.append(
             f"{path.name}: 文件大小 {len(data)} 字节，按 {clips} clip / {total_frames} 帧"

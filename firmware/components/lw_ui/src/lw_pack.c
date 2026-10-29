@@ -161,6 +161,37 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
     return raw_ok;
 }
 
+/* Zero-copy variant of read_frame() for cached card packs.
+ *
+ * The sprite redraws straight out of the cache buffer instead of memcpy-ing the
+ * frame into its own lease buffer first. On the RPG page that copy was 6-20 ms
+ * per 97 KB frame in PSRAM and walking needs a frame every 50 ms per actor, which
+ * was the entire hitch the user reported. Returns NULL whenever the bytes are not
+ * (and cannot be) pinned - embedded packs, the host's stdio path, or a cache with
+ * nothing evictable - and the caller then falls back to read_frame(). */
+static const uint8_t *borrow_frame(void *context, uint16_t frame, size_t bytes)
+{
+    lw_pack_source_t *source = context;
+    if (!source || !source->cache || frame >= source->frames || bytes != source->frame_bytes) return NULL;
+    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
+    return lw_file_cache_borrow(source->cache, source->file, offset, bytes);
+}
+
+static void unborrow_frame(void *context, const uint8_t *pixels)
+{
+    lw_pack_source_t *source = context;
+    if (!source || !source->cache || !pixels) return;
+    lw_file_cache_unborrow(source->cache, pixels);
+}
+
+static void prefetch_frame(void *context, uint16_t frame)
+{
+    lw_pack_source_t *source = context;
+    if (!source || !source->cache || frame >= source->frames) return;
+    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
+    (void)lw_file_cache_prefetch(source->cache, source->file, offset, source->frame_bytes);
+}
+
 bool lw_pack_registry_reset(void)
 {
     /* Detach first, and ONLY wipe the arrays if the detach really happened.
@@ -379,7 +410,8 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
                                           trailer_bbox_x[i], trailer_bbox_y[i],
                                           trailer_bbox_w[i], trailer_bbox_h[i],
                                           trailer_prescaled[i], read_frame,
-                                          &s_sources[spec]};
+                                          &s_sources[spec], borrow_frame, unborrow_frame,
+                                          prefetch_frame};
         /* Clip names stay exactly as the pack spells them: the UI looks up
          * "idle", "blink", "wave" and "walk_<dir>" by name, so a silent rename
          * here would disable those paths with no visible error. */

@@ -457,6 +457,31 @@ static int cmd_rpg(int argc, char **argv)
                o ? (int)lv_obj_get_x(o) : -1, o ? (int)lv_obj_get_y(o) : -1,
                (int)state->actors[i].moving);
     }
+    if (argc >= 2 && strcmp(argv[1], "reset") == 0) {
+        lw_os_rpg_perf_reset();
+        lw_assets_refill_perf_reset();
+        printf("rpg: perf counters reset\n");
+        fflush(stdout);
+        return 0;
+    }
+    lw_rpg_perf_t perf;
+    lw_os_rpg_perf(&perf);
+    if (perf.frames) {
+        printf("rpg perf: frames=%u refresh=%u ms avg=%u max=%u slow>=25ms=%u\n",
+               perf.frames, perf.refresh_ms,
+               perf.refresh_ms / perf.frames, perf.refresh_max_ms, perf.slow_frames);
+        printf("rpg perf: taps=%u tap=%u ms max=%u core=%u label=%u orders=%u order=%u ms\n",
+               perf.taps, perf.tap_ms, perf.tap_max_ms, perf.core_ms, perf.label_ms,
+               perf.orders, perf.order_ms);
+        printf("rpg perf: refresh split state=%u anchor=%u seek=%u ms\n",
+               perf.state_ms, perf.anchor_ms, perf.seek_ms);
+        {
+            uint32_t calls = 0, borrowed = 0;
+            lw_assets_refill_perf(&calls, &borrowed);
+            printf("rpg perf: refill calls=%u borrowed=%u\n",
+                   (unsigned)calls, (unsigned)borrowed);
+        }
+    }
     fflush(stdout);
     return 0;
 }

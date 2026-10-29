@@ -202,6 +202,17 @@ bool lw_sprite_play(lw_sprite_t *s, const lw_clip_t *clip)
     uint32_t total=clip_length(clip);
     if (!s || !total || !present(s,clip,clip->sequence[0])) return false;
     s->clip=clip; s->total=total; s->elapsed=0; s->epoch=lv_tick_get(); s->finished=false; s->paused=false;
+    /* Queue the rest of the clip for background read-ahead. Walking needs a new
+     * frame every 50 ms, and a demand read of one frame from the card measured
+     * 60-75 ms on the board, so waiting for it on the draw path can never keep
+     * up; asking for the whole clip up front is what turns "every frame misses"
+     * into "the first frame misses". */
+    if (clip->count > 1) {
+        const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);
+        if (spec && spec->prefetch) {
+            for (unsigned i=1;i<clip->count;i++) spec->prefetch(spec->context,clip->sequence[i]);
+        }
+    }
     if (s->enabled && !s->external) lv_timer_resume(s->timer); else lv_timer_pause(s->timer);
 #if CONFIG_LW_DIAG_STATIC_UI
     lv_timer_pause(s->timer);   /* diagnostic C: keep the first frame */

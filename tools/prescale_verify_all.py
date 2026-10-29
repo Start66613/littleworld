@@ -50,13 +50,28 @@ def clip_table(pack):
     import struct
     HEADER = struct.Struct('<8sHHHH')
     CLIP = struct.Struct('<32sHhhBBI32H')
-    _magic, w, h, count, _kind = HEADER.unpack_from(raw, 0)
+    TRAILER_HEADER = struct.Struct('<8sHH')
+    TRAILER_RECORD = struct.Struct('<HHHHH')
+    _magic, w, h, count, kind = HEADER.unpack_from(raw, 0)
     table = {}
+    names = []
     for i in range(count):
         rec = CLIP.unpack_from(raw, 16 + 108 * i)
-        table[rec[0].split(b'\0')[0].decode()] = {'frames': rec[1],
-                                                  'anchor_x': rec[2],
-                                                  'anchor_y': rec[3]}
+        name = rec[0].split(b'\0')[0].decode()
+        names.append(name)
+        table[name] = {'frames': rec[1],
+                       'anchor_x': rec[2],
+                       'anchor_y': rec[3],
+                       'box': (0, 0, w, h)}
+    if kind == 1:
+        # The trailer's per-clip box is a sub-window of the pack canvas, so a
+        # verifier that drew the whole canvas would compare the wrong rectangle.
+        start = len(raw) - (12 + 10 * count)
+        magic, clips, _res = TRAILER_HEADER.unpack_from(raw, start)
+        assert magic == b'LWTR0001' and clips == count
+        for i in range(count):
+            bx, by, bw, bh, _pre = TRAILER_RECORD.unpack_from(raw, start + 12 + 10 * i)
+            table[names[i]]['box'] = (bx, by, bw or w, bh or h)
     return w, h, table
 
 
@@ -65,6 +80,8 @@ def main():
     ap.add_argument('--pack', action='append', default=None)
     ap.add_argument('--frames', type=int, default=0,
                     help='0 = every frame (slow but complete)')
+    ap.add_argument('--rebake', action='store_true',
+                    help='regenerate the baked packs before verifying')
     ap.add_argument('--json', type=Path,
                     default=ROOT / 'reports' / 'perf-v4-5' / 'prescale_verify.json')
     args = ap.parse_args()
@@ -76,9 +93,12 @@ def main():
         spec = PACKS[name]
         src = ROOT / spec['src']
         baked = OUT / ('%s.lwp' % name)
-        if not baked.exists():
-            run([PY, 'tools/lwp_prescale.py', str(src), str(baked),
-                 '--scale', str(spec['scale'])])
+        if not baked.exists() or args.rebake:
+            cmd = [PY, 'tools/lwp_prescale.py', str(src), str(baked),
+                   '--scale', str(spec['scale'])]
+            if spec.get('per_clip', True):
+                cmd.append('--per-clip')
+            run(cmd)
         bw, bh, btable = clip_table(baked)
         sw, sh, stable = clip_table(src)
         for clip in spec['clips']:
@@ -95,10 +115,12 @@ def main():
                      '--frame', str(frame), '-o', str(a)])
                 run([PY, 'tools/lwp_frame_dump.py', str(baked), clip,
                      '--frame', str(frame), '-o', str(b)])
+                box = btable[clip]['box']
                 cmd = [str(VERIFY), str(a), str(sw), str(sh), str(spec['scale']),
                        str(b), str(bw), str(bh),
                        str(stable[clip]['anchor_x']), str(stable[clip]['anchor_y']),
-                       str(btable[clip]['anchor_x']), str(btable[clip]['anchor_y'])]
+                       str(btable[clip]['anchor_x']), str(btable[clip]['anchor_y']),
+                       str(box[0]), str(box[1]), str(box[2]), str(box[3])]
                 res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
                 diff = 0
                 worst = 0

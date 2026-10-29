@@ -114,9 +114,10 @@ static int scale_px(int v, int scale) { return (v * scale + 0x80) >> 8; }
 
 int main(int argc, char **argv)
 {
-    if (argc != 12) {
+    if (argc != 12 && argc != 16) {
         printf("usage: %s <before.raw> <bw> <bh> <bscale> <after.raw> <aw> <ah> "
-               "<anchor_x> <anchor_y> <after_anchor_x> <after_anchor_y>\n", argv[0]);
+               "<anchor_x> <anchor_y> <after_anchor_x> <after_anchor_y> "
+               "[<box_x> <box_y> <box_w> <box_h>]\n", argv[0]);
         return 2;
     }
     const char *before_path = argv[1];
@@ -125,6 +126,16 @@ int main(int argc, char **argv)
     int aw = atoi(argv[6]), ah = atoi(argv[7]);
     int anchor_x = atoi(argv[8]), anchor_y = atoi(argv[9]);
     int after_anchor_x = atoi(argv[10]), after_anchor_y = atoi(argv[11]);
+    /* Optional content box inside the baked canvas. The pack format has one
+     * canvas per pack, so daily.lwp's clips all occupy 276x252 bytes even though
+     * dog.idle only covers 54x47; the trailer records that smaller box and the
+     * firmware draws just the box. Mirroring it here is what keeps the verifier
+     * measuring what the device actually does. */
+    int box_x = 0, box_y = 0, box_w = aw, box_h = ah;
+    if (argc == 16) {
+        box_x = atoi(argv[12]), box_y = atoi(argv[13]);
+        box_w = atoi(argv[14]), box_h = atoi(argv[15]);
+    }
 
     lv_init();
     lv_tick_set_cb(tick_cb);
@@ -145,12 +156,17 @@ int main(int argc, char **argv)
     memcpy(s_ref, s_fb, sizeof(s_ref));
 
     /* after: baked pixels drawn 1:1. The object origin is the anchor minus the
-     * distance from the object origin to the anchor, and for a baked asset that
-     * distance is just the baked anchor. */
-    render(&s_after_dsc, aw, ah, LV_SCALE_NONE,
-           PLACE_X + scale_px(anchor_x, bscale) - after_anchor_x,
-           PLACE_Y + scale_px(anchor_y, bscale) - after_anchor_y,
-           0, 0);
+     * distance from the object origin to the anchor; for a baked asset that
+     * distance is the baked anchor minus the box origin, because the object now
+     * covers only the box rather than the whole canvas. The offset then puts the
+     * box back where the full-canvas draw had it: LV_ALIGN_CENTER places the
+     * image at obj.x1 + (obj_w/2 - img_w/2) and LVGL halves the two dimensions
+     * separately, so this is not (obj_w - img_w)/2. */
+    render(&s_after_dsc, box_w, box_h, LV_SCALE_NONE,
+           PLACE_X + scale_px(anchor_x, bscale) - (after_anchor_x - box_x),
+           PLACE_Y + scale_px(anchor_y, bscale) - (after_anchor_y - box_y),
+           -box_x - (box_w / 2 - aw / 2),
+           -box_y - (box_h / 2 - ah / 2));
 
     long diff = 0, worst = 0, opaque = 0;
     int min_x = CANVAS_W, max_x = -1, min_y = CANVAS_H, max_y = -1;
