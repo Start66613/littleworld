@@ -23,6 +23,7 @@
 | 卡吞吐（新量） | 438 KB/s（FATFS 实测） | **1,866 KB/s**（bounce buffer 16 KiB→64 KiB PSRAM） |
 | 开机动画 | 5 帧 / 2047 ms | **24 帧 / 2025 ms（11 fps）** |
 | 点击（RPG 22 次） | 未测 | **合计 8 ms，单次 max 1 ms** |
+| 卡上字节量 | 55.5 MB（原始帧） | **19.8 MB**（deflate 6.4–11.8×，校验通过；未上卡，见 §11） |
 | 30 分钟 soak | 未做 | 见 `FINAL_BENCHMARK.md` §9 |
 
 走路这一项是用户指出的验收盲区：「RPG界面你得让人物走起来测啊，你人物走起来就
@@ -120,16 +121,16 @@ framebuffer；LVGL 已经按 `lv_area_t` 维护失效区，再叠一层行校验
 
 | 验收项 | 目标 | 本轮状态 |
 |---|---|---|
-| 桌面 / 世界 | 40–50 FPS | ✅ 真机 21 ms（V4.4 基线）；烘焙路径待烧 |
-| RPG | 40–50 FPS | ⬜ 真机 119 ms，烘焙路径待烧 |
-| 宠物 | 40–50 FPS | ⬜ 真机 251 ms，烘焙路径待烧 |
-| 开机 | 40–50 FPS | ⬜ 真机 5 帧/2047 ms；本轮已去掉遮挡期重绘 |
-| 点击 p95 < 50 ms | — | ⬜ 未测（板子未连接） |
-| 30–60 分钟稳定 | — | 🟡 V4.4 已跑 32.1 分钟，0 error / 0 safe mode |
+| 桌面 / 世界 | 40–50 FPS | ✅ 真机 20 / 20 ms（`max 20`） |
+| RPG | 40–50 FPS | ✅ 站立 20 ms；**走路 23 ms**（`max 344 ms`，512 帧中 7 帧 > 25 ms） |
+| 宠物 | 40–50 FPS | ✅ 真机 20 ms（per-clip bbox 进卡后） |
+| 开机 | 40–50 FPS | 🟡 24 帧 / 2025 ms（11 fps）；遮罩每帧全屏半透明合成是下限 |
+| 点击 p95 < 50 ms | — | ✅ RPG 22 次点击合计 8 ms，单次 max 1 ms |
+| 30–60 分钟稳定 | — | ✅ 30 分钟 / 152 样本，0 error、0 safe mode、0 未到页（§9） |
 
-**没有任何一条结论声称「全部页面已经达标」。** 所有「待烧」项都需要用户对
-本次烧录的明确授权（V4.5 指令要求不得沿用 V4.4 的授权），且当前板子未连接
-（`Get-PnpDevice -Class Ports -PresentOnly` 只有两条蓝牙串口）。
+**仍不达标的只有两项**：开机动画 11 fps（遮罩合成下限，未解）、走路换方向时的
+单帧尖峰（`max 344 ms`）。其余全部拿到真机读数。帧压缩（§11）是针对尖峰的第二轮尝试，
+已完成但**尚未上卡验证**。
 
 ## 复现命令
 
@@ -163,9 +164,9 @@ New-Item -ItemType Directory -Force -Path build\v45-assets\shot-x | Out-Null
 | `tools/run_v4_resource_tests.ps1` | **261 checks, 0 failure** |
 | `--os-v2-test`（整页） | **752 checks, 1 failure**（既有 `greeting naturally returns to idle clips`，HEAD 上同样失败） |
 | 156 张整页截图 vs HEAD | **156 identical, 0 differ**（用 `LW_FAKE_TIME=19:30` 钉住相位后同条件复跑，两次逐字节一致） |
-| ESP32-P4 固件构建 | `little_world.bin` **0x241140**（2,363,712 B），分区余 62% |
+| ESP32-P4 固件构建 | `little_world.bin` **0x241a20**（2,365,984 B），分区余 62%，0 warning |
 
-## 三个教训（写在这里，避免下一轮重复踩）
+## 六个教训（写在这里，避免下一轮重复踩）
 
 1. **离线重采样必须从整画布 lattice 取窗口。** LVGL 的 `step` 由整个目标宽度
    推导（`lv_draw_sw_transform.c:191-219`），按 bbox 单独建 lattice 会选到不同的

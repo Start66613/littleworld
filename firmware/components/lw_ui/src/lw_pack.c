@@ -54,6 +54,12 @@ typedef struct {
      * 512x544), so the size belongs to the source and must not be assumed at
      * read time. */
     uint32_t frame_bytes;
+    /* Bytes per frame as STORED in the file. Zero means raw frames, which is
+     * every pack before V4.6. Non-zero means the file holds stride-sized
+     * deflate blocks (see tools/lwp_compress.py) and read_frame() has to
+     * inflate them; frame_bytes above stays the decoded size the sprite
+     * allocates. */
+    uint32_t stored_bytes;
     uint16_t frames;
     /* Non-NULL for an embedded blob: frames are copied straight out of the
      * flash-mapped image, so there is no file to open and no cache to consult. */
@@ -121,6 +127,25 @@ static uint32_t u32(const uint8_t *p)
     return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
 }
 
+/* Inflate one deflate block into a frame buffer. The ESP32-P4 keeps miniz's
+ * tinfl in ROM, so this costs no flash; the Windows host has no ROM and never
+ * sees deflate packs (host/pixel_pack.c refuses them), so it reports failure
+ * instead of pulling a decompressor into the simulator build. */
+#ifdef ESP_PLATFORM
+#include "miniz.h"
+static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src_len)
+{
+    size_t got = tinfl_decompress_mem_to_mem(dst, dst_len, src, src_len, 0);
+    return got == (size_t)TINFL_DECOMPRESS_MEM_TO_MEM_FAILED ? 0 : got;
+}
+#else
+static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src_len)
+{
+    (void)dst; (void)dst_len; (void)src; (void)src_len;
+    return 0;
+}
+#endif
+
 /* One frame of one clip. Runs on the LVGL thread only, because lw_asset_acquire
  * is called from lw_sprite_seek. */
 static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t bytes)
@@ -139,6 +164,26 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
      * is ambiguous, because the same clip table can be re-added from a rebuilt
      * pack and the per-file path record then describes a different file. */
     lw_file_cache_t *cache = source->cache;
+    if (source->stored_bytes) {
+        /* Deflate pack: the file holds stride-sized compressed blocks, so the
+         * read is 15-48 KiB instead of 98-208 KiB and the frame is expanded
+         * here. Reading through borrow() keeps the block in the cache and hands
+         * the decoder a pinned pointer, so a decompressed frame costs no copy
+         * out of the cache, only the inflate. */
+        if (!cache) return false;
+        uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->stored_bytes;
+        const uint8_t *block =
+            lw_file_cache_borrow(cache, source->file, offset, source->stored_bytes);
+        if (!block) return false;
+        size_t got = lwp_inflate(pixels, bytes, block, source->stored_bytes);
+        lw_file_cache_unborrow(cache, block);
+        if (got != bytes) return false;
+        unsigned next = (unsigned)((frame + 1u) % source->frames);
+        (void)lw_file_cache_prefetch(cache, source->file,
+                                     (uint64_t)source->offset + (uint64_t)next * source->stored_bytes,
+                                     source->stored_bytes);
+        return true;
+    }
     uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
     if (cache) {
         bool ok = lw_file_cache_read(cache, source->file, offset, pixels, bytes);
@@ -167,12 +212,13 @@ static bool read_frame(void *context, uint16_t frame, uint8_t *pixels, size_t by
  * frame into its own lease buffer first. On the RPG page that copy was 6-20 ms
  * per 97 KB frame in PSRAM and walking needs a frame every 50 ms per actor, which
  * was the entire hitch the user reported. Returns NULL whenever the bytes are not
- * (and cannot be) pinned - embedded packs, the host's stdio path, or a cache with
- * nothing evictable - and the caller then falls back to read_frame(). */
+ * (and cannot be) pinned - embedded packs, deflate packs (the cache holds
+ * compressed blocks, not pixels), the host's stdio path, or a cache with nothing
+ * evictable - and the caller then falls back to read_frame(). */
 static const uint8_t *borrow_frame(void *context, uint16_t frame, size_t bytes)
 {
     lw_pack_source_t *source = context;
-    if (!source || !source->cache || !bytes) return NULL;
+    if (!source || !source->cache || !bytes || source->stored_bytes) return NULL;
     return lw_file_cache_borrow(source->cache, source->file,
                                 (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes,
                                 bytes);
@@ -189,8 +235,9 @@ static void prefetch_frame(void *context, uint16_t frame)
 {
     lw_pack_source_t *source = context;
     if (!source || !source->cache || frame >= source->frames) return;
-    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * source->frame_bytes;
-    (void)lw_file_cache_prefetch(source->cache, source->file, offset, source->frame_bytes);
+    uint32_t bytes = source->stored_bytes ? source->stored_bytes : source->frame_bytes;
+    uint64_t offset = (uint64_t)source->offset + (uint64_t)frame * bytes;
+    (void)lw_file_cache_prefetch(source->cache, source->file, offset, bytes);
 }
 
 bool lw_pack_registry_reset(void)
@@ -301,6 +348,10 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
     uint16_t trailer_bbox_w[LW_PACK_MAX_CLIPS] = {0};
     uint16_t trailer_bbox_h[LW_PACK_MAX_CLIPS] = {0};
     uint16_t trailer_prescaled[LW_PACK_MAX_CLIPS] = {0};
+    /* Frame stride as stored in the file: 0 for raw frames (every pack before
+     * V4.6), otherwise the size of one deflate block. Carried in the trailer's
+     * reserved u16, which the loader has always read and no pack has used. */
+    unsigned stored_stride = 0;
     if (u16(header + 14) == LW_PACK_TRAILER_GEOMETRY) {
         uint64_t trailer_bytes = LW_PACK_TRAILER_HEADER_BYTES +
                                  (uint64_t)LW_PACK_TRAILER_RECORD_BYTES * clips;
@@ -314,6 +365,7 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
             fclose(f);
             return LW_PACK_ERR_TRAILER;
         }
+        stored_stride = u16(trailer_header + 10);
         for (unsigned i = 0; i < clips; i++) {
             uint8_t rec[LW_PACK_TRAILER_RECORD_BYTES];
             if (fread(rec, 1, sizeof(rec), f) != sizeof(rec)) { fclose(f); return LW_PACK_ERR_TRAILER; }
@@ -340,6 +392,20 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         fclose(f);
         return LW_PACK_ERR_TRAILER;
     }
+
+    /* A stride is only legal when it can hold one deflate block and it is
+     * smaller than the decoded frame (otherwise the pack bought nothing and is
+     * more likely a corrupt trailer than a deliberate layout). Deflate packs
+     * also require a cache: decompression reads its input through the cache so
+     * a block is fetched once, not once per decompress. */
+    if (stored_stride) {
+        if (!cache || stored_stride < 64u || stored_stride > LW_PACK_MAX_FRAME_BYTES ||
+            (uint64_t)stored_stride > frame_bytes) {
+            fclose(f);
+            return LW_PACK_ERR_TRAILER;
+        }
+    }
+    uint64_t file_stride = stored_stride ? stored_stride : frame_bytes;
 
     /* A second pack for the same actor APPENDS: qianqian keeps her base clips
      * and gains wave, instead of one pack silently replacing the other. */
@@ -379,7 +445,7 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         }
         if (loop > 1u) { status = LW_PACK_ERR_LOOP; break; }
         if (offset < payload_start ||
-            (uint64_t)offset + (uint64_t)frames * frame_bytes > payload_end) {
+            (uint64_t)offset + (uint64_t)frames * file_stride > payload_end) {
             status = LW_PACK_ERR_OFFSET;
             break;
         }
@@ -400,11 +466,12 @@ static lw_pack_status_t parse(const char *root, const char *file, const char *ac
         memcpy(s_sources[spec].file, file, strlen(file) + 1);
         s_sources[spec].offset = offset;
         s_sources[spec].frame_bytes = (uint32_t)frame_bytes;
+        s_sources[spec].stored_bytes = (uint32_t)stored_stride;
         s_sources[spec].memory = NULL;
         s_sources[spec].frames = (uint16_t)frames;
         s_sources[spec].cache = cache;
         s_sources[spec].raw = (lw_asset_raw_file_t){
-            s_file_paths[file_slot], offset, (uint32_t)frame_bytes, (uint16_t)frames};
+            s_file_paths[file_slot], offset, (uint32_t)file_stride, (uint16_t)frames};
         s_specs[spec] = (lw_asset_spec_t){s_sources[spec].id, (uint16_t)width,
                                           (uint16_t)height, (uint16_t)frames, (int16_t)anchor_x,
                                           (int16_t)anchor_y, LV_COLOR_FORMAT_RGB565A8,
@@ -573,7 +640,11 @@ lw_pack_status_t lw_pack_registry_add_embedded(const uint8_t *data, size_t size,
                                        * bbox would instead resize the object to
                                        * scale_px(width) and shift every actor. */
                                       0, 0, 0, 0, 0,
-                                      read_frame, &s_sources[spec]};
+                                      read_frame, &s_sources[spec],
+                                      /* No cache behind a flash-mapped pack, so
+                                       * there is nothing to borrow, nothing to
+                                       * unborrow and nothing to read ahead. */
+                                      NULL, NULL, NULL};
 
     for (unsigned k = 0; k < frames; k++) {
         s_sequences[slot][existing][k] = (uint16_t)k;

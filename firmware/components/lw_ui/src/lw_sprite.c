@@ -214,7 +214,10 @@ bool lw_sprite_play(lw_sprite_t *s, const lw_clip_t *clip)
      * frame every 50 ms, and a demand read of one frame from the card measured
      * 60-75 ms on the board, so waiting for it on the draw path can never keep
      * up; asking for the whole clip up front is what turns "every frame misses"
-     * into "the first frame misses". */
+     * into "the first frame misses". A two-frame look-ahead variant was tried
+     * and reverted: it measured the same average and a worse tail on the RPG
+     * page, and it starved the pet page (whose clips advance every 125 ms) down
+     * to roughly one tick per 600 ms. */
     if (clip->count > 1) {
         const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);
         if (spec && spec->prefetch) {

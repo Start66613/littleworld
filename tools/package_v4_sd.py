@@ -191,6 +191,11 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
     kind = struct.unpack_from("<H", data, 14)[0]
     trailer_bytes = 0
     payload_end = len(data)
+    # Frame stride as stored in the file. The trailer's reserved u16 carries it:
+    # 0 means raw frames (every pack before V4.6), non-zero means the file holds
+    # stride-sized deflate blocks (tools/lwp_compress.py) and clip offsets and
+    # the file length must be measured in stride units, not frame units.
+    stored_stride = 0
     if kind == PACK_TRAILER_GEOMETRY:
         trailer_bytes = PACK_TRAILER_HEADER + PACK_TRAILER_RECORD * clips
         payload_start = PACK_HEADER + PACK_RECORD * clips
@@ -200,6 +205,14 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
         if (data[start : start + 8] != PACK_TRAILER_MAGIC
                 or struct.unpack_from("<H", data, start + 8)[0] != clips):
             return problems + [f"{path.name}: 几何 trailer 头错误（魔数或 clip 数）"], info
+        stored_stride = struct.unpack_from("<H", data, start + 10)[0]
+        if stored_stride:
+            if stored_stride < 64 or stored_stride > PACK_MAX_FRAME_BYTES:
+                problems.append(f"{path.name}: 压缩块尺寸 {stored_stride} 越界")
+            elif stored_stride > frame_bytes:
+                problems.append(
+                    f"{path.name}: 压缩块尺寸 {stored_stride} 不小于原始帧 {frame_bytes}"
+                )
         for i in range(clips):
             rec = start + PACK_TRAILER_HEADER + i * PACK_TRAILER_RECORD
             bx, by, bw, bh, prescaled = struct.unpack_from("<HHHHH", data, rec)
@@ -215,6 +228,7 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
 
     total_frames = 0
     names: list[str] = []
+    file_stride = stored_stride or frame_bytes
     for i in range(clips):
         off = PACK_HEADER + i * PACK_RECORD
         if off + PACK_RECORD > len(data):
@@ -241,13 +255,13 @@ def check_lwp(path: Path) -> tuple[list[str], dict]:
             )
         if offset < PACK_HEADER + PACK_RECORD * clips:
             problems.append(f"{path.name}: clip {name!r} 数据偏移 {offset} 落入记录区")
-        elif offset + frames * frame_bytes > payload_end:
+        elif offset + frames * file_stride > payload_end:
             problems.append(
-                f"{path.name}: clip {name!r} 数据越界（{offset}+{frames}x{frame_bytes}）"
+                f"{path.name}: clip {name!r} 数据越界（{offset}+{frames}x{file_stride}）"
             )
         total_frames += frames
 
-    expected = (PACK_HEADER + PACK_RECORD * clips + total_frames * frame_bytes
+    expected = (PACK_HEADER + PACK_RECORD * clips + total_frames * file_stride
                 + trailer_bytes)
     if len(data) != expected:
         problems.append(
