@@ -29,6 +29,7 @@
 
 #include "bsp/esp-bsp.h"
 #include "esp_console.h"
+#include "sdmmc_cmd.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -610,6 +611,116 @@ static int cmd_fault(int argc, char **argv)
 }
 #endif /* CONFIG_LW_FAULT_INJECT */
 
+/* One 256x256 RGB565A8 frame at 1.125x: the unit the sprite cache reads. */
+#define SDS_FRAME_BYTES 97512u
+#define SDS_FRAMES 8u
+#define SDS_MAX_CHUNK (96u * 1024u)
+
+/* How fast can this card actually deliver a frame?
+ *
+ * Everything about the walking animation depends on the answer: at 50 ms per
+ * frame a 97 KiB frame needs 1950 KB/s, so if the card delivers less, no amount
+ * of caching in the engine can keep up and the honest fix is to cut bytes per
+ * second rather than add buffers.
+ *
+ * The readings separate what could be slow:
+ *   chunk=<n>   one open, sequential reads of <n> bytes. If throughput rises
+ *               with the chunk size, transfer setup dominates and the fix is
+ *               bigger reads; if it is flat, the bus is simply that slow.
+ *   reopen      one open/seek/read/close per frame, the cache's shape.
+ * The destination is PSRAM, like the frame cache: a 32 KiB internal DMA buffer
+ * could not even be allocated once the UI was up (largest internal block was
+ * 6144 B), so internal staging is not an option the engine can use.
+ */
+static size_t sd_read_chunks(const char *path, unsigned char *buf, size_t chunk, size_t total)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f) return 0;
+    size_t got = 0;
+    while (got < total) {
+        size_t want = (total - got) < chunk ? (total - got) : chunk;
+        size_t n = fread(buf, 1, want, f);
+        if (!n) break;
+        got += n;
+    }
+    fclose(f);
+    return got;
+}
+
+static int cmd_sdspeed(int argc, char **argv)
+{
+    const char *path = argc > 1 ? argv[1] : "/sdcard/littleworld/male.lwp";
+    const size_t total = (size_t)SDS_FRAME_BYTES * SDS_FRAMES;
+    /* Not static: a 95 KiB .bss buffer lives in internal DRAM and starved
+     * bsp_display_lcd_init() on the real board (assert at
+     * esp32_p4_wifi6_touch_lcd_7b.c:627), which rebooted the firmware. */
+    unsigned char *buf = heap_caps_malloc(SDS_MAX_CHUNK, MALLOC_CAP_SPIRAM);
+    if (bsp_sdcard) {
+        printf("sdspeed: card name=%s freq=%u kHz width=%d\n", bsp_sdcard->cid.name,
+               (unsigned)bsp_sdcard->real_freq_khz, (int)bsp_sdcard->log_bus_width);
+    } else {
+        printf("sdspeed: no card handle\n");
+    }
+    if (!buf) { printf("sdspeed: no PSRAM buffer\n"); return 1; }
+    printf("sdspeed: %s  %u frames of %u B = %u B\n", path, (unsigned)SDS_FRAMES,
+           (unsigned)SDS_FRAME_BYTES, (unsigned)total);
+
+    static const size_t sizes[] = {4096u, 16384u, 32768u, 65536u, SDS_FRAME_BYTES};
+    for (unsigned i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
+        int64_t t0 = esp_timer_get_time();
+        size_t got = sd_read_chunks(path, buf, sizes[i], total);
+        int64_t t1 = esp_timer_get_time();
+        unsigned ms = (unsigned)((t1 - t0) / 1000);
+        printf("sdspeed: chunk=%-6u %u B in %u ms -> %u KB/s%s\n", (unsigned)sizes[i],
+               (unsigned)got, ms, ms ? (unsigned)(got / ms) : 0,
+               got == total ? "" : " (short)");
+    }
+
+    size_t c = 0;
+    int64_t t2 = esp_timer_get_time();
+    for (unsigned i = 0; i < SDS_FRAMES; i++) {
+        FILE *f = fopen(path, "rb");
+        if (!f) break;
+        if (fseek(f, (long)(4096 + i * SDS_FRAME_BYTES), SEEK_SET) != 0) { fclose(f); break; }
+        c += fread(buf, 1, SDS_FRAME_BYTES, f);
+        fclose(f);
+    }
+    int64_t t3 = esp_timer_get_time();
+    printf("sdspeed: reopen/frame %u B in %u ms -> %u us per 97 KiB frame\n",
+           (unsigned)c, (unsigned)((t3 - t2) / 1000), (unsigned)((t3 - t2) / 1000 / 8));
+    printf("sdspeed: a 50 ms/frame budget at 97 KiB needs 1950 KB/s\n");
+    heap_caps_free(buf);
+    return 0;
+}
+/* Raw block reads, straight to the driver, bypassing FATFS.
+ *
+ * If these are fast while sdspeed is slow, the file layer is the problem; if
+ * they are also ~440 KB/s the bus itself is delivering that, and no file-system
+ * tuning can help. A 2-bit slot at 40 MHz should reach megabytes per second.
+ */
+static int cmd_sdblk(int argc, char **argv)
+{
+    (void)argc; (void)argv;
+    unsigned char *buf = heap_caps_malloc(SDS_MAX_CHUNK, MALLOC_CAP_SPIRAM);
+    if (!buf) { printf("sdblk: no PSRAM buffer\n"); return 1; }
+    if (!bsp_sdcard) { printf("sdblk: no card handle\n"); heap_caps_free(buf); return 1; }
+    printf("sdblk: card freq=%u kHz width=%d\n", (unsigned)bsp_sdcard->real_freq_khz,
+           (int)bsp_sdcard->log_bus_width);
+    static const size_t blocks[] = {8u, 64u, 128u, 192u};
+    for (unsigned i = 0; i < sizeof(blocks) / sizeof(blocks[0]); i++) {
+        size_t n = blocks[i] * 512u;
+        if (n > SDS_MAX_CHUNK) n = SDS_MAX_CHUNK;
+        size_t count = n / 512u;
+        int64_t t0 = esp_timer_get_time();
+        esp_err_t err = sdmmc_read_sectors(bsp_sdcard, buf, 4096u / 512u, count);
+        int64_t t1 = esp_timer_get_time();
+        unsigned ms = (unsigned)((t1 - t0) / 1000);
+        printf("sdblk: %u blocks (%u B) %s in %u ms -> %u KB/s\n", (unsigned)count, (unsigned)n,
+               err == ESP_OK ? "ok" : "ERR", ms, ms ? (unsigned)(n / ms) : 0);
+    }
+    heap_caps_free(buf);
+    return 0;
+}
 bool lw_capture_console_start(void)
 {
     esp_console_repl_t *repl = NULL;
@@ -661,6 +772,12 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_anim = { .command = "anim",
                                        .help = "actor clip, frame index and model clock",
                                        .func = &cmd_anim };
+    const esp_console_cmd_t c_sdspeed = { .command = "sdspeed",
+                                          .help = "sdspeed [file]: card read rate, reopen vs streaming",
+                                          .func = &cmd_sdspeed };
+    const esp_console_cmd_t c_sdblk = { .command = "sdblk", .help = "sdblk: raw block read rate, no FATFS", .func = &cmd_sdblk };
+    esp_console_cmd_register(&c_sdblk);
+    esp_console_cmd_register(&c_sdspeed);
     esp_console_cmd_register(&c_diag);
     esp_console_cmd_register(&c_diagjson);
     esp_console_cmd_register(&c_diagerr);

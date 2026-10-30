@@ -45,6 +45,20 @@ esp_err_t lw_sd_mount_existing(void)
         s_dma_staging = heap_caps_malloc(want, MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
         if (s_dma_staging) { s_dma_staging_bytes = want; break; }
     }
+    /* Internal RAM shrank to 16 KiB by the time the card mounts, and every
+     * transfer through a small bounce buffer is a separate SDMMC transaction:
+     * the measured cost of a 4 KiB read was 6 ms and of 32 KiB 14 ms, so the
+     * bounce size is a throughput knob, not just a safety net. PSRAM is
+     * DMA-capable on this chip through the cache, so take the larger block
+     * there rather than accept the small internal one. */
+    if (s_dma_staging_bytes < LW_SD_DMA_CHUNK_MAX) {
+        void *psram = heap_caps_malloc(LW_SD_DMA_CHUNK_MAX, MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA);
+        if (psram) {
+            heap_caps_free(s_dma_staging);
+            s_dma_staging = psram;
+            s_dma_staging_bytes = LW_SD_DMA_CHUNK_MAX;
+        }
+    }
     if (s_dma_staging) {
         bsp_sdcard->host.dma_aligned_buffer = s_dma_staging;
         ESP_LOGI(TAG, "sdmmc staging buffer: %u B", (unsigned)s_dma_staging_bytes);

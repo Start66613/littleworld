@@ -296,6 +296,13 @@ lw_rpg_view_t *lw_rpg_view_create(lv_obj_t *parent,const lw_rpg_view_host_t *hos
         if (clip) { v->players[i]=lw_sprite_create(v->map,0,0,288); if (v->players[i]) { lw_sprite_set_external_clock(v->players[i],true); lw_sprite_set_pixel_mode(v->players[i]); lw_sprite_play(v->players[i],clip); v->clips[i]=clip; v->actor[i]=lw_sprite_object(v->players[i]); } }
         if (!v->actor[i]) v->actor[i]=lw_os_label(v->map,i ? "千千\n资源待载" : "男方\n资源待载",&lw_font_18,0,0,80,colors(v)->text);
     }
+    /* Read the head of every clip an actor can enter while the user is still
+     * deciding where to tap. A direction change re-enters at frame 0, and a
+     * demand read of that frame measured 60-75 ms on the card - that single
+     * frame is the hitch the user sees when the actor turns. */
+    static const char *const walk_names[]={"walk_down","walk_left","walk_right","walk_up"};
+    for (unsigned i=0;i<2;i++)
+        for (unsigned d=0;d<4;d++) lw_sprite_prefetch_head(resident_clip(v,i,walk_names[d]));
     lv_obj_t *side=lw_os_box(v->root,744,65,254,112,0xf5e4c8,8,210);if(lw_skin_panel(side,SK_CC_PANEL,254,112,12))lv_obj_set_style_bg_opa(side,0,0);
     v->progress=lw_os_label(side,"",&lw_font_18,16,12,126,colors(v)->text);
     for (unsigned i=0;i<3;i++) { v->badges[i]=lw_os_box(side,16+(int)i*38,74,28,28,colors(v)->soft,8,255); lw_os_icon(v->badges[i],i==0 ? OS_I_ALBUM : i==1 ? OS_I_MAIL : OS_I_LEAF,4,4,20,colors(v)->deep); }

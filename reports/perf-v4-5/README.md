@@ -20,6 +20,7 @@
 | RPG 站立 | 119 ms | **20 ms** |
 | **RPG 走路** | **89–117 ms** | **23 ms**（`max 344 ms`，512 帧中 7 帧 > 25 ms） |
 | 宠物 | 251 ms | **20 ms**（per-clip bbox 进卡后） |
+| 卡吞吐（新量） | 438 KB/s（FATFS 实测） | **1,866 KB/s**（bounce buffer 16 KiB→64 KiB PSRAM） |
 | 开机动画 | 5 帧 / 2047 ms | **24 帧 / 2025 ms（11 fps）** |
 | 点击（RPG 22 次） | 未测 | **合计 8 ms，单次 max 1 ms** |
 | 30 分钟 soak | 未做 | 见 `FINAL_BENCHMARK.md` §9 |

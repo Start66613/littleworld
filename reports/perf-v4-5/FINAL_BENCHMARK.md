@@ -233,3 +233,56 @@ rpg perf: refill calls=286 borrowed=286
 
 V4.4 那轮 32.1 分钟长测的问题是 `misrouted: rpg->id 0 ×7`（7/161 次没进到目标页）；
 本轮 **0/152**，因为 RPG 页这次真的能打开（见 `BOOT_OPTIMIZATION.md` §7.5）。
+
+---
+
+## 10. 卡的实际吞吐（新增 `sdspeed` / `sdblk` 探针）
+
+「走路偶尔卡一下」的最后一段路全在卡上，所以先量卡。两个命令都留在固件里
+（`sdspeed [file]`、`sdblk`），输出如下。
+
+### 10.1 修复前的读数
+
+```
+sdspeed: card name=SK64G freq=40000 kHz width=2
+sdspeed: chunk=4096   780096 B in 2246 ms -> 347 KB/s
+sdspeed: chunk=97512  780096 B in 1781 ms -> 438 KB/s
+sdspeed: reopen/frame 780096 B in 1840 ms -> 230 ms per 97 KiB frame
+```
+
+- 换再大的读块也**不涨**（347 → 438 KB/s 就饱和）⇒ 不是「读得太碎」，是每次传输有固定开销。
+- `sdblk`（绕开 FATFS 直接 `sdmmc_read_sectors`）：4 KiB 6 ms / 32 KiB 14 ms / 96 KiB 92 ms
+  ⇒ **固定开销约 4–5 ms/次**，块越大越摊薄。
+- 结论：这段成本来自 **SDMMC 每次搬运都要经过一个 16 KiB 的 bounce buffer**，
+  而 `lw_sd.c` 只在内部 RAM 里挑得到 16 KiB（挂载时内部最大连续块已掉到 30 KiB 以下）。
+
+### 10.2 修复：bounce buffer 放到 PSRAM，取 64 KiB
+
+`firmware/components/lw_storage/src/lw_sd.c` 原来只从内部 RAM 里挑
+（`64 KiB → 32 → 16 → 8`），实测只拿到 16 KiB。改成内部不够时再要一块
+**PSRAM 的 64 KiB**（P4 的 PSRAM 经 cache 可 DMA）替换掉小的那块。
+
+```
+I (1660) lw_sd: sdmmc staging buffer: 65536 B
+sdspeed: chunk=4096   780096 B in  418 ms -> 1866 KB/s
+sdspeed: chunk=97512  780096 B in  415 ms -> 1879 KB/s
+sdspeed: reopen/frame 780096 B in  429 ms ->  53 ms per 97 KiB frame
+```
+
+**4.3× 吞吐**，单帧点播从 **230 ms 降到 53 ms**。顺带的副产物：那块 64 KiB 不再占内部
+RAM，首屏后内部可用从 **6,347 B 回到 39,187 B**（`boot ram after ui`）。
+
+### 10.3 为什么走路还是偶尔卡
+
+50 ms 一帧、97 KiB 一帧 ⇒ 需要 **1950 KB/s**，现在实测 **1879 KB/s**（单流）。
+而 RPG 里一次点击会让**两个角色**同时走路（主角 + 跟随者），需求翻倍到约 3900 KB/s。
+所以：
+
+- **稳态同方向走**：预取把整段 clip 排进队列，1.6 MB 在 800 ms 的点击间隙里读得完，
+  命中率够，`avg 26 ms`。
+- **刚换方向的头几帧**：新 clip 才开始预取，点播 3–4 帧 × 53 ms ≈ 200 ms，
+  这就是 `max 289 ms` 那个尖峰。
+
+按 4.5 轮的约束，这里**没有**用「再扩缓存」解决（预算仍是 12 MiB，
+槽位仍是 64）；要真正消掉这个尖峰只剩两条路：把卡跑满 4 线（板子当前协商到
+`width=2`，槽位请求的是 4 线）或降低走路帧率（属于降动画质量，不做）。

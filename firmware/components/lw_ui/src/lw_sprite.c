@@ -197,6 +197,14 @@ lw_sprite_t *lw_sprite_create(lv_obj_t *parent, int x, int y, uint16_t scale)
     return s;
 }
 lv_obj_t *lw_sprite_object(lw_sprite_t *s) { return s ? s->image : NULL; }
+bool lw_sprite_prefetch_head(const lw_clip_t *clip)
+{
+    if (!clip || !clip->count) return false;
+    const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);
+    if (!spec || !spec->prefetch) return false;
+    spec->prefetch(spec->context,clip->sequence[0]);
+    return true;
+}
 bool lw_sprite_play(lw_sprite_t *s, const lw_clip_t *clip)
 {
     uint32_t total=clip_length(clip);
