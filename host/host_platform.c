@@ -14,6 +14,37 @@ static char s_base_dir[MAX_PATH];
 
 static bool host_get_time(struct tm *out)
 {
+    /* Screenshot regressions compare whole frames, and the ambience tint is a
+     * function of the local hour, so a run at 18:00 and a run at 23:00 differ by
+     * ~25 levels on every pixel even when nothing changed. LW_FAKE_TIME pins the
+     * hour ("HH:MM") for the harness; without it the real clock is used. */
+    static int fake_hour = -1, fake_minute = 0, fake_parsed = 0;
+    if (!fake_parsed) {
+        fake_parsed = 1;
+        const char *text = getenv("LW_FAKE_TIME");
+        if (text != NULL && text[0] != '\0') {
+            int hour = 0, minute = 0;
+            if (sscanf(text, "%d:%d", &hour, &minute) == 2 && hour >= 0 && hour < 24 &&
+                minute >= 0 && minute < 60) {
+                fake_hour = hour;
+                fake_minute = minute;
+            }
+        }
+    }
+    if (out == NULL) {
+        return false;
+    }
+    if (fake_hour >= 0) {
+        struct tm pinned;
+        memset(&pinned, 0, sizeof(pinned));
+        pinned.tm_year = 126; /* 2026, so lw_ambience_localtime()'s epoch check passes */
+        pinned.tm_mon = 0;
+        pinned.tm_mday = 1;
+        pinned.tm_hour = fake_hour;
+        pinned.tm_min = fake_minute;
+        *out = pinned;
+        return true;
+    }
     time_t now = time(NULL);
     if (now <= 0) {
         return false;

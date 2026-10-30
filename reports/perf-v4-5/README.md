@@ -12,20 +12,25 @@
 宿主实测 `male.idle` 0.426 → 0.077 ms/帧、`couple.seated` 0.651 → 0.091 ms/帧，
 且**与现状逐像素完全一致**（`diff px = 0`）。**
 
-### 真机结果（2026-10-29 烧录后实测）
+### 真机结果（2026-10-30 最终镜像：`0x241140`，per-clip 烘焙卡，16 KB 主任务栈）
 
 | 页面 | V4.4 | **V4.5** |
 |---|---|---|
 | 桌面 / 世界 / 音乐 | 21 / 21 / 20 ms | **20 / 20 / 20 ms** |
 | RPG 站立 | 119 ms | **20 ms** |
-| **RPG 走路** | **89–117 ms** | **20–21 ms**（`max 185 ms`，777 帧中 3 帧 > 25 ms） |
-| 宠物 | 251 ms | **53–65 ms**（per-clip 包未写卡，见 `FINAL_BENCHMARK.md` §6） |
+| **RPG 走路** | **89–117 ms** | **23 ms**（`max 344 ms`，512 帧中 7 帧 > 25 ms） |
+| 宠物 | 251 ms | **20 ms**（per-clip bbox 进卡后） |
 | 开机动画 | 5 帧 / 2047 ms | **24 帧 / 2025 ms（11 fps）** |
 | 点击（RPG 22 次） | 未测 | **合计 8 ms，单次 max 1 ms** |
+| 30 分钟 soak | 未做 | 见 `FINAL_BENCHMARK.md` §9 |
 
 走路这一项是用户指出的验收盲区：「RPG界面你得让人物走起来测啊，你人物走起来就
 掉帧了」。定位过程与修复见 `RPG_ACCEPTANCE.md` §3.6——真凶不是绘制，而是
 **未命中的同步 SD 读（60–75 ms/帧）加上走路工作集正好等于当时的缓存槽位数**。
+
+最后一轮还暴露了一个与「快慢」无关的真问题：首屏构建之后内部 RAM 只剩 23 B，
+RPG 页因此打不开、控制台任务建不出来、板子在启动末尾 panic。把它归零的过程
+（控制台提到首屏前 + 主任务栈 32→16 KB）见 `BOOT_OPTIMIZATION.md` §7。
 
 V4.5 之前的所有优化（扩缓存、加守卫、遮挡剔除）都没有触及这条路径；
 V4.4 的 `C-1`（缓存 4→12 MiB）只把宠物页 I/O 归零，剩下的 86% 墙钟仍是绘制。
@@ -156,8 +161,8 @@ New-Item -ItemType Directory -Force -Path build\v45-assets\shot-x | Out-Null
 | `tools/run_core_regression.ps1` | Duo **82** / RPG **336** / Storage **33** — `CORE REGRESSION PASSED` |
 | `tools/run_v4_resource_tests.ps1` | **261 checks, 0 failure** |
 | `--os-v2-test`（整页） | **752 checks, 1 failure**（既有 `greeting naturally returns to idle clips`，HEAD 上同样失败） |
-| 156 张整页截图 vs HEAD | **156 identical, 0 differ** |
-| ESP32-P4 固件构建 | `little_world.bin` **0x240470**（2,359,408 B），分区余 62% |
+| 156 张整页截图 vs HEAD | **156 identical, 0 differ**（用 `LW_FAKE_TIME=19:30` 钉住相位后同条件复跑，两次逐字节一致） |
+| ESP32-P4 固件构建 | `little_world.bin` **0x241140**（2,363,712 B），分区余 62% |
 
 ## 三个教训（写在这里，避免下一轮重复踩）
 
@@ -169,3 +174,13 @@ New-Item -ItemType Directory -Force -Path build\v45-assets\shot-x | Out-Null
 3. **`lv_obj_set_size` 不改变 `lv_image` 的绘制尺寸。** `img->w/img->h` 缓存的是
    **源图尺寸**，`LV_IMAGE_ALIGN_CENTER` 下对象尺寸只影响 `coords`（进而影响裁剪），
    唯一能平移绘制落点的是 `lv_image_set_offset`。
+4. **首屏之后内部 RAM 只剩几个 KB，是这台机器的绑定约束。** SD 挂载 + 六包 53 KB、
+   首屏再 38 KB，`ui` 之后 `internal` 只剩 23 B；控制台任务、RPG 页都会因此创建失败，
+   而失败路径会在 `printf` 取 stdout 递归锁时踩坏启动状态，看起来像「栈保护/abort」。
+   `BOOT_OPTIMIZATION.md` §7 有完整量化。
+5. **截图回归必须先钉住 ambience 相位。** 色调层不透明度是本地时钟的函数，
+   同一份代码在 18:00 和 23:00 会得到整屏差 25 级的"回归失败"。现在用
+   `LW_FAKE_TIME=19:30` 固定（`host/host_platform.c`），同条件两次跑 156/156 逐字节一致。
+6. **`git stash -u` 会删掉未跟踪的日志目录。** 30 分钟 soak 的日志写在
+   `reports/logs/v45/`（未跟踪），一次 `stash push -u` 直接让正在跑的 soak
+   崩在 `Add-Content: 未能找到路径`。做长测时不要 stash，或把日志放到 `build/`。

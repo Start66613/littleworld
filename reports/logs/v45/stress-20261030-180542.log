@@ -1,0 +1,160 @@
+﻿# V4.4 soak: 30 minutes, port COM5, started 2026-10-30T18:05:42.3699394+08:00
+18:05:51  #  1   page desktop  (id 0)  heap 13326479  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:06:02  #  2   page world    (id 1)  heap 13322583  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:06:14  #  3   page music    (id 6)  heap 13011603  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:06:27  #  4   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:06:42  #  5   page rpg      (id 9)  heap 12075035  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 319  err none
+18:06:54  #  6   page memories (id 5)  heap 13599975  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:07:03  #  7   page desktop  (id 0)  heap 13326379  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 310  err none
+18:07:14  #  8   page world    (id 1)  heap 13322527  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 312  err none
+18:07:25  #  9   page music    (id 6)  heap 13011643  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:07:39  # 10   page pet      (id 8)  heap 11915471  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:07:53  # 11   page rpg      (id 9)  heap 12075083  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:08:05  # 12   page memories (id 5)  heap 13599923  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:08:14  # 13   page desktop  (id 0)  heap 13326447  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:08:26  # 14   page world    (id 1)  heap 13322567  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:08:37  # 15   page music    (id 6)  heap 13011571  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:08:50  # 16   page pet      (id 8)  heap 11915527  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:09:05  # 17   page rpg      (id 9)  heap 12075087  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:09:17  # 18   page memories (id 5)  heap 13599951  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:09:26  # 19   page desktop  (id 0)  heap 13326495  psram 13295492  resident 11688324  evict 286  sched 20/49 ms  ticks 312  err none
+18:09:37  # 20   page world    (id 1)  heap 13322547  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:09:48  # 21   page music    (id 6)  heap 13011595  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:10:02  # 22   page pet      (id 8)  heap 11914815  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:10:16  # 23   page rpg      (id 9)  heap 12075115  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:10:28  # 24   page memories (id 5)  heap 13599943  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:10:37  # 25   page desktop  (id 0)  heap 13326415  psram 13295492  resident 11688324  evict 286  sched 20/51 ms  ticks 309  err none
+18:10:48  # 26   page world    (id 1)  heap 13322539  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:10:59  # 27   page music    (id 6)  heap 13011571  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 309  err none
+18:11:13  # 28   page pet      (id 8)  heap 11915471  psram 11902848  resident 11688324  evict 286  sched 20/21 ms  ticks 314  err none
+18:11:27  # 29   page rpg      (id 9)  heap 12075023  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:11:39  # 30   page memories (id 5)  heap 13599867  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:11:48  # 31   page desktop  (id 0)  heap 13326427  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 311  err none
+18:12:00  # 32   page world    (id 1)  heap 13322559  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:12:11  # 33   page music    (id 6)  heap 13011563  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:12:24  # 34   page pet      (id 8)  heap 11915419  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:12:39  # 35   page rpg      (id 9)  heap 12075083  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:12:51  # 36   page memories (id 5)  heap 13599899  psram 13565836  resident 11688324  evict 286  sched 20/23 ms  ticks 314  err none
+18:13:00  # 37   page desktop  (id 0)  heap 13326463  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 309  err none
+18:13:11  # 38   page world    (id 1)  heap 13322547  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:13:23  # 39   page music    (id 6)  heap 13011551  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:13:36  # 40   page pet      (id 8)  heap 11915419  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:13:50  # 41   page rpg      (id 9)  heap 12075027  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 312  err none
+18:14:03  # 42   page memories (id 5)  heap 13599919  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:14:12  # 43   page desktop  (id 0)  heap 13326435  psram 13295492  resident 11688324  evict 286  sched 20/49 ms  ticks 312  err none
+18:14:23  # 44   page world    (id 1)  heap 13322539  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 312  err none
+18:14:34  # 45   page music    (id 6)  heap 13011539  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:14:47  # 46   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/21 ms  ticks 316  err none
+18:15:02  # 47   page rpg      (id 9)  heap 12075111  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:15:14  # 48   page memories (id 5)  heap 13599935  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:15:23  # 49   page desktop  (id 0)  heap 13326447  psram 13295492  resident 11688324  evict 286  sched 20/51 ms  ticks 310  err none
+18:15:34  # 50   page world    (id 1)  heap 13322531  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:15:45  # 51   page music    (id 6)  heap 13011579  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:15:59  # 52   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:16:13  # 53   page rpg      (id 9)  heap 12075059  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:16:26  # 54   page memories (id 5)  heap 13599927  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:16:35  # 55   page desktop  (id 0)  heap 13326423  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 309  err none
+18:16:46  # 56   page world    (id 1)  heap 13322547  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:16:57  # 57   page music    (id 6)  heap 13011551  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:17:11  # 58   page pet      (id 8)  heap 11915479  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:17:25  # 59   page rpg      (id 9)  heap 12075111  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:17:37  # 60   page memories (id 5)  heap 13599879  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:17:46  # 61   page desktop  (id 0)  heap 13326419  psram 13295492  resident 11688324  evict 286  sched 20/49 ms  ticks 311  err none
+18:17:58  # 62   page world    (id 1)  heap 13322551  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:18:09  # 63   page music    (id 6)  heap 13011587  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:18:22  # 64   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:18:37  # 65   page rpg      (id 9)  heap 12075067  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:18:49  # 66   page memories (id 5)  heap 13599915  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:18:58  # 67   page desktop  (id 0)  heap 13326487  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 309  err none
+18:19:09  # 68   page world    (id 1)  heap 13322519  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 308  err none
+18:19:20  # 69   page music    (id 6)  heap 13011563  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:19:33  # 70   page pet      (id 8)  heap 11915491  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:19:48  # 71   page rpg      (id 9)  heap 12075087  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:20:00  # 72   page memories (id 5)  heap 13599919  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:20:09  # 73   page desktop  (id 0)  heap 13326471  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 308  err none
+18:20:20  # 74   page world    (id 1)  heap 13322547  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:20:31  # 75   page music    (id 6)  heap 13011555  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:20:45  # 76   page pet      (id 8)  heap 11915419  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:20:59  # 77   page rpg      (id 9)  heap 12075043  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:21:11  # 78   page memories (id 5)  heap 13599923  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 311  err none
+18:21:20  # 79   page desktop  (id 0)  heap 13326435  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:21:32  # 80   page world    (id 1)  heap 13322159  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:21:43  # 81   page music    (id 6)  heap 13011551  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:21:56  # 82   page pet      (id 8)  heap 11915431  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:22:11  # 83   page rpg      (id 9)  heap 12075059  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:22:23  # 84   page memories (id 5)  heap 13599871  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:22:32  # 85   page desktop  (id 0)  heap 13326451  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:22:43  # 86   page world    (id 1)  heap 13322491  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 309  err none
+18:22:54  # 87   page music    (id 6)  heap 13011539  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:23:08  # 88   page pet      (id 8)  heap 11915475  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:23:22  # 89   page rpg      (id 9)  heap 12075043  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 311  err none
+18:23:34  # 90   page memories (id 5)  heap 13599907  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:23:43  # 91   page desktop  (id 0)  heap 13326427  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:23:55  # 92   page world    (id 1)  heap 13322543  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:24:06  # 93   page music    (id 6)  heap 13011559  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:24:19  # 94   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:24:34  # 95   page rpg      (id 9)  heap 12075043  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:24:46  # 96   page memories (id 5)  heap 13599927  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 311  err none
+18:24:55  # 97   page desktop  (id 0)  heap 13326423  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:25:06  # 98   page world    (id 1)  heap 13322559  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 311  err none
+18:25:17  # 99   page music    (id 6)  heap 13011563  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:25:30  #100   page pet      (id 8)  heap 11915503  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:25:45  #101   page rpg      (id 9)  heap 12075055  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:25:57  #102   page memories (id 5)  heap 13599915  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:26:06  #103   page desktop  (id 0)  heap 13326467  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 308  err none
+18:26:17  #104   page world    (id 1)  heap 13322563  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:26:29  #105   page music    (id 6)  heap 13011619  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:26:42  #106   page pet      (id 8)  heap 11915435  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:26:57  #107   page rpg      (id 9)  heap 12075059  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:27:09  #108   page memories (id 5)  heap 13599911  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:27:18  #109   page desktop  (id 0)  heap 13326419  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:27:29  #110   page world    (id 1)  heap 13322563  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:27:40  #111   page music    (id 6)  heap 13011591  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:27:54  #112   page pet      (id 8)  heap 11915467  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:28:08  #113   page rpg      (id 9)  heap 12075055  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:28:20  #114   page memories (id 5)  heap 13599939  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:28:30  #115   page desktop  (id 0)  heap 13326471  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 309  err none
+18:28:41  #116   page world    (id 1)  heap 13322611  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:28:52  #117   page music    (id 6)  heap 13011571  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:29:05  #118   page pet      (id 8)  heap 11915491  psram 11902848  resident 11688324  evict 286  sched 20/21 ms  ticks 315  err none
+18:29:20  #119   page rpg      (id 9)  heap 12075047  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:29:32  #120   page memories (id 5)  heap 13599991  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:29:41  #121   page desktop  (id 0)  heap 13326419  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 313  err none
+18:29:52  #122   page world    (id 1)  heap 13322575  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:30:03  #123   page music    (id 6)  heap 13011619  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+18:30:17  #124   page pet      (id 8)  heap 11915491  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:30:31  #125   page rpg      (id 9)  heap 12075067  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:30:43  #126   page memories (id 5)  heap 13599943  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 312  err none
+18:30:52  #127   page desktop  (id 0)  heap 13326467  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 312  err none
+18:31:04  #128   page world    (id 1)  heap 13322571  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:31:15  #129   page music    (id 6)  heap 13011547  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:31:28  #130   page pet      (id 8)  heap 11915491  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 311  err none
+18:31:43  #131   page rpg      (id 9)  heap 12075067  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:31:55  #132   page memories (id 5)  heap 13599935  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:32:04  #133   page desktop  (id 0)  heap 13326431  psram 13295492  resident 11688324  evict 286  sched 20/49 ms  ticks 310  err none
+18:32:15  #134   page world    (id 1)  heap 13322539  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:32:26  #135   page music    (id 6)  heap 13011571  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 310  err none
+18:32:40  #136   page pet      (id 8)  heap 11915479  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:32:54  #137   page rpg      (id 9)  heap 12075091  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:33:06  #138   page memories (id 5)  heap 13599947  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 317  err none
+18:33:15  #139   page desktop  (id 0)  heap 13326467  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 305  err none
+18:33:27  #140   page world    (id 1)  heap 13322567  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:33:38  #141   page music    (id 6)  heap 13011611  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:33:51  #142   page pet      (id 8)  heap 11915475  psram 11902848  resident 11688324  evict 286  sched 20/20 ms  ticks 313  err none
+18:34:06  #143   page rpg      (id 9)  heap 12075075  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:34:18  #144   page memories (id 5)  heap 13599911  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:34:27  #145   page desktop  (id 0)  heap 13326467  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 310  err none
+18:34:38  #146   page world    (id 1)  heap 13322579  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 314  err none
+18:34:49  #147   page music    (id 6)  heap 13011579  psram 12976008  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:35:03  #148   page pet      (id 8)  heap 11915435  psram 11902848  resident 11688324  evict 286  sched 20/21 ms  ticks 313  err none
+18:35:17  #149   page rpg      (id 9)  heap 12075063  psram 12050304  resident 11688324  evict 286  sched 20/20 ms  ticks 315  err none
+18:35:29  #150   page memories (id 5)  heap 13599927  psram 13565836  resident 11688324  evict 286  sched 20/20 ms  ticks 318  err none
+18:35:38  #151   page desktop  (id 0)  heap 13326463  psram 13295492  resident 11688324  evict 286  sched 20/50 ms  ticks 311  err none
+18:35:50  #152   page world    (id 1)  heap 13322543  psram 13295492  resident 11688324  evict 286  sched 20/20 ms  ticks 316  err none
+# soak finished after 30.1 minutes, 152 samples
+heap_free first=13326479 last=13322543 delta=-3936 min=11914815
+psram_free first=13295492 last=13295492 delta=0
+cache_evictions first=286 last=286
+samples with non-none last_error: 0
+samples with safe_mode true: 0
+samples that did not reach the intended page: 0 of 152

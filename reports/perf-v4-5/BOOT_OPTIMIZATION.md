@@ -311,20 +311,36 @@ ESP_LOGI(TAG, "boot ram after %s: stack %u B free, internal %u B free, largest %
 正常打印，`status` 可应答，20 秒观察无重启（`boots=0`），
 `boot phases: hw=30 art=164 content=9 ui=1728 apply=1 total=1934 ms`。
 
-### 7.4 修复二：主任务栈 32 KB → 16 KB（未上机验证）
+### 7.4 修复二：主任务栈 32 KB → 16 KB（已上机验证）
 
 `firmware/sdkconfig.os` 的 `CONFIG_ESP_MAIN_TASK_STACK_SIZE` 与
 `CONFIG_MAIN_TASK_STACK_SIZE` 从 32768 改为 16384。依据是上面的水位：
 实测只用 3,784 B，16 KB 仍有 4 倍余量；而主任务栈是静态占用的**内部 RAM**，
-缩掉 16 KB 等于直接把 16 KB 还给内部堆。镜像 `0x240fd0`（2,363,344 B）构建通过，
-**烧录时板子从 USB 掉线，此改动尚未上机验证**。
+缩掉 16 KB 等于直接把 16 KB 还给内部堆。
 
-### 7.5 副作用：RPG 页打不开
+镜像 `0x241140`（2,363,712 B）烧录 `Hash of data verified.`，真机读数：
 
-`ui` 之后内部 RAM 只剩 23 B，于是进 RPG 页失败：世界页（`page 1`）正常，
+| 时刻 | free | largest | 对比（32 KB 栈） |
+|---|---|---|---|
+| 控制台之后、`lw_boot_start()` 之前 | 125,295 | **73,728** | 107,759 / 55,296 |
+| `hw` 之后 | 102,091 | 61,440 | 84,555 |
+| `art` 之后 | 48,575 | 30,720 | 31,039 / 16,384 |
+| `ui` 之后 | **6,347** | **6,144** | **23 / 0** |
+| `boot phases` | `hw=31 art=145 content=11 ui=1615 apply=1 total=1804 ms` | | `ui=1728 total=1934` |
+
+⇒ 内部池在首屏后从 **23 B 升到 6,347 B**，栈水位从 28,984 → 12,520 B（仍剩一半）。
+顺带 `ui` 从 1728 降到 1615 ms（少了 SD 与堆竞争的抖动）。
+
+### 7.5 副作用与它的修复：RPG 页曾经打不开
+
+内部 RAM 只剩 23 B 的那版，进 RPG 页失败：世界页（`page 1`）正常，
 但 `tap 866 372` 之后 `status` 仍是 `page 1`，`rpg` 命令回 `rpg: page not open`。
-这是**同一个内存问题的用户可见后果**，不是 RPG 页自身缺陷——无卡启动
-（内部池 57,891 B）从未出现。
+这是**同一个内存问题的用户可见后果**，不是 RPG 页自身缺陷。
+
+16 KB 栈版上 RPG 页恢复：`tap 866 372` → `page 9`，`rpg` 回
+`rpg 0: tile=11,7 ... rpg 1: tile=10,7 ...`，走 12 次地图点击后
+`rpg perf: frames=512 refresh=1466 ms avg=2 max=332 slow>=25ms=7`、
+`seek=1151 ms`、`sched: ticks=466 avg_gap=23 ms max_gap=344 ms`。
 
 ### 7.6 已排除的候选
 
@@ -339,11 +355,13 @@ ESP_LOGI(TAG, "boot ram after %s: stack %u B free, internal %u B free, largest %
 | 未持锁 attach | `bsp_display_lock(0)` → `-1` | 是真实 bug，但不是崩溃主因 |
 | 整段 clip 预取 | `if (0 && clip->count > 1)` | `ui` 1728→1405 ms，但内部 RAM 仍 23 B |
 
-### 7.7 待确认
+### 7.7 已验证（16 KB 栈版，per-clip 烘焙卡）
 
-| 项 | 怎么测 | 预期 |
+| 项 | 怎么测 | 结果 |
 |---|---|---|
-| 16 KB 主任务栈后内部池 | 烧后启动日志 `boot ram after ui` | `internal` 从 23 B 升到约 16 KB |
-| RPG 页能否打开 | `tap 866 372` + `status` | `page 9` |
-| 内部池与 `ui` 段的关系 | 同一镜像跑有卡/无卡 | 无卡 57,891 B、有卡 23 B |
-| per-clip 几何上机后的宠物页 | `pet` 命令 | 绘制面积按 clip 收窄 |
+| 16 KB 主任务栈后内部池 | 启动日志 `boot ram after ui` | `internal 6,347 B / largest 6,144 B`（原 23 / 0） |
+| RPG 页能否打开 | `tap 866 372` + `status` | `page 9`，`rpg` 有读数 |
+| 板子是否稳定 | 连续启动 + 30 分钟轮询 | 无 panic、无 safe mode |
+| 桌面页 | `sched reset` → `sched` | `ticks=304 avg_gap=20 max_gap=20` |
+| 宠物页（per-clip 生效） | 同上 | `ticks=456 avg_gap=20 max_gap=20`（并集卡时代 53–65 ms） |
+| `asset_bytes` 佐证 per-clip | `diagjson` | 1,102,815 B = skin 835,708 + male 97,512 + qianqian-base 169,002 |

@@ -228,6 +228,8 @@ rpg perf: refill calls=286 borrowed=286
 | 5. 点击 | 地图格点击 | 22 次共 8 ms，单次 max 1 ms |
 | 6. 瞬移 | 连续走 10 格 | 无整格跳（V4.4 已修，本轮回归通过） |
 | 7. `anim off` 对照 | `anim off` → `sched` | 20 ms（走路不再依赖开关） |
+| 8. 最终镜像复测（per-clip 卡 + 16 KB 栈） | `rpg reset`+`sched reset` → 12 次交替 `tap 200 300`/`tap 700 300` | **23 ms / max 344**；`frames=512`、`refresh=1466 ms avg=2`、`seek=1151 ms`、`slow>=25ms=7`、`taps=12` |
+| 9. 走路有效性自检 | 每次 `rpg` 对比 `tile=` | 必须变化；`taps=0` 或 tile 不变 = 这次**没走**，读数作废 |
 
 ---
 
@@ -236,8 +238,9 @@ rpg perf: refill calls=286 borrowed=286
 交接书要求「RPG 页 40–50 FPS」（≈ `sched` ≤ 25 ms）。**本轮达成**：
 
 - 站立：20 ms（V4.4 119 ms）
-- **走路：20–21 ms**（V4.4 89–117 ms），777 帧中 3 帧 > 25 ms
+- **走路：20–23 ms**（V4.4 89–117 ms）；最终镜像 512 帧中 7 帧 > 25 ms
 - 正确性：连续插值、双人不瞬移、遮挡门控生效、存档不逐帧标脏、点击命中正确
 
-剩下的只有单帧尖峰 `max 185 ms`（新 clip 首次加载），不影响平均帧率，已记入
-`FINAL_BENCHMARK.md` §6 的待办。
+剩下的只有单帧尖峰 `max 344 ms`（换方向、新 clip 首次加载），不影响平均帧率，
+已记入 `FINAL_BENCHMARK.md` §6 的待办。**注意**：测量前必须先确认角色真的在走
+（`tile=` 变化 + `seek` 非零 + `taps` 计数对得上），否则 20 ms 可能是「没动」。
