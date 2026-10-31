@@ -1,16 +1,36 @@
 #include "lw_polish.h"
 #include "lw_os_design.h"
 #include "lw_theme.h"
+#include <stdio.h>
 #include <string.h>
-static const char *const ids[]={"v42.couple.seated","v42.couple.wave","v42.couple.rest","v42.dog.idle","v42.dog.sleep","v42.dogbed.empty","v42.dogbed.sleep","v42.dogbed.look"};
-static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[8];
+#define POLISH_CLIPS 8
+static const char *const ids[POLISH_CLIPS]={"v42.couple.seated","v42.couple.wave","v42.couple.rest","v42.dog.idle","v42.dog.sleep","v42.dogbed.empty","v42.dogbed.sleep","v42.dogbed.look"};
+/* The night look used to be a runtime lv_obj_set_style_image_recolor call. A
+ * non-zero recolor_opa drops the image out of LVGL's RGB565A8 fast path into
+ * the per-pixel transform loop, which measured 24 ms per frame change on the
+ * board - the whole pet page ran at 46 ms instead of 22 ms. The packer can now
+ * bake <clip>.night with the identical tint (same lv_color_16_16_mix math), so
+ * these names exist only when the card carries them; lookups fall back to the
+ * day clip when it does not. */
+static char night_ids[POLISH_CLIPS][48];
+static bool night_ready;
+static uint16_t sequence[32],time_idle[32],time_wave[32]; static lw_clip_t clips[POLISH_CLIPS * 2];
+static void build_night_ids(void)
+{
+    if (night_ready) return;
+    for (unsigned i=0;i<POLISH_CLIPS;i++) snprintf(night_ids[i],sizeof(night_ids[i]),"%s.night",ids[i]);
+    night_ready=true;
+}
 const lw_clip_t *lw_polish_clip(const char *name)
 {
-    for (unsigned i=0;i<8;i++) if (!strcmp(name,ids[i])) {
+    build_night_ids();
+    for (unsigned i=0;i<POLISH_CLIPS*2;i++) {
+        const char *match = i<POLISH_CLIPS ? ids[i] : night_ids[i-POLISH_CLIPS];
+        if (strcmp(name,match)) continue;
         const lw_asset_spec_t *spec=lw_assets_find(name); if (!spec) return NULL;
         for (unsigned n=0;n<32;n++) { sequence[n]=(uint16_t)n; time_idle[n]=125; time_wave[n]=100; }
         bool wave=strstr(name,"wave")!=NULL; bool fast=wave || (strstr(name,"dog")!=NULL && strstr(name,"dogbed")==NULL);
-        clips[i]=(lw_clip_t){ids[i],sequence,fast ? time_wave : time_idle,spec->frames,!wave}; return &clips[i];
+        clips[i]=(lw_clip_t){match,sequence,fast ? time_wave : time_idle,spec->frames,!wave}; return &clips[i];
     }
     return NULL;
 }

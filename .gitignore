@@ -104,3 +104,8 @@ __pycache__/
 /COMMIT_MSG_V45B.txt
 /COMMIT_MSG_V45C.txt
 /COMMIT_MSG_V46Z.txt
+
+/reports/board-*/*.bmp
+/reports/board-z/desktop.bmp
+/reports/board-z/rpg.bmp
+/COMMIT_MSG_V46N.txt

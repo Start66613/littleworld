@@ -31,6 +31,18 @@ static lw_sprite_t *couple; static const lw_clip_t *couple_clip;
 static lw_sprite_t *dog; static const lw_clip_t *dog_clip;
 static bool polished; static uint32_t room_clock,room_last,reaction_until;
 static bool joint_bed;static uint32_t empty_until;
+/* True when the card carries the baked <clip>.night variants; see create_room. */
+static bool baked_night;
+static const lw_clip_t *pick_clip(const char *name)
+{
+    if (lw_ambience_phase()>=LW_NIGHT) {
+        char night[48];
+        snprintf(night,sizeof(night),"%s.night",name);
+        const lw_clip_t *baked=lw_polish_clip(night);
+        if (baked) return baked;
+    }
+    return lw_polish_clip(name);
+}
 /* Last values written by refresh(). The pet page ticks every 40 ms, and every
  * lv_label_set_text() re-allocates the text, marks the label dirty and defers a
  * full re-layout to LV_EVENT_UPDATE_LAYOUT_COMPLETED, and every lw_bar_set()
@@ -57,11 +69,11 @@ static void refresh(void)
         if (lw_os_motion_get()!=LW_MOTION_OFF && lw_os_overlay()==OS_OVER_NONE) room_clock+=dt;
         if (couple) {
             const char *name=pet->sleeping ? "v42.couple.rest" : room_clock<reaction_until ? "v42.couple.wave" : "v42.couple.seated";
-            const lw_clip_t *clip=lw_polish_clip(name); if (!clip) clip=lw_polish_clip("v42.couple.seated");
+            const lw_clip_t *clip=pick_clip(name); if (!clip) clip=lw_polish_clip("v42.couple.seated");
             if (clip && clip!=couple_clip) {lw_sprite_play(couple,clip);couple_clip=clip;}
             if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock<reaction_until ? LW_PET_WAVE_MS-(reaction_until-room_clock) : room_clock);
         }
-        if (dog) {const char *id=joint_bed ? (pet->sleeping ? "v42.dogbed.sleep" : room_clock<empty_until ? "v42.dogbed.empty" : "v42.dogbed.look") : pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle";const lw_clip_t *clip=lw_polish_clip(id);if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
+        if (dog) {const char *id=joint_bed ? (pet->sleeping ? "v42.dogbed.sleep" : room_clock<empty_until ? "v42.dogbed.empty" : "v42.dogbed.look") : pet->sleeping ? "v42.dog.sleep" : "v42.dog.idle";const lw_clip_t *clip=pick_clip(id);if (clip && clip!=dog_clip) {lw_sprite_play(dog,clip);dog_clip=clip;}if (lw_os_overlay()==OS_OVER_NONE) lw_sprite_seek(dog,lw_os_motion_get()==LW_MOTION_OFF ? 0 : room_clock);}
     }
     if (s_view != NULL) {
         lw_pet_view_refresh(s_view, pet, now);
@@ -181,18 +193,24 @@ static lv_obj_t *stat_row(lv_obj_t *parent, const char *name, int y, uint32_t co
 static void create_room(lv_obj_t *content)
 {
     const lw_palette_t *c=lw_palette(); polished=true; room_clock=0; reaction_until=0;empty_until=0; room_last=lv_tick_get();
+    /* The night tint used to be a runtime image_recolor, which costs 24 ms per
+     * frame change on this board because a non-zero recolor_opa leaves LVGL's
+     * RGB565A8 fast path. It is baked into the card now (lwp_prescale.py
+     * --night-tint), so the look survives at no per-frame cost; cards built
+     * without the baked clips keep the old recolour so nothing goes missing. */
+    baked_night = lw_polish_clip("v42.couple.seated.night")!=NULL;
     lv_obj_t *stage=lw_os_box(content,0,0,1024,548,c->card_soft,0,255);
     lv_obj_t *bg=lw_visual_daily_image(stage); if (bg) lv_obj_set_y(bg,-52);
     else lw_os_label(stage,"房间资源未安装 · 日常互动仍可用",&lw_font_18,32,100,650,c->dim);
     lw_ambience_layer(stage,1,-52);
     /* State is conveyed by the residents, not a permanent title/mood dashboard. */
-    const lw_clip_t *clip=lw_polish_clip("v42.couple.seated");
+    const lw_clip_t *clip=pick_clip("v42.couple.seated");
     if (clip) { couple=lw_sprite_create(stage,516,316,282);if (couple) {lw_sprite_set_external_clock(couple,true);lw_sprite_set_pixel_mode(couple);lw_sprite_play(couple,clip);couple_clip=clip;} }
     if (!couple) lw_os_label(stage,"互动角色资源待载入",&lw_font_18,360,150,500,c->dim);
     joint_bed=lw_polish_clip("v42.dogbed.look")!=NULL;
     if(!joint_bed)lw_os_box(stage,889,373,56,10,0x73534b,LV_RADIUS_CIRCLE,45);
-    const lw_clip_t *pup=lw_polish_clip(joint_bed ? "v42.dogbed.look" : "v42.dog.idle"); if (pup) {dog=lw_sprite_create(stage,joint_bed ? 906 : 916,joint_bed ? 412 : 376,256);if (dog) {lw_sprite_set_external_clock(dog,true);lw_sprite_set_pixel_mode(dog);lw_sprite_play(dog,pup);dog_clip=pup;if(!joint_bed){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0xd8b99c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),65,0);}else if(lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0x937a8c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),35,0);}}}
-    if(couple && lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(couple),lv_color_hex(0x797092),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(couple),35,0);}
+    const lw_clip_t *pup=pick_clip(joint_bed ? "v42.dogbed.look" : "v42.dog.idle"); if (pup) {dog=lw_sprite_create(stage,joint_bed ? 906 : 916,joint_bed ? 412 : 376,256);if (dog) {lw_sprite_set_external_clock(dog,true);lw_sprite_set_pixel_mode(dog);lw_sprite_play(dog,pup);dog_clip=pup;if(!baked_night){if(!joint_bed){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0xd8b99c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),65,0);}else if(lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(dog),lv_color_hex(0x937a8c),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(dog),35,0);}}}}
+    if(couple && !baked_night && lw_ambience_phase()>=LW_NIGHT){lv_obj_set_style_image_recolor(lw_sprite_object(couple),lv_color_hex(0x797092),0);lv_obj_set_style_image_recolor_opa(lw_sprite_object(couple),35,0);}
     if (!dog) s_view=lw_pet_view_create(stage,888,330,30);
     lv_obj_t *hello=lw_button(stage,"打招呼",88,44,0xf2dfc4,0x775956,&lw_font_18);
     lv_obj_set_pos(hello,310,190);lw_skin_button(hello,SK_ACTION,SK_SELECTED,SK_PRESSED); lv_obj_add_event_cb(hello,greet,LV_EVENT_CLICKED,NULL);

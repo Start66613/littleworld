@@ -23,9 +23,9 @@
 | 世界页 | ≤ 25 ms | 21 | **20 / max 20** | ✅ |
 | 音乐页 | ≤ 25 ms | 20 | **20 / max 20** | ✅ |
 | RPG 页（站立） | ≤ 25 ms | 119 | **20 / max 20** | ✅ |
-| **RPG 页（走路）** | ≤ 25 ms | **89–117** | **20–21 / max 185** | ✅ |
+| **RPG 页（走路）** | ≤ 25 ms | **89–117** | **20 / max 23** | ✅ |
 | 宠物页 | ≤ 25 ms | 251 | **20 / max 20** | ✅ |
-| 开机动画 | 帧数 / 时长 | 5 帧 / 2047 ms | **24 帧 / 2025 ms（11 fps）** | 🟡 改善 4.8×，未达 40 fps |
+| 开机动画 | 帧数 / 时长 | 5 帧 / 2047 ms | **40 帧 / 2030 ms（19 fps）** | 🟡 改善 8.9×，未达 40 fps |
 | 点击延迟 p95 | < 50 ms | 未测 | **tap 合计 8 ms / 22 次，单发 max 1 ms** | ✅（见 §5.4） |
 | 30 分钟无异常 | 0 error | 32.1 min 通过 | **152 样本 / 0 error / 0 misroute / heap −3.9 KB** | ✅（见 §9） |
 
@@ -53,6 +53,12 @@
 | 5 | + `ENTRIES 64` / `QUEUE 24` + clip 预取 | 20 | 20 | 20 | **20–21** | 53–65 | 24 帧 |
 | 6 | + per-clip 烘焙包进卡 | 20 | 20 | 20 | 23 / max 344 | **20** | 24 帧 |
 | 7 | + 主任务栈 32→16 KB（内部 RAM 修复） | 20 | 20 | 20 | 23 / max 344 | 20 | 11 fps |
+| 8 | + 帧压缩（stride + raw-deflate，角色包） | 20 | 20 | 20 | **21 / max 87** | 46 ⚠️ | **20 fps** |
+| 9 | + 夜间染色烘进 `daily.lwp`（不压缩） | 20 | 20 | 20 | **20 / max 23** | **20 / max 20** | **19 fps** |
+
+第 8 行同时是一个反面证据：**压缩把 RPG 走路尖峰从 353 ms 压到 87 ms，却把宠物页从 20 ms 推到 46 ms**。
+原因是宠物页的 24 帧本来就全部驻留缓存（工作集 5 MB < 12 MiB），压缩没省到 I/O，只多付了解压；
+于是最终只压缩「工作集超出缓存」的三个角色包，`daily.lwp` 保持原始（见 §11.6）。
 
 第 2 行是转折点：**烘焙包把 RPG 站立从 103 ms 直接压到 20 ms**，证明
 「`set_scale(288)` 走 `transform_and_recolor` 慢路径」这个根因判断在真机上成立
@@ -140,11 +146,15 @@ rpg perf: refill calls=286 borrowed=286
 
 | 指标 | 怎么测 | 当前值 |
 |---|---|---|
-| **LVGL 调度间隔** | `sched` | 桌面 20 / 世界 20 / 音乐 20 / RPG 站立 20 / **RPG 走路 20–21** / 宠物 53–65 ms |
-| **真实显示 FPS** | `boot` 的 `frames*1000/elapsed` | 开机 24 帧 / 2025 ms = **11 fps** |
+| **LVGL 调度间隔** | `sched` | 桌面 20 / 世界 20 / 音乐 20 / RPG 站立 20 / **RPG 走路 20 / max 23** / 宠物 20 ms（全部 max ≤ 23） |
+| **真实显示 FPS** | `boot` 的 `frames*1000/elapsed` | 开机 **40 帧 / 2030 ms = 19 fps** |
 | **精灵切帧频率** | `anim` | `male.idle` 8 帧 @100 ms、`couple.seated` 16 帧 @125 ms |
 
 `fps` 命令（统计「有 flush 的秒」）在慢页上会给出误导值，本报告不用它下结论。
+
+**`sched` 的窗口必须核对**：`tools/console_seq.ps1` 的 `cmd|delay` 里 delay 是「发完命令后等多久」，
+所以 `sched|5000` 实际只统计 reset 后约 300 ms。长窗口要用填充命令（连续 `clock|1000`）撑起来，
+并用 `ticks × avg_gap ≈ 窗口时长` 复核。本轮有多条早期「宠物页 20 ms」的读数就是因为窗口太短而失真。
 
 ### 5.4 点击延迟
 
@@ -158,13 +168,14 @@ rpg perf: refill calls=286 borrowed=286
 
 | # | 事项 | 现状 | 依据 |
 |---|---|---|---|
-| 1 | ~~宠物页 53–65 → ≤25 ms~~ | **已解决**：per-clip 烘焙包进卡后 `ticks=456 avg_gap=20 max_gap=20` | `daily.lwp` 的 `dog.idle` 内容只有 60×52，并集画布 276×252 |
-| 2 | 开机 11 → 30+ fps | 遮罩上两个 288-scale 精灵本身每帧重采样 | `boot` 帧数 6→24 已证明烘焙有效，剩余成本在 boot 精灵 |
-| 3 | 走路 `max 344 ms` 单帧尖峰 | 7/512 帧，出现在新 clip 首次加载 | 需求读 60–75 ms/帧 × 预取队列深度 |
-| 4 | `ui = 1615 ms` 首帧延迟（机制 4） | 烘焙包 1543 → 1373，16 KB 栈版实测 1615 | `boot phases` |
+| 1 | ~~宠物页 53–65 → ≤25 ms~~ | **已解决**，见 §12：per-clip 烘焙让 53–65 → 20，但夜间染色又把 20 推回 46；把染色烘进素材后稳定 `ticks=277 avg 20 / max 20` | `daily.lwp` 的 `dog.idle` 内容只有 60×52、并集画布 276×252 |
+| 2 | 开机 11 → 30+ fps | **19 fps**（40 帧 / 2030 ms）。压缩包让开机帧数翻倍（24→40），剩余成本仍在遮罩上两个 288-scale 精灵的每帧重采样 | `boot` 真机 |
+| 3 | 走路 `max 344 ms` 单帧尖峰 | **已收敛到 max 23 ms**：帧压缩把单帧 98 KiB 降到 15 KiB、卡吞吐 438→1866 KB/s、`ENTRIES 64`/`QUEUE 24` + clip 预取 | `sched` / `rpg perf` |
+| 4 | `ui = 1615 ms` 首帧延迟（机制 4） | 未拆分。烘焙 1543 → 1373、压缩卡 1244 ms；仍未分段，`render()` 与 `lw_os_boot()` 是一次同步调用 | `boot phases` |
 | 5 | 皮肤九宫格 9 个 `lv_image`（机制 5） | 未做 | `lw_skin_panel()` |
-| 6 | 30 分钟长测重跑 | V4.5 已重跑，见 §9 | — |
+| 6 | 30 分钟长测重跑 | V4.5 已重跑（§9）；夜间烘焙版另跑 10 分钟（§12.6） | — |
 | 7 | 内部 RAM 只剩 23 B | **已解决**：控制台提到首屏前 + 主任务栈 32→16 KB；`ui` 后 internal 23 → 6,347 B，RPG 页恢复 `page 9` | `BOOT_OPTIMIZATION.md` §7 |
+| 8 | 宠物页夜间染色 24 ms/帧 | **已解决**：染色离线烘进 `daily.lwp` 的 `.night` clip，运行时 `recolor_opa` 归零 ⇒ 回到 RGB565A8 直通路径 | §12 |
 
 ---
 
@@ -353,15 +364,109 @@ lzma 只多 15%，但解压慢一个量级且代码量 10 倍，**选 zlib**。
 按 §10.3 的账重算：两人走路需要 3900 KB/s，压缩后每帧从 97+169 KiB 降到
 15+14 KiB ⇒ 需求降到约 **580 KB/s**，**卡的上限 1879 KB/s 有 3.2 倍余量**。
 
-### 11.5 当前状态（诚实记录）
+### 11.5 上卡后的真机读数（已验收）
 
-- 已完成：压缩工具、固件解压路径、SD 包校验器适配（`tools/package_v4_sd.py` 的
-  `check_lwp()` 按 stride 校验偏移与文件长度）、压缩包落盘并**通过卡校验**
-  （`[OK] 校验通过 build\v46-sd`，19 文件哈希全匹配）、固件编译 0 warning 并已烧录。
-- **未完成**：压缩包还没写到 TF 卡上（卡在用户手里，需要经读卡器写入），
-  因此**压缩后的真机帧率尚未测量**。烧录用的是未压缩卡，行为与 §10 完全一致
-  （已验证：`art: card: 6/6 packs`、`boot phases ... ui` 正常、`sdmmc staging buffer: 65536 B`）。
-- 待验证：① 压缩包上卡后，用 `reports/board-base/{desktop,rpg,pet}.bmp` 做逐像素透明性比对
-  （基线已抓，19:30 固定相位）② 走路 `avg`/`max` 与 `seek` 的实际变化
-  ③ 解压占用的 CPU 是否回吐掉一部分 I/O 收益（`tinfl` 解 97 KiB 约需 1–2 ms，
-  相对它省掉的 53 ms 点播可以接受，但要用实测确认）。
+压缩包落到 TF 卡（`build\v46-sd`，19 文件哈希全匹配）后，同一台板、同一份固件实测：
+
+| 项 | 未压缩卡 | 压缩卡 | 说明 |
+|---|---|---|---|
+| RPG 走路 `sched` | 27 / max 353 ms | **21 / max 87 ms** | 尖峰降 4 倍 |
+| `rpg perf` | refresh 3193 ms / 403 帧 | refresh 1598 ms / 533 帧 | 每帧 7.9 → 3.0 ms |
+| `seek` | 3170 ms | 1378 ms | — |
+| `refill` | 178 次 | 239 次 / `borrowed=0` | `borrowed=0` 证明走的是 read+inflate 路径 |
+| 开机动画 | 24 帧 / 11 fps | **42 帧 / 20 fps** | 单帧体积小了，遮罩期也更快 |
+| 宠物页 | 20 ms | **46 ms ⚠️** | 见 11.6 |
+
+解压的 CPU 代价实测约 **1–2 ms/帧**（97 KiB），远小于它省掉的 53 ms 点播。
+
+### 11.6 为什么不压缩 `daily.lwp`：一个用实测否证的设计
+
+宠物页在压缩卡上从 20 ms 退化到 **46 ms**，而缓存证据显示这不是 I/O：
+
+- 6 秒窗口 `cache_misses` 完全不动（614→614）、`cache_evictions` 不动、`cache_borrows +112`
+  ⇒ **帧全部命中，零 I/O**。
+- 因此 46 ms 全是「解压 + 绘制」。宠物页两个精灵 `couple.seated`(227×252) + `dog.idle`(60×52)
+  每 125 ms 换一帧，`daily.lwp` 的 stride 是 48,128（大帧熵高、比值只有 4.34×），
+  两次解压约 26 ms/次换帧。
+
+结论：**只压缩「工作集超出缓存」的包**。RPG 四方向工作集 = `male` 6.2 MB + `qianqian-base` 10.8 MB
+≈ 17 MB > 12 MiB 预算，压缩后降到 1.1 MB，从根本上消除了逐出；而宠物页的 24 帧只有 5 MB，
+本来就全部常驻，压缩只多付解压。`daily.lwp` 因此保持原始（`stride=0`），per-clip bbox 照旧生效。
+
+这个取舍同时说明：**压缩不是「越多越好」的通用优化**，判据是「工作集 vs 缓存预算」。
+（字节预算仍 12 MiB 未动，也没有靠扩缓存解决——见 §4。）
+
+---
+
+## 12. 宠物页夜间染色：把逐像素 tint 烘进素材
+
+### 12.1 现象与定位
+
+宠物页在夜间（`lw_ambience_phase() >= LW_NIGHT`）是 **46 ms**，`anim off` 立刻回 **20 ms**。
+用 §11.6 的缓存证据排除 I/O 后，源码给出唯一嫌疑：
+
+`firmware/components/lw_ui/src/lw_app_pet.c` 对两个精灵调用
+`lv_obj_set_style_image_recolor(...)` + `recolor_opa`（狗 65 / 情侣 35 / 夜间各 35）。
+而 LVGL 的 RGB565A8 直通快速路径条件是
+`!transformed && !radius && cf == RGB565A8 && recolor_opa <= LV_OPA_MIN && colorkey == NULL`
+（`lv_draw_sw_img.c:254`）⇒ **非零 recolor 一定掉进 `transform_and_recolor()` 的逐像素路径**。
+
+单变量确认：把三处 `recolor_opa` 临时改 0 重编烧录 ⇒ 宠物页 **22 ms / max 250**。
+**染色代价 ≈ 24 ms/帧**。
+
+### 12.2 为什么不能直接删染色
+
+V4.5 明令禁止「降画质换 FPS」。夜间染色是观感的一部分，删掉就是降画质。
+
+### 12.3 方案：把染色算到素材里
+
+`daily.lwp` 只有宠物页用，所以可以在烘焙时把「日间帧 × 夜间色 × 不透明度」算成两套 clip，
+运行时直接选 `.night` 变体、`recolor_opa` 归零 ⇒ 既保观感又回到直通路径。
+
+- `tools/lwp_prescale.py` 新增 `tint_rgb565()`，**逐位复刻 `lv_color_16_16_mix`**
+  （`firmware/managed_components/lvgl__lvgl/src/misc/lv_color.c`）：
+  `mix=((opa+4)>>3)&0x1F`、`bg=(px|(px<<16))&0x7E0F81F`、`out=((((fg-bg)*mix)>>5)+bg)&0x7E0F81F`。
+  新参数 `--night-tint 'name=RRGGBB:opa,...'`，为列出的 clip 追加 `<name>.night`（同 anchor、同 bbox，只换 RGB 平面）。
+- `tools/verify_night_tint.py` 逐帧断言 `.night` 的 RGB 等于对日间帧套同一公式的结果、alpha 平面未变：
+  **59 frames checked, 0 mismatch**。
+- 固件：`firmware/components/lw_ui/src/lw_polish.c` 的 `lw_polish_clip()` 同时认识
+  `"%s"` 与 `"%s.night"`（16 项查表）；`lw_app_pet.c` 新增 `pick_clip()` 优先取 `.night`，
+  并在 `create_room()` 里用 `baked_night = lw_polish_clip("v42.couple.seated.night")!=NULL;` 记录
+  **卡上是否有夜间素材**——没有就回退到运行时染色（旧卡不掉画质，只是慢）。
+
+### 12.4 结果
+
+| 项 | 旧卡（运行时染色） | 新卡（染色烘进素材） |
+|---|---|---|
+| 宠物页 `sched` | 38 ms | **`ticks=277 avg 20 / max 20 ms`** |
+| 素材 | `daily.lwp` 12,311,676 B | `daily.lwp` **24,623,324 B**（8 → 16 clips） |
+| 观感 | 夜间色调 | 夜间色调**不变**（`reports/board-night/pet2.png` 目视确认） |
+
+真机截图 `reports/board-night/pet2.png`：情侣坐在沙发上（夜间冷调）、狗在窝里、状态条与按钮齐全、无渲染瑕疵。
+
+### 12.5 一并确认的其它页（同一份固件 + 夜间卡）
+
+`boot phases: hw=32 art=162 content=9 ui=1244 apply=0 total=1448 ms`；
+`boot: frames=40 elapsed=2030 ms visible=1766 fps=19 skipped=0`；
+桌面 20/20、世界 20/20、RPG 站立 20/20、**RPG 走路 `ticks=351 avg 20 max 23`**
+（`refresh=473 ms / 387 帧`、`seek=472`、`slow>=25ms=0`）。
+
+### 12.6 夜间烘焙版 10 分钟 soak
+
+`tools/stress_v44.ps1 -Minutes 10 -LogDir reports\logs\v46`（`reports/logs/v46/stress-20261031-225433.log`），
+**51 个样本、六页循环**：
+
+| 项 | 结果 |
+|---|---|
+| `last_error` 非 `none` | **0** |
+| `safe_mode` true | **0** |
+| 未落到目标页 | **0 of 51** |
+| `cache_evictions` | **全程 0**（压缩卡把工作集压到预算内，不再逐出） |
+| `sched` | 每页 `avg 20`；`max` 只有两类偏高：**回到桌面页那一轮 42–79 ms**（页面重建 + 首帧整屏重绘）、RPG 页 23–26 ms。宠物页 51 个样本里凡命中都是 `20/20` |
+| `heap_free` | **按页稳定，无漂移**：桌面 17,604,771–17,604,835（跨度 64 B）、宠物 16,193,823–16,193,895、RPG 16,353,367–16,353,443。首次进桌面看到的 19.06 MB 是音乐页还没分配过素材的状态，不是泄漏 |
+
+### 12.7 遗留
+
+`ui = 1244 ms` 仍未分段（机制 4）；皮肤九宫格 9 个 `lv_image`（机制 5）未做。
+桌面页「换页回来那一下 42–79 ms」也是下一轮的候选（页面重建里 `render()` 一次性建完所有控件）。
+

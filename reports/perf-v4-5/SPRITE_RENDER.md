@@ -402,3 +402,53 @@ V4.4 遗留的未解现象：桌面/世界页在 21 ms 与 116 ms 之间成串�
 - `ui.lwp`（544×352）同理，是 `v42ui.sheet` 7 帧的图标表。
 
 它们的优化路径是另一条（机制 5：合并 9 个 piece），本轮未做。
+
+---
+
+## 8. 帧存储格式：stride + raw-deflate（V4.5 收尾）
+
+烘焙解决了「每帧要混合多少像素」，但 RPG 走路还有第二个瓶颈：**每帧要搬多少字节**。
+两者是不同的量——`male.walk_*` 烘焙后画布 137×239 = 98 KiB/帧，走起来 50 ms 换一帧，
+两人的需求约 3900 KB/s，而这块卡在 2 线模式下只有 1879 KB/s（`FINAL_BENCHMARK.md` §10.3）。
+
+像素画帧的 deflate 比是 6–12×（同 §11.1 的实测表），所以文件格式只改两处：
+
+1. **每帧变成一个固定 stride 的 raw-deflate 块**（不足补零）。固定 stride 是关键：
+   偏移校验、缓存 key、预取算术、`borrow()` 的字节数全部沿用原有公式，只把
+   `frame_bytes` 换成 `stored_bytes`。
+2. **stride 写进几何 trailer 里一直存在但从未使用的保留 u16**（偏移 +10，0 = 未压缩）。
+   于是 V4.6 之前的包照旧能读，压缩是纯增量特性。
+
+读取路径（`firmware/components/lw_ui/src/lw_pack.c`）：
+
+```c
+static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src_len)
+{
+    if (!s_inflate) {
+        s_inflate = heap_caps_malloc(sizeof(tinfl_decompressor),
+                                     MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!s_inflate) return 0;
+    }
+    tinfl_init(s_inflate);
+    size_t in_len = src_len;
+    size_t out_len = dst_len;
+    tinfl_status status = tinfl_decompress(
+        s_inflate, (const mz_uint8 *)src, &in_len,
+        (mz_uint8 *)dst, (mz_uint8 *)dst, &out_len,
+        TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
+    return status == TINFL_STATUS_DONE ? out_len : 0;
+}
+```
+
+三条来自崩溃的约束，写在这里以免重犯：
+
+- **`tinfl_decompressor` 自带 32 KiB 字典，绝不能放栈上**。第一版用
+  `tinfl_decompress_mem_to_mem()` 在 LVGL 任务（栈只有 8 KiB）里解压，第一帧就
+  `Stack protection fault`。改为堆上单实例（放 PSRAM，因为内部 DRAM 是这块板的绑定约束）。
+- **单实例是安全的**：所有帧读都发生在 LVGL 锁内（sprite seek 来自 LVGL timer 与页面构建）。
+- **零拷贝与压缩互斥**：`borrow_frame()` 对压缩包返回 NULL——缓存里存的是压缩块，
+  不是能直接给渲染器的像素。换来的是 I/O 降 6–12×，远大于 memcpy 的收益。
+
+真机结果见 `FINAL_BENCHMARK.md` §11.5：走路 `max` 353 → 87 ms、开机 24 → 42 帧。
+但**压缩不是越多越好**：`daily.lwp` 压了反而让宠物页 20 → 46 ms（工作集 5 MB 本来就全部驻留，
+压缩只多付解压），所以最终只压三个角色包。这条判据写在 §11.6。

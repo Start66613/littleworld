@@ -130,13 +130,44 @@ static uint32_t u32(const uint8_t *p)
 /* Inflate one deflate block into a frame buffer. The ESP32-P4 keeps miniz's
  * tinfl in ROM, so this costs no flash; the Windows host has no ROM and never
  * sees deflate packs (host/pixel_pack.c refuses them), so it reports failure
- * instead of pulling a decompressor into the simulator build. */
+ * instead of pulling a decompressor into the simulator build.
+ *
+ * Two things about this call are load-bearing:
+ *
+ * 1. It must NOT use tinfl_decompress_mem_to_mem(). That convenience wrapper
+ *    puts a tinfl_decompressor on the stack, and the struct carries a 32 KiB
+ *    LZ dictionary, so the very first compressed frame overran the 8 KiB LVGL
+ *    task stack and the board panicked with a stack-protection fault right
+ *    after the first boot phase. The streaming API takes the state as a
+ *    parameter, so we keep it on the heap instead.
+ *
+ * 2. The state is a single shared instance, not one per pack. Every frame read
+ *    happens inside the LVGL lock (sprite seeks run from the LVGL timer and
+ *    from page construction), so there is exactly one reader at a time; five
+ *    idle copies would cost 170 KiB of PSRAM for no benefit. It lives in PSRAM
+ *    because internal DRAM is the binding constraint on this board (see
+ *    BOOT_OPTIMIZATION.md section 7), and the dictionary part of the struct is
+ *    never touched thanks to TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF.
+ */
 #ifdef ESP_PLATFORM
 #include "miniz.h"
+#include "esp_heap_caps.h"
+static tinfl_decompressor *s_inflate;
 static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src_len)
 {
-    size_t got = tinfl_decompress_mem_to_mem(dst, dst_len, src, src_len, 0);
-    return got == (size_t)TINFL_DECOMPRESS_MEM_TO_MEM_FAILED ? 0 : got;
+    if (!s_inflate) {
+        s_inflate = heap_caps_malloc(sizeof(tinfl_decompressor),
+                                     MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!s_inflate) return 0;
+    }
+    tinfl_init(s_inflate);
+    size_t in_len = src_len;
+    size_t out_len = dst_len;
+    tinfl_status status = tinfl_decompress(
+        s_inflate, (const mz_uint8 *)src, &in_len,
+        (mz_uint8 *)dst, (mz_uint8 *)dst, &out_len,
+        TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
+    return status == TINFL_STATUS_DONE ? out_len : 0;
 }
 #else
 static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src_len)
