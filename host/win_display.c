@@ -228,6 +228,12 @@ int lw_host_run_window(void)
     ShowWindow(s_window, SW_SHOW);
     UpdateWindow(s_window);
 
+    /* Safety valve: this loop used to run forever with no way out if the UI
+     * stopped answering messages (a frozen window cannot be closed by clicking
+     * X). Keep an idle deadline so a stuck instance always dies on its own
+     * instead of sitting on top of whatever else is on the desktop. */
+    ULONGLONG idle_deadline = GetTickCount64() + (ULONGLONG)LW_HOST_WINDOW_MAX_SECONDS * 1000u;
+
     MSG msg;
     while (s_running) {
         while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -239,6 +245,10 @@ int lw_host_run_window(void)
             DispatchMessageA(&msg);
         }
         if (!s_running) {
+            break;
+        }
+        if (GetTickCount64() > idle_deadline) {
+            printf("window closed itself after %d s\n", LW_HOST_WINDOW_MAX_SECONDS);
             break;
         }
         lv_timer_handler();

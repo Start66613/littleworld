@@ -22,15 +22,35 @@ int lw_ui_v2_test(const char *output_dir);
 int lw_pixel_duo_run(const char *pack_path,const char *output_dir);
 int lw_os_host_run(const char *pack_path,const char *output_dir);
 
+/* Opening a window is now opt-in.
+ *
+ * This binary used to open the 1024x600 simulator window whenever it was
+ * started without a test/auto argument. Scripted runs that lost an argument
+ * therefore launched a visible window that never exited, and because the
+ * window stops answering messages once the UI wedges, it could not even be
+ * closed with the X button - the only way out was rebooting the machine. That
+ * is never an acceptable side effect of a regression run, so the window now
+ * requires an explicit --window, and every automated invocation stays headless.
+ */
+static int refuse_window(void)
+{
+    printf("headless build: no window requested.\n");
+    printf("  screenshots : --os-v2-test PACK DIR   (or --auto DIR / --ui-v2-test DIR)\n");
+    printf("  simulator   : --window                (1024x600 window, Esc to quit)\n");
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *auto_dir = NULL;
     const char *v2_dir = NULL;
     const char *pixel_pack = NULL,*pixel_output = NULL;
     const char *os_pack=NULL,*os_output=NULL;
-    bool legacy=false;
+    bool legacy=false, want_window=false;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--legacy") == 0) { legacy=true;
+        } else if (strcmp(argv[i], "--window") == 0) {
+            want_window=true;
         } else if (strcmp(argv[i], "--auto") == 0 && i + 1 < argc) {
             auto_dir = argv[i + 1];
             i++;
@@ -68,6 +88,10 @@ int main(int argc, char **argv)
 
     lw_host_display_init();
     lw_ui_start();
+    /* These two entry points open the window themselves when the output
+     * directory is NULL, so the opt-in check has to happen here as well. */
+    if (os_pack && !os_output && !want_window) return refuse_window();
+    if (pixel_pack && !pixel_output && !want_window) return refuse_window();
     if (os_pack) return lw_os_host_run(os_pack,os_output);
     if (pixel_pack) return lw_pixel_duo_run(pixel_pack,pixel_output);
 
@@ -81,9 +105,11 @@ int main(int argc, char **argv)
     if (!legacy) {
         os_pack=getenv("LW_PIXEL_PACK");
         if (!os_pack || !*os_pack) os_pack="private/pixel-duo/qianqian/qianqian.lwpx";
+        if (!want_window) return refuse_window();
         return lw_os_host_run(os_pack,NULL);
     }
 
+    if (!want_window) return refuse_window();
     printf("Little World desktop simulator ready (%dx%d). Esc quits.\n", LW_HOST_WIDTH, LW_HOST_HEIGHT);
     printf("save directory: %s\n", host_platform_dir());
     fflush(stdout);

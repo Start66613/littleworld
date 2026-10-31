@@ -15,6 +15,13 @@
 #define LW_HOST_WIDTH  1024
 #define LW_HOST_HEIGHT 600
 
+/* Hard ceiling on how long the interactive window may stay up. A frozen
+ * simulator window cannot be closed by clicking X, and one that was started by
+ * a script has no console to press Ctrl+C in either, so the loop has to be able
+ * to end by itself. Long enough for any human demo, short enough that a stray
+ * instance never has to be cleaned up by rebooting the machine. */
+#define LW_HOST_WINDOW_MAX_SECONDS 1800
+
 typedef struct {
     int x;
     int y;
