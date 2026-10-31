@@ -10,6 +10,7 @@ lv_obj_t *lw_visual_rpg_image(lv_obj_t *parent);
 lv_obj_t *lw_visual_daily_image(lv_obj_t *parent);
 bool lw_visual_assets_available(void);
 lv_obj_t *lw_visual_scene_image(lv_obj_t *parent,unsigned theme,int w,int h,bool thumbnail);
+const char *lw_visual_daily_name(void);
 lw_visual_stats_t lw_visual_assets_stats(void);
 /* Delete all scene widgets first. No hardware or filesystem mutation. */
 bool lw_visual_assets_shutdown(void);

@@ -364,7 +364,7 @@ static void motion_v4_tests(const char *out,bool characters)
         if (mode==LW_MOTION_OFF) { CHECK("off mode creates no decorative animations",lv_anim_count_running()==0); if (characters) { uint16_t frame=lw_os_actor_frame(0); advance(700); CHECK("idle stays still when motion is disabled",lw_os_actor_frame(0)==frame); } }
     }
     lw_app_state()->settings.animations=true; lw_os_motion_mode(LW_MOTION_FULL); lw_os_open(OS_DESKTOP); advance(600);
-    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("one full room, bounded thumbnails and one auxiliary room stay bounded",visual.peak_bytes<=1228800+3*76800+1024*600*2); if (lw_visual_assets_available()) CHECK("full scene is reused rather than decoded on every page",visual.hits>visual.reads);
+    lw_visual_stats_t visual=lw_visual_assets_stats(); CHECK("a three-card pool bounds what the session keeps resident",visual.peak_bytes<=3u*1228800u+3u*76800u); if (lw_visual_assets_available()) CHECK("full scene is reused rather than decoded on every page",visual.hits>visual.reads);
     desktop_objects=objects(lw_os_root()); desktop_timers=timers();
 }
 int lw_os_host_run(const char *pack_path,const char *out)
