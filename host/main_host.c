@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 #include "lvgl.h"
 #include "lw_app_state.h"
 #include "lw_ui.h"
@@ -22,16 +25,29 @@ int lw_ui_v2_test(const char *output_dir);
 int lw_pixel_duo_run(const char *pack_path,const char *output_dir);
 int lw_os_host_run(const char *pack_path,const char *output_dir);
 
-/* Opening a window is now opt-in.
+/* Opening a window is opt-in for scripts, implicit for a human.
  *
  * This binary used to open the 1024x600 simulator window whenever it was
  * started without a test/auto argument. Scripted runs that lost an argument
  * therefore launched a visible window that never exited, and because the
- * window stops answering messages once the UI wedges, it could not even be
- * closed with the X button - the only way out was rebooting the machine. That
- * is never an acceptable side effect of a regression run, so the window now
- * requires an explicit --window, and every automated invocation stays headless.
+ * window stopped answering messages once the UI wedged, it could not even be
+ * closed with the X button - the only way out was rebooting the machine.
+ *
+ * So the window is now explicit (--window) for anything automated, but a bare
+ * double-click still works: when no arguments were given AND stdout is a real
+ * console, the window is what the person in front of the machine asked for.
+ * A redirected stdout is the signature of a script, and scripts stay headless.
+ * win_display.c additionally pumps LVGL on its own thread and kills the window
+ * after LW_HOST_WINDOW_MAX_SECONDS, so a wedged UI can always be closed again.
  */
+static bool console_is_interactive(void)
+{
+    DWORD mode = 0;
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (out == NULL || out == INVALID_HANDLE_VALUE) return false;
+    return GetConsoleMode(out, &mode) != 0;
+}
+
 static int refuse_window(void)
 {
     printf("headless build: no window requested.\n");
@@ -70,6 +86,11 @@ int main(int argc, char **argv)
     }
 
     if ((auto_dir && v2_dir) || (pixel_pack && (auto_dir || v2_dir)) || (os_pack && (pixel_pack || auto_dir || v2_dir)) || (legacy && (os_pack || pixel_pack || auto_dir || v2_dir))) return 2;
+
+    /* A double-click (no arguments) or "LittleWorld.exe --legacy" from a real
+     * console is a person asking for the simulator; anything with a redirected
+     * stdout is a script and stays headless. */
+    if (!want_window && console_is_interactive() && (argc == 1 || (legacy && argc == 2))) want_window = true;
     if (auto_dir || v2_dir || pixel_output || os_output) {
         char isolated[512];
         const char *directory=auto_dir ? auto_dir : v2_dir ? v2_dir : pixel_output ? pixel_output : os_output;

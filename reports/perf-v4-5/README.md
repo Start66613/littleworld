@@ -12,7 +12,7 @@
 宿主实测 `male.idle` 0.426 → 0.077 ms/帧、`couple.seated` 0.651 → 0.091 ms/帧，
 且**与现状逐像素完全一致**（`diff px = 0`）。**
 
-### 真机结果（2026-10-31 最终镜像：`0x241bc0`，压缩角色包 + 夜间烘焙卡，16 KB 主任务栈）
+### 真机结果（最终镜像：`0x241f90` = 2,367,888 B，压缩角色包 + 夜间烘焙卡 + 两阶段首屏，16 KB 主任务栈）
 
 | 页面 | V4.4 | **V4.5** |
 |---|---|---|
@@ -21,10 +21,15 @@
 | **RPG 走路** | **89–117 ms** | **20 ms**（`max 23 ms`，387 帧中 0 帧 > 25 ms） |
 | 宠物 | 251 ms | **20 ms**（per-clip bbox + 夜间染色烘进素材） |
 | 卡吞吐（新量） | 438 KB/s（FATFS 实测） | **1,866 KB/s**（bounce buffer 16 KiB→64 KiB PSRAM） |
-| 开机动画 | 5 帧 / 2047 ms | **40 帧 / 2030 ms（19 fps）** |
+| 开机动画 | 5 帧 / 2047 ms | **29 帧 / 3247 ms（8 fps）**；首屏可见 **23 ms** |
+| **首屏可见时间** | **1254 ms 黑屏** | **23 ms 标题卡**（`osperf` 真机） |
 | 点击（RPG 22 次） | 未测 | **合计 8 ms，单次 max 1 ms** |
 | 卡上字节量 | 55.5 MB（原始帧） | **41.6 MB**（三个角色包 deflate 6.4–11.8×，`daily.lwp` 保留原始并追加夜间变体） |
 | 30 分钟 soak | 未做 | 见 `FINAL_BENCHMARK.md` §9；夜间烘焙版另跑 10 分钟（§12.6） |
+
+> 开机这一行有两个数：`23 ms` 是「屏幕上出现东西」的时间，`3247 ms / 8 fps` 是整段动效的时长与帧率。
+> 加上两阶段遮罩之前是 `40 帧 / 2030 ms / 19 fps`——帧率更高，但前 1.2 秒是黑屏。
+> 这是有意把等待换成内容，不是提速；两种读数都留着（`FINAL_BENCHMARK.md` §13）。
 
 走路这一项是用户指出的验收盲区：「RPG界面你得让人物走起来测啊，你人物走起来就
 掉帧了」。定位过程与修复见 `RPG_ACCEPTANCE.md` §3.6——真凶不是绘制，而是
@@ -46,10 +51,10 @@ V4.4 的 `C-1`（缓存 4→12 MiB）只把宠物页 I/O 归零，剩下的 86% 
 | `OPEN_SOURCE_RESEARCH.md` | P1 | 14 个开源项目的许可证与机制研究，逐条采纳判断 | — |
 | `ARCHITECTURE_COMPARISON.md` | P2 | 我们的渲染/生命周期与六个参照项目的逐项对照 | — |
 | `SPRITE_RENDER.md` | P3 | **精灵渲染引擎重构**：根因、方案、逐像素验证、收益 | 宿主实测 |
-| `BOOT_OPTIMIZATION.md` | P4 | 开机动画：`ui=1542 ms` 拆分与遮罩期跳过重绘 | 真机基线 + 宿主验证 |
+| `BOOT_OPTIMIZATION.md` | P4 | 开机：`ui` 分段、遮罩期跳过重绘、内部 RAM 绑定约束（§7）、两阶段首屏（§8） | 真机 |
 | `RPG_ACCEPTANCE.md` | P5 | RPG 页验收：连续插值、瞬移判据、真机复测 | 真机（V4.4 数据） |
 | `DUAL_STATE_INVESTIGATION.md` | P6 | 桌面/世界页 21↔116 ms 双稳态的机制性解释 | 真机 + 宿主 |
-| `FINAL_BENCHMARK.md` | P7 | 综合验收对照与待真机确认项 | 部分 |
+| `FINAL_BENCHMARK.md` | P7 | 综合验收：§9 长测、§10 卡吞吐、§11 帧压缩、§12 夜间烘焙、§13 首屏 | 真机 |
 | `render_bench.txt` | — | RenderBench 原始输出（三个 clip × 六配置） | 宿主实测 |
 | `sprite_bbox.json` | — | 12 个 clip 的画布/内容像素与浪费率 | 静态测量 |
 | `prescale_verify.json` | — | 237 帧逐像素烘焙验证结果 | 宿主实测 |
@@ -103,16 +108,25 @@ LVGL 渲染器逐帧比对：
 合计 **237 帧、0 差异**（`prescale_verify.json`）。整页截图回归 **156/156 逐像素
 完全一致**（`baked_vs_head.json`）。
 
-## 六项可试验机制（按收益排序）
+## 机制台账（试过的、没试的、否决的）
 
-| 优先级 | 机制 | 来源 | 实测/预期收益 | 证据强度 | 状态 |
+| # | 机制 | 来源 | 结果 | 证据 | 状态 |
 |---|---|---|---|---|---|
-| **1** | **离线预缩放 + 预裁剪素材（F 形态）** | LVGL 源码 + GB Studio 属性表 + retro-go 整数步进 | **5.54–7.13×** | ⭐⭐⭐ 237 帧 diff=0 | **已实现** |
-| 2 | `lw_asset_spec_t` 增加 bbox 元数据 | GB Studio | 单独 1.49× | ⭐⭐⭐ 逐像素 diff=0 | **已实现**（F 的一部分） |
-| 3 | 开机遮罩期不重绘被遮挡的桌面精灵 | InfiniTime 生命周期 | 开机同屏精灵 4→2 | ⭐⭐ 156/156 一致 | **已实现** |
-| 4 | 首屏 `ui=1542 ms` 分段延后不可见部分 | Brookesia 分阶段 init | 待真机 | ⭐ 需视觉验收 | 未做 |
-| 5 | 皮肤九宫格按钮 9 个 `lv_image` 合并 | raylib 图集 | 待测 | ⭐ 需真机 | 未做 |
-| 6 | 行级校验和 / 重复行 memcpy | retro-go | **不采纳** | — | 与 LVGL 失效区冲突 |
+| 1 | **离线预缩放 + 预裁剪素材（F 形态）** | LVGL 源码 + GB Studio 属性表 + retro-go 整数步进 | **5.54–7.13×** | 237 帧 `diff = 0` | ✅ 已上卡 |
+| 2 | `lw_asset_spec_t` 增加 bbox 元数据（per-clip） | GB Studio | 单独 1.49× | 逐像素 `diff = 0` | ✅ 已上卡 |
+| 3 | 开机遮罩期不重绘被全遮的桌面精灵 | InfiniTime 生命周期 | 同屏精灵 4→2 | 156/156 一致 | ✅ 已实现 |
+| 4 | **首屏两阶段：遮罩先出、页面背后建** | Brookesia 分阶段 init | 首屏可见 **1254 → 23 ms** | 147/156 一致（9 张只差动画相位） | ✅ 已烧录 |
+| 5 | 皮肤九宫格按钮 9 个 `lv_image` 合并成图集 | raylib draw call 合并 | 未测 | — | ⬜ 未做（收益小、要重画美术） |
+| 6 | 行级校验和 / 重复行 memcpy | retro-go | **否决** | — | ❌ LVGL 失效区已覆盖，重复工作 |
+| 7 | **卡 bounce buffer 上 PSRAM（16 → 64 KiB）** | 自己测出来的（`sdspeed`/`sdblk` 探针） | 卡吞吐 **438 → 1866 KB/s（4.3×）** | 真机三轮读数 | ✅ 已上卡 |
+| 8 | **帧压缩：固定 stride + raw-deflate（miniz/ROM）** | retro-go 的「按块而不是按帧」思路 | 单帧 97–209 KiB → **15–48 KiB**（6.4–11.8×） | 逐帧回环校验 + 宿主拒收旧包 | ✅ 已上卡（三个角色包；`daily.lwp` 保留原始） |
+| 9 | **夜间染色烘进素材**（`.night` clip 变体） | 由 #1 推出来 | 宠物页 **46 → 20 ms** | 59 帧 tint 公式等价性校验 | ✅ 已上卡 |
+
+机制 9 的来历值得单记：宠物页 46 ms 的原因不是 I/O 也不是几何，而是运行时
+`lv_obj_set_style_image_recolor(..., opa 35/65)` 让精灵离开了 RGB565A8 直通路径
+（快速路径要求 `recolor_opa <= LV_OPA_MIN`）。把它按 `lv_color_16_16_mix` 的位运算
+复刻进素材，既不动画质（旧卡会自动回退到运行时染色），又把 24 ms/帧变成 0。
+
 
 机制 6 被否决的理由：retro-go 用整帧校验和跳过未变化行，是因为它自己拥有整个
 framebuffer；LVGL 已经按 `lv_area_t` 维护失效区，再叠一层行校验只会重复工作。
@@ -124,11 +138,13 @@ framebuffer；LVGL 已经按 `lv_area_t` 维护失效区，再叠一层行校验
 | 桌面 / 世界 | 40–50 FPS | ✅ 真机 20 / 20 ms（`max 20`） |
 | RPG | 40–50 FPS | ✅ 站立 20 ms；**走路 20 ms**（`max 23 ms`，387 帧中 0 帧 > 25 ms） |
 | 宠物 | 40–50 FPS | ✅ 真机 20 ms（per-clip bbox + 夜间染色烘进素材） |
-| 开机 | 40–50 FPS | 🟡 **40 帧 / 2030 ms（19 fps）**；遮罩每帧全屏半透明合成是下限 |
+| 首屏可见 | < 100 ms | ✅ **23 ms**（标题卡先上屏，页面背后继续建） |
+| 开机 | 40–50 FPS | 🟡 **29 帧 / 3247 ms（8 fps）**；遮罩每帧全屏半透明合成是下限 |
 | 点击 p95 < 50 ms | — | ✅ RPG 22 次点击合计 8 ms，单次 max 1 ms |
 | 30–60 分钟稳定 | — | ✅ 30 分钟 / 152 样本，0 error、0 safe mode、0 未到页（§9） |
 
-**仍不达标的只有开机动画**（19 fps，遮罩全屏半透明混合下限，未解）。
+**仍不达标的只有开机动效的帧率**（8 fps；两阶段遮罩之前是 19 fps，但那时前 1.2 秒是黑屏）。
+遮罩上每帧要做一次 1024×600 的半透明合成，是这块板子软件混合的下限，未解。
 走路换方向的单帧尖峰已从 `max 344 ms` 收敛到 **`max 23 ms`**：帧压缩把单帧 98 KiB 降到 15 KiB
 （§11）、卡吞吐提升 4.3×（§10）、宠物页夜间染色改为离线烘焙（§12）。
 
@@ -136,6 +152,11 @@ framebuffer；LVGL 已经按 `lv_area_t` 维护失效区，再叠一层行校验
 ## 复现命令
 
 ```powershell
+# 模拟器窗口（人看的时候用；脚本一律 headless）
+#   双击 LittleWorld.exe，或带 --window 运行。窗口关闭永远有效：消息泵在主线程，
+#   LVGL 在自己的线程上跑，UI 卡死也不会让窗口失去响应；另有 1800 s 自毁兜底。
+& .\build\host\LittleWorld.exe --window
+
 # 宿主渲染基准（不需要板子）
 & .\tools\build_demo.ps1            # 或 ninja -j 2 -C build/host RenderBench
 & .\build\host\RenderBench.exe build\bench\male_idle.rgb565a8 256 256 75 17 105 208 288 40
@@ -165,9 +186,9 @@ New-Item -ItemType Directory -Force -Path build\v45-assets\shot-x | Out-Null
 | `tools/run_v4_resource_tests.ps1` | **261 checks, 0 failure** |
 | `--os-v2-test`（整页） | **752 checks, 1 failure**（既有 `greeting naturally returns to idle clips`，HEAD 上同样失败） |
 | 156 张整页截图 vs HEAD | **156 identical, 0 differ**（用 `LW_FAKE_TIME=19:30` 钉住相位后同条件复跑，两次逐字节一致） |
-| ESP32-P4 固件构建 | `little_world.bin` **0x241bc0**（2,366,400 B），分区余 62%，0 warning |
+| ESP32-P4 固件构建 | `little_world.bin` **0x241f90**（2,367,888 B），分区余 62%，0 warning |
 
-## 六个教训（写在这里，避免下一轮重复踩）
+## 八个教训（写在这里，避免下一轮重复踩）
 
 1. **离线重采样必须从整画布 lattice 取窗口。** LVGL 的 `step` 由整个目标宽度
    推导（`lv_draw_sw_transform.c:191-219`），按 bbox 单独建 lattice 会选到不同的
@@ -187,3 +208,10 @@ New-Item -ItemType Directory -Force -Path build\v45-assets\shot-x | Out-Null
 6. **`git stash -u` 会删掉未跟踪的日志目录。** 30 分钟 soak 的日志写在
    `reports/logs/v45/`（未跟踪），一次 `stash push -u` 直接让正在跑的 soak
    崩在 `Add-Content: 未能找到路径`。做长测时不要 stash，或把日志放到 `build/`。
+7. **`Set-Content -NoNewline` 回写 `Get-Content` 数组会把整个源文件压成一行。**
+   我用它改 `lw_os.c`，得到 82,480 B / 1 行的文件（幸亏没有 `//` 注释才没变语法错误）。
+   靠 `git fsck --unreachable` 找回被 `stash pop` 丢掉的提交 `90828ce6` 才恢复。
+   改 C 文件只用编辑器/`edit` 工具，或 Python 显式读写换行。
+8. **`recolor_opa`、非 256 的 `scale`、`colorkey` 任何一个出现，精灵就离开直通路径。**
+   这三条是 LVGL 的「快速路径入场券」，而美术侧（比例修正、夜间染色）很容易无意间
+   撕掉其中一张。加新的视觉效果时，先问它是否会让这三条中任一条从「满足」变成「不满足」。

@@ -187,6 +187,19 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
     }
 }
 
+/* LVGL's own thread. Nothing else touches LVGL after lw_host_display_init()
+ * and the page build are done on the main thread, so a single worker keeps the
+ * renderer single-threaded while the message pump stays responsive. */
+static DWORD WINAPI ui_thread(LPVOID arg)
+{
+    (void)arg;
+    while (s_running) {
+        lv_timer_handler();
+        Sleep(4);
+    }
+    return 0;
+}
+
 int lw_host_run_window(void)
 {
     WNDCLASSA wc;
@@ -228,31 +241,44 @@ int lw_host_run_window(void)
     ShowWindow(s_window, SW_SHOW);
     UpdateWindow(s_window);
 
-    /* Safety valve: this loop used to run forever with no way out if the UI
-     * stopped answering messages (a frozen window cannot be closed by clicking
-     * X). Keep an idle deadline so a stuck instance always dies on its own
-     * instead of sitting on top of whatever else is on the desktop. */
+    /* LVGL runs on its own thread so the message pump never depends on it.
+     *
+     * The old single-thread loop interleaved PeekMessage with lv_timer_handler,
+     * which meant a wedged UI (one draw call that never returns) also stopped
+     * message dispatch - the window froze and clicking X did nothing, so the
+     * only way out was rebooting. With the pump on this thread and LVGL on the
+     * worker, closing the window always works; LW_HOST_WINDOW_MAX_SECONDS is
+     * only the backstop for a window nobody is looking at. */
+    HANDLE pump = CreateThread(NULL, 0, ui_thread, NULL, 0, NULL);
+    if (pump == NULL) {
+        printf("cannot start the UI thread\n");
+    }
+
     ULONGLONG idle_deadline = GetTickCount64() + (ULONGLONG)LW_HOST_WINDOW_MAX_SECONDS * 1000u;
 
     MSG msg;
     while (s_running) {
-        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                s_running = 0;
-                break;
+        if (MsgWaitForMultipleObjects(0, NULL, FALSE, 50, QS_ALLINPUT) == WAIT_OBJECT_0) {
+            while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+                if (msg.message == WM_QUIT) {
+                    s_running = 0;
+                    break;
+                }
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
             }
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
-        }
-        if (!s_running) {
-            break;
         }
         if (GetTickCount64() > idle_deadline) {
             printf("window closed itself after %d s\n", LW_HOST_WINDOW_MAX_SECONDS);
+            PostMessageA(s_window, WM_CLOSE, 0, 0);
             break;
         }
-        lv_timer_handler();
-        Sleep(4);
+    }
+
+    s_running = 0;
+    if (pump) {
+        WaitForSingleObject(pump, 3000);
+        CloseHandle(pump);
     }
 
     DeleteDC(s_bitmap_dc);
