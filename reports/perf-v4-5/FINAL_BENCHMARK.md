@@ -25,7 +25,7 @@
 | RPG 页（站立） | ≤ 25 ms | 119 | **20 / max 20** | ✅ |
 | **RPG 页（走路）** | ≤ 25 ms | **89–117** | **20 / max 23** | ✅ |
 | 宠物页 | ≤ 25 ms | 251 | **20 / max 20** | ✅ |
-| 开机动画 | 帧数 / 时长 | 5 帧 / 2047 ms | **40 帧 / 2030 ms（19 fps）** | 🟡 改善 8.9×，未达 40 fps |
+| 开机动画 | 帧数 / 时长 | 5 帧 / 2047 ms | **29 帧 / 3247 ms（8 fps）** | 🟡 帧率未达标；动效改从页面建完后开始（§13） |
 | **首屏可见时间** | < 100 ms | **1254 ms 黑屏** | **23 ms（标题卡）** | ✅（见 §13） |
 | 点击延迟 p95 | < 50 ms | 未测 | **tap 合计 8 ms / 22 次，单发 max 1 ms** | ✅（见 §5.4） |
 | 30 分钟无异常 | 0 error | 32.1 min 通过 | **152 样本 / 0 error / 0 misroute / heap −3.9 KB** | ✅（见 §9） |
@@ -148,7 +148,7 @@ rpg perf: refill calls=286 borrowed=286
 | 指标 | 怎么测 | 当前值 |
 |---|---|---|
 | **LVGL 调度间隔** | `sched` | 桌面 20 / 世界 20 / 音乐 20 / RPG 站立 20 / **RPG 走路 20 / max 23** / 宠物 20 ms（全部 max ≤ 23） |
-| **真实显示 FPS** | `boot` 的 `frames*1000/elapsed` | 开机 **40 帧 / 2030 ms = 19 fps** |
+| **真实显示 FPS** | `boot` 的 `frames*1000/elapsed` | 开机 **29 帧 / 3247 ms = 8 fps**（两阶段遮罩之前是 40 帧 / 2030 ms = 19 fps，但那 1.2 s 是黑屏） |
 | **精灵切帧频率** | `anim` | `male.idle` 8 帧 @100 ms、`couple.seated` 16 帧 @125 ms |
 
 `fps` 命令（统计「有 flush 的秒」）在慢页上会给出误导值，本报告不用它下结论。
@@ -170,7 +170,7 @@ rpg perf: refill calls=286 borrowed=286
 | # | 事项 | 现状 | 依据 |
 |---|---|---|---|
 | 1 | ~~宠物页 53–65 → ≤25 ms~~ | **已解决**，见 §12：per-clip 烘焙让 53–65 → 20，但夜间染色又把 20 推回 46；把染色烘进素材后稳定 `ticks=277 avg 20 / max 20` | `daily.lwp` 的 `dog.idle` 内容只有 60×52、并集画布 276×252 |
-| 2 | 开机 11 → 30+ fps | **19 fps**（40 帧 / 2030 ms）。压缩包让开机帧数翻倍（24→40），剩余成本仍在遮罩上两个 288-scale 精灵的每帧重采样 | `boot` 真机 |
+| 2 | 开机 11 → 30+ fps | **8 fps**（29 帧 / 3247 ms）。压缩包让开机帧数翻倍（24→40 / 19 fps），但两阶段遮罩把动效窗口从 2030 拉到 3247 ms，帧数反而少了；剩余成本仍在遮罩上两个 288-scale 精灵的每帧重采样 | `boot` 真机 |
 | 3 | 走路 `max 344 ms` 单帧尖峰 | **已收敛到 max 23 ms**：帧压缩把单帧 98 KiB 降到 15 KiB、卡吞吐 438→1866 KB/s、`ENTRIES 64`/`QUEUE 24` + clip 预取 | `sched` / `rpg perf` |
 | 4 | `ui = 1615 ms` 首帧延迟（机制 4） | 未拆分。烘焙 1543 → 1373、压缩卡 1244 ms；仍未分段，`render()` 与 `lw_os_boot()` 是一次同步调用 | `boot phases` |
 | 5 | 皮肤九宫格 9 个 `lv_image`（机制 5） | 未做 | `lw_skin_panel()` |
@@ -504,3 +504,102 @@ boot: frames=29 elapsed=3247 ms visible=2969 ms fps=8 active=0 skipped=0
 
 细节见 `BOOT_OPTIMIZATION.md` §8（含两个非显然约束：遮罩必须挂 top layer；壁纸/压暗必须按身份插回
 z 序，用固定下标会把标题盖住）。
+
+## 14. 真机复现手册（这一轮踩过的坑都在这儿）
+
+这一节不是结论，是操作手册。写下来的原因：本轮至少有三轮测量是**无效的**，
+而且无效的方式很隐蔽（数字看起来完全正常）。
+
+### 14.1 串口与脚本
+
+| 规则 | 原因 |
+|---|---|
+| 同一时刻只能有一个进程持有 COM5 | 两处同时开会报 `对端口"COM5"的访问被拒绝` |
+| 波特率 115200，等 `status` 能回话再发其他命令 | 首屏构建那 1.2 s 里控制台可能还没起来 |
+| **不要动 DTR/RTS** | CH343 的 DTR/RTS 接 EN/IO0，置位会让板子反复复位（我因此误判过一次「重启循环」） |
+| 烧录后先 `status|3500` 等开机结束 | 否则 `tap 512 578` 会落在还没消失的遮罩上 |
+| dock 4.5 s 无触摸自动收起 | 连续导航必须同一个会话里连着发 |
+
+`tools/console_seq.ps1 -Steps 'cmd|delay,...'` 里的 **delay 是「发完这条命令之后等多久」**，
+所以 `sched|5000` 拿到的是 reset 之后约 300 ms 的统计——**要看长窗口必须用填充命令**
+（例如连发 6 个 `clock|1000` 再发 `sched`）。
+
+### 14.2 导航坐标（1024×600，真机实测）
+
+| 目标 | 操作 |
+|---|---|
+| 展开 dock | `tap 512 578` |
+| 世界页 | `tap 308 541`（i0） |
+| 音乐页 | `tap 554 541`（i3） |
+| 设置页 | `tap 718 541`（i5） |
+| 返回 | `tap 862 24` |
+| 世界页 → RPG | `tap 866 372`（「小冒险」） |
+| 世界页 → 宠物 | `tap 866 438`（「照顾宠物」） |
+
+页面号：`0` 桌面、`1` 世界、`4` 相册、`5` 回忆、`6` 音乐、`8` 宠物、`9` RPG。
+
+### 14.3 每页刷新的测法
+
+```text
+tap <nav clicks...>          # 每一步之后 status 确认 page N
+sched reset
+clock|1000  ×6               # 填充，制造真实窗口
+sched                        # 读 avg/max/ticks
+diagjson                     # 读 cache_*/heap/asset_*
+```
+
+**窗口有效性判据：`ticks × avg_gap ≈ 实际秒数`。** 不成立就是假窗口，重测。
+宠物页曾出现 `ticks=1 avg_gap=90 ms` 这种自相矛盾的数字，就是假窗口。
+
+### 14.4 RPG 走路的测法（含三条自检）
+
+```text
+rpg reset
+sched reset
+tap 700 300|750
+tap 200 300|750
+...    （交替 12 次）
+sched
+rpg
+```
+
+必须同时满足：
+
+1. `rpg` 的 `tile=` 在点击前后发生**变化**（并出现 `moving=1`）；
+2. `rpg perf` 的 `frames` 增长、`seek` 非零；
+3. `taps` 等于发出的点击次数（`lw_rpg_tap_tile()` 会拒绝不可达格，被拒绝的不计数）。
+
+可靠坐标：`tap 700 300` / `tap 200 300` / `tap 536 300` / `tap 700 400`。
+**无效**：`480 76`、`592 76`、`536 98`、`200 200`、`700 200`（点在地图外的装饰上）。
+
+### 14.5 三个计时代码
+
+| 命令 | 读数 |
+|---|---|
+| `osperf` | `total/wall/page/status/dock/tail`；`title card on panel`、`build done`、`flush event` |
+| `boot` | `frames elapsed visible fps active skipped`（开机动画；**需要洁净窗口**，先 `flash_v4_safe.ps1 -Probe` 复位再读） |
+| `rpg` | `taps/tap_ms/core/label/orders/order_ms` + `refresh split state/anchor/seek` + `refill calls/borrowed` |
+| `pet` | 宠物页拆分（`sprites` vs `chrome`） |
+| `sdspeed` / `sdblk` | FATFS 分块吞吐 / 绕开 FATFS 的裸扇区读；用来判断瓶颈是卡还是文件系统 |
+| `diagjson` | `cache_hits/misses/evictions/borrows/borrow_misses/resident/budget`、`heap_*`、`asset_*` |
+
+### 14.6 卡上应该有什么
+
+| 文件 | 形态 |
+|---|---|
+| `male.lwp` / `qianqian-base.lwp` / `qianqian-wave.lwp` | **预缩放 + per-clip 裁剪 + deflate 压缩** |
+| `daily.lwp` | **预缩放 + per-clip 裁剪 + 夜间变体 `.night`**，不压缩（工作集常驻，压缩只会加解压开销） |
+| `ui.lwp` / `skin.lwp` | **不动**（切片图集，烘焙会破坏切图坐标） |
+
+判据：`.lwp` 的几何 trailer 里 `prescaled=1`，header `+14` 的 `kind=1`；
+压缩包另有 stride 写在 trailer 保留 u16（`+10`，0 = 未压缩）。
+`tools/lwp_prescale.py --inspect` 可以直接看每 clip 的 box / stride。
+
+### 14.7 烧录
+
+```powershell
+& .	oolslash_v4_safe.ps1 -Config os -Stage app -Execute -Authorized -Port COM5
+```
+
+只写 `0x010000` 的 app 分区；**永不**写 nvs（`0x9000..0xF000`）、永不 `erase_flash`、
+不碰 ESP32-C6、不动 eFuse、失败不重试。成功后 esptool 会打印 `Hash of data verified.`。

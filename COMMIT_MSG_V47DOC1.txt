@@ -1,0 +1,18 @@
+﻿docs(v4.7): 机制台账 9 项、双稳态结案、RPG 验收方法、模拟器窗口可关闭
+
+报告：
+- README：机制表从「六项」扩成「九项台账」（新增卡 bounce buffer、帧压缩、
+  夜间染色烘进素材）；真机表增加「首屏可见 23 ms」；教训从 6 条扩到 8 条
+  （新增 Set-Content -NoNewline 毁文件、recolor/scale/colorkey 三张快速路径入场券）。
+- DUAL_STATE_INVESTIGATION §8：双稳态终局。152 样本长测里没有一次 116 ms 串，
+  原因是那条会随状态变贵的路径（transform_and_recolor）整体不在路径上了，
+  不是找到了开关。
+- RPG_ACCEPTANCE §6：收尾读数（走路 20 / max 23，orders=0），并把「先证明在走」
+  的三条前置条件与可靠坐标写进报告——这一项被用户纠正过，方法必须留档。
+- ARCHITECTURE_COMPARISON §8：四条跨项目共性最后都落成了代码；补一条
+  「内部 RAM 比 CPU 更紧」的原则。
+
+模拟器：
+- 双击（无参数且 stdout 是真控制台）恢复开窗，脚本重定向到文件时仍 headless。
+- LVGL 移到工作线程、消息泵留在主线程：UI 卡死时窗口仍能响应关闭，
+  这才是「关不掉只能关机」的根因修复；1800 s 自毁只作兜底。

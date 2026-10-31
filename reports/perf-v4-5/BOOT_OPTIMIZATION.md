@@ -206,7 +206,7 @@ boot: frames=5 elapsed=2047 ms visible=1877 ms fps=2 active=0 skipped=0
 
 ---
 
-## 5. 未做项：`ui = 1542 ms` 的拆分
+## 5. 未做项：`ui = 1542 ms` 的拆分（**已被 §8 完成，本节保留为当时的判断依据**）
 
 ### 5.1 为什么本轮不做
 

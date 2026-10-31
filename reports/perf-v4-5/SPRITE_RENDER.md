@@ -452,3 +452,59 @@ static size_t lwp_inflate(void *dst, size_t dst_len, const void *src, size_t src
 真机结果见 `FINAL_BENCHMARK.md` §11.5：走路 `max` 353 → 87 ms、开机 24 → 42 帧。
 但**压缩不是越多越好**：`daily.lwp` 压了反而让宠物页 20 → 46 ms（工作集 5 MB 本来就全部驻留，
 压缩只多付解压），所以最终只压三个角色包。这条判据写在 §11.6。
+
+---
+
+## 9. 同一招的第二、第三次使用：把「每帧都要算的常量」全部离线化
+
+§8 解决的是**存储与传输**。收尾时发现同一个思路还能再解决两件看起来无关的事，
+它们有一个共同点：**每帧都在重算一个其实不变的常量**。
+
+### 9.1 夜间染色
+
+`lw_app_pet.c` 在夜间对两个精灵做 `lv_obj_set_style_image_recolor(..., opa 35/65)`。
+这个效果本身是对的（美术要求夜景偏冷），但它把精灵推出了 RGB565A8 直通路径
+（`lv_draw_sw_img.c` 的快速路径要求 `recolor_opa <= LV_OPA_MIN`），于是每帧改走
+`transform_and_recolor()` 的逐像素 mix——**实测 24 ms/帧**，宠物页从 20 ms 掉到 46 ms。
+
+处理办法：颜色是常量、opacity 是常量、帧是常量，所以**结果也是常量**。
+烘焙器按 `lv_color_16_16_mix` 的位运算逐像素复刻：
+
+```python
+mix = ((opa + 4) >> 3) & 0x1F
+bg  = (px | (px << 16)) & 0x7E0F81F
+out = ((((fg - bg) * mix) >> 5) + bg) & 0x7E0F81F
+ret = (out >> 16) | out
+```
+
+对 8 个 clip 各追加一个 `<name>.night` 变体（同 anchor、同 bbox、只换 RGB 平面），
+`tools/verify_night_tint.py` 逐帧断言「夜间变体 == 对日间帧套公式」，**59 帧 0 差异**。
+运行时用 `pick_clip()` 按相位选名字，`baked_night == false`（旧卡）时自动回退到
+运行时染色——**旧卡不掉画质，新卡零成本**。
+
+`daily.lwp` 因此从 8 clips / 12.3 MB 变成 16 clips / 24.6 MB，但**运行时成本是 0**；
+而且它只有宠物页用，不需要像角色包那样压 deflate（§8.5 的取舍）。
+
+### 9.2 一张速查表：哪些「效果」会破坏快速路径
+
+| 效果 | 手段 | 是否离开快速路径 | 离线化做法 |
+|---|---|---|---|
+| 比例修正 1.125× | `lv_image_set_scale(288)` | **是**（`scale != 256`） | 预缩放（§4） |
+| 夜间偏色 | `recolor_opa = 35/65` | **是**（`recolor_opa > LV_OPA_MIN`） | 预乘色（§9.1） |
+| 透明键 | `colorkey` | **是** | 用 alpha 平面表达，不要用 colorkey |
+| 旋转 | `lv_image_set_rotation()` | **是** | 预旋转（本项目的角色不需要旋转） |
+| 圆角裁剪 | `radius` | **是** | 用遮罩图或干脆不做 |
+| 纯位移 / 换帧 | `set_pos` / `set_src` | 否 | — |
+
+这一张表比任何一次单点优化都值得留给下一轮：**新增任何视觉效果之前，先查它落在哪一行。**
+
+### 9.3 顺带纠正一条早期的错误结论
+
+`RPG_ACCEPTANCE.md` §2 曾把「遮挡守卫」判为零收益，`DUAL_STATE_INVESTIGATION.md` §5
+则预言 F 形态会让双稳态消失。两件事后来都成立，但**理由和当初写的不完全一样**：
+
+- 遮挡守卫仍然零收益，因为 `lv_obj_move_to_index()` 在 LVGL 里对同值/越界早退，
+  只剩「真正换序时 `lv_obj_invalidate(parent)` 重绘整张地图」这一条路径，而
+  两角色在 RPG 页几乎不重叠 ⇒ 守卫一次都没触发（最终读数里 `orders=0`）。
+- 双稳态消失不是因为「脏区变小了」，而是**那条按脏区形状付费的路径整体不在路径上了**
+  （快速路径没有临时缓冲、没有逐像素重采样）。这一点在 `DUAL_STATE_INVESTIGATION.md` §8 重写了。
