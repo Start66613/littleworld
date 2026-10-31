@@ -365,3 +365,93 @@ ESP_LOGI(TAG, "boot ram after %s: stack %u B free, internal %u B free, largest %
 | 桌面页 | `sched reset` → `sched` | `ticks=304 avg_gap=20 max_gap=20` |
 | 宠物页（per-clip 生效） | 同上 | `ticks=456 avg_gap=20 max_gap=20`（并集卡时代 53–65 ms） |
 | `asset_bytes` 佐证 per-clip | `diagjson` | 1,102,815 B = skin 835,708 + male 97,512 + qianqian-base 169,002 |
+
+## 8. 首屏不再黑屏：遮罩先刷出、页面在背后建
+
+### 8.1 问题：`ui=1244 ms` 期间面板是黑的
+
+旧的 `lw_os_start()` 是纯同步的：`render()` 先解一张 1024×600 壁纸（632 ms）再建整页控件（549 ms），
+`lw_os_boot()` 的遮罩**排在它们后面**。所以从 `lv_screen_load(s->root)` 到第一帧上屏，用户面对的是
+一块只有背景色的黑屏。`osperf` 把这 1.2 秒变成了可读的数字：
+
+| 项 | 改前（`osperf` 首读，真机） |
+|---|---|
+| `renders=1 total=1201 ms` | `wall=632 page=549 status=3 dock=16 tail=1` |
+| `splash ready` | **1215 ms** |
+| `first frame on panel` | **1254 ms** |
+
+真正让用户等的是「壁纸解码 + 页面构建」，而这两件事**都不需要在遮罩之前**完成。
+
+### 8.2 做法：把 `lw_os_boot()` 拆成两半
+
+| 函数 | 内容 | 何时调用 |
+|---|---|---|
+| `boot_backdrop()` | 只有底色调的 1024×600 盒 + 心形图标 + "Little World"（44 号）+ 副标题（22 号）+ "轻触跳过"。**不含任何动画**，所以建完就能显示 | `render()` **之前** |
+| `boot_finish()` | 壁纸、195→0 的压暗、logo 的 `LW_MOVE_BOOT`、8 片叶子、两个 288 scale 精灵、淡出 | `render()` + 计时器之后 |
+
+`lw_os_start()` 的新顺序：
+
+```c
+lv_obj_add_event_cb(s->root,gesture,LV_EVENT_GESTURE,NULL); lv_screen_load(s->root);
+const bool splash=lw_os_motion_get()!=LW_MOTION_OFF && boot_backdrop();
+if (splash) lv_refr_now(NULL);
+s_frames.splash_ms=lv_tick_get()-started;   /* this is when the panel shows something */
+render();
+s->timer=lv_timer_create(tick,20,s);
+if (splash) boot_finish();
+s_frames.build_ms=lv_tick_get()-started;    /* the intro timeline starts here */
+```
+
+两个非显然的约束：
+
+1. **遮罩必须挂在 `lv_layer_top()`，不能挂在 `s->root` 上**。`render()` 第一件事是 `lv_obj_clean(s->root)`，
+   挂在页面上的遮罩会被它自己盖住的那次构建删掉，于是「先画遮罩」变成「先画又立刻删掉」。
+2. **壁纸和压暗必须用身份定位插回 z 序，不能用固定下标**。第一次实现写的是
+   `lv_obj_move_to_index(lv_obj_get_child(s->boot,1),1)`，当时的子对象顺序是 `[底色盒(0), logo(1), 提示(2)]`，
+   壁纸建在最后，所以 "child 1" 其实是 logo，等于没挪，压暗层反而盖住了标题。宿主截图立刻暴露：
+   有屋子、有角色、有花瓣，**没标题也没压暗**。改成按身份取最后一个子对象：
+
+```c
+const uint32_t count=lv_obj_get_child_count(s->boot);
+lv_obj_t *wall=count ? lv_obj_get_child(s->boot,count-1) : NULL;
+if (wall) lv_obj_move_to_index(wall,1);
+```
+
+### 8.3 真机结果（板子，`0x241f90` = 2,367,888 B）
+
+```
+osperf: renders=1 total=1201 ms (wall=632 page=549 status=3 dock=16 tail=1)
+osperf: title card on panel=23 ms, build done=1237 ms, flush event=1297 ms
+boot: frames=29 elapsed=3247 ms visible=2969 ms fps=8 active=0 skipped=0
+```
+
+| 指标 | 改前 | 改后 | 变化 |
+|---|---|---|---|
+| 看到第一帧的时间 | **1254 ms** | **23 ms** | **−98.2%** |
+| 页面构建完成 | 1215 ms | 1237 ms | +22 ms（遮罩本身的开销） |
+| 开机动效总时长 | 2047 ms | 3247 ms | +1200 ms（有意：动效现在从页面建完才开始） |
+| 动效期间 fps | 11 | 8 | 动效窗口变长，帧数几乎不变 |
+
+代价是诚实的：**总时长变长了 1.2 秒**，但用户不再对着黑屏等 1.2 秒，而是先看到标题卡。
+这一条是「把等待变成内容」，不是「把等待缩短」，所以两种读数都留着。
+
+### 8.4 逐像素证据：静帧不变，只有动画相位不同
+
+截图矩阵（`LW_FAKE_TIME=19:30` 钉住 ambience 相位、未压缩包，`--os-v2-test`，752 checks）：
+
+| 对比 | 结果 | 说明 |
+|---|---|---|
+| 改前 vs 改后（z-order 还错） | 146 identical / **10 differ** | `v4-boot-00..06` 全屏差 579k–581k px（worst 166），即「有没有标题与压暗」 |
+| 改前 vs 改后（z-order 修好） | 147 identical / **9 differ** | 只有 `v4-boot-01..09`，bbox `[380,354..503,635]`、diff 6.2k–6.5k px、worst 66–148 |
+
+第二个对比里剩下的差异全部落在**左侧那个 288 scale 开机精灵的矩形内**，是位移动画的相位差
+（动效起点从 0 ms 变成 1237 ms）；壁纸、压暗、标题、叶子、右精灵逐像素一致。这一改动
+**没有动任何静态画面**，只是把动效往后挪。
+
+### 8.5 教训
+
+- 「先显示、后构建」的前提是**遮罩不能挂在那棵会被清空的树上**。
+- 任何「按固定下标调整 z 序」的代码都要在截图里看一眼，这种 bug 不崩、不报错、只是少了一层内容。
+- 用 PowerShell 的 `Set-Content -NoNewline` 回写 `Get-Content` 的数组会把整个源文件压成一行
+  （82,480 B / 1 行）。这次靠 `git fsck --unreachable` 找回被 `stash pop` 丢掉的提交
+  `90828ce6` 才恢复。**改 C 文件只用编辑器、`edit` 工具或 Python 显式读写换行。**

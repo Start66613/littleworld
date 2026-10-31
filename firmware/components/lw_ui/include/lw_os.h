@@ -71,3 +71,28 @@ typedef struct {
     bool active, skipped;
 } lw_os_boot_stats_t;
 void lw_os_boot_stats(lw_os_boot_stats_t *out);
+
+/* Where the first-frame budget goes (V4.6). `lw_os_start()` builds the whole
+ * first screen synchronously inside the LVGL lock, and on the board that
+ * measured 1.2 s before the panel showed anything. These are the times of the
+ * last build, so a capture taken later still reports the numbers:
+ *
+ *   wall_ms   clean + wallpaper + ambience tint + content box
+ *   page_ms   the page itself (desk objects, furniture, RSS sprites, app)
+ *   status_ms the top bar
+ *   dock_ms   the six dock items (each one is a skinned 9-piece button)
+ *   tail_ms   refresh() + first sprite paint + page motion
+ *
+ * `splash_ms` is wall clock to the first flush: before V4.6 that whole stretch
+ * was spent in front of a black screen, now it is where the title card shows.
+ * `build_ms` is the end of the synchronous build, where the intro animation
+ * starts, so the boot timeline runs from there.
+ * `first_frame_ms` is the display's own FLUSH_FINISH, which on this panel can
+ * lag the flush request by a whole build because the event arrives from the
+ * DPI signal rather than from lv_refr_now(). */
+typedef struct {
+    uint32_t renders;
+    uint32_t last_total_ms, wall_ms, page_ms, status_ms, dock_ms, tail_ms;
+    uint32_t splash_ms, build_ms, first_frame_ms;
+} lw_os_frame_stats_t;
+void lw_os_frame_stats(lw_os_frame_stats_t *out);

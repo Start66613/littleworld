@@ -33,6 +33,9 @@ typedef struct {
     lw_os_page_t theme_return;
     bool caps_refresh_on_unlock;
     lv_obj_t *control_panel,*boot;
+    /* Title block of the splash; kept so boot_finish() can animate it instead
+     * of rebuilding it after the page is ready. */
+    lv_obj_t *boot_logo;
     lw_sprite_t *lock_sprites[2];
     lw_sprite_t *boot_sprites[2];
     int pull_last_y,pull_velocity; uint32_t pull_last_tick;
@@ -45,6 +48,16 @@ typedef struct {
     uint32_t boot_frames,boot_started_tick,boot_visible_ms,boot_elapsed_ms; bool boot_skipped;
 } os_t;
 static os_t *s;
+/* First-frame budget of the last build; see lw_os_frame_stats() in lw_os.h. */
+static lw_os_frame_stats_t s_frames;
+/* Tick at lw_os_start() entry; the first flush measures the black-screen wait
+ * against it. */
+static uint32_t s_start_tick;
+static void first_flush(lv_event_t *e)
+{
+    (void)e;
+    if (!s_frames.first_frame_ms) s_frames.first_frame_ms=lv_tick_get()-s_start_tick;
+}
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
 bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
 static void render(void);
@@ -437,9 +450,17 @@ static void build_legacy(void)
 }
 static void render(void)
 {
+    /* Section marks for lw_os_frame_stats(). Keep them cheap: four lv_tick_get()
+     * calls per rebuild is nothing next to the work being measured. */
+    const uint32_t render_started=lv_tick_get();
+    uint32_t render_mark=render_started;
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=s->boot=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->boot_sprites[0]=s->boot_sprites[1]=NULL;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
+    /* s->boot and its sprites are children of the top layer, not of s->root:
+     * lv_obj_clean(s->root) cannot touch them, and on the first build the
+     * splash is already on the panel while this runs. Clearing the pointers
+     * here used to be how the old root-parented overlay was forgotten. */
     lv_obj_clean(s->root); memset(s->base_controls,0,sizeof(s->base_controls)); memset(s->over_controls,0,sizeof(s->over_controls)); s->over=NULL; s->overlay=OS_OVER_NONE;
     unsigned wallpaper=s->page==OS_THEMES ? s->preview_wallpaper : s->system->prefs.wallpaper;
     s->phase=lw_ambience_phase();if(s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET)wallpaper=lw_ambience_wallpaper();
@@ -450,6 +471,7 @@ static void render(void)
     if (s->painted && s->painted_wallpaper!=wallpaper) lw_os_wallpaper_change(wall,s->painted_wallpaper);
     s->painted=true; s->painted_wallpaper=wallpaper;
     s->light=lw_ambience_layer(s->root,0,0);s->content=lw_os_box(s->root,0,0,1024,600,0,0,0);
+    { uint32_t now=lv_tick_get(); s_frames.wall_ms=now-render_mark; render_mark=now; }
     if (s->page==OS_DESKTOP || s->page==OS_WORLD) build_desktop(s->page==OS_WORLD);
     else {
         lw_os_box(s->content,0,48,1024,446,palette()->bg,0,252);
@@ -457,8 +479,12 @@ static void render(void)
         else if (s->page==OS_RPG) { s->rpg=lw_rpg_view_create(s->content,&rpg_storage,s->system->prefs.theme,s->art); if (!s->rpg) lw_os_notify("冒险房间暂不可用"); }
         else build_legacy();
     }
-    build_status(); build_dock(); if (s->page!=OS_DESKTOP){lv_obj_t *back=icon_button(s->root,OS_I_BACK,840,2,44,OC_HOME);lv_obj_set_style_bg_opa(back,0,0);lv_obj_set_style_border_width(back,0,0);}
+    { uint32_t now=lv_tick_get(); s_frames.page_ms=now-render_mark; render_mark=now; }
+    build_status(); { uint32_t now=lv_tick_get(); s_frames.status_ms=now-render_mark; render_mark=now; }
+    build_dock(); if (s->page!=OS_DESKTOP){lv_obj_t *back=icon_button(s->root,OS_I_BACK,840,2,44,OC_HOME);lv_obj_set_style_bg_opa(back,0,0);lv_obj_set_style_border_width(back,0,0);}
+    { uint32_t now=lv_tick_get(); s_frames.dock_ms=now-render_mark; render_mark=now; }
     refresh(); update_actors(0); lw_os_motion(s->content,s->page==OS_THEMES ? LW_MOVE_THEME : s->reverse_page ? LW_MOVE_RETURN : LW_MOVE_PAGE); s->reverse_page=false;
+    { uint32_t now=lv_tick_get(); s_frames.tail_ms=now-render_mark; s_frames.last_total_ms=now-render_started; s_frames.renders++; }
 }
 static void build_control(void)
 {
@@ -896,28 +922,71 @@ static void boot_fade_start(lv_anim_t *a)
     (void)a;
     if (s && s->boot_visible_ms==0) s->boot_visible_ms=lv_tick_get()-s->boot_started_tick;
 }
-void lw_os_boot(void)
+/* Splitting the splash in two is what removes the black screen.
+ *
+ * lw_os_start() builds the whole first screen synchronously inside the LVGL
+ * lock: measured 1.2 s on the board, of which 626 ms is the wallpaper decode
+ * and 547 ms the page itself. The panel showed nothing for all of it. The
+ * backdrop is the cheap part (a coloured box with the title), so it can be put
+ * on the panel in a few milliseconds and flushed; the expensive wallpaper and
+ * the 2 s animation are attached afterwards, behind the dim layer, where the
+ * user cannot see them arrive.
+ *
+ * The backdrop lives on the top layer rather than under s->root because
+ * render() calls lv_obj_clean(s->root): a splash parented to the page would be
+ * deleted by the very build it is covering. */
+static bool boot_backdrop(void)
 {
-    if (!s || lw_os_motion_get()==LW_MOTION_OFF) return;
+    if (!s) return false;
     if (s->boot) lv_obj_delete(s->boot);
     /* Evidence reset: a re-entered boot (theme change, wake) starts a new window. */
     s->boot_frames=0; s->boot_visible_ms=0; s->boot_elapsed_ms=0; s->boot_skipped=false;
     s->boot_started_tick=lv_tick_get();
-    s->boot_ms=0; s->boot=lw_os_box(s->root,0,0,1024,600,palette()->bg,0,255); lv_obj_add_flag(s->boot,LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(s->boot,boot_deleted,LV_EVENT_DELETE,NULL); lv_obj_add_event_cb(s->boot,boot_skip,LV_EVENT_CLICKED,NULL);
+    s->boot_ms=0;
+    s->boot=lw_os_box(lv_layer_top(),0,0,1024,600,palette()->bg,0,255);
+    lv_obj_add_flag(s->boot,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s->boot,boot_deleted,LV_EVENT_DELETE,NULL);
+    lv_obj_add_event_cb(s->boot,boot_skip,LV_EVENT_CLICKED,NULL);
+    s->boot_logo=lw_os_box(s->boot,0,84,1024,136,0,0,0);
+    lw_os_icon(s->boot_logo,OS_I_HEART,484,0,56,palette()->accent);
+    lv_obj_t *title=lw_os_label(s->boot_logo,"Little World",&lw_font_44,0,54,1024,palette()->deep);
+    lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
+    title=lw_os_label(s->boot_logo,"把喜欢的日子，慢慢点亮。",&lw_font_22,0,112,1024,palette()->text);
+    lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
+    lw_os_label(s->boot,"轻触跳过",&lw_font_18,888,24,120,palette()->muted);
+    return true;
+}
+/* Attach the wallpaper and start the animation. Safe to call on the overlay
+ * created by boot_backdrop(); also the whole of the old lw_os_boot(). */
+static void boot_finish(void)
+{
+    if (!s || !s->boot) return;
     lw_os_wallpaper(s->boot,s->painted_wallpaper,0,0,1024,600);
-    lv_obj_t *light=lw_os_box(s->boot,0,0,1024,600,0x282438,0,195); lw_os_motion_dim(light,195,0,1450);
-    lv_obj_t *logo=lw_os_box(s->boot,0,84,1024,136,0,0,0); lw_os_icon(logo,OS_I_HEART,484,0,56,palette()->accent);
-    lv_obj_t *title=lw_os_label(logo,"Little World",&lw_font_44,0,54,1024,palette()->deep); lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0);
-    title=lw_os_label(logo,"把喜欢的日子，慢慢点亮。",&lw_font_22,0,112,1024,palette()->text); lv_obj_set_style_text_align(title,LV_TEXT_ALIGN_CENTER,0); lw_os_motion(logo,LW_MOVE_BOOT);
+    /* The wallpaper and the dim layer are created *last*, so they are the
+     * topmost children, while the colour box, the logo and the hint were made
+     * first. Move them back by identity (index 0 is the colour box) instead of
+     * by a guessed index: the first attempt moved the logo and left the dim
+     * layer covering the title. */
+    const uint32_t count=lv_obj_get_child_count(s->boot);
+    lv_obj_t *wall=count ? lv_obj_get_child(s->boot,count-1) : NULL;
+    if (wall) lv_obj_move_to_index(wall,1);
+    lv_obj_t *light=lw_os_box(s->boot,0,0,1024,600,0x282438,0,195);
+    lv_obj_move_to_index(light,2);
+    lw_os_motion_dim(light,195,0,1450);
+    lw_os_motion(s->boot_logo,LW_MOVE_BOOT);
     for (unsigned i=0;i<8;i++) { lv_obj_t *petal=lw_os_icon(s->boot,OS_I_LEAF,46+(int)i*130,180+(int)(i%3)*90,18+(int)(i%2)*6,palette()->accent); lv_obj_set_style_opa(petal,170,0); lw_os_motion_vector(petal,-22,-72,1450+i*40,i*45); }
     for (unsigned i=0;s->art && i<2;i++) {
         const lw_clip_t *clip=art_clip(i,"idle"); if (!clip) continue;
         s->boot_sprites[i]=lw_sprite_create(s->boot,(int)s->duo.actors[i].x,(int)s->duo.actors[i].y,288);
         if (s->boot_sprites[i]) { lw_sprite_set_pixel_mode(s->boot_sprites[i]); lw_sprite_set_external_clock(s->boot_sprites[i],true); lw_sprite_play(s->boot_sprites[i],clip); lw_os_motion_vector(lw_sprite_object(s->boot_sprites[i]),i ? 84 : -84,10,900,300+i*160); }
     }
-    lw_os_label(s->boot,"轻触跳过",&lw_font_18,888,24,120,palette()->muted);
     lv_anim_t a; lv_anim_init(&a); lv_anim_set_var(&a,s->boot); lv_anim_set_exec_cb(&a,fade); lv_anim_set_values(&a,255,0); lv_anim_set_delay(&a,lw_os_motion_get()==LW_MOTION_FULL ? 1740 : 80); lv_anim_set_duration(&a,lw_os_motion_get()==LW_MOTION_FULL ? 260 : 90); lv_anim_set_start_cb(&a,boot_fade_start); lv_anim_set_completed_cb(&a,boot_complete); lv_anim_start(&a);
+}
+void lw_os_boot(void)
+{
+    if (!s || lw_os_motion_get()==LW_MOTION_OFF) return;
+    boot_backdrop();
+    boot_finish();
 }
 bool lw_os_boot_active(void) { return s && s->boot; }
 lv_obj_t *lw_os_control_panel(void) { return s ? s->control_panel : NULL; }
@@ -956,12 +1025,20 @@ void lw_os_boot_stats(lw_os_boot_stats_t *out)
     out->elapsed_ms = s->boot ? (lv_tick_get() - s->boot_started_tick) : s->boot_elapsed_ms;
     out->visible_ms = s->boot_visible_ms;
 }
+void lw_os_frame_stats(lw_os_frame_stats_t *out)
+{
+    if (out) *out = s_frames;
+}
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;
     /* The legacy shell initialised the saved app state; the OS path never did,
        so the anniversary read as year 0 and the desktop showed 740312 days. */
     lw_app_state_init();
+    const uint32_t started=lv_tick_get();
+    s_start_tick=started;
+    s_frames.last_total_ms=s_frames.wall_ms=s_frames.page_ms=s_frames.status_ms=s_frames.dock_ms=s_frames.tail_ms=0;
+    s_frames.splash_ms=s_frames.build_ms=s_frames.first_frame_ms=0;
     s=lv_malloc_zeroed(sizeof(*s)); if (!s) return false;
     s->system=system; s->art=art; s->pending=s->navigation=-1; s->previous=lv_screen_active(); s->last_tick=lv_tick_get(); s->last_wifi=system->wifi;
     if (!explicit_capabilities) derive_capabilities(system);
@@ -971,12 +1048,35 @@ bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
     (void)lw_duo_set_bounds(&s->duo,510,862,400,446);
     if (lw_visual_assets_available()) { for (unsigned i=0;i<2;i++) { s->duo.actors[i].x=450.0f+i*196.0f; s->duo.actors[i].y=478.0f; s->duo.actors[i].target_x=s->duo.actors[i].x; s->duo.actors[i].target_y=478.0f; } (void)lw_duo_set_bounds(&s->duo,394,702,436,478); }
     s->root=lv_obj_create(NULL); lv_obj_remove_style_all(s->root); lv_obj_set_size(s->root,1024,600); lv_obj_set_style_bg_opa(s->root,255,0); lv_obj_remove_flag(s->root,LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_event_cb(s->root,gesture,LV_EVENT_GESTURE,NULL); lv_screen_load(s->root); render(); s->timer=lv_timer_create(tick,20,s);
-    if (!s->timer) { lw_os_stop(); return false; } lw_os_boot(); return true;
+    lv_obj_add_event_cb(s->root,gesture,LV_EVENT_GESTURE,NULL); lv_screen_load(s->root);
+    /* Put something readable on the panel before the expensive build (626 ms of
+     * wallpaper decode plus 547 ms of page), then flush it. The user waits in
+     * front of a picture instead of a black screen; the real animation is
+     * attached after the page exists, behind the dim layer. */
+    const bool splash=lw_os_motion_get()!=LW_MOTION_OFF && boot_backdrop();
+    if (splash) lv_refr_now(NULL);
+    /* Time to something-on-the-panel, measured at the flush and not at the end
+     * of the build: this is the number that used to mean "black screen". */
+    s_frames.splash_ms=lv_tick_get()-started;
+    render();
+    s->timer=lv_timer_create(tick,20,s);
+    if (!s->timer) { lw_os_stop(); return false; }
+    if (splash) boot_finish();
+    /* The intro animation starts here, so its timeline is measured from here. */
+    s_frames.build_ms=lv_tick_get()-started;
+    /* A frame has reached the panel only after the next lv_timer_handler(), and
+     * that is the wall clock the user actually waits through. Measure it from
+     * the display instead of guessing, so a slow first flush shows up. */
+    lv_display_t *disp=lv_display_get_default();
+    if (disp) lv_display_add_event_cb(disp,first_flush,LV_EVENT_FLUSH_FINISH,NULL);
+    return true;
 }
 void lw_os_stop(void)
 {
     if (!s) return;
+    /* The splash lives on the top layer, which outlives s->root: without this
+     * it would stay on the panel after the OS is torn down. */
+    if (s->boot) lv_obj_delete(s->boot);
     if (s->timer) lv_timer_delete(s->timer);
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL; lw_visual_assets_shutdown(); lw_theme_session_palette(NULL); lw_shell_bind_host(NULL);

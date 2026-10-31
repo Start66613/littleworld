@@ -528,6 +528,28 @@ static int cmd_boot(int argc, char **argv)
     return 0;
 }
 
+static int cmd_osperf(int argc, char **argv)
+{
+    /* Where the first frame goes (V4.6). lw_os_start() builds the whole first
+     * screen synchronously inside the LVGL lock, and the panel shows nothing
+     * until that returns, so these numbers are literally how long the user
+     * stares at a black screen. The five parts add up to total; the interesting
+     * comparison is against "first", which is measured at the first flush, not
+     * at the end of the build - the gap between them is the flush itself. */
+    (void)argc;
+    (void)argv;
+    lw_os_frame_stats_t st = {0};
+    lw_os_frame_stats(&st);
+    printf("osperf: renders=%u total=%u ms (wall=%u page=%u status=%u dock=%u tail=%u)\n",
+           (unsigned)st.renders, (unsigned)st.last_total_ms, (unsigned)st.wall_ms,
+           (unsigned)st.page_ms, (unsigned)st.status_ms, (unsigned)st.dock_ms,
+           (unsigned)st.tail_ms);
+    printf("osperf: title card on panel=%u ms, build done=%u ms, flush event=%u ms\n",
+           (unsigned)st.splash_ms, (unsigned)st.build_ms, (unsigned)st.first_frame_ms);
+    fflush(stdout);
+    return 0;
+}
+
 static int cmd_fps(int argc, char **argv)
 {
     /* Real frame rate, measured by the LVGL adapter once a second. Without this
@@ -769,6 +791,9 @@ bool lw_capture_console_start(void)
     const esp_console_cmd_t c_boot = { .command = "boot",
                                        .help = "boot: overlay frames, wall clock and real rate",
                                        .func = &cmd_boot };
+    const esp_console_cmd_t c_osperf = { .command = "osperf",
+                                         .help = "osperf: first-screen build split and first frame",
+                                         .func = &cmd_osperf };
     const esp_console_cmd_t c_anim = { .command = "anim",
                                        .help = "actor clip, frame index and model clock",
                                        .func = &cmd_anim };
@@ -787,6 +812,7 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_sched);
     esp_console_cmd_register(&c_rpg);
     esp_console_cmd_register(&c_boot);
+    esp_console_cmd_register(&c_osperf);
     esp_console_cmd_register(&c_anim);
 #endif
 #if CONFIG_LW_FAULT_INJECT

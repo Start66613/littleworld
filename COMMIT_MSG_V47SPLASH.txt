@@ -1,0 +1,22 @@
+﻿perf(v4.7): 首屏黑屏 1254 -> 23 ms（遮罩先出、页面在背后建）+ 模拟器窗口改成显式 opt-in
+
+开机：
+- lw_os_boot() 拆成 boot_backdrop()（底色+标题+副标题+轻触跳过，无动画，挂在
+  lv_layer_top() 上，因为 render() 会 lv_obj_clean(s->root)）和 boot_finish()
+  （壁纸、压暗、logo 位移、叶子、两个开机精灵、淡出，页面建好后补）。
+- lw_os_start() 在 boot_backdrop() 之后立刻 lv_refr_now(NULL)，于是标题卡 23 ms
+  上屏；页面构建仍在背后继续（build done 1237 ms）。
+- 壁纸与压暗按身份插回 z 序（lv_obj_get_child(s->boot,count-1) 移到 index 1）。
+  用固定下标会把 logo 当成壁纸，压暗层盖住标题——宿主截图抓到的正是这个。
+- 代价如实记录：动效总时长 2047 -> 3247 ms，fps 11 -> 8；这是把等待变成内容，
+  不是提速。
+- 新的 osperf 命令给出首屏分段（wall/page/status/dock/tail）与
+  title card on panel / build done / flush event 三个时间点。
+
+宿主机：
+- 交互窗口改成显式 --window opt-in；没有它时打印 headless 用法并 exit 0。
+  此前少传一个参数就会开出一个永不退出的窗口（UI 卡死后点 X 关不掉）。
+- lw_host_run_window() 增加 1800 s 自毁上限，脚本启动的窗口不会再卡住机器。
+
+验证：host 142/0、resource 261/0、core（Duo 82 / RPG 336 / Storage 33）全绿；
+截图回归 147 identical / 9 differ，差异只在左侧开机精灵的矩形内（动效相位）。
