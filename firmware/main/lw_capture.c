@@ -555,13 +555,9 @@ static int cmd_osperf(int argc, char **argv)
     printf("osperf: cards reads=%u hits=%u refs=%u live=%u peak=%u\n",
            (unsigned)vis.reads, (unsigned)vis.hits, (unsigned)vis.refs,
            (unsigned)vis.live_bytes, (unsigned)vis.peak_bytes);
-    /* Nine-slice setters. One control-centre open builds 103 pieces; if these
-     * three numbers are small the cost is in creating objects, not in moving
-     * them, and the fix is fewer objects rather than fewer calls. */
-    uint32_t sc=0,pv=0,ps=0;
-    lw_skin_show_steps(&sc,&pv,&ps);
-    printf("osperf: nine-slice scale=%u pivot=%u pos=%u ms\n",
-           (unsigned)sc,(unsigned)pv,(unsigned)ps);
+    /* Nine-slice pieces used to be one box plus one image each; the skin now
+     * draws them from a single object, so the setter counters are gone and the
+     * remaining cost shows up in the overlay total above. */
     printf("osperf: overlays=%u last overlay=%u ms\n",
            (unsigned)st.overlays,(unsigned)st.overlay_ms);
     fflush(stdout);

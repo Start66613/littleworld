@@ -10,7 +10,3 @@ bool lw_skin_button(lv_obj_t *,lw_skin_id_t normal,lw_skin_id_t selected,lw_skin
 void lw_skin_select(lv_obj_t *,bool selected);
 void lw_skin_slider(lv_obj_t *slider);
 unsigned lw_skin_references(void);
-/* Temporary probe while the control centre is being made cheaper: how much of
- * one overlay build goes into each of the four nine-slice setters. */
-void lw_skin_show_steps(uint32_t *scale,uint32_t *pivot,uint32_t *pos);
-void lw_skin_show_reset(void);

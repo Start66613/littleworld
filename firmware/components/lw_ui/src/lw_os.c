@@ -661,7 +661,6 @@ static void show_overlay(lw_os_overlay_t kind)
     clear_overlay(); if (kind==OS_OVER_NONE) return;
     s->overlay=kind; s->building_overlay=true;
     const uint32_t overlay_started=lv_tick_get();
-    lw_skin_show_reset();
     freeze_begin();
     if(kind==OS_OVER_LETTER || kind==OS_OVER_LOCK)dock_set(false);
     lw_rpg_view_suspend(s->rpg,true);
