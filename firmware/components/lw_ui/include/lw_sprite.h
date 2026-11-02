@@ -23,6 +23,14 @@ bool lw_sprite_play(lw_sprite_t *sprite, const lw_clip_t *clip);
  * while the user is still standing still, makes that frame already resident.
  * Safe for clips that are never played; returns false if nothing was queued. */
 bool lw_sprite_prefetch_head(const lw_clip_t *clip);
+/* Queue every frame of a clip for a background read.
+ *
+ * Same read-ahead worker as the head prefetch, just the whole clip: the pet page
+ * plays 24 frames of 204 KB from an uncompressed pack, which is 2.5 s of card
+ * time, and paying that while the user is still on the desktop is invisible
+ * where paying it on entry costs most of a second. Returns false if nothing was
+ * queued (no cache, or the queue was full). */
+bool lw_sprite_prefetch_clip(const lw_clip_t *clip);
 bool lw_sprite_seek(lw_sprite_t *sprite, uint32_t elapsed_ms);
 void lw_sprite_pause(lw_sprite_t *sprite);
 void lw_sprite_resume(lw_sprite_t *sprite);

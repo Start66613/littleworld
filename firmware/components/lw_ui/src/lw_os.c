@@ -59,6 +59,10 @@ static void first_flush(lv_event_t *e)
     if (!s_frames.first_frame_ms) s_frames.first_frame_ms=lv_tick_get()-s_start_tick;
 }
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
+/* Boot warm-up: which card to read next, and when. See warm_pump(). */
+static unsigned s_warm_step;
+static uint32_t s_warm_at;
+static unsigned s_warm_rounds;
 bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
 static void render(void);
 static void refresh(void); static void show_overlay(lw_os_overlay_t);
@@ -825,6 +829,77 @@ static void act(int id)
         break;
     }
 }
+/* Read the cards the next page will want while the splash is still up.
+ *
+ * A page switch used to cost 670 ms of card time per card (1.2 MB at 1.9 MB/s),
+ * measured as `wall=` in osperf. The boot overlay is the only idle window this
+ * firmware has, so the room cards are read here, one per tick, in the order a
+ * session is likely to visit them. Each read blocks the LVGL task for about
+ * 650 ms, which the splash animation absorbs: it is already running at 8 fps
+ * behind a dimmed overlay, and the alternative is a dead second every time the
+ * user opens the RPG.
+ *
+ * Host builds never warm. There the cards come from a directory that is not rate
+ * limited, and more importantly the screenshot baselines must not depend on
+ * which cards happened to be warm when the capture ran. Note this is decided at
+ * compile time: lw_shell_host_active() is true on the board as well (it only
+ * says the OS shell owns app routing), so it cannot be used for this. */
+#if defined(ESP_PLATFORM)
+#define LW_VISUAL_WARM 1
+#else
+#define LW_VISUAL_WARM 0
+#endif
+
+/* The pet page picks a baked night variant when the card carries one (see
+ * pick_clip() in lw_app_pet.c); warming the day clip instead would queue frames
+ * nobody draws and leave the ones the page actually plays still cold. */
+static const lw_clip_t *warm_pet_clip(const char *name)
+{
+    if (lw_ambience_phase()>=LW_NIGHT) {
+        char night[48];
+        snprintf(night,sizeof(night),"%s.night",name);
+        const lw_clip_t *baked=lw_polish_clip(night);
+        if (baked) return baked;
+    }
+    return lw_polish_clip(name);
+}
+
+static void warm_pump(uint32_t now)
+{
+    if (!LW_VISUAL_WARM || !s_warm_step) return;
+    if ((int32_t)(now-s_warm_at)<0) return;
+    switch (s_warm_step) {
+    /* Pet frames first, on purpose. These calls only enqueue, so the read-ahead
+     * worker starts pulling them off the card while the LVGL task is blocked on
+     * the three card reads below - the two costs overlap instead of queuing up.
+     * 24 frames of about 204 KB are 2.5 s of card time on their own. */
+    case 1: s_warm_step=2; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
+    case 2: {
+        /* The dog sits in its bed when the card carries the dogbed clips, so
+         * those are the frames the page actually plays; dog.idle is only the
+         * fallback for a card without them. */
+        const lw_clip_t *pup=warm_pet_clip("v42.dogbed.look");
+        if (!pup || !pup->count) pup=warm_pet_clip("v42.dog.idle");
+        s_warm_step=3; s_warm_at=now+40; lw_sprite_prefetch_clip(pup); break;
+    }
+    case 3: s_warm_step=4; s_warm_at=now+40; lw_visual_prefetch_room("rpg-room"); break;
+    case 4: s_warm_step=5; s_warm_at=now+40; lw_visual_prefetch_room(lw_visual_daily_name()); break;
+    /* The RPG page paints prefs.wallpaper, not the ambience scene the desktop
+     * uses, so without this the RPG still paid 670 ms on its own background
+     * while the room behind it was already warm. Four slots now hold exactly
+     * this set: ambience scene, RPG room, pet room, preference scene. */
+    case 5: s_warm_step=6; s_warm_at=now+800; lw_visual_prefetch_scene(s->system->prefs.wallpaper); break;
+    /* Keep nudging the pet clips for a few rounds while the fan-out of the card
+     * reads settles. A repeat pass over frames that already landed is a cache
+     * hit inside the worker, so this costs nothing once the work is done. */
+    case 6:
+        if (++s_warm_rounds<20) { s_warm_step=1; s_warm_at=now+800; }
+        else s_warm_step=0;
+        break;
+    default: s_warm_step=0; break;
+    }
+}
+
 static void tick(lv_timer_t *timer)
 {
     (void)timer; uint32_t now=lv_tick_get(),dt=now-s->last_tick; s->last_tick=now; if (dt>200) dt=200;
@@ -844,6 +919,9 @@ static void tick(lv_timer_t *timer)
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt);
     if (s->boot) { s->boot_frames++; s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); }
+    /* Card reads only fit under the overlay (each blocks for about 650 ms). The
+     * pet frame nudges are queue calls, so they may outlive it. */
+    if (s->boot || s_warm_step>3) warm_pump(now);
     /* While the boot overlay is fully opaque the desktop cannot be seen, so the
      * duo state machine advances without repainting two 288-scale sprites and
      * their shadows underneath it. From the moment the fade starts
@@ -1062,6 +1140,9 @@ bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
     s->timer=lv_timer_create(tick,20,s);
     if (!s->timer) { lw_os_stop(); return false; }
     if (splash) boot_finish();
+    /* Only now: the page exists, the timer is running, and the overlay is up, so
+     * the warm reads have somewhere to hide. */
+    if (splash) { s_warm_step=1; s_warm_at=lv_tick_get()+80; }
     /* The intro animation starts here, so its timeline is measured from here. */
     s_frames.build_ms=lv_tick_get()-started;
     /* A frame has reached the panel only after the next lv_timer_handler(), and
@@ -1078,6 +1159,7 @@ void lw_os_stop(void)
      * it would stay on the panel after the OS is torn down. */
     if (s->boot) lv_obj_delete(s->boot);
     if (s->timer) lv_timer_delete(s->timer);
+    s_warm_step=0;
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     lw_system_save(s->system); lv_screen_load(s->previous); lv_obj_delete(s->root); lv_free(s); s=NULL; lw_visual_assets_shutdown(); lw_theme_session_palette(NULL); lw_shell_bind_host(NULL);
 }

@@ -19,7 +19,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define VISUAL_FULL_SLOTS 3
+/* Four, not three: a session that has visited the desktop, RPG and pet page wants
+ * the ambience scene, the preference scene, the RPG room and the pet room at
+ * once. With three the desktop's own scene load evicts the RPG room the boot
+ * warm-up just paid for, and the warm-up looks like it does nothing. */
+#define VISUAL_FULL_SLOTS 4
 #define VISUAL_THUMB_SLOTS 3
 #define VISUAL_KEY 24
 
@@ -86,26 +90,46 @@ bool lw_visual_assets_available(void)
 
 lw_visual_stats_t lw_visual_assets_stats(void) { return stats; }
 
+/* Read one card into an already reserved slot, taking no reference. Drawing
+ * rights are what load() adds on top; the bytes are the expensive part. */
+static bool fill(entry_t *e, const char *key, const char *path, unsigned w, unsigned h)
+{
+    FILE *f=fopen(path,"rb"); if (!f) { stats.failures++; return false; }
+    const size_t bytes=(size_t)w*h*2u; uint8_t header[16];
+    bool valid=fread(header,1,16,f)==16 && !memcmp(header,"LWSR0001",8) && u16(header+8)==w && u16(header+10)==h;
+    if (!valid) { fclose(f); stats.failures++; return false; }
+    uint8_t *data=lv_malloc(bytes); if (!data) { fclose(f); stats.failures++; return false; }
+    valid=fread(data,1,bytes,f)==bytes && fgetc(f)==EOF; fclose(f);
+    if (!valid) { lv_free(data); stats.failures++; return false; }
+    e->pixels=data; e->refs=0; e->used=++use_clock;
+    snprintf(e->key,sizeof(e->key),"%s",key);
+    e->image.header.magic=LV_IMAGE_HEADER_MAGIC; e->image.header.cf=LV_COLOR_FORMAT_RGB565;
+    e->image.header.w=w; e->image.header.h=h; e->image.header.stride=w*2;
+    e->image.data=data; e->image.data_size=bytes; stats.reads++; stats.live_bytes+=bytes;
+    if (stats.live_bytes>stats.peak_bytes) stats.peak_bytes=stats.live_bytes;
+    return true;
+}
+
 static entry_t *load(entry_t *pool, unsigned count, const char *key, const char *path, unsigned w, unsigned h)
 {
     entry_t *e=lookup(pool,count,key);
     if (e) { stats.hits++; e->refs++; stats.refs++; e->used=++use_clock; return e; }
     e=reserve(pool,count);
     if (!e) { stats.failures++; return NULL; }
-    FILE *f=fopen(path,"rb"); if (!f) { stats.failures++; return NULL; }
-    const size_t bytes=(size_t)w*h*2u; uint8_t header[16];
-    bool valid=fread(header,1,16,f)==16 && !memcmp(header,"LWSR0001",8) && u16(header+8)==w && u16(header+10)==h;
-    if (!valid) { fclose(f); stats.failures++; return NULL; }
-    uint8_t *data=lv_malloc(bytes); if (!data) { fclose(f); stats.failures++; return NULL; }
-    valid=fread(data,1,bytes,f)==bytes && fgetc(f)==EOF; fclose(f);
-    if (!valid) { lv_free(data); stats.failures++; return NULL; }
-    e->pixels=data; e->refs=1; e->used=++use_clock;
-    snprintf(e->key,sizeof(e->key),"%s",key);
-    e->image.header.magic=LV_IMAGE_HEADER_MAGIC; e->image.header.cf=LV_COLOR_FORMAT_RGB565;
-    e->image.header.w=w; e->image.header.h=h; e->image.header.stride=w*2;
-    e->image.data=data; e->image.data_size=bytes; stats.reads++; stats.refs++; stats.live_bytes+=bytes;
-    if (stats.live_bytes>stats.peak_bytes) stats.peak_bytes=stats.live_bytes;
+    if (!fill(e,key,path,w,h)) return NULL;
+    e->refs=1; stats.refs++;
     return e;
+}
+
+/* Put a card in the pool without giving it a reference. Nothing depends on this
+ * succeeding: if the read fails or the pool evicts the slot again, the page that
+ * wanted it simply pays the card read it always used to pay. */
+static bool warm(entry_t *pool, unsigned count, const char *key, const char *path, unsigned w, unsigned h)
+{
+    if (lookup(pool,count,key)) return true;
+    entry_t *e=reserve(pool,count);
+    if (!e) return false;
+    return fill(e,key,path,w,h);
 }
 
 static void deleted(lv_event_t *event)
@@ -149,6 +173,23 @@ static lv_obj_t *aux_image(lv_obj_t *parent,const char *name)
 }
 
 lv_obj_t *lw_visual_rpg_image(lv_obj_t *parent) { return aux_image(parent,"rpg-room"); }
+
+/* Boot warm-up entry points. They read through the same slot pool the pages use,
+ * so "warm" means "the next load() of this name is a lookup". */
+bool lw_visual_prefetch_scene(unsigned theme)
+{
+    if (!directory[0] || theme>2) return false;
+    char path[600]; if (!scene_path(path,sizeof(path),theme,false)) return false;
+    char key[VISUAL_KEY]; snprintf(key,sizeof(key),"scene-%u",theme);
+    return warm(full_slots,VISUAL_FULL_SLOTS,key,path,1024u,600u);
+}
+
+bool lw_visual_prefetch_room(const char *name)
+{
+    if (!aux_directory[0] || !name || !name[0]) return false;
+    char path[600]; snprintf(path,sizeof(path),"%s/%s.lwr",aux_directory,name);
+    return warm(full_slots,VISUAL_FULL_SLOTS,name,path,1024u,600u);
+}
 
 /* One place decides which room card the pet page shows, so the warm-up can ask
  * for the same file instead of guessing from the phase and getting it wrong. */

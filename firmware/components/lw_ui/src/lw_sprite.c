@@ -205,6 +205,14 @@ bool lw_sprite_prefetch_head(const lw_clip_t *clip)
     spec->prefetch(spec->context,clip->sequence[0]);
     return true;
 }
+bool lw_sprite_prefetch_clip(const lw_clip_t *clip)
+{
+    if (!clip || !clip->count) return false;
+    const lw_asset_spec_t *spec=lw_assets_find(clip->asset_id);
+    if (!spec || !spec->prefetch) return false;
+    for (unsigned i=0;i<clip->count;i++) spec->prefetch(spec->context,clip->sequence[i]);
+    return true;
+}
 bool lw_sprite_play(lw_sprite_t *s, const lw_clip_t *clip)
 {
     uint32_t total=clip_length(clip);

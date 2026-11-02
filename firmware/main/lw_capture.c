@@ -42,6 +42,7 @@
 #include "lw_time_boot.h"
 #include "lw_os.h"
 #include "lw_os_design.h"
+#include "lw_visual_assets.h"
 #include "esp_lv_adapter.h"
 #if CONFIG_LW_FAULT_INJECT
 #include "lw_fault.h"
@@ -546,6 +547,13 @@ static int cmd_osperf(int argc, char **argv)
            (unsigned)st.tail_ms);
     printf("osperf: title card on panel=%u ms, build done=%u ms, flush event=%u ms\n",
            (unsigned)st.splash_ms, (unsigned)st.build_ms, (unsigned)st.first_frame_ms);
+    /* Card pool evidence. A page switch costs one card read when the pool misses,
+     * so "reads" climbing by exactly the number of cards a page needs is the
+     * signature of a cold pool, and reads standing still is a warm one. */
+    lw_visual_stats_t vis=lw_visual_assets_stats();
+    printf("osperf: cards reads=%u hits=%u refs=%u live=%u peak=%u\n",
+           (unsigned)vis.reads, (unsigned)vis.hits, (unsigned)vis.refs,
+           (unsigned)vis.live_bytes, (unsigned)vis.peak_bytes);
     fflush(stdout);
     return 0;
 }
