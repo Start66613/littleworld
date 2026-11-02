@@ -94,5 +94,9 @@ typedef struct {
     uint32_t renders;
     uint32_t last_total_ms, wall_ms, page_ms, status_ms, dock_ms, tail_ms;
     uint32_t splash_ms, build_ms, first_frame_ms;
+    /* Overlays (control centre, Wi-Fi, password, lock, letter) are built on the
+     * running page instead of through render(), so they need their own two
+     * numbers: how many have been built, and how long the last one took. */
+    uint32_t overlays, overlay_ms;
 } lw_os_frame_stats_t;
 void lw_os_frame_stats(lw_os_frame_stats_t *out);

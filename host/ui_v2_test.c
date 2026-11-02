@@ -32,8 +32,10 @@ static bool read_fixture(void *context, uint16_t frame, uint8_t *data, size_t by
     return true;
 }
 static const lw_asset_spec_t s_specs[]={
-    {"pet.idle",32,32,3,16,28,LV_COLOR_FORMAT_RGB565A8,read_fixture,&s_pet},
-    {"room.home",64,48,1,0,0,LV_COLOR_FORMAT_RGB565,read_fixture,&s_room}
+    /* Zero bbox = "no geometry metadata": the draw keeps a canvas-sized object,
+     * exactly like the V4.4 assets these fixtures stand in for. */
+    {"pet.idle",32,32,3,16,28,LV_COLOR_FORMAT_RGB565A8,0,0,0,0,0,read_fixture,&s_pet},
+    {"room.home",64,48,1,0,0,LV_COLOR_FORMAT_RGB565,0,0,0,0,0,read_fixture,&s_room}
 };
 static const uint16_t s_sequence[]={0,1,2}, s_duration[]={80,140,100};
 static const lw_clip_t s_loop={"pet.idle",s_sequence,s_duration,3,true};
@@ -235,8 +237,8 @@ int lw_ui_v2_test(const char *output_dir)
     /* Production-size budget exercise without loading an entire animation. */
     fixture_t full_room={1024,600,false,-1,0},full_pet={256,256,true,-1,0};
     lw_asset_spec_t full[]={
-        {"room",1024,600,1,0,0,LV_COLOR_FORMAT_RGB565,read_fixture,&full_room},
-        {"pet",256,256,16,128,236,LV_COLOR_FORMAT_RGB565A8,read_fixture,&full_pet}
+        {"room",1024,600,1,0,0,LV_COLOR_FORMAT_RGB565,0,0,0,0,0,read_fixture,&full_room},
+        {"pet",256,256,16,128,236,LV_COLOR_FORMAT_RGB565A8,0,0,0,0,0,read_fixture,&full_pet}
     };
     CHECK("register production-sized provider",lw_assets_register(full,2,2u*1024u*1024u));
     lw_asset_lease_t *bg=lw_asset_acquire("room",0), *current=lw_asset_acquire("pet",0), *next=lw_asset_acquire("pet",1);

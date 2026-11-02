@@ -683,3 +683,89 @@ rpg
 - **音乐页 311 ms**：和上面同源——一页 20 个皮肤按钮，每个按钮是 9 个 `lv_image` 切片。
   这两处要的是同一件事：把九宫格从「9 个对象」变成「1 个对象画 9 块」，
   或者按实际尺寸把面板烘成单张图。
+
+---
+
+## 16. 构建期的失效风暴：`lv_obj_invalidate()` 每次遍历整棵对象树五遍
+
+### 16.1 现象
+
+控制中心首次打开 429 ms，而它不读卡、不解码、不做布局（`layout=16 ms`）。
+把 103 个九宫格切片的四次 setter 分开计时：
+
+```
+skin steps box=90 image=4 show=224 tint=35 callbacks=7 worst=7 ms
+osperf: nine-slice scale=109 pivot=95 pos=61 ms
+```
+
+`set_scale_x` / `set_scale_y` / `set_pivot` / `set_pos` 每个调用摊到 **约 1 ms**。
+对一次属性赋值来说这个数量级没有道理，于是去看 LVGL 里 `lv_obj_invalidate()`
+到底做了什么。
+
+### 16.2 根因
+
+`firmware/managed_components/lvgl__lvgl/src/core/lv_obj_pos.c` 的
+`obj_invalidate_area_internal()`：
+
+```c
+lv_result_t res = invalidate_area_core(obj, &area_tmp);
+if(res == LV_RESULT_INVALID) return res;
+/*If this area is on a blurred widget, invalidate that widget too*/
+lv_obj_tree_walk(disp->act_scr, blur_walk_cb, &blur_walk_data);
+if(disp->prev_scr) lv_obj_tree_walk(disp->prev_scr, blur_walk_cb, &blur_walk_data);
+lv_obj_tree_walk(disp->sys_layer, blur_walk_cb, &blur_walk_data);
+lv_obj_tree_walk(disp->top_layer, blur_walk_cb, &blur_walk_data);
+lv_obj_tree_walk(disp->bottom_layer, blur_walk_cb, &blur_walk_data);
+```
+
+**每一次失效都会把五棵层的对象树各走一遍**，为的是找「被模糊半径覆盖的控件」。
+本项目从不用 `blur_radius`，但库不知道。控制中心是几百个对象、两千多次 setter，
+于是走树的成本盖过了所有业务代码。
+
+### 16.3 改动
+
+构建期间冻结失效，构建完再整屏失效一次：
+
+```c
+static lv_display_t *s_frozen;
+static void freeze_begin(void)
+{
+    if (s_frozen) return;
+    lv_display_t *disp=lv_display_get_default();
+    if (!disp || !lv_display_is_invalidation_enabled(disp)) return;
+    lv_display_enable_invalidation(disp,false); s_frozen=disp;
+}
+static void freeze_end(void)
+{
+    if (!s_frozen) return;
+    lv_display_t *disp=s_frozen; s_frozen=NULL;
+    lv_display_enable_invalidation(disp,true);
+    lv_obj_t *active=lv_display_get_screen_active(disp);
+    if (active) lv_obj_invalidate(active);
+}
+```
+
+`render()`（整页重建）与 `show_overlay()`（控制中心/信纸/锁屏等）各自包一层。
+失效关闭时 `lv_obj_invalidate()` 在 `lv_display_is_invalidation_enabled()`
+处直接返回，控件坐标照样被 setter 更新——失效只是「标记脏区」，不是状态。
+
+### 16.4 结果
+
+| | 改前 | 改后 |
+|---|---|---|
+| 控制中心首次打开 | 429 ms | **305–328 ms** |
+| 九宫格四 setter 合计 | 265 ms | **151–172 ms** |
+| 整页重建（音乐页） | 412 ms | 412 ms（`page=322`，见 §16.5） |
+| 156 张宿主截图 | — | **156/156 逐像素一致** |
+
+### 16.5 剩下的成本在哪
+
+冻结之后 setter 仍占 151–172 ms，说明还有一半成本不在失效里：
+103 个切片 = 206 个对象（每片一个容器盒 + 一个 `lv_image`），
+而九宫格要靠父对象裁剪出窗口，所以每片必须是两级。
+真正的解法是把一个面板画成**一个对象**：`LV_EVENT_DRAW_MAIN` 里画九块，
+每块用 `lv_draw_image` 按各自的比例缩放，绘制成本不变而对象数从 206 降到 12。
+音乐页 322 ms 同理（一页 20 个皮肤按钮 = 180 片）。
+
+这也是为什么 §15.5 里「建一次藏起来」的缓存路线虽然把重开降到 0–1 ms
+却把后续页面的场景卡挤掉：它没有减少对象，只是把一整页藏起来。

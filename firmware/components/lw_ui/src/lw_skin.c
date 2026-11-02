@@ -10,12 +10,25 @@ static const rect_t rects[SK_COUNT]={
  {0,178,148,136},{0,314,480,220},
  {152,178,128,128},{284,178,96,48},{380,178,96,48},{284,230,96,48},{492,178,16,128},{380,230,32,40}};
 static lw_asset_lease_t *atlas;static unsigned refs;
+/* Temporary probe: the control centre builds 103 nine-slice pieces and one
+ * open measured 429 ms. Splitting the four setters tells us whether the cost
+ * is per call (then fewer calls help) or per object (then fewer objects do). */
+static uint32_t s_scale_ms,s_pivot_ms,s_pos_ms;
+void lw_skin_show_steps(uint32_t *scale,uint32_t *pivot,uint32_t *pos){if(scale)*scale=s_scale_ms;if(pivot)*pivot=s_pivot_ms;if(pos)*pos=s_pos_ms;}
+void lw_skin_show_reset(void){s_scale_ms=s_pivot_ms=s_pos_ms=0;}
 typedef struct {lv_obj_t *image,*button;rect_t source;int width,height,offx,offy;lw_skin_id_t base,selected,pressed;} slice_t;
 static void pressed(lv_event_t *e);
 static void show(slice_t *s,rect_t r)
 {
     s->source=r;unsigned sx=(unsigned)s->width*256/(unsigned)r.w,sy=(unsigned)s->height*256/(unsigned)r.h;
-    lv_image_set_scale_x(s->image,sx);lv_image_set_scale_y(s->image,sy);lv_image_set_pivot(s->image,0,0);lv_obj_set_pos(s->image,-r.x*(int)sx/256,-r.y*(int)sy/256);
+    uint32_t t0=lv_tick_get();
+    lv_image_set_scale_x(s->image,sx);lv_image_set_scale_y(s->image,sy);
+    uint32_t t1=lv_tick_get();
+    lv_image_set_pivot(s->image,0,0);
+    uint32_t t2=lv_tick_get();
+    lv_obj_set_pos(s->image,-r.x*(int)sx/256,-r.y*(int)sy/256);
+    uint32_t t3=lv_tick_get();
+    s_scale_ms+=(uint32_t)(t1-t0);s_pivot_ms+=(uint32_t)(t2-t1);s_pos_ms+=(uint32_t)(t3-t2);
 }
 static void deleted(lv_event_t *e)
 {

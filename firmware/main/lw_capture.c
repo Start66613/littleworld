@@ -43,6 +43,7 @@
 #include "lw_os.h"
 #include "lw_os_design.h"
 #include "lw_visual_assets.h"
+#include "lw_skin.h"
 #include "esp_lv_adapter.h"
 #if CONFIG_LW_FAULT_INJECT
 #include "lw_fault.h"
@@ -554,6 +555,15 @@ static int cmd_osperf(int argc, char **argv)
     printf("osperf: cards reads=%u hits=%u refs=%u live=%u peak=%u\n",
            (unsigned)vis.reads, (unsigned)vis.hits, (unsigned)vis.refs,
            (unsigned)vis.live_bytes, (unsigned)vis.peak_bytes);
+    /* Nine-slice setters. One control-centre open builds 103 pieces; if these
+     * three numbers are small the cost is in creating objects, not in moving
+     * them, and the fix is fewer objects rather than fewer calls. */
+    uint32_t sc=0,pv=0,ps=0;
+    lw_skin_show_steps(&sc,&pv,&ps);
+    printf("osperf: nine-slice scale=%u pivot=%u pos=%u ms\n",
+           (unsigned)sc,(unsigned)pv,(unsigned)ps);
+    printf("osperf: overlays=%u last overlay=%u ms\n",
+           (unsigned)st.overlays,(unsigned)st.overlay_ms);
     fflush(stdout);
     return 0;
 }

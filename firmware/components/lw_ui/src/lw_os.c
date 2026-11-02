@@ -452,12 +452,36 @@ static void build_legacy(void)
     s->mount=lw_os_box(s->content,0,52,1024,s->page==OS_PET ? 548 : 440,palette()->bg,0,255);
     if (app) { s->legacy=app; app->create(s->mount,app); }
 }
+/* Building a screen invalidates on every widget setter, and lv_obj_invalidate()
+ * walks the whole object tree five times per call (once for each layer, looking
+ * for blurred widgets). A page or overlay is a few hundred objects and a couple
+ * of thousand setters, so the walk dominates: the control centre's four setters
+ * per nine-slice piece measured 109 + 95 + 61 ms, all of it invalidate walks.
+ * Freezing invalidation for the duration of the build and redrawing the screen
+ * once at the end is the same picture for a fraction of the work. */
+static lv_display_t *s_frozen;
+static void freeze_begin(void)
+{
+    if (s_frozen) return;
+    lv_display_t *disp=lv_display_get_default();
+    if (!disp || !lv_display_is_invalidation_enabled(disp)) return;
+    lv_display_enable_invalidation(disp,false); s_frozen=disp;
+}
+static void freeze_end(void)
+{
+    if (!s_frozen) return;
+    lv_display_t *disp=s_frozen; s_frozen=NULL;
+    lv_display_enable_invalidation(disp,true);
+    lv_obj_t *active=lv_display_get_screen_active(disp);
+    if (active) lv_obj_invalidate(active);
+}
 static void render(void)
 {
     /* Section marks for lw_os_frame_stats(). Keep them cheap: four lv_tick_get()
      * calls per rebuild is nothing next to the work being measured. */
     const uint32_t render_started=lv_tick_get();
     uint32_t render_mark=render_started;
+    freeze_begin();
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
     s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
@@ -488,6 +512,7 @@ static void render(void)
     build_dock(); if (s->page!=OS_DESKTOP){lv_obj_t *back=icon_button(s->root,OS_I_BACK,840,2,44,OC_HOME);lv_obj_set_style_bg_opa(back,0,0);lv_obj_set_style_border_width(back,0,0);}
     { uint32_t now=lv_tick_get(); s_frames.dock_ms=now-render_mark; render_mark=now; }
     refresh(); update_actors(0); lw_os_motion(s->content,s->page==OS_THEMES ? LW_MOVE_THEME : s->reverse_page ? LW_MOVE_RETURN : LW_MOVE_PAGE); s->reverse_page=false;
+    freeze_end();
     { uint32_t now=lv_tick_get(); s_frames.tail_ms=now-render_mark; s_frames.last_total_ms=now-render_started; s_frames.renders++; }
 }
 static void build_control(void)
@@ -635,6 +660,9 @@ static void show_overlay(lw_os_overlay_t kind)
     if (kind==OS_OVER_LOCK && s->overlay==kind && s->over) { refresh(); return; }
     clear_overlay(); if (kind==OS_OVER_NONE) return;
     s->overlay=kind; s->building_overlay=true;
+    const uint32_t overlay_started=lv_tick_get();
+    lw_skin_show_reset();
+    freeze_begin();
     if(kind==OS_OVER_LETTER || kind==OS_OVER_LOCK)dock_set(false);
     lw_rpg_view_suspend(s->rpg,true);
     s->over=lw_os_box(s->root,0,0,1024,600,0x493e43,0,72); lv_obj_add_flag(s->over,LV_OBJ_FLAG_CLICKABLE);
@@ -656,7 +684,8 @@ static void show_overlay(lw_os_overlay_t kind)
         }
         lw_os_motion(p,kind==OS_OVER_LETTER ? LW_MOVE_PAPER : LW_MOVE_DIALOG);
     }
-    s->building_overlay=false; refresh();
+    s->building_overlay=false; freeze_end(); refresh();
+    s_frames.overlays++; s_frames.overlay_ms=lv_tick_get()-overlay_started;
 }
 void lw_os_notify(const char *message)
 {
