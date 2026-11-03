@@ -916,11 +916,17 @@ static void warm_pump(uint32_t now)
      * uses, so without this the RPG still paid 670 ms on its own background
      * while the room behind it was already warm. Four slots now hold exactly
      * this set: ambience scene, RPG room, pet room, preference scene. */
-    case 5: s_warm_step=6; s_warm_at=now+800; lw_visual_prefetch_scene(s->system->prefs.wallpaper); break;
+    case 5: s_warm_step=6; s_warm_at=now+40; lw_visual_prefetch_scene(s->system->prefs.wallpaper); break;
+    /* The album and music pages each draw one v42ui sheet frame, and each frame
+     * is 574 KB of card time (~300 ms) inside the page build. Only the first
+     * round reads them: the lease is released right away, so every later round
+     * would just copy the same 574 KB back out of the cache for nothing. */
+    case 6: s_warm_step=7; s_warm_at=now+40; if (!s_warm_rounds) lw_polish_prefetch(3); break; /* album */
+    case 7: s_warm_step=8; s_warm_at=now+200; if (!s_warm_rounds) lw_polish_prefetch(2); break; /* music */
     /* Keep nudging the pet clips for a few rounds while the fan-out of the card
      * reads settles. A repeat pass over frames that already landed is a cache
      * hit inside the worker, so this costs nothing once the work is done. */
-    case 6:
+    case 8:
         if (++s_warm_rounds<20) { s_warm_step=1; s_warm_at=now+800; }
         else s_warm_step=0;
         break;

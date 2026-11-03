@@ -35,6 +35,21 @@ const lw_clip_t *lw_polish_clip(const char *name)
     return NULL;
 }
 static void release(lv_event_t *e) { lv_image_set_src(lv_event_get_target_obj(e),NULL); lw_asset_release(lv_event_get_user_data(e)); }
+/* Pull one sheet frame into the file cache early, so the album and music pages
+ * do not pay for it on the way in.
+ *
+ * A v42ui frame is 544x352x3 = 574,464 B and the card delivers about 1.9 MB/s,
+ * which is ~300 ms inside the page build: osperf put both pages at 339/340 ms
+ * against 41-48 ms everywhere else. Acquiring and immediately releasing is the
+ * whole trick - the read goes through exactly the same provider the page uses,
+ * so a later acquire is a cache hit, and the lease buffer goes back to PSRAM.
+ * Returns false when the card has no sheet, which is not an error. */
+bool lw_polish_prefetch(unsigned frame)
+{
+    const lw_asset_spec_t *spec=lw_assets_find("v42ui.sheet"); if (!spec || frame>=spec->frames) return false;
+    lw_asset_lease_t *lease=lw_asset_acquire(spec->id,(uint16_t)frame); if (!lease) return false;
+    lw_asset_release(lease); return true;
+}
 lv_obj_t *lw_polish_art(lv_obj_t *parent,unsigned frame,int x,int y)
 {
     const lw_asset_spec_t *spec=lw_assets_find("v42ui.sheet"); if (!spec || frame>=spec->frames) return NULL;

@@ -123,7 +123,10 @@ void host_platform_init(void)
         exit(2);
     }
     if (!CreateDirectoryA(s_base_dir,NULL) && GetLastError()!=ERROR_ALREADY_EXISTS) {
-        fprintf(stderr,"Cannot create isolated simulator data directory.\n"); exit(2);
+        fprintf(stderr,"Cannot create isolated simulator data directory.\n");
+        fprintf(stderr,"  path: %s\n",s_base_dir);
+        fprintf(stderr,"  GetLastError: %lu\n",(unsigned long)GetLastError());
+        exit(2);
     }
     lw_platform_set(&s_platform);
 }
