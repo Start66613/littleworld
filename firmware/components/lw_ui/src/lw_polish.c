@@ -40,13 +40,20 @@ static void release(lv_event_t *e) { lv_image_set_src(lv_event_get_target_obj(e)
  *
  * A v42ui frame is 544x352x3 = 574,464 B and the card delivers about 1.9 MB/s,
  * which is ~300 ms inside the page build: osperf put both pages at 339/340 ms
- * against 41-48 ms everywhere else. Acquiring and immediately releasing is the
- * whole trick - the read goes through exactly the same provider the page uses,
- * so a later acquire is a cache hit, and the lease buffer goes back to PSRAM.
+ * against 41-48 ms everywhere else.
+ *
+ * This queues the frame on the read-ahead worker instead of reading it here.
+ * The first version acquired a lease and released it immediately, which does
+ * work but blocks the LVGL task for the full 300 ms per frame: the boot overlay
+ * went from 3247 ms / 29 frames to 4402 ms / 5 frames, i.e. it paid 1.15 s of
+ * animation to save 0.6 s of page time. The worker reads while the splash is
+ * still animating, so the same bytes land without stopping the UI.
  * Returns false when the card has no sheet, which is not an error. */
 bool lw_polish_prefetch(unsigned frame)
 {
     const lw_asset_spec_t *spec=lw_assets_find("v42ui.sheet"); if (!spec || frame>=spec->frames) return false;
+    if (spec->prefetch) { spec->prefetch(spec->context,(uint16_t)frame); return true; }
+    /* Providers without a queue (embedded fallback) can only be read directly. */
     lw_asset_lease_t *lease=lw_asset_acquire(spec->id,(uint16_t)frame); if (!lease) return false;
     lw_asset_release(lease); return true;
 }

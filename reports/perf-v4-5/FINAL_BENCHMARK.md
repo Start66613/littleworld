@@ -848,3 +848,75 @@ sheet 插画还没做。可选两条路：
 `art_state()` 里把九宫格边框硬编码成 10，而 `lw_skin_panel()` 是带 `border` 参数的（控制中心面板是 16）。
 按下/选中时按 10 重画，边框就会缩水。现在 `art_t` 存了自己的 `border`，状态切换沿用它。
 **任何「状态重绘」都必须复用创建时的几何参数，不能重新猜一遍。**
+
+## 18. 相册/音乐：把 574 KB 的插图帧排进开机队列
+
+### 18.1 上一节留下的账
+
+§17 收尾时相册 339 ms、音乐 340 ms，而 `wall` 只有 9 ms —— 不是读场景卡，是 `page` 段里的 302 / 309 ms。两页各调一次
+`lw_polish_art()` 取 `v42ui.sheet` 的一帧：**544×352×3 = 574,464 B**，卡 1.9 MB/s ⇒ 一张 300 ms。`diagjson` 前后
+`cache_misses` +6、`cache_resident` +1,210,368 B，正好对上两张。
+
+用到的帧号：相册 `lw_app_album.c:84` frame 3、音乐 `lw_app_music.c:205` frame 2、回忆 `lw_app_memories.c:266` frame 1 与
+`:357` frame 4、RPG 面板 `lw_rpg_view.c:192` frame 28。
+
+### 18.2 做法：一次 `lw_polish_prefetch()`
+
+```c
+bool lw_polish_prefetch(unsigned frame)
+{
+    const lw_asset_spec_t *spec=lw_assets_find("v42ui.sheet");
+    if (!spec) return false;
+    if (spec->prefetch) return spec->prefetch(spec->context,(uint16_t)frame);
+    const lw_asset_t *a=lw_asset_acquire("v42ui.sheet",frame);
+    if (!a) return false;
+    lw_asset_release(a);
+    return true;
+}
+```
+
+有 `prefetch` 就只入队（`lw_file_cache_prefetch`，非阻塞）；没有才退回 acquire+release 的阻塞读。两个调用点挂在
+`warm_pump()` 的开机预热状态机上。
+
+### 18.3 三次翻车，每次都是同一个原因：队列是有界的
+
+**第一次：阻塞版把动画赔进去了。** 先用 acquire+release（每张 300 ms 实读），页面确实降到 38 ms，但真机
+`boot: frames=5 elapsed=4402 ms fps=1`（基线 `frames=29 elapsed=3247 ms fps=8`）—— 为了省 0.6 s 页面时间，赔掉 1.15 s
+动画、24 帧。换成入队版。
+
+**第二次：入队版一样慢，因为排在最后被静默丢掉。** 预热队列 **24 深**，而宠物帧一轮就排 32 帧（24 个
+`couple.seated` + 8 个 `dogbed.look`），并且每 800 ms 重排一次。`lw_file_cache_prefetch()` 满了直接返回 `false`，
+不报错、不排队。实测证据很干净：**相册（早一步问）38 ms 命中，音乐（晚一步问）339 ms 没中**。
+
+**第三次：把 sheet 挪到最前面，宠物帧排到遮罩结束之后。** 顺序变成
+sheet(2 张) → 场景卡(3 张，阻塞) → 宠物帧(32 帧) → 20 轮只回到宠物步。宠物帧那一步加了
+`if (s->boot) { s_warm_at=now+100; break; }`：**遮罩动画还在跑时，read-ahead worker 抢的是同一张卡和同一把缓存锁**，
+一次装进去就让遮罩从 29 帧掉到 5 帧。
+
+### 18.4 真机结果
+
+| 页面 | 改前 | 改后 |
+|---|---|---|
+| 相册（首次） | 339 ms | **77 ms** |
+| 音乐（首次） | 340 ms | **46 ms** |
+| 回忆（首次） | 43 ms | 43 ms |
+| 桌面→世界 | 77 ms | **49 ms** |
+| 世界→RPG | 1359 → 121 ms | **43 ms** |
+| RPG→桌面 | 734 → 115 ms | **48 ms** |
+| 桌面→宠物 | 908 → 90 ms | **37 ms** |
+| 控制中心（首次） | 429 → 20 ms | **20 ms** |
+
+开机：`boot: frames=5 elapsed=3462 ms fps=1`，`osperf: total=1164 ms (wall=631 page=524)`，
+`cards reads=4 hits=1 live=4,915,200 peak=4,915,200`（四张卡正好填满四槽）。
+
+**代价写清楚**：开机总时长 3247 → 3462 ms（+215 ms），但**遮罩动画的帧数从 29 掉到 5**。三张场景卡各 650 ms 的同步读
+都在 LVGL 任务里，这段时间 `lv_timer_handler` 根本转不起来。这是一次有意识的取舍：遮罩是"加载画面"，而用户下一句话
+是点开一个页面；但它在"开机动效不能退"这一条上确实是退步，下一轮要么把卡读搬到 worker（需要给 `lw_visual_assets`
+加一条异步装载路径），要么把遮罩的淡出缩短到与卡读等长。
+
+### 18.5 教训
+
+1. **有界队列是"先到先得"，不是"重要先得"。** 预热要按"最贵的先排"，不能按"最想优化的页面先写代码"。
+2. **别用阻塞读换页面时间。** 一次 300 ms 的同步读，代价是遮罩少 6–7 帧；用户先看到的是遮罩。
+3. **遮罩期间的 SD 卡与缓存锁是共享资源。** 读 ahead 的 worker 和遮罩自己的精灵 seek 抢同一张卡，谁多谁就让遮罩掉帧。
+

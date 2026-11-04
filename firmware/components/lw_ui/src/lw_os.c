@@ -897,19 +897,18 @@ static void warm_pump(uint32_t now)
     if (!LW_VISUAL_WARM || !s_warm_step) return;
     if ((int32_t)(now-s_warm_at)<0) return;
     switch (s_warm_step) {
-    /* Pet frames first, on purpose. These calls only enqueue, so the read-ahead
-     * worker starts pulling them off the card while the LVGL task is blocked on
-     * the three card reads below - the two costs overlap instead of queuing up.
-     * 24 frames of about 204 KB are 2.5 s of card time on their own. */
-    case 1: s_warm_step=2; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
-    case 2: {
-        /* The dog sits in its bed when the card carries the dogbed clips, so
-         * those are the frames the page actually plays; dog.idle is only the
-         * fallback for a card without them. */
-        const lw_clip_t *pup=warm_pet_clip("v42.dogbed.look");
-        if (!pup || !pup->count) pup=warm_pet_clip("v42.dog.idle");
-        s_warm_step=3; s_warm_at=now+40; lw_sprite_prefetch_clip(pup); break;
-    }
+    /* The album and music sheet frames go into the queue first, while it is
+     * still empty. The queue is 24 deep and the pet clips alone queue 32 frames
+     * (24 couple + 8 dog), so asking for these last silently dropped them and
+     * the music page stayed at 339 ms while the album, asked for a step earlier,
+     * got its frame. Queue order is the whole point: first asked, first read. */
+    case 1: s_warm_step=2; s_warm_at=now+40; lw_polish_prefetch(3); break; /* album */
+    case 2: s_warm_step=3; s_warm_at=now+40; lw_polish_prefetch(2); break; /* music */
+    /* The three card reads block the LVGL task, so they run after the queue
+     * calls and alone. They used to be interleaved with the pet-frame queue, on
+     * the theory that the read-ahead worker would fill the card time; measured
+     * on the board the opposite happened: the worker competed for the same card
+     * and the boot overlay went from 3247 ms / 29 frames to 4417 ms / 5 frames. */
     case 3: s_warm_step=4; s_warm_at=now+40; lw_visual_prefetch_room("rpg-room"); break;
     case 4: s_warm_step=5; s_warm_at=now+40; lw_visual_prefetch_room(lw_visual_daily_name()); break;
     /* The RPG page paints prefs.wallpaper, not the ambience scene the desktop
@@ -917,17 +916,32 @@ static void warm_pump(uint32_t now)
      * while the room behind it was already warm. Four slots now hold exactly
      * this set: ambience scene, RPG room, pet room, preference scene. */
     case 5: s_warm_step=6; s_warm_at=now+40; lw_visual_prefetch_scene(s->system->prefs.wallpaper); break;
-    /* The album and music pages each draw one v42ui sheet frame, and each frame
-     * is 574 KB of card time (~300 ms) inside the page build. Only the first
-     * round reads them: the lease is released right away, so every later round
-     * would just copy the same 574 KB back out of the cache for nothing. */
-    case 6: s_warm_step=7; s_warm_at=now+40; if (!s_warm_rounds) lw_polish_prefetch(3); break; /* album */
-    case 7: s_warm_step=8; s_warm_at=now+200; if (!s_warm_rounds) lw_polish_prefetch(2); break; /* music */
-    /* Keep nudging the pet clips for a few rounds while the fan-out of the card
-     * reads settles. A repeat pass over frames that already landed is a cache
-     * hit inside the worker, so this costs nothing once the work is done. */
+    /* Pet frames last. These calls only enqueue, so the worker pulls them while
+     * the UI is already building the desktop; 24 frames of about 204 KB are
+     * 2.5 s of card time on their own.
+     *
+     * But not while the overlay is still animating: the read-ahead worker shares
+     * the card and the cache lock with the overlay's own sprite seeks, and queued
+     * under it the splash fell from 29 frames to 5 (fps 8 -> 1). Waiting until
+     * the overlay is gone costs nothing visible - the desktop is up by then and
+     * the pet page is two taps away. */
+    case 6: if (s->boot) { s_warm_at=now+100; break; }
+        s_warm_step=7; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
+    case 7: {
+        if (s->boot) { s_warm_at=now+100; break; }
+        /* The dog sits in its bed when the card carries the dogbed clips, so
+         * those are the frames the page actually plays; dog.idle is only the
+         * fallback for a card without them. */
+        const lw_clip_t *pup=warm_pet_clip("v42.dogbed.look");
+        if (!pup || !pup->count) pup=warm_pet_clip("v42.dog.idle");
+        s_warm_step=8; s_warm_at=now+40; lw_sprite_prefetch_clip(pup); break;
+    }
+    /* Keep nudging the pet clips for a few rounds while the fan-out settles. A
+     * repeat pass over frames that already landed is a cache hit inside the
+     * worker, so this costs nothing once the work is done. Rounds restart at the
+     * pet steps, never at the card reads or the sheet frames. */
     case 8:
-        if (++s_warm_rounds<20) { s_warm_step=1; s_warm_at=now+800; }
+        if (++s_warm_rounds<20) { s_warm_step=6; s_warm_at=now+800; }
         else s_warm_step=0;
         break;
     default: s_warm_step=0; break;
@@ -953,9 +967,12 @@ static void tick(lv_timer_t *timer)
     int action=s->pending; s->pending=-1; act(action);
     lw_system_tick(s->system,dt);
     if (s->boot) { s->boot_frames++; s->boot_ms+=dt; for (unsigned i=0;i<2;i++) if (s->boot_sprites[i] && lw_os_motion_get()!=LW_MOTION_OFF) lw_sprite_seek(s->boot_sprites[i],s->boot_ms); }
-    /* Card reads only fit under the overlay (each blocks for about 650 ms). The
-     * pet frame nudges are queue calls, so they may outlive it. */
-    if (s->boot || s_warm_step>3) warm_pump(now);
+    /* The card reads block for about 650 ms each, so they are meant to happen
+     * under the overlay. Rounds after the first only touch the pet queue, which
+     * is cheap enough to continue on the desktop; and if the overlay is skipped
+     * early the remaining steps must still run, otherwise the pet page pays for
+     * them later. */
+    if (s_warm_step) warm_pump(now);
     /* While the boot overlay is fully opaque the desktop cannot be seen, so the
      * duo state machine advances without repainting two 288-scale sprites and
      * their shadows underneath it. From the moment the fade starts
