@@ -47,6 +47,17 @@ def lattice(atlas_len, scale, mode):
     return map_axis(0, atlas_len, dest, scale, mode)
 
 
+def piece_axis(src_lo, src_len, dst_len):
+    """Stretch one piece on its own: source index per destination pixel."""
+    out = []
+    for i in range(dst_len):
+        j = (i * src_len) // dst_len
+        if j > src_len - 1:
+            j = src_len - 1
+        out.append(src_lo + j)
+    return out
+
+
 def nine_slice(panel_w, panel_h, border, atlas_w, atlas_h, rgb, alpha, mode):
     """Resample one nine-slice panel the way lv_draw_sw_transform would.
 
@@ -73,15 +84,15 @@ def nine_slice(panel_w, panel_h, border, atlas_w, atlas_h, rgb, alpha, mode):
             scale_y = (dst_h * 256) // src_h
             lat_x = lattice(atlas_w, scale_x, mode)
             lat_y = lattice(atlas_h, scale_y, mode)
-            ox = dx - ((sx * scale_x) >> 8)
-            oy = dy - ((sy * scale_y) >> 8)
+            ox = dx - ((sx * scale_x) >> 8) if mode != 'piece' else dx
+            oy = dy - ((sy * scale_y) >> 8) if mode != 'piece' else dy
             for y in range(dy, dy + dst_h):
-                t = y - oy
+                t = (y - dy) if mode == 'piece' else (y - oy)
                 if t < 0 or t >= len(lat_y):
                     continue
                 sy_atlas = lat_y[t]
                 for x in range(dx, dx + dst_w):
-                    u = x - ox
+                    u = (x - dx) if mode == 'piece' else (x - ox)
                     if u < 0 or u >= len(lat_x):
                         continue
                     sx_atlas = lat_x[u]
@@ -124,7 +135,7 @@ def main():
     ap.add_argument('--skin', default=r'build\v45-runtime\skin.lwp')
     ap.add_argument('--shot', default=r'build\v45-assets\shot-skin2\02-control-center.bmp')
     ap.add_argument('--out', default=r'build\v45-assets\baked')
-    ap.add_argument('--mode', default='half', choices=['half', 'floor'])
+    ap.add_argument('--mode', default='half', choices=['half', 'floor', 'piece'])
     args = ap.parse_args()
 
     raw, width, height, records, _kind, _trailer = read_pack(Path(args.skin))
