@@ -44,26 +44,21 @@ static const lv_image_dsc_t *atlas_image(void)
     return atlas ? lw_asset_image(atlas) : NULL;
 }
 
-static void art_draw(lv_event_t *e)
+/* Draw every piece of one art object into a layer. The layer may be the screen
+ * (normal path) or an offscreen canvas (bake path) - both take absolute screen
+ * coordinates, so the geometry below is shared. */
+static void art_pieces(lv_obj_t *obj,lv_layer_t *layer,const art_t *a,const lv_area_t *co)
 {
-    lv_obj_t *obj=lv_event_get_target_obj(e);
-    const art_t *a=lv_obj_get_user_data(obj);
     const lv_image_dsc_t *img=atlas_image();
-    if(!a || !img)return;
-    lv_layer_t *layer=lv_event_get_layer(e);
-    lv_area_t co;
-    if(!layer)return;
-    lv_obj_get_coords(obj,&co);
+    if(!img)return;
     /* Each piece keeps the clip its box used to provide. Narrowing the layer's
      * clip for the duration of one draw is the same thing lv_refr does per
      * object (lv_refr.c sets layer->_clip_area before sending DRAW_MAIN), so the
-     * pieces never bleed into each other; the intersection with the incoming
-     * clip keeps whatever the parent already cut off. */
+     * pieces never bleed into each other. */
     const lv_area_t outer=layer->_clip_area;
     /* One style lookup for the whole object: opa and the night/dusk recolor live
      * on the object, and lv_obj_init_draw_image_dsc is what folds them into the
-     * draw descriptor (lv_image calls it once per widget - we call it once per
-     * panel instead of once per piece). */
+     * draw descriptor. */
     lv_draw_image_dsc_t dsc;
     lv_draw_image_dsc_init(&dsc);
     dsc.base.layer=layer;
@@ -77,7 +72,7 @@ static void art_draw(lv_event_t *e)
         const int16_t dx=a->dst[k].dx, dy=a->dst[k].dy, dw=a->dst[k].dw, dh=a->dst[k].dh;
         if(sw<1 || sh<1 || dw<1 || dh<1)continue;
         lv_area_t clip;
-        clip.x1=co.x1+dx; clip.y1=co.y1+dy;
+        clip.x1=co->x1+dx; clip.y1=co->y1+dy;
         clip.x2=clip.x1+dw-1; clip.y2=clip.y1+dh-1;
         if(clip.x1<outer.x1)clip.x1=outer.x1;
         if(clip.y1<outer.y1)clip.y1=outer.y1;
@@ -91,13 +86,145 @@ static void art_draw(lv_event_t *e)
          * destination origin, then let the clip above cut out just this piece -
          * the same arithmetic lv_image did when the pivot was (0,0) and the
          * image sat at -source*scale/256 inside its own box. */
-        const int32_t ox=co.x1+dx-(sx*(int32_t)scale_x>>8);
-        const int32_t oy=co.y1+dy-(sy*(int32_t)scale_y>>8);
+        const int32_t ox=co->x1+dx-(sx*(int32_t)scale_x>>8);
+        const int32_t oy=co->y1+dy-(sy*(int32_t)scale_y>>8);
         lv_area_set(&dsc.image_area,ox,oy,ox+a->atlas_w-1,oy+a->atlas_h-1);
         layer->_clip_area=clip;
         lv_draw_image(layer,&dsc,&dsc.image_area);
     }
     layer->_clip_area=outer;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Baked panels.                                                            */
+/*                                                                          */
+/* Nine slices cost their whole destination area through                */
+/* transform_and_recolor(): measured 3.8 us/px on the panel (807 ms for the  */
+/* 468x454 middle block alone), while a 1:1 blit of the same pixels runs at  */
+/* ~0.25 us/px. So each panel size is rendered once into an offscreen buffer */
+/* and afterwards drawn as one 1:1 image.                                    */
+/*                                                                          */
+/* The bake buffer is ARGB8888 (canvas), then converted by hand to RGB565A8  */
+/* because that is the only format that takes LVGL's fast image path and     */
+/* because a canvas of RGB565A8 leaves the alpha plane at zero.              */
+#define PANEL_CACHE 6
+typedef struct {
+    lv_image_dsc_t dsc;
+    uint8_t *px;
+    lw_skin_id_t id;
+    int w,h,phase;
+} baked_t;
+static baked_t s_baked[PANEL_CACHE];
+static unsigned s_bake_clock;
+
+static int skin_phase(void)
+{
+    return lw_ambience_phase()>=LW_NIGHT ? 1 : 0;
+}
+
+/* ARGB8888 (B,G,R,A in memory) to RGB565A8, undoing the premultiply the
+ * canvas blend left behind. */
+static void bake_convert(uint8_t *dst,const uint8_t *src,int w,int h)
+{
+    for(int y=0;y<h;y++){
+        const uint8_t *srow=src+(size_t)y*(size_t)w*4u;
+        uint16_t *drow=(uint16_t*)(void*)(dst+(size_t)y*(size_t)w*2u);
+        uint8_t *arow=dst+(size_t)w*(size_t)h*2u+(size_t)y*(size_t)w;
+        for(int x=0;x<w;x++){
+            const uint8_t *q=srow+(size_t)x*4u;
+            unsigned a=q[3], r=q[2], g=q[1], b=q[0];
+            if(a && a<255){
+                r=r*255u/a; g=g*255u/a; b=b*255u/a;
+                if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
+            }
+            drow[x]=(uint16_t)((((unsigned)r&0xF8u)<<8)|(((unsigned)g&0xFCu)<<3)|((unsigned)b>>3));
+            arow[x]=(uint8_t)a;
+        }
+    }
+}
+
+static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_area_t *co)
+{
+    const int w=lv_area_get_width(co), h=lv_area_get_height(co);
+    if(a->count!=9)return NULL;   /* only nine-slice panels are worth a bake */
+    if(w<2 || h<2 || w>640 || h>600)return NULL;
+    const int phase=skin_phase();
+    for(unsigned i=0;i<PANEL_CACHE;i++){
+        if(s_baked[i].px && s_baked[i].id==a->base && s_baked[i].w==w && s_baked[i].h==h && s_baked[i].phase==phase)
+            return &s_baked[i].dsc;
+    }
+    baked_t *bk=NULL;
+    for(unsigned i=0;i<PANEL_CACHE;i++){ if(!s_baked[i].px){ bk=&s_baked[i]; break; } }
+    if(!bk) bk=&s_baked[s_bake_clock++%PANEL_CACHE];
+    if(bk->px){ lv_free(bk->px); bk->px=NULL; }
+
+    const size_t argb_bytes=(size_t)w*(size_t)h*4u;
+    const size_t out_bytes=(size_t)w*(size_t)h*2u+(size_t)w*(size_t)h;
+    uint8_t *argb=lv_malloc(argb_bytes);
+    uint8_t *out=lv_malloc(out_bytes);
+    if(!argb || !out){ if(argb)lv_free(argb); if(out)lv_free(out); return NULL; }
+    lv_memset(argb,0,argb_bytes);
+
+    lv_obj_t *cv=lv_canvas_create(lv_obj_get_parent(obj));
+    lv_obj_set_pos(cv,co->x1,co->y1);
+    lv_obj_set_size(cv,w,h);
+    lv_obj_remove_flag(cv,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_pad_all(cv,0,0);
+    lv_obj_set_style_border_width(cv,0,0);
+    lv_obj_set_style_bg_opa(cv,0,0);
+    lv_canvas_set_buffer(cv,argb,w,h,LV_COLOR_FORMAT_ARGB8888);
+    lv_layer_t layer;
+    lv_canvas_init_layer(cv,&layer);
+    lv_area_t local;
+    local.x1=0; local.y1=0; local.x2=w-1; local.y2=h-1;
+    art_pieces(obj,&layer,a,&local);
+    lv_canvas_finish_layer(cv,&layer);
+    lv_obj_delete(cv);
+
+    lv_memset(out,0,out_bytes);
+    bake_convert(out,argb,w,h);
+    lv_free(argb);
+
+    bk->px=out; bk->id=a->base; bk->w=w; bk->h=h; bk->phase=phase;
+    lv_memset(&bk->dsc,0,sizeof(bk->dsc));
+    bk->dsc.header.magic=LV_IMAGE_HEADER_MAGIC;
+    bk->dsc.header.cf=LV_COLOR_FORMAT_RGB565A8;
+    bk->dsc.header.w=(uint32_t)w;
+    bk->dsc.header.h=(uint32_t)h;
+    bk->dsc.header.stride=(uint32_t)w*2u;
+    bk->dsc.data_size=(uint32_t)out_bytes;
+    bk->dsc.data=out;
+    return &bk->dsc;
+}
+
+static void art_draw(lv_event_t *e)
+{
+    lv_obj_t *obj=lv_event_get_target_obj(e);
+    const art_t *a=lv_obj_get_user_data(obj);
+    if(!a)return;
+    lv_layer_t *layer=lv_event_get_layer(e);
+    if(!layer)return;
+    lv_area_t co;
+    lv_obj_get_coords(obj,&co);
+    /* A baked panel is one opaque image at 1:1: no scale, no recolor (the tint
+     * is already in the pixels), so it takes the fast blit path. */
+    const lv_image_dsc_t *bk=art_baked(obj,a,&co);
+    if(bk){
+        lv_draw_image_dsc_t dsc;
+        lv_draw_image_dsc_init(&dsc);
+        dsc.base.layer=layer;
+        dsc.src=bk;
+        dsc.opa=LV_OPA_COVER;
+        dsc.recolor=lv_color_black();
+        dsc.recolor_opa=LV_OPA_TRANSP;
+        dsc.antialias=false;
+        dsc.pivot.x=0;dsc.pivot.y=0;
+        dsc.scale_x=256;dsc.scale_y=256;
+        dsc.image_area=co;
+        lv_draw_image(layer,&dsc,&co);
+        return;
+    }
+    art_pieces(obj,layer,a,&co);
 }
 
 /* Nine-slice grid: three source columns/rows by three destination columns/rows. */
