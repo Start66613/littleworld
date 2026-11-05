@@ -100,3 +100,10 @@ typedef struct {
     uint32_t overlays, overlay_ms;
 } lw_os_frame_stats_t;
 void lw_os_frame_stats(lw_os_frame_stats_t *out);
+
+/* Diagnostics only: the overlay probe reports how much read-ahead is still
+ * queued, because a user tap that lands while the boot prefetch is draining
+ * waits behind it. Host builds never bind a cache and simply report zero. */
+struct lw_file_cache;
+void lw_os_bind_cache(struct lw_file_cache *);
+

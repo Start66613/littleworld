@@ -10,3 +10,5 @@ bool lw_skin_button(lv_obj_t *,lw_skin_id_t normal,lw_skin_id_t selected,lw_skin
 void lw_skin_select(lv_obj_t *,bool selected);
 void lw_skin_slider(lv_obj_t *slider);
 unsigned lw_skin_references(void);
+/* Diagnostics: how often the offscreen panel bake helps vs has to run. */
+unsigned lw_skin_bake_stats(unsigned *hits, unsigned *misses);

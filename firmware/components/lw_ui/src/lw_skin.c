@@ -1,4 +1,5 @@
 #include "lw_skin.h"
+#include <stdio.h>
 #include "lw_assets.h"
 #include "lw_os_design.h"
 #include "lw_ambience.h"
@@ -107,7 +108,7 @@ static void art_pieces(lv_obj_t *obj,lv_layer_t *layer,const art_t *a,const lv_a
 /* The bake buffer is ARGB8888 (canvas), then converted by hand to RGB565A8  */
 /* because that is the only format that takes LVGL's fast image path and     */
 /* because a canvas of RGB565A8 leaves the alpha plane at zero.              */
-#define PANEL_CACHE 6
+#define PANEL_CACHE 32
 typedef struct {
     lv_image_dsc_t dsc;
     uint8_t *px;
@@ -115,6 +116,16 @@ typedef struct {
     int w,h,phase;
 } baked_t;
 static baked_t s_baked[PANEL_CACHE];
+
+static unsigned s_bake_hit, s_bake_miss, s_bake_skip;
+
+unsigned lw_skin_bake_stats(unsigned *hits, unsigned *misses)
+{
+    *hits = s_bake_hit;
+    *misses = s_bake_miss;
+    return s_bake_hit + s_bake_miss;
+}
+
 static unsigned s_bake_clock;
 
 static int skin_phase(void)
@@ -134,10 +145,19 @@ static void bake_convert(uint8_t *dst,const uint8_t *src,int w,int h)
             const uint8_t *q=srow+(size_t)x*4u;
             unsigned a=q[3], r=q[2], g=q[1], b=q[0];
             if(a && a<255){
-                r=r*255u/a; g=g*255u/a; b=b*255u/a;
-                if(r>255)r=255; if(g>255)g=255; if(b>255)b=255;
+                r=(r*255u+a/2u)/a; g=(g*255u+a/2u)/a; b=(b*255u+a/2u)/a;
+                if(r>255){r=255;}
+                if(g>255){g=255;}
+                if(b>255){b=255;}
             }
-            drow[x]=(uint16_t)((((unsigned)r&0xF8u)<<8)|(((unsigned)g&0xFCu)<<3)|((unsigned)b>>3));
+            /* Round to 5/6/5 instead of truncating: truncation biased every
+               baked pixel one step dark, which showed up as a worst-case 9. */
+            {
+                const unsigned r5=((unsigned)r*31u+127u)/255u;
+                const unsigned g6=((unsigned)g*63u+127u)/255u;
+                const unsigned b5=((unsigned)b*31u+127u)/255u;
+                drow[x]=(uint16_t)((r5<<11)|(g6<<5)|b5);
+            }
             arow[x]=(uint8_t)a;
         }
     }
@@ -146,12 +166,16 @@ static void bake_convert(uint8_t *dst,const uint8_t *src,int w,int h)
 static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_area_t *co)
 {
     const int w=lv_area_get_width(co), h=lv_area_get_height(co);
-    if(a->count!=9)return NULL;   /* only nine-slice panels are worth a bake */
+#ifndef LW_SKIN_BAKE
+#define LW_SKIN_BAKE 0
+#endif
+    if(!LW_SKIN_BAKE){ s_bake_skip++; return NULL; }
+    if(a->count!=9){ s_bake_skip++; return NULL; }   /* only nine-slice panels are worth a bake */
     if(w<2 || h<2 || w>640 || h>600)return NULL;
     const int phase=skin_phase();
     for(unsigned i=0;i<PANEL_CACHE;i++){
         if(s_baked[i].px && s_baked[i].id==a->base && s_baked[i].w==w && s_baked[i].h==h && s_baked[i].phase==phase)
-            return &s_baked[i].dsc;
+            { s_bake_hit++; return &s_baked[i].dsc; }
     }
     baked_t *bk=NULL;
     for(unsigned i=0;i<PANEL_CACHE;i++){ if(!s_baked[i].px){ bk=&s_baked[i]; break; } }
@@ -185,6 +209,8 @@ static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_are
     bake_convert(out,argb,w,h);
     lv_free(argb);
 
+    s_bake_miss++;
+    printf("skinbake: hit=%u miss=%u skip=%u\n", s_bake_hit, s_bake_miss, s_bake_skip);
     bk->px=out; bk->id=a->base; bk->w=w; bk->h=h; bk->phase=phase;
     lv_memset(&bk->dsc,0,sizeof(bk->dsc));
     bk->dsc.header.magic=LV_IMAGE_HEADER_MAGIC;

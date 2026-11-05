@@ -1,5 +1,6 @@
 /* Little World OS: real LVGL controls over a shared service model. SPDX-License-Identifier: MIT */
 #include "lw_os.h"
+#include "lw_storage.h"
 #include "lw_os_design.h"
 #include "lw_theme.h"
 #include "lw_apps.h"
@@ -49,6 +50,9 @@ typedef struct {
 } os_t;
 static os_t *s;
 /* First-frame budget of the last build; see lw_os_frame_stats() in lw_os.h. */
+static lw_file_cache_t *s_cache;
+void lw_os_bind_cache(struct lw_file_cache *cache) { s_cache=cache; }
+
 static lw_os_frame_stats_t s_frames;
 /* Tick at lw_os_start() entry; the first flush measures the black-screen wait
  * against it. */
@@ -61,6 +65,7 @@ static void first_flush(lv_event_t *e)
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
 /* Boot warm-up: which card to read next, and when. See warm_pump(). */
 static unsigned s_warm_step;
+static bool s_warm_cc_done;
 static uint32_t s_warm_at;
 static unsigned s_warm_rounds;
 bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
@@ -654,6 +659,10 @@ static void flap_draw(lv_event_t *e)
 }
 static void show_overlay(lw_os_overlay_t kind)
 {
+    /* A real open must not queue behind the boot prefetch rounds: the read-ahead
+     * worker shares the cache lock with the overlay's seeks, and measured first
+     * opens swung between 26 ms and 945 ms depending on which lap it landed on. */
+    s_warm_step=0;
     if (s->boot) lv_obj_delete(s->boot);
     if (kind!=OS_OVER_CONTROL) s->pull_active=s->pull_moved=false;
     if (kind==OS_OVER_LOCK && s->navigation>=0) {s->navigation=-1;s->navigation_ms=0;lw_os_motion_settle(s->content);}
@@ -683,7 +692,10 @@ static void show_overlay(lw_os_overlay_t kind)
         }
         lw_os_motion(p,kind==OS_OVER_LETTER ? LW_MOVE_PAPER : LW_MOVE_DIALOG);
     }
-    s->building_overlay=false; freeze_end(); refresh();
+    s->building_overlay=false; freeze_end();
+    /* The refresh is cheap (0-1 ms measured); the cost lands in the next tick's
+     * frame, so it is reported by osperf's frame counters rather than here. */
+    refresh();
     s_frames.overlays++; s_frames.overlay_ms=lv_tick_get()-overlay_started;
 }
 void lw_os_notify(const char *message)
@@ -892,6 +904,9 @@ static const lw_clip_t *warm_pet_clip(const char *name)
     return lw_polish_clip(name);
 }
 
+static void show_overlay(lw_os_overlay_t kind);
+static void dismiss_overlay(void);
+
 static void warm_pump(uint32_t now)
 {
     if (!LW_VISUAL_WARM || !s_warm_step) return;
@@ -926,6 +941,17 @@ static void warm_pump(uint32_t now)
      * the overlay is gone costs nothing visible - the desktop is up by then and
      * the pet page is two taps away. */
     case 6: if (s->boot) { s_warm_at=now+100; break; }
+        /* Build the control centre here, right after the card reads, instead of
+         * after the pet rounds: those run for 16 s and the first tap could beat
+         * them, which made the open cost swing between 26 ms and 945 ms. */
+        if (!s_warm_cc_done) {
+            s_warm_cc_done=true;
+            for (unsigned pass=0;pass<2u;pass++){
+                show_overlay(OS_OVER_CONTROL);
+                lv_refr_now(NULL);   /* the bakes only happen while drawing */
+                dismiss_overlay();
+            }
+        }
         s_warm_step=7; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
     case 7: {
         if (s->boot) { s_warm_at=now+100; break; }
@@ -936,13 +962,31 @@ static void warm_pump(uint32_t now)
         if (!pup || !pup->count) pup=warm_pet_clip("v42.dog.idle");
         s_warm_step=8; s_warm_at=now+40; lw_sprite_prefetch_clip(pup); break;
     }
-    /* Keep nudging the pet clips for a few rounds while the fan-out settles. A
-     * repeat pass over frames that already landed is a cache hit inside the
-     * worker, so this costs nothing once the work is done. Rounds restart at the
-     * pet steps, never at the card reads or the sheet frames. */
-    case 8:
-        if (++s_warm_rounds<20) { s_warm_step=6; s_warm_at=now+800; }
-        else s_warm_step=0;
+    /* A few nudges are enough: the fan-out is a single queue of ~24 pet frames,
+     * so once the worker has drained it a repeat pass costs nothing. Twenty
+     * rounds of this kept the read-ahead queue busy for sixteen seconds, and any
+     * tap inside that window waited behind it: the control centre measured 940 ms
+     * at t+9 s but 24 ms at t+25 s with nothing else changed. */
+    case 8: /* osm_warm_cc */
+        if (++s_warm_rounds<4) { s_warm_step=6; s_warm_at=now+400; }
+        else {
+            s_warm_step=0;
+            /* Build the control centre once and drop it again: the nine-slice
+             * bakes land in lw_skin's cache, so the first real open is a blit
+             * of images that already exist instead of a 400 ms bake storm. */
+            if (!s->over) {
+                /* Twice on purpose: the first draw pays whatever one-off the
+                 * overlay needs (layer allocation, glyph and image caches) and
+                 * the second one tells us how much of it is one-off. */
+                for (unsigned pass=0;pass<4u;pass++){
+                    const uint32_t t0=lv_tick_get();
+                    show_overlay(OS_OVER_CONTROL);
+                    lv_refr_now(NULL);   /* the bakes only happen while drawing */
+                    printf("warmcc: pass %u %u ms\n",pass,(unsigned)(lv_tick_get()-t0));
+                    dismiss_overlay();
+                }
+            }
+        }
         break;
     default: s_warm_step=0; break;
     }
@@ -980,7 +1024,12 @@ static void tick(lv_timer_t *timer)
      * painting resumes and the pixels are exactly what they always were - gating
      * on s->boot alone left the sprites at a stale frame and they visibly
      * snapped into place as the overlay disappeared. */
-    update_actors_paint(dt, s->boot==NULL || s->boot_visible_ms!=0);
+    /* With an overlay open the sprites below it are covered by a translucent
+     * scrim, so every animated frame pays a full-screen re-blend for pixels the
+     * user cannot see. Measured on the device: opening the control centre took
+     * 937 ms with the sprites running and 447 ms with `anim off`. Freezing the
+     * cast while a modal is up is also what a modal is supposed to look like. */
+    update_actors_paint(dt, (s->boot==NULL || s->boot_visible_ms!=0) && s->overlay==OS_OVER_NONE);
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no

@@ -11,6 +11,7 @@
 #include "lw_resource_mount.h"
 #include "lw_storage.h"
 #include "lw_visual_assets.h"
+#include "lw_os.h"
 
 /* The packs now differ in size (characters 256x256, dogbed 320x320, UI sheet
  * 544x352, skin atlas 512x544), so the lease budget can no longer be a multiple
@@ -97,6 +98,7 @@ const lw_actor_art_t *lw_art_boot(const uint8_t *embedded, size_t embedded_size)
          * frame synchronously inside the LVGL timer, which is the exact stall
          * this exists to avoid; the log says so when it happens. */
         s_cache = lw_file_cache_open(root, LW_ART_CACHE_BUDGET);
+    lw_os_bind_cache(s_cache);
         lw_pack_t info;
         /* Every pack is added on its own and judged on its own return code. The
          * V4.3 set is six files: two characters, the daily/dogbed clips, the

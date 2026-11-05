@@ -530,6 +530,122 @@ static int cmd_boot(int argc, char **argv)
     return 0;
 }
 
+
+/* Print what a full repaint costs, then hide one direct child of the active
+ * screen at a time and print the same number again.  Whichever child makes the
+ * repaint cheap is the expensive one. */
+/* Bisect a full repaint over the screen's direct children, but run the
+ * repaint in the LVGL thread: calling lv_refr_now() from the console task blew
+ * the 12 KB console stack and reset the board. */
+
+typedef struct { lv_obj_t *parent; } hideall_ctx_t;
+
+static void hideall_tick(lv_timer_t *timer)
+{
+    hideall_ctx_t *ctx = (hideall_ctx_t *)lv_timer_get_user_data(timer);
+    if (!ctx || !ctx->parent) { lv_timer_delete(timer); return; }
+    const uint32_t count = lv_obj_get_child_count(ctx->parent);
+
+    uint32_t t = lv_tick_get();
+    lv_obj_invalidate(lv_screen_active());
+    lv_refr_now(NULL);
+    const uint32_t shown = lv_tick_get() - t;
+
+    for (uint32_t i = 0; i < count; i++) {
+        lv_obj_t *c = lv_obj_get_child(ctx->parent, (int32_t)i);
+        if (c) lv_obj_add_flag(c, LV_OBJ_FLAG_HIDDEN);
+    }
+    t = lv_tick_get();
+    lv_obj_invalidate(lv_screen_active());
+    lv_refr_now(NULL);
+    const uint32_t hidden = lv_tick_get() - t;
+
+    for (uint32_t i = 0; i < count; i++) {
+        lv_obj_t *c = lv_obj_get_child(ctx->parent, (int32_t)i);
+        if (c) lv_obj_remove_flag(c, LV_OBJ_FLAG_HIDDEN);
+    }
+    printf("hideall: %u children, shown %u ms, hidden %u ms\n", (unsigned)count,
+           (unsigned)shown, (unsigned)hidden);
+    lv_free(ctx);
+    lv_timer_delete(timer);
+}
+
+static int cmd_hideall(int argc, char **argv)
+{
+    lv_obj_t *parent = lv_screen_active();
+    if (!parent) { printf("hideall: no screen\n"); return 0; }
+    for (int arg = 1; arg < argc; arg++) {
+        const int32_t which = (int32_t)atoi(argv[arg]);
+        lv_obj_t *child = lv_obj_get_child(parent, which);
+        if (!child) { printf("hideall: no child %ld\n", (long)which); return 0; }
+        parent = child;
+    }
+    hideall_ctx_t *ctx = (hideall_ctx_t *)lv_malloc(sizeof(*ctx));
+    if (!ctx) { printf("hideall: no memory\n"); return 0; }
+    ctx->parent = parent;
+    lv_timer_create(hideall_tick, 150, ctx);
+    printf("hideall: armed\n");
+    return 0;
+}
+
+typedef struct { lv_obj_t *parent; uint32_t index, count; uint32_t base_ms; } bisect_ctx_t;
+
+static void bisect_tick(lv_timer_t *timer)
+{
+    bisect_ctx_t *ctx = (bisect_ctx_t *)lv_timer_get_user_data(timer);
+    lv_obj_t *screen = ctx ? ctx->parent : NULL;
+    if (!ctx || !screen) { lv_timer_delete(timer); return; }
+
+    if (ctx->index == 0 && ctx->count == 0) {
+        uint32_t t = lv_tick_get();
+        lv_obj_invalidate(screen);
+        lv_refr_now(NULL);
+        ctx->base_ms = lv_tick_get() - t;
+        ctx->count = lv_obj_get_child_count(screen);
+        printf("bisect: %u children, full repaint %u ms\n", (unsigned)ctx->count,
+               (unsigned)ctx->base_ms);
+        ctx->index = 1;
+        return;
+    }
+    if (ctx->index > ctx->count) { lv_timer_delete(timer); return; }
+
+    lv_obj_t *child = lv_obj_get_child(screen, (int32_t)(ctx->index - 1));
+    if (child) {
+        lv_area_t co;
+        lv_obj_get_coords(child, &co);
+        lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
+        uint32_t t = lv_tick_get();
+        lv_obj_invalidate(screen);
+        lv_refr_now(NULL);
+        uint32_t ms = lv_tick_get() - t;
+        lv_obj_remove_flag(child, LV_OBJ_FLAG_HIDDEN);
+        printf("bisect: hide %u -> %u ms  [%d,%d %dx%d]\n", (unsigned)(ctx->index - 1),
+               (unsigned)ms, (int)co.x1, (int)co.y1,
+               (int)lv_area_get_width(&co), (int)lv_area_get_height(&co));
+    }
+    ctx->index++;
+}
+
+static int cmd_bisect(int argc, char **argv)
+{
+    lv_obj_t *screen = lv_screen_active();
+    if (!screen) { printf("bisect: no screen\n"); return 0; }
+    lv_obj_t *parent = screen;
+    for (int arg = 1; arg < argc; arg++) {
+        const int32_t which = (int32_t)atoi(argv[arg]);
+        lv_obj_t *child = lv_obj_get_child(parent, which);
+        if (!child) { printf("bisect: no child %ld at depth %d\n", (long)which, arg - 1); return 0; }
+        parent = child;
+    }
+    bisect_ctx_t *ctx = (bisect_ctx_t *)lv_malloc(sizeof(*ctx));
+    if (!ctx) { printf("bisect: no memory\n"); return 0; }
+    ctx->parent = parent; ctx->index = 0; ctx->count = 0; ctx->base_ms = 0;
+    lv_timer_t *timer = lv_timer_create(bisect_tick, 120, ctx);
+    lv_timer_set_repeat_count(timer, 40);
+    printf("bisect: armed\n");
+    return 0;
+}
+
 static int cmd_osperf(int argc, char **argv)
 {
     /* Where the first frame goes (V4.6). lw_os_start() builds the whole first
@@ -827,6 +943,18 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_rpg);
     esp_console_cmd_register(&c_boot);
     esp_console_cmd_register(&c_osperf);
+    const esp_console_cmd_t c_bisect = {
+        .command = "bisect",
+        .help = "bisect: full repaint cost, then with each screen child hidden",
+        .func = &cmd_bisect
+    };
+    esp_console_cmd_register(&c_bisect);
+    const esp_console_cmd_t c_hideall = {
+        .command = "hideall",
+        .help = "hideall [path]: hide all children of a node, repaint, restore",
+        .func = &cmd_hideall
+    };
+    esp_console_cmd_register(&c_hideall);
     esp_console_cmd_register(&c_anim);
 #endif
 #if CONFIG_LW_FAULT_INJECT
