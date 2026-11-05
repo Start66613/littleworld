@@ -98,6 +98,10 @@ typedef struct {
      * running page instead of through render(), so they need their own two
      * numbers: how many have been built, and how long the last one took. */
     uint32_t overlays, overlay_ms;
+    /* Frames that took 50 ms or more, and the last one's cost. A page that
+     * averages 20 ms can still hide a one second stall, and sched's max_gap
+     * cannot say whether that stall was one frame or twenty. */
+    uint32_t frame_slow, frame_last_ms;
 } lw_os_frame_stats_t;
 void lw_os_frame_stats(lw_os_frame_stats_t *out);
 

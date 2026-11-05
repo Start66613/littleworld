@@ -167,7 +167,7 @@ static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_are
 {
     const int w=lv_area_get_width(co), h=lv_area_get_height(co);
 #ifndef LW_SKIN_BAKE
-#define LW_SKIN_BAKE 0
+#define LW_SKIN_BAKE 1
 #endif
     if(!LW_SKIN_BAKE){ s_bake_skip++; return NULL; }
     if(a->count!=9){ s_bake_skip++; return NULL; }   /* only nine-slice panels are worth a bake */

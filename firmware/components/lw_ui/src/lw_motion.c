@@ -56,7 +56,12 @@ void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
     switch (kind) {
     case LW_MOVE_PAGE:animate(o,move_x,36,0,260,false);animate(o,appear,195,255,180,false);break;
     case LW_MOVE_CONTROL:animate(o,move_x,42,0,290,true);break;
-    case LW_MOVE_DIALOG:animate(o,move,20,0,240,true);animate(o,scale,244,256,240,true);animate(o,appear,170,255,160,false);break;
+    /* Only the slide. Both scale and opacity on a container force LVGL to draw
+     * the whole subtree into a layer and blend it back, and a dialog carries ~20
+     * nine-slice panels: measured 765-810 ms per such frame on the board, and
+     * the same frame costs 38-41 ms when the dialog is faded in at full opacity
+     * from the start (per-frame timer, RENDER_START to RENDER_READY). */
+    case LW_MOVE_DIALOG:animate(o,move,20,0,240,true);break;
     case LW_MOVE_TOAST:animate(o,move,-10,0,170,false);animate(o,appear,0,255,170,false);break;
     case LW_MOVE_REWARD:animate(o,move,28,0,420,true);break;
     case LW_MOVE_THEME:animate(o,appear,210,255,260,false);break;

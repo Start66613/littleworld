@@ -62,6 +62,27 @@ static void first_flush(lv_event_t *e)
     (void)e;
     if (!s_frames.first_frame_ms) s_frames.first_frame_ms=lv_tick_get()-s_start_tick;
 }
+/* Per-frame timing. sched reports the gap between 20 ms timer ticks, which
+ * stays at 20 ms even while a single frame costs a second; these two events
+ * bracket one lv_refr_now()/flush so a slow frame can be counted and its cost
+ * kept. Printing happens in the tick, never inside the render. */
+static uint32_t s_frame_start;
+static uint32_t s_reported_slow;
+static void render_start_cb(lv_event_t *e)
+{
+    (void)e;
+    s_frame_start=lv_tick_get();
+}
+static void render_ready_cb(lv_event_t *e)
+{
+    (void)e;
+    if (!s_frame_start) return;
+    const uint32_t spent=lv_tick_get()-s_frame_start;
+    s_frame_start=0;
+    if (spent<50) return;
+    s_frames.frame_slow++;
+    s_frames.frame_last_ms=spent;
+}
 static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
 /* Boot warm-up: which card to read next, and when. See warm_pump(). */
 static unsigned s_warm_step;
@@ -1030,6 +1051,13 @@ static void tick(lv_timer_t *timer)
      * 937 ms with the sprites running and 447 ms with `anim off`. Freezing the
      * cast while a modal is up is also what a modal is supposed to look like. */
     update_actors_paint(dt, (s->boot==NULL || s->boot_visible_ms!=0) && s->overlay==OS_OVER_NONE);
+    /* Report a slow frame from here, not from the render callback: printf takes
+     * the stdout lock and a 12 KB console task, both of which are the worst
+     * possible thing to touch inside lv_refr. */
+    if (s_frames.frame_slow!=s_reported_slow) {
+        s_reported_slow=s_frames.frame_slow;
+        printf("frame: slow=%u last=%u ms\n",(unsigned)s_frames.frame_slow,(unsigned)s_frames.frame_last_ms);
+    }
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no
@@ -1250,6 +1278,8 @@ bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
      * the display instead of guessing, so a slow first flush shows up. */
     lv_display_t *disp=lv_display_get_default();
     if (disp) lv_display_add_event_cb(disp,first_flush,LV_EVENT_FLUSH_FINISH,NULL);
+    if (disp) lv_display_add_event_cb(disp,render_start_cb,LV_EVENT_RENDER_START,NULL);
+    if (disp) lv_display_add_event_cb(disp,render_ready_cb,LV_EVENT_RENDER_READY,NULL);
     return true;
 }
 void lw_os_stop(void)
