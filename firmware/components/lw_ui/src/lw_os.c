@@ -967,10 +967,16 @@ static void warm_pump(uint32_t now)
          * them, which made the open cost swing between 26 ms and 945 ms. */
         if (!s_warm_cc_done) {
             s_warm_cc_done=true;
+            /* Two passes, and clear_overlay() after each one instead of
+             * dismiss_overlay(): the dismiss path fades the panel out over
+             * 180 ms and hands it to s->closing, which leaves a live animation
+             * pointing at a panel that the next pass already replaced - the
+             * overlay then stayed on screen after boot with its state flag set.
+             * clear_overlay() deletes synchronously and resets s->overlay. */
             for (unsigned pass=0;pass<2u;pass++){
                 show_overlay(OS_OVER_CONTROL);
                 lv_refr_now(NULL);   /* the bakes only happen while drawing */
-                dismiss_overlay();
+                clear_overlay();
             }
         }
         s_warm_step=7; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
@@ -990,24 +996,7 @@ static void warm_pump(uint32_t now)
      * at t+9 s but 24 ms at t+25 s with nothing else changed. */
     case 8: /* osm_warm_cc */
         if (++s_warm_rounds<4) { s_warm_step=6; s_warm_at=now+400; }
-        else {
-            s_warm_step=0;
-            /* Build the control centre once and drop it again: the nine-slice
-             * bakes land in lw_skin's cache, so the first real open is a blit
-             * of images that already exist instead of a 400 ms bake storm. */
-            if (!s->over) {
-                /* Twice on purpose: the first draw pays whatever one-off the
-                 * overlay needs (layer allocation, glyph and image caches) and
-                 * the second one tells us how much of it is one-off. */
-                for (unsigned pass=0;pass<4u;pass++){
-                    const uint32_t t0=lv_tick_get();
-                    show_overlay(OS_OVER_CONTROL);
-                    lv_refr_now(NULL);   /* the bakes only happen while drawing */
-                    printf("warmcc: pass %u %u ms\n",pass,(unsigned)(lv_tick_get()-t0));
-                    dismiss_overlay();
-                }
-            }
-        }
+        else s_warm_step=0;   /* the control centre was warmed in step 6 */
         break;
     default: s_warm_step=0; break;
     }
