@@ -873,6 +873,18 @@ static int cmd_sdblk(int argc, char **argv)
     heap_caps_free(buf);
     return 0;
 }
+/* Restart the app. The reply is flushed first: the console task owns stdout, and
+ * a restart that cuts the line off looks like a crash in the capture log. */
+static int cmd_reboot(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
+    printf("reboot: restarting now\n");
+    fflush(stdout);
+    vTaskDelay(pdMS_TO_TICKS(60));
+    esp_restart();
+    return 0;
+}
 bool lw_capture_console_start(void)
 {
     esp_console_repl_t *repl = NULL;
@@ -957,6 +969,14 @@ bool lw_capture_console_start(void)
     esp_console_cmd_register(&c_hideall);
     esp_console_cmd_register(&c_anim);
 #endif
+    /* A real restart, so "how long since boot" can be reproduced without
+     * reflashing. esptool's --after hard_reset does not take on this CH343 link
+     * (uptime kept climbing), and a board that has been up for two minutes is
+     * not a board measured in its first ten seconds. */
+    const esp_console_cmd_t c_reboot = { .command = "reboot",
+                                         .help = "reboot: restart the app for a clean timing run",
+                                         .func = &cmd_reboot };
+    esp_console_cmd_register(&c_reboot);
 #if CONFIG_LW_FAULT_INJECT
     const esp_console_cmd_t c_fault = { .command = "fault",
                                         .help = "fault <point> <times> | clear | status",
