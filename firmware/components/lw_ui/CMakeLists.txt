@@ -40,4 +40,5 @@ idf_component_register(
     INCLUDE_DIRS "include"
     REQUIRES lvgl__lvgl lw_core arcade_core lw_duo lw_system lw_rpg lw_storage lw_engine log
     PRIV_REQUIRES esp32_p4_wifi6_touch_lcd_7b
+    EMBED_FILES "panels/skinpanels.bin"
 )

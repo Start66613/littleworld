@@ -53,6 +53,18 @@ void lw_os_scene_focus(bool focused);
  * Returns the number of ticks and the worst/average gap in milliseconds. */
 void lw_os_tick_stats(uint32_t *calls, uint32_t *max_gap_ms, uint32_t *avg_gap_ms);
 void lw_os_tick_stats_reset(void);
+/* Why a page can stop moving.  Three things gate the desktop animation and the
+ * panel repaint, and from a screenshot they all look the same: invalidation
+ * left disabled by a leaked freeze, a splash overlay that never got deleted, or
+ * a splash that is still holding the "don't animate yet" gate.  Reading them
+ * here saves guessing from pictures. */
+typedef struct {
+    int frozen;              /* 1 while build-time invalidation freeze is held */
+    int boot_alive;          /* 1 while the splash overlay object still exists */
+    uint32_t boot_visible_ms;/* 0 until the splash starts fading */
+    int invalidation_enabled;/* what the display itself thinks */
+} lw_os_gate_t;
+void lw_os_gates(lw_os_gate_t *out);
 
 /* Boot-animation evidence (V4.4 P0-D). The boot overlay is the first thing the
  * user sees, and it is also the first frame the LVGL task has to produce while

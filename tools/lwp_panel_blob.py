@@ -23,7 +23,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--skin', default=r'build\v45-runtime\skin.lwp')
     ap.add_argument('--out', default=r'firmware\components\lw_ui\panels\skinpanels.bin')
-    ap.add_argument('--mode', default='half', choices=['half', 'floor'])
+    ap.add_argument('--mode', default='half', choices=['half', 'floor', 'piece'])
     args = ap.parse_args()
 
     raw, width, height, records, _k, _t = read_pack(Path(args.skin))

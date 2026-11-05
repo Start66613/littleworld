@@ -25,7 +25,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lwp_prescale import read_pack, frame_view, map_axis, tint_rgb565  # noqa: E402
 
 SKIN_ATLAS = 'atlas'   # the runtime name is <pack>.<clip> = v43skin.atlas
-PANEL_RECT = (0, 314, 480, 220)       # SK_CC_PANEL in lw_skin.c rects[10]
+# All three geometries are asked for as SK_CC_PANEL, which is rects[11] in
+# lw_skin.c, not the big SK_BOOK rect: the 128x128 tile is what the runtime
+# stretches to 500x486. Baking rects[10] produced a leather book cover.
+PANEL_RECT = (152, 178, 128, 128)
 PANELS = [
     ('cc',   500, 486, 16),
     ('tile', 108, 196, 10),

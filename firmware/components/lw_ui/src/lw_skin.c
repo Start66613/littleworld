@@ -1,5 +1,7 @@
 #include "lw_skin.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "lw_assets.h"
 #include "lw_os_design.h"
 #include "lw_ambience.h"
@@ -11,6 +13,94 @@ static const rect_t rects[SK_COUNT]={
  {0,178,148,136},{0,314,480,220},
  {152,178,128,128},{284,178,96,48},{380,178,96,48},{284,230,96,48},{492,178,16,128},{380,230,32,40}};
 static lw_asset_lease_t *atlas;static unsigned refs;
+
+/* Baked nine-slice panels, written by tools/lwp_panel_blob.py.
+ *
+ * A 500x486 panel is a 448x188 source stretched to 468x454, and that one draw
+ * measured 807 ms of a 1038 ms repaint: lv_draw_image bills the transformed
+ * destination area, which for a nine-slice piece is the whole atlas, not the
+ * piece. The three geometries the code actually asks for are baked offline, so
+ * at run time they are a single 1:1 image. The night tint is baked in too,
+ * because any non-zero recolor_opa sends the draw back to the slow path.
+ *
+ * The blob is embedded in flash (no SD read, no file-cache pressure) and the
+ * host build reads the same file through LW_SKINPANEL_BIN, so the screenshot
+ * comparison sees the same bytes the board paints. */
+typedef struct { uint32_t w, h, phase, offset, bytes; } panel_entry_t;
+#define PANEL_BLOB_MAGIC "LWSP0001"
+#define PANEL_BLOB_MAX 8
+static const uint8_t *s_blob;
+static size_t s_blob_size;
+static bool s_blob_tried;
+static lv_image_dsc_t s_panel_dsc[PANEL_BLOB_MAX];
+static bool s_panel_ready[PANEL_BLOB_MAX];
+
+#if defined(ESP_PLATFORM)
+extern const uint8_t panel_blob_start[] asm("_binary_skinpanels_bin_start");
+extern const uint8_t panel_blob_end[] asm("_binary_skinpanels_bin_end");
+static void panel_blob_open(void)
+{
+    s_blob = panel_blob_start;
+    s_blob_size = (size_t)(panel_blob_end - panel_blob_start);
+}
+#else
+static uint8_t *s_blob_owned;
+static void panel_blob_open(void)
+{
+    const char *path = getenv("LW_SKINPANEL_BIN");
+    if (!path || !*path) return;
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (n > 0 && (size_t)n < 8u * 1024u * 1024u) {
+        uint8_t *buf = malloc((size_t)n);
+        if (buf && fread(buf, 1, (size_t)n, f) == (size_t)n) { s_blob_owned = buf; s_blob = buf; s_blob_size = (size_t)n; }
+        else free(buf);
+    }
+    fclose(f);
+}
+#endif
+
+static uint32_t rd32(const uint8_t *p)
+{
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+static const lv_image_dsc_t *panel_baked(unsigned w, unsigned h, int phase)
+{
+    if (!s_blob_tried) { s_blob_tried = true; panel_blob_open(); }
+    if (!s_blob || s_blob_size < 20u) return NULL;
+    if (memcmp(s_blob, PANEL_BLOB_MAGIC, 8) != 0) return NULL;
+    const uint32_t count = rd32(s_blob + 8);
+    for (uint32_t i = 0; i < count && i < PANEL_BLOB_MAX; i++) {
+        if (12u + 20u * (i + 1u) > s_blob_size) return NULL;
+        const uint8_t *e = s_blob + 12u + 20u * i;
+        const uint32_t ew = rd32(e), eh = rd32(e + 4), ep = rd32(e + 8);
+        const uint32_t off = rd32(e + 12), bytes = rd32(e + 16);
+        if (ew != w || eh != h || (int)ep != phase) continue;
+        if ((size_t)off + bytes > s_blob_size) return NULL;
+        if (!s_panel_ready[i]) {
+            printf("panelblob: w=%u h=%u phase=%d cf=%d stride=%u bytes=%u\n",
+                   (unsigned)ew, (unsigned)eh, (int)ep, (int)LV_COLOR_FORMAT_RGB565A8,
+                   (unsigned)(ew * 2u), (unsigned)bytes);
+            fflush(stdout);
+            lv_image_dsc_t *d = &s_panel_dsc[i];
+            lv_memset(d, 0, sizeof(*d));
+            d->header.magic = LV_IMAGE_HEADER_MAGIC;
+            d->header.cf = LV_COLOR_FORMAT_RGB565A8;
+            d->header.w = (uint32_t)ew;
+            d->header.h = (uint32_t)eh;
+            d->header.stride = ew * 2u;
+            d->data = s_blob + off;
+            d->data_size = bytes;
+            s_panel_ready[i] = true;
+        }
+        return &s_panel_dsc[i];
+    }
+    return NULL;
+}
 
 /* One art object draws the whole nine-slice.
  *
@@ -167,7 +257,11 @@ static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_are
 {
     const int w=lv_area_get_width(co), h=lv_area_get_height(co);
 #ifndef LW_SKIN_BAKE
-#define LW_SKIN_BAKE 1
+/* The runtime canvas bake is off: the flash blob (panel_baked) now covers the
+ * panel geometries, and the canvas path allocated a 972 KB ARGB buffer plus a
+ * 729 KB RGB565A8 target per panel, which is RAM the sprite caches want and
+ * which also changed the heap layout enough to expose a latent overflow. */
+#define LW_SKIN_BAKE 0
 #endif
     if(!LW_SKIN_BAKE){ s_bake_skip++; return NULL; }
     if(a->count!=9){ s_bake_skip++; return NULL; }   /* only nine-slice panels are worth a bake */
@@ -348,6 +442,21 @@ lv_obj_t *lw_skin_panel(lv_obj_t *p,lw_skin_id_t id,int w,int h,int b)
     if(id>=SK_COUNT || b<1 || w<=2*b || h<=2*b)return NULL;
     rect_t r=rects[id];
     if(r.w<=2*b || r.h<=2*b)return NULL;
+    /* Buttons keep the nine-slice object: pressed() re-points its art through
+     * art_show(), and a baked image has no art_t to re-point. Only the straight
+     * panel id is replaced by the baked bitmap. */
+    if(id==SK_CC_PANEL){
+        const lv_image_dsc_t *bk=panel_baked((unsigned)w,(unsigned)h,lw_ambience_phase()>=LW_NIGHT?1:0);
+        if(bk){
+            lv_obj_t *img=lv_image_create(p);
+            if(img){
+                lv_image_set_src(img,bk);
+                lv_obj_set_pos(img,0,0);
+                lv_obj_remove_flag(img,LV_OBJ_FLAG_CLICKABLE);
+                return img;
+            }
+        }
+    }
     lv_obj_t *o=art_create(p,0,0,w,h);
     if(!o)return NULL;
     art_t *a=lv_obj_get_user_data(o);

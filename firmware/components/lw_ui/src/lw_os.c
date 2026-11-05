@@ -1213,6 +1213,15 @@ void lw_os_frame_stats(lw_os_frame_stats_t *out)
 {
     if (out) *out = s_frames;
 }
+void lw_os_gates(lw_os_gate_t *out)
+{
+    if (!out) return;
+    out->frozen = s_frozen != NULL;
+    out->boot_alive = s && s->boot != NULL;
+    out->boot_visible_ms = s ? s->boot_visible_ms : 0;
+    lv_display_t *disp = lv_display_get_default();
+    out->invalidation_enabled = disp ? (int)lv_display_is_invalidation_enabled(disp) : -1;
+}
 bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;

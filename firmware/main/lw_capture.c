@@ -297,6 +297,12 @@ static int cmd_status(int argc, char **argv)
     printf("page %d, overlay %d, dock %s\n",
            (int)lw_os_page(), (int)lw_os_overlay(),
            lw_os_dock_expanded() ? "open" : "closed");
+    {
+        lw_os_gate_t g;
+        lw_os_gates(&g);
+        printf("gates: frozen=%d boot=%d visible=%u invalidation=%d\n",
+               g.frozen, g.boot_alive, (unsigned)g.boot_visible_ms, g.invalidation_enabled);
+    }
     return 0;
 }
 
