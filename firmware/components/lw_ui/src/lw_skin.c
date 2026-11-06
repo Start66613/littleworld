@@ -1,4 +1,4 @@
-#include "lw_skin.h"
+﻿#include "lw_skin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -261,7 +261,7 @@ static const lv_image_dsc_t *art_baked(lv_obj_t *obj,const art_t *a,const lv_are
  * panel geometries, and the canvas path allocated a 972 KB ARGB buffer plus a
  * 729 KB RGB565A8 target per panel, which is RAM the sprite caches want and
  * which also changed the heap layout enough to expose a latent overflow. */
-#define LW_SKIN_BAKE 0
+#define LW_SKIN_BAKE 1
 #endif
     if(!LW_SKIN_BAKE){ s_bake_skip++; return NULL; }
     if(a->count!=9){ s_bake_skip++; return NULL; }   /* only nine-slice panels are worth a bake */

@@ -88,6 +88,7 @@ static lw_os_capabilities_t capabilities; static bool explicit_capabilities;
 static unsigned s_warm_step;
 static uint32_t s_warm_at;
 static unsigned s_warm_rounds;
+static bool s_warm_cc_done;
 bool lw_os_volume_available(void) { return !s || capabilities.volume!=LW_SERVICE_UNAVAILABLE; }
 static void render(void);
 static void refresh(void); static void show_overlay(lw_os_overlay_t);
@@ -961,13 +962,20 @@ static void warm_pump(uint32_t now)
      * the overlay is gone costs nothing visible - the desktop is up by then and
      * the pet page is two taps away. */
     case 6: if (s->boot) { s_warm_at=now+100; break; }
-        /* The control centre is deliberately NOT warmed here any more. Building
-         * it to prime the bake cache measured no better than building it for the
-         * first real tap (464 ms either way), and it left two side effects that
-         * cost more than it saved: the overlay could still be on screen - or
-         * half faded - when the desktop came up, and every timing taken in the
-         * first seconds became a guess about whether the warm had run yet. The
-         * first open now pays its own way, once. */
+        /* The control centre is warmed here, once, after the mask is gone.
+         * Every button in it is a nine-slice drawn from the 512x544 atlas, and
+         * each piece pays for the whole atlas area again: eight buttons came to
+         * 270 ms per frame for the first three frames. Warming builds it once
+         * behind the user's back so the bake cache is already full when the
+         * first real tap arrives - measured 941 -> 268 ms before this existed.
+         * The overlay must be gone before the desktop is shown, hence the
+         * lv_refr_now() before dismiss_overlay(). */
+        if (!s_warm_cc_done) {
+            s_warm_cc_done=true;
+            show_overlay(OS_OVER_CONTROL);
+            lv_refr_now(NULL);
+            dismiss_overlay();
+        }
         s_warm_step=7; s_warm_at=now+40; lw_sprite_prefetch_clip(warm_pet_clip("v42.couple.seated")); break;
     case 7: {
         if (s->boot) { s_warm_at=now+100; break; }
