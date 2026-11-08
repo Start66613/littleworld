@@ -55,10 +55,10 @@ lv_obj_t *lw_button(lv_obj_t *parent, const char *text, int w, int h, uint32_t b
     lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(btn, lv_color_hex(bg), 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_shadow_width(btn, 12, 0);
+    lv_obj_set_style_shadow_width(btn, 8, 0);
     lv_obj_set_style_shadow_color(btn, lv_color_hex(lw_palette()->shadow), 0);
     lv_obj_set_style_shadow_opa(btn, LV_OPA_30, 0);
-    lv_obj_set_style_shadow_offset_y(btn, 4, 0);
+    lv_obj_set_style_shadow_offset_y(btn, 3, 0);
     lv_obj_set_style_translate_y(btn, 2, LV_STATE_PRESSED);
     lv_obj_remove_flag(btn, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -90,7 +90,7 @@ lv_obj_t *lw_icon_button(lv_obj_t *parent, const char *symbol, int size, uint32_
     lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(btn, lv_color_hex(bg), 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_shadow_width(btn, 10, 0);
+    lv_obj_set_style_shadow_width(btn, 7, 0);
     lv_obj_set_style_shadow_color(btn, lv_color_hex(lw_palette()->shadow), 0);
     lv_obj_set_style_shadow_opa(btn, LV_OPA_20, 0);
     lv_obj_remove_flag(btn, LV_OBJ_FLAG_SCROLLABLE);

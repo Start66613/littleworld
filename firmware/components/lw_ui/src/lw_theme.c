@@ -54,16 +54,20 @@ void lw_theme_init(void)
     lv_style_set_bg_opa(&s_card, LV_OPA_COVER);
     lv_style_set_border_width(&s_card, 0);
     lv_style_set_pad_all(&s_card, 0);
-    lv_style_set_shadow_width(&s_card, 22);
+    /* Shadow blur is recomputed in software on every repaint and the
+     * blurred footprint grows with the width; 22 -> 14 (round-2 perf
+     * pass) cuts that area by roughly a third while the colour and
+     * opacity stay the same, so cards keep the same soft look. */
+    lv_style_set_shadow_width(&s_card, 14);
     lv_style_set_shadow_color(&s_card, lv_color_hex(s_variants[0].shadow));
     lv_style_set_shadow_opa(&s_card, LV_OPA_30);
-    lv_style_set_shadow_offset_y(&s_card, 8);
+    lv_style_set_shadow_offset_y(&s_card, 6);
     lv_style_set_text_font(&s_card, &lw_font_22);
     lv_style_set_text_color(&s_card, lv_color_hex(s_variants[0].text));
 
     lv_style_init(&s_card_pressed);
-    lv_style_set_shadow_width(&s_card_pressed, 6);
-    lv_style_set_shadow_offset_y(&s_card_pressed, 2);
+    lv_style_set_shadow_width(&s_card_pressed, 4);
+    lv_style_set_shadow_offset_y(&s_card_pressed, 1);
     lv_style_set_translate_y(&s_card_pressed, 2);
 
     lv_style_init(&s_soft);
