@@ -20,6 +20,7 @@ struct lw_pet_view {
     lv_timer_t *blink_timer;
     lv_timer_t *blink_restore_timer;
     lv_anim_t breath;
+    int32_t breath_shown; /* last height breath_cb pushed to the body */
     lw_pet_mood_t mood;
     int scale;
 };
@@ -52,6 +53,17 @@ static void breath_cb(void *var, int32_t value)
     if (view == NULL) {
         return;
     }
+    /* The height only ever takes the seven integer values between
+     * s(170) and s(176), eased over 1.4 s (3.2 s asleep) at a ~30 ms
+     * animation tick: most ticks repeat the previous value, and the
+     * ease-in-out spends even longer sitting on the end values.  A
+     * repeated set_height/set_y still walks the style and invalidate
+     * paths for the whole body, so skip ticks that would not move
+     * anything. */
+    if (value == view->breath_shown) {
+        return;
+    }
+    view->breath_shown = value;
     lv_obj_set_height(body, value);
     lv_obj_set_y(body, s(40, view->scale) - (value - s(170, view->scale)) / 2);
 }
@@ -99,6 +111,7 @@ lw_pet_view_t *lw_pet_view_create(lv_obj_t *parent, int x, int y, int scale)
         return NULL;
     }
     view->scale = scale;
+    view->breath_shown = -1; /* no height pushed yet */
     view->mood = LW_PET_MOOD_CALM;
 
     view->root = lv_obj_create(parent);
