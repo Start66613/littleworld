@@ -322,6 +322,8 @@ typedef struct {
     arcade_point_t press;
     int pressed;
     int over;
+    uint32_t last_score;
+    int last_length;
 } snake_ui_t;
 
 static snake_ui_t s_snake;
@@ -357,12 +359,16 @@ static void snake_refresh(void)
             lv_obj_set_size(seg, 32, 32);
             lv_obj_set_style_radius(seg, 9, 0);
             lv_obj_set_style_bg_opa(seg, LV_OPA_COVER, 0);
+            /* A segment's colour is a function of its index only (head, or
+             * odd/even body), and segments[i] is bound to index i for its
+             * whole life, so the colour is set once here instead of being
+             * rewritten - and the object invalidated - on every step. */
+            lv_obj_set_style_bg_color(seg, lv_color_hex(snake_color(i, i == 0)), 0);
             lv_obj_remove_flag(seg, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_remove_flag(seg, LV_OBJ_FLAG_SCROLLABLE);
             s_snake.segments[i] = seg;
             s_snake.segment_count = i + 1;
         }
-        lv_obj_set_style_bg_color(s_snake.segments[i], lv_color_hex(snake_color(i, i == 0)), 0);
         lv_obj_set_pos(s_snake.segments[i], s_snake.model.body[i].x * 36 + 2, s_snake.model.body[i].y * 36 + 2);
         lv_obj_remove_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
     }
@@ -370,8 +376,14 @@ static void snake_refresh(void)
         lv_obj_add_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
     }
     lv_obj_set_pos(s_snake.food, s_snake.model.food.x * 36 + 4, s_snake.model.food.y * 36 + 4);
-    lv_label_set_text_fmt(s_snake.score, "得分 %u", (unsigned)s_snake.model.score);
-    lv_label_set_text_fmt(s_snake.extra, "长度 %d", (int)s_snake.model.length);
+    if (s_snake.model.score != s_snake.last_score) {
+        s_snake.last_score = s_snake.model.score;
+        lv_label_set_text_fmt(s_snake.score, "得分 %u", (unsigned)s_snake.model.score);
+    }
+    if (s_snake.model.length != s_snake.last_length) {
+        s_snake.last_length = s_snake.model.length;
+        lv_label_set_text_fmt(s_snake.extra, "长度 %d", (int)s_snake.model.length);
+    }
 }
 
 static void snake_restart(void)
@@ -514,6 +526,10 @@ static void open_game_snake(lv_event_t *event)
     s_snake.score = lw_pill(overlay, "得分 0", palette->card_soft, palette->accent_deep);
     lv_obj_set_pos(s_snake.score, 700, 20);
     s_snake.extra = lw_pill(overlay, "长度 3", palette->card_soft, palette->lav_deep);
+    /* The pills above already show the initial values, so the first
+     * snake_refresh() must not rewrite them. */
+    s_snake.last_score = s_snake.model.score;
+    s_snake.last_length = s_snake.model.length;
     lv_obj_set_pos(s_snake.extra, 850, 20);
 
     lv_obj_t *field = lv_obj_create(overlay);
