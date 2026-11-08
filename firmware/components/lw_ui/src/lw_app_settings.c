@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include <stdio.h>
+#include <string.h>
 
 #include "lw_app_state.h"
 #include "lw_shell.h"
@@ -73,6 +74,15 @@ static void reset_clicked(lv_event_t *event)
     lw_shell_refresh_theme();
 }
 
+/* The text timer_cb() last wrote. The 2 s timer exists so this label stays
+ * truthful, but in a steady state none of its four fields change, while
+ * lv_label_set_text_fmt() re-formats, re-allocates and re-lays out the label
+ * on every call. Format into a buffer and only touch the label when the text
+ * actually differs; the object count is still recomputed every tick, so a
+ * page build or an overlay opening is picked up on the next tick as before.
+ * Reset in destroy(), because create() builds a fresh label. */
+static char s_diag_shown[128];
+
 static void timer_cb(lv_timer_t *timer)
 {
     (void)timer;
@@ -80,10 +90,15 @@ static void timer_cb(lv_timer_t *timer)
         return;
     }
     lw_state_t *state = lw_app_state();
-    lv_label_set_text_fmt(s_diag_label,
-                          "活动对象：%d\n宠物互动：%u 次\n时钟：%s\n版本：%s",
-                          count_objects(lv_screen_active()), (unsigned)state->pet.interactions,
-                          lw_time_is_demo() ? "DEMO（未接实时时钟）" : "系统时间", LW_VERSION);
+    char text[sizeof(s_diag_shown)];
+    snprintf(text, sizeof(text),
+             "活动对象：%d\n宠物互动：%u 次\n时钟：%s\n版本：%s",
+             count_objects(lv_screen_active()), (unsigned)state->pet.interactions,
+             lw_time_is_demo() ? "DEMO（未接实时时钟）" : "系统时间", LW_VERSION);
+    if (strcmp(text, s_diag_shown) != 0) {
+        snprintf(s_diag_shown, sizeof(s_diag_shown), "%s", text);
+        lv_label_set_text(s_diag_label, text);
+    }
 }
 
 static lv_obj_t *row_label(lv_obj_t *parent, const char *text, int y)
@@ -167,6 +182,7 @@ static void destroy(void)
     s_sound_toggle = NULL;
     s_anim_toggle = NULL;
     s_diag_label = NULL;
+    s_diag_shown[0] = '\0';
 }
 
 const lw_app_t lw_app_settings_def = {
