@@ -215,26 +215,50 @@ static void build_tab_today(lv_obj_t *page)
     lv_obj_add_event_cb(open_btn, tab_clicked, LV_EVENT_CLICKED, (void *)(intptr_t)1);
 }
 
+/* Last values refresh_today() actually wrote, plus the label objects they
+ * were written to: build_page() deletes and recreates these labels on every
+ * tab build, so a changed pointer invalidates the cached value. The 1 s
+ * timer re-runs this, but both counts change once a day, while every
+ * lv_label_set_text() re-allocates, re-lays out and invalidates. */
+static int s_days_shown = -1;
+static int s_next_shown = -1;
+static lv_obj_t *s_days_for;
+static lv_obj_t *s_next_for;
+
 static void refresh_today(void)
 {
     lw_state_t *state = lw_app_state();
     lw_date_t today = lw_today();
+    if (s_days_label != s_days_for) {
+        s_days_for = s_days_label;
+        s_days_shown = -1;
+    }
+    if (s_next_label != s_next_for) {
+        s_next_for = s_next_label;
+        s_next_shown = -1;
+    }
     if (s_days_label != NULL) {
         int days = lw_days_between(state->anniversary, today) + 1;
         if (days < 1) {
             days = 1;
         }
-        lv_label_set_text_fmt(s_days_label, "%d", days);
-        if (s_days_unit != NULL) {
-            lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
+        if (days != s_days_shown) {
+            s_days_shown = days;
+            lv_label_set_text_fmt(s_days_label, "%d", days);
+            if (s_days_unit != NULL) {
+                lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
+            }
         }
     }
     if (s_next_label != NULL) {
         int days = lw_days_until_anniversary(state->anniversary, today);
-        if (days == 0) {
-            lv_label_set_text(s_next_label, "今天就是纪念日");
-        } else {
-            lv_label_set_text_fmt(s_next_label, "下一个纪念日还有 %d 天", days);
+        if (days != s_next_shown) {
+            s_next_shown = days;
+            if (days == 0) {
+                lv_label_set_text(s_next_label, "今天就是纪念日");
+            } else {
+                lv_label_set_text_fmt(s_next_label, "下一个纪念日还有 %d 天", days);
+            }
         }
     }
 }
@@ -505,6 +529,8 @@ static void destroy(void)
     s_days_unit = NULL;
     s_next_label = NULL;
     s_content = NULL;
+    s_days_for = NULL;
+    s_next_for = NULL;
 }
 
 const lw_app_t lw_app_memories_def = {
