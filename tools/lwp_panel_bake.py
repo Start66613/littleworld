@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lwp_prescale import read_pack, frame_view, map_axis, tint_rgb565  # noqa: E402
+from lwp_prescale import read_pack, frame_view, map_axis, crop_axis, tint_rgb565  # noqa: E402
 
 SKIN_ATLAS = 'atlas'   # the runtime name is <pack>.<clip> = v43skin.atlas
 # All three geometries are asked for as SK_CC_PANEL, which is rects[11] in
@@ -61,12 +61,55 @@ def piece_axis(src_lo, src_len, dst_len):
     return out
 
 
-def nine_slice(panel_w, panel_h, border, atlas_w, atlas_h, rgb, alpha, mode):
+def piece_window(atlas_len, src_lo, src_len, dst_len, scale, mode, sampler):
+    """Source indices for one nine-slice piece, one per destination pixel.
+
+    sampler='crop' (the default since the cloud audit) builds the piece's
+    sampling grid the way tools/lwp_prescale.py - the implementation already
+    verified at 237 frames / 0 differences - builds it for a sprite clip:
+    crop_axis() takes the window out of the *whole atlas* lattice (whose
+    length is the scaled length, (atlas_len*scale+0x80)>>8, and whose bounds
+    are judged against that scaled length, not the atlas length), and the
+    window - not a truncated scaled offset - decides which source pixels
+    the piece gets. The old code anchored the window at
+    (src_lo*scale)>>8 inside a per-call lattice, which is off by one source
+    pixel wherever the lattice crosses the piece edge on the other side of
+    a rounding boundary; that is the 1 px sampling difference the host
+    screenshot baseline shows on panel paper texture.
+
+    sampler='atlas' keeps that old behaviour for A/B comparison, and
+    sampler='piece' keeps the naive per-piece stretch. Neither is the
+    default any more.
+
+    A crop window can be one slot shorter or longer than the destination
+    piece (the lattice, not the geometry, decides); extra slots are
+    clipped away and a short window's last source pixel is held for the
+    remaining slot, matching the clamp map_axis() itself applies at the
+    edge of a lattice.
+    """
+    if sampler == 'piece':
+        return piece_axis(src_lo, src_len, dst_len)
+    if sampler == 'atlas':
+        lat = lattice(atlas_len, scale, mode)
+        start = (src_lo * scale) >> 8
+        out = []
+        for k in range(dst_len):
+            t = start + k
+            out.append(lat[t] if 0 <= t < len(lat) else lat[-1])
+        return out
+    window, _first = crop_axis(atlas_len, src_lo, src_len, scale, mode)
+    out = []
+    for k in range(dst_len):
+        out.append(window[k] if k < len(window) else window[-1])
+    return out
+
+
+def nine_slice(panel_w, panel_h, border, atlas_w, atlas_h, rgb, alpha, mode, sampler='crop'):
     """Resample one nine-slice panel the way lv_draw_sw_transform would.
 
-    Each piece is its own draw of the whole atlas with dsc.scale_*, clipped to
-    the piece. So the sampling lattice spans the atlas, and a destination pixel
-    X reads task-local slot X - ox, exactly like art_draw() places the image.
+    Each piece is its own draw of the whole atlas with dsc.scale_*, clipped
+    to the piece; piece_window() decides which source pixels each piece is
+    sampled from.
     """
     sw = [border, PANEL_RECT[2] - 2 * border, border]
     sh = [border, PANEL_RECT[3] - 2 * border, border]
@@ -85,22 +128,10 @@ def nine_slice(panel_w, panel_h, border, atlas_w, atlas_h, rgb, alpha, mode):
             dst_w, dst_h = dw[i], dh[j]
             scale_x = (dst_w * 256) // src_w
             scale_y = (dst_h * 256) // src_h
-            lat_x = lattice(atlas_w, scale_x, mode)
-            lat_y = lattice(atlas_h, scale_y, mode)
-            ox = dx - ((sx * scale_x) >> 8) if mode != 'piece' else dx
-            oy = dy - ((sy * scale_y) >> 8) if mode != 'piece' else dy
-            for y in range(dy, dy + dst_h):
-                t = (y - dy) if mode == 'piece' else (y - oy)
-                if t < 0 or t >= len(lat_y):
-                    continue
-                sy_atlas = lat_y[t]
-                for x in range(dx, dx + dst_w):
-                    u = (x - dx) if mode == 'piece' else (x - ox)
-                    if u < 0 or u >= len(lat_x):
-                        continue
-                    sx_atlas = lat_x[u]
-                    out_rgb[y, x] = rgb[sy_atlas, sx_atlas]
-                    out_a[y, x] = alpha[sy_atlas, sx_atlas]
+            cols = np.asarray(piece_window(atlas_w, sx, src_w, dst_w, scale_x, mode, sampler), dtype=np.intp)
+            rows = np.asarray(piece_window(atlas_h, sy, src_h, dst_h, scale_y, mode, sampler), dtype=np.intp)
+            out_rgb[dy:dy + dst_h, dx:dx + dst_w] = rgb[rows[:, None], cols[None, :]]
+            out_a[dy:dy + dst_h, dx:dx + dst_w] = alpha[rows[:, None], cols[None, :]]
             sx += src_w
             dx += dst_w
         sy += sh[j]
@@ -139,6 +170,10 @@ def main():
     ap.add_argument('--shot', default=r'build\v45-assets\shot-skin2\02-control-center.bmp')
     ap.add_argument('--out', default=r'build\v45-assets\baked')
     ap.add_argument('--mode', default='half', choices=['half', 'floor', 'piece'])
+    ap.add_argument('--sampler', default='crop', choices=['crop', 'atlas', 'piece'],
+                    help="per-piece sampling grid: 'crop' = crop_axis window from the "
+                         "whole-atlas lattice (default), 'atlas' = pre-audit lattice + "
+                         "truncated offset, 'piece' = naive per-piece stretch")
     args = ap.parse_args()
 
     raw, width, height, records, _kind, _trailer = read_pack(Path(args.skin))
@@ -156,7 +191,9 @@ def main():
         shot = np.asarray(Image.open(args.shot).convert('RGB'))
 
     for name, w, h, b in PANELS:
-        panel_rgb, panel_a = nine_slice(w, h, b, width, height, rgb, alpha, args.mode)
+        panel_rgb, panel_a = nine_slice(w, h, b, width, height, rgb, alpha,
+                                        'piece' if args.mode == 'piece' else args.mode,
+                                        'piece' if args.mode == 'piece' else args.sampler)
         to_ppm(out / ('panel-%s.png' % name), panel_rgb, panel_a)
         for tag, tint in (('day', None), ('night', NIGHT), ('dusk', DUSK)):
             trgb, ta = panel_rgb, panel_a
