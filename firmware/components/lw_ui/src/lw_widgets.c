@@ -204,7 +204,12 @@ void lw_bar_set(lv_obj_t *bar, int percent)
         return;
     }
     lv_coord_t width = lv_obj_get_width(bar);
-    lv_obj_set_width(fill, (width * percent) / 100);
+    lv_coord_t fill_width = (width * percent) / 100;
+    /* Bars are refreshed from 1 s timers with values that change slowly;
+     * skip the style write (and its invalidate) when nothing would move. */
+    if (lv_obj_get_width(fill) != fill_width) {
+        lv_obj_set_width(fill, fill_width);
+    }
 }
 
 lv_obj_t *lw_icon_badge(lv_obj_t *parent, int x, int y, int size, uint32_t bg, int radius)

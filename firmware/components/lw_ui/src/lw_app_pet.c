@@ -22,6 +22,13 @@ static lv_obj_t *s_sleep_button_label;
 static lv_obj_t *s_sleep_button;
 static uint32_t s_feedback_until;
 
+/* Last values pushed by refresh(): the 1 s timer re-runs it, but the mood
+ * and the sleep button caption only change on state transitions, and
+ * lv_label_set_text() reallocates + re-layouts on every call. Reset in
+ * create() because the labels are rebuilt there. */
+static int s_last_mood = -1;
+static int s_last_sleeping = -1;
+
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
@@ -31,7 +38,11 @@ static void refresh(void)
         lw_pet_view_refresh(s_view, pet, now);
     }
     if (s_mood_label != NULL) {
-        lv_label_set_text(s_mood_label, lw_pet_mood_name(lw_pet_mood(pet, now)));
+        lw_pet_mood_t mood = lw_pet_mood(pet, now);
+        if ((int)mood != s_last_mood) {
+            s_last_mood = (int)mood;
+            lv_label_set_text(s_mood_label, lw_pet_mood_name(mood));
+        }
     }
     if (s_fullness_bar != NULL) {
         lw_bar_set(s_fullness_bar, pet->fullness);
@@ -47,7 +58,11 @@ static void refresh(void)
         s_feedback_until = 0;
     }
     if (s_sleep_button_label != NULL) {
-        lv_label_set_text(s_sleep_button_label, pet->sleeping ? "叫醒" : "休息");
+        int sleeping = pet->sleeping ? 1 : 0;
+        if (sleeping != s_last_sleeping) {
+            s_last_sleeping = sleeping;
+            lv_label_set_text(s_sleep_button_label, sleeping ? "叫醒" : "休息");
+        }
     }
 }
 
@@ -171,6 +186,9 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     s_sleep_button_label = lv_obj_get_child(s_sleep_button, 0);
 
     (void)hint;
+    /* the labels above are fresh objects: forget what refresh() last pushed */
+    s_last_mood = -1;
+    s_last_sleeping = -1;
     refresh();
     s_timer = lv_timer_create(timer_cb, 1000, NULL);
 }
