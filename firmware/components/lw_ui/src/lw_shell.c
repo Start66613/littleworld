@@ -33,6 +33,16 @@ static const char *const s_weekdays[7] = {"周日", "周一", "周二", "周三"
 
 /* --------------------------------------------------------------- top bar */
 
+/* Last values pushed to the top bar.
+ *
+ * lv_label_set_text() reallocates the text and re-runs layout on every call,
+ * so the 1 s clock timer only touches a label when its visible text would
+ * actually change: the clock once a minute, the date once a day, the demo
+ * pill when the clock source flips. */
+static int s_clock_minute = -1; /* hour * 60 + minute */
+static int s_clock_day = -1;    /* days since the unix epoch */
+static int s_demo_shown = -1;   /* -1 = not applied yet */
+
 static void update_clock(void)
 {
     if (s_clock_label == NULL) {
@@ -43,21 +53,33 @@ static void update_clock(void)
     int hour = seconds_of_day / 3600;
     int minute = (seconds_of_day % 3600) / 60;
 
-    char clock[16];
-    snprintf(clock, sizeof(clock), "%02d:%02d", hour, minute);
-    lv_label_set_text(s_clock_label, clock);
+    int minute_of_day = hour * 60 + minute;
+    if (minute_of_day != s_clock_minute) {
+        s_clock_minute = minute_of_day;
+        char clock[16];
+        snprintf(clock, sizeof(clock), "%02d:%02d", hour, minute);
+        lv_label_set_text(s_clock_label, clock);
+    }
 
-    lw_date_t today = lw_today();
-    int weekday = (int)((lw_days_from_civil(today.year, today.month, today.day) % 7 + 11) % 7);
-    char date[48];
-    snprintf(date, sizeof(date), "%d月%d日 %s", today.month, today.day, s_weekdays[weekday]);
-    lv_label_set_text(s_date_label, date);
+    int days = (int)(now / 86400u);
+    if (days != s_clock_day) {
+        s_clock_day = days;
+        lw_date_t today = lw_today();
+        int weekday = (int)((lw_days_from_civil(today.year, today.month, today.day) % 7 + 11) % 7);
+        char date[48];
+        snprintf(date, sizeof(date), "%d月%d日 %s", today.month, today.day, s_weekdays[weekday]);
+        lv_label_set_text(s_date_label, date);
+    }
 
     if (s_demo_pill != NULL) {
-        if (lw_time_is_demo()) {
-            lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+        int demo = lw_time_is_demo() ? 1 : 0;
+        if (demo != s_demo_shown) {
+            s_demo_shown = demo;
+            if (demo) {
+                lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            }
         }
     }
 }

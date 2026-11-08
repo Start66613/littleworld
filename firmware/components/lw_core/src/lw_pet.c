@@ -23,6 +23,16 @@ static uint8_t clamp_u8(int value)
     return (uint8_t)value;
 }
 
+/* Whole points earned by `delta` seconds at `feed` per `modulus`, keeping the
+ * sub-point remainder in *frac for the next call.  See lw_pet.h: a 10 s tick
+ * loses the fraction otherwise, and the stats never move. */
+static int decay_points(uint32_t *frac, uint32_t delta, uint32_t feed, uint32_t modulus)
+{
+    uint32_t total = *frac + delta * feed;
+    *frac = total % modulus;
+    return (int)(total / modulus);
+}
+
 void lw_pet_clamp(lw_pet_t *pet)
 {
     pet->fullness = clamp_u8(pet->fullness);
@@ -74,17 +84,27 @@ void lw_pet_tick(lw_pet_t *pet, uint32_t now)
         }
 
         if (pet->sleeping) {
-            pet->energy = clamp_u8(pet->energy + (int)((delta * ENERGY_REGEN_PER_HOUR) / HOUR));
-            pet->fullness = clamp_u8(pet->fullness - (int)((delta * 4u) / HOUR));
+            pet->energy = clamp_u8(pet->energy +
+                                   decay_points(&pet->decay_frac_energy, delta,
+                                                ENERGY_REGEN_PER_HOUR, HOUR));
+            pet->fullness = clamp_u8(pet->fullness -
+                                     decay_points(&pet->decay_frac_fullness, delta,
+                                                  4u, HOUR));
             if (pet->energy >= 98) {
                 pet->sleeping = 0;
                 pet->last_interaction = now;
             }
         } else {
-            pet->fullness = clamp_u8(pet->fullness - (int)((delta * FULLNESS_DECAY_PER_HOUR) / HOUR));
-            pet->energy = clamp_u8(pet->energy - (int)((delta * ENERGY_DECAY_PER_HOUR) / HOUR));
+            pet->fullness = clamp_u8(pet->fullness -
+                                     decay_points(&pet->decay_frac_fullness, delta,
+                                                  FULLNESS_DECAY_PER_HOUR, HOUR));
+            pet->energy = clamp_u8(pet->energy -
+                                   decay_points(&pet->decay_frac_energy, delta,
+                                                ENERGY_DECAY_PER_HOUR, HOUR));
             if (pet->affection > AFFECTION_FLOOR) {
-                pet->affection = clamp_u8(pet->affection - (int)(delta / (6u * HOUR)));
+                pet->affection = clamp_u8(pet->affection -
+                                          decay_points(&pet->decay_frac_affection, delta,
+                                                       1u, 6u * HOUR));
             }
         }
         pet->last_update = now;

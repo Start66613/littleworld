@@ -45,6 +45,16 @@ typedef struct {
     uint32_t mood_until;  /* unix seconds until the temporary mood expires */
     uint32_t last_interaction;
     uint16_t interactions;
+    /* Sub-point decay remainders carried between lw_pet_tick() calls.
+     *
+     * The UI ticks the pet every 10 s, where (10 * 6) / 3600 == 0, so
+     * computing each call's decay from its own delta alone made the stats
+     * stand still while the device stayed awake.  These fields let the
+     * fractions accumulate to the exact per-hour rates.  Runtime only: not
+     * written to the save record, so the file format is unchanged. */
+    uint32_t decay_frac_fullness;
+    uint32_t decay_frac_energy;
+    uint32_t decay_frac_affection;
 } lw_pet_t;
 
 /** Start a fresh pet (or restore fields manually and call lw_pet_retick). */
