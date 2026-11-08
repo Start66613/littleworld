@@ -785,7 +785,12 @@ static void open_game_breakout(lv_event_t *event)
     lv_obj_remove_flag(s_breakout.ball, LV_OBJ_FLAG_SCROLLABLE);
 
     breakout_refresh();
-    s_breakout.timer = lv_timer_create(breakout_tick_cb, ARCADE_BREAKOUT_TICK_MS / 2, NULL);
+    /* The callback steps the model by real elapsed time (see
+     * breakout_tick_cb), so the game speed does not depend on the
+     * timer period.  It used to run at TICK_MS/2 (8 ms) and return
+     * immediately on half of its wakeups; one wakeup per tick is
+     * enough. */
+    s_breakout.timer = lv_timer_create(breakout_tick_cb, ARCADE_BREAKOUT_TICK_MS, NULL);
 
     lw_text(overlay, "在屏幕上拖动挡板，轻触发球；掉球会损失一条命", &lw_font_18, palette->dim, 20, 548);
 }
