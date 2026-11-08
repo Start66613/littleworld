@@ -57,16 +57,50 @@ lw_state_t *lw_app_state(void)
     return &s_state;
 }
 
+/* Write throttling.  The shell asks for a save every 60 s, but between
+ * pet interactions the encoded blob only changes in pet.last_update,
+ * so most of those asks used to cost a full NVS set_blob + commit
+ * (~1440 writes a day) to store a new timestamp.  Skip a write when the
+ * blob is identical to the last one written, and when the only change
+ * is last_update unless the last actual write is at least
+ * LW_SAVE_FORCE_INTERVAL seconds old.
+ *
+ * Trade-off: after an unclean power cut the stored last_update can lag
+ * the true value by up to LW_SAVE_FORCE_INTERVAL.  With a real clock
+ * nothing is lost - decay is computed from wall-clock elapsed time, and
+ * the stored stats are the consistent snapshot from that same write.
+ * In demo-clock mode the post-reboot decay-freeze window grows from
+ * ~60 s to the same <=10 min bound.  Any meaningful change (stats,
+ * settings, scores...) still writes immediately. */
+#define LW_SAVE_FORCE_INTERVAL 600
+
+static uint8_t s_last_written[LW_SAVE_BYTES];
+static bool s_have_written;
+static uint32_t s_last_write_at;
+
 void lw_app_state_save(void)
 {
     uint8_t blob[LW_SAVE_BYTES];
     if (lw_save_encode(&s_state, blob, sizeof(blob)) != LW_SAVE_BYTES) {
         return;
     }
+    uint32_t now = lw_now();
+    if (s_have_written) {
+        if (memcmp(blob, s_last_written, LW_SAVE_BYTES) == 0) {
+            return;
+        }
+        if (!lw_save_meaningful_diff(s_last_written, blob, LW_SAVE_BYTES) &&
+            now - s_last_write_at < LW_SAVE_FORCE_INTERVAL) {
+            return;
+        }
+    }
     const lw_platform_t *platform = lw_platform_get();
     if (platform != NULL && platform->storage_write != NULL) {
         platform->storage_write(LW_SAVE_KEY, blob, sizeof(blob));
     }
+    memcpy(s_last_written, blob, sizeof(blob));
+    s_have_written = true;
+    s_last_write_at = now;
 }
 
 void lw_app_state_reset(void)

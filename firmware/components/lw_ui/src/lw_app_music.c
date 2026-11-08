@@ -109,6 +109,19 @@ static void play_toggle(lv_event_t *event)
 {
     (void)event;
     s_playing = !s_playing;
+    /* The 1 s timer only does work while playing, so park it while
+     * paused instead of waking the timer handler every second to
+     * return immediately.  Nuance: LVGL does not advance a paused
+     * timer's last_run, so on resume the first tick fires right away
+     * rather than at the next 1 s boundary - the progress steps one
+     * second as play is pressed, then settles into the 1 s cadence. */
+    if (s_timer != NULL) {
+        if (s_playing) {
+            lv_timer_resume(s_timer);
+        } else {
+            lv_timer_pause(s_timer);
+        }
+    }
     refresh();
 }
 
@@ -248,6 +261,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
 
     refresh();
     s_timer = lv_timer_create(timer_cb, 1000, NULL);
+    lv_timer_pause(s_timer); /* the page opens paused; play_toggle resumes */
 }
 
 static void destroy(void)

@@ -44,21 +44,38 @@ void lw_memories_open_tab(int tab)
 
 /* ------------------------------------------------------------------ common */
 
+/* The tab bar is built once in create() and stays put; a tab switch
+ * only restyles the tabs (background + caption colour, matching what
+ * build_tabs() applies) and rebuilds the page area below it.  The old
+ * switch_tab() cleaned the whole content area and rebuilt the bar -
+ * five objects, four labels and a flex layout - even though only the
+ * active styling changes.  Callers that pass the already-active tab
+ * (adjust_date, gift_opened) still get their page rebuild. */
+static void restyle_tabs(void)
+{
+    const lw_palette_t *palette = lw_palette();
+    for (int i = 0; i < 4; i++) {
+        if (s_tabs[i] == NULL) {
+            continue;
+        }
+        int active = (i == s_active_tab);
+        lv_obj_set_style_bg_color(s_tabs[i], lv_color_hex(active ? palette->accent : palette->card), 0);
+        lv_obj_set_style_bg_opa(s_tabs[i], active ? LV_OPA_COVER : LV_OPA_70, 0);
+        lv_obj_t *label = lv_obj_get_child(s_tabs[i], 0);
+        if (label != NULL) {
+            lv_obj_set_style_text_color(label, lv_color_hex(active ? 0xFFFFFF : palette->dim), 0);
+        }
+    }
+}
+
 static void switch_tab(int index)
 {
     if (index < 0 || index > 3) {
         return;
     }
     s_active_tab = index;
-    if (s_content != NULL) {
-        lv_obj_clean(s_content);
-        build_tabs(s_content);
-        s_page = lv_obj_create(s_content);
-        lv_obj_remove_style_all(s_page);
-        lv_obj_set_pos(s_page, 0, 54);
-        lv_obj_set_size(s_page, LW_SCREEN_W, LW_CONTENT_H - 54);
-        lv_obj_remove_flag(s_page, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_remove_flag(s_page, LV_OBJ_FLAG_CLICKABLE);
+    restyle_tabs();
+    if (s_page != NULL) {
         build_page();
     }
 }
@@ -483,6 +500,10 @@ static void destroy(void)
     }
     s_tab_bar = NULL;
     s_page = NULL;
+    s_content = NULL;
+    for (int i = 0; i < 4; i++) {
+        s_tabs[i] = NULL;
+    }
     s_days_label = NULL;
     s_days_unit = NULL;
     s_next_label = NULL;

@@ -107,6 +107,24 @@ int lw_save_encode(const lw_state_t *state, uint8_t *out, size_t capacity)
     return LW_SAVE_BYTES;
 }
 
+bool lw_save_meaningful_diff(const uint8_t *a, const uint8_t *b, size_t length)
+{
+    if (a == NULL || b == NULL || length != LW_SAVE_BYTES) {
+        return true;
+    }
+    /* The CRC occupies the last four bytes and pet.last_update the four
+     * bytes at offset 17; neither counts as a meaningful change. */
+    for (size_t i = 0; i < LW_SAVE_BYTES - 4; i++) {
+        if (i >= 17 && i < 21) {
+            continue;
+        }
+        if (a[i] != b[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int lw_save_decode(lw_state_t *state, const uint8_t *in, size_t length)
 {
     if (state == NULL || in == NULL || length != LW_SAVE_BYTES) {

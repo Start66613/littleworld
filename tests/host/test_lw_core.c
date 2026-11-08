@@ -298,6 +298,44 @@ static void test_state(void)
     CHECK_EQ(decoded.anniversary.month, 10);
 }
 
+static void test_save_diff(void)
+{
+    lw_state_t state;
+    lw_state_defaults(&state, 100000);
+    uint8_t a[LW_SAVE_BYTES];
+    uint8_t b[LW_SAVE_BYTES];
+    CHECK_EQ(lw_save_encode(&state, a, sizeof(a)), LW_SAVE_BYTES);
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES)); /* identical */
+
+    /* only pet.last_update moved (its CRC changes along, also ignored) */
+    state.pet.last_update += 600;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* CRC-only difference */
+    memcpy(b, a, sizeof(b));
+    b[LW_SAVE_BYTES - 1] ^= 0xFF;
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* a real change: one stat point */
+    state.pet.last_update -= 600;
+    state.pet.fullness -= 1;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* the byte right after last_update (born_at) does count */
+    state.pet.fullness += 1;
+    state.pet.born_at += 1;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* unprovable sameness counts as meaningful */
+    CHECK(lw_save_meaningful_diff(NULL, b, LW_SAVE_BYTES));
+    CHECK(lw_save_meaningful_diff(a, NULL, LW_SAVE_BYTES));
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES - 1));
+}
+
 /* -------------------------------------------------------------- memories */
 
 static void test_memories(void)
@@ -328,6 +366,7 @@ int main(void)
     test_time();
     test_pet();
     test_state();
+    test_save_diff();
     test_memories();
 
     printf("\n%d checks, %d failure(s)\n", g_checks, g_failures);
