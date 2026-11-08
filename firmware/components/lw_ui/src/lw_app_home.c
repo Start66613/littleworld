@@ -61,6 +61,15 @@ static const char *greeting_for_hour(int hour)
     return "晚上好";
 }
 
+/* Last values refresh() actually wrote. The 1 s timer re-runs refresh(), but
+ * the day counts change once a day and the mood only with the pet's state,
+ * while every lv_label_set_text() re-allocates, re-lays out and invalidates.
+ * Guard on the inputs - the pattern lw_app_pet.c already uses - and reset in
+ * destroy(), because create() builds fresh labels. */
+static int s_mood_shown = -1;
+static int s_days_shown = -1;
+static int s_next_shown = -1;
+
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
@@ -71,9 +80,11 @@ static void refresh(void)
         lw_pet_view_refresh(s_view, pet, now);
     }
     if (s_mood_label != NULL) {
-        char mood[32];
-        snprintf(mood, sizeof(mood), "%s", lw_pet_mood_name(lw_pet_mood(pet, now)));
-        lv_label_set_text(s_mood_label, mood);
+        lw_pet_mood_t mood = lw_pet_mood(pet, now);
+        if ((int)mood != s_mood_shown) {
+            s_mood_shown = (int)mood;
+            lv_label_set_text(s_mood_label, lw_pet_mood_name(mood));
+        }
     }
     if (s_days_label != NULL) {
         lw_date_t today = lw_today();
@@ -81,18 +92,24 @@ static void refresh(void)
         if (days < 1) {
             days = 1;
         }
-        lv_label_set_text_fmt(s_days_label, "%d", days);
-        if (s_days_unit != NULL) {
-            lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
+        if (days != s_days_shown) {
+            s_days_shown = days;
+            lv_label_set_text_fmt(s_days_label, "%d", days);
+            if (s_days_unit != NULL) {
+                lv_obj_align_to(s_days_unit, s_days_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -10);
+            }
         }
     }
     if (s_next_label != NULL) {
         lw_date_t today = lw_today();
         int days = lw_days_until_anniversary(state->anniversary, today);
-        if (days == 0) {
-            lv_label_set_text(s_next_label, "今天就是纪念日");
-        } else {
-            lv_label_set_text_fmt(s_next_label, "距离下一个纪念日还有 %d 天", days);
+        if (days != s_next_shown) {
+            s_next_shown = days;
+            if (days == 0) {
+                lv_label_set_text(s_next_label, "今天就是纪念日");
+            } else {
+                lv_label_set_text_fmt(s_next_label, "距离下一个纪念日还有 %d 天", days);
+            }
         }
     }
 }
@@ -191,6 +208,9 @@ static void destroy(void)
     s_mood_label = NULL;
     s_days_label = NULL;
     s_next_label = NULL;
+    s_mood_shown = -1;
+    s_days_shown = -1;
+    s_next_shown = -1;
 }
 
 const lw_app_t lw_app_home_def = {
