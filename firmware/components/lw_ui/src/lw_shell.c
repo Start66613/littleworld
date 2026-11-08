@@ -33,6 +33,14 @@ static const char *const s_weekdays[7] = {"周日", "周一", "周二", "周三"
 
 /* --------------------------------------------------------------- top bar */
 
+/* Text update_clock() last wrote, and the demo state it last applied. The
+ * 1 s timer drives this, but the clock text has minute resolution and the
+ * date changes daily, so almost every call used to rewrite identical text
+ * (lv_label_set_text re-allocates and re-lays out regardless). */
+static char s_clock_shown[16];
+static char s_date_shown[48];
+static int s_demo_shown = -1;
+
 static void update_clock(void)
 {
     if (s_clock_label == NULL) {
@@ -43,21 +51,31 @@ static void update_clock(void)
     int hour = seconds_of_day / 3600;
     int minute = (seconds_of_day % 3600) / 60;
 
-    char clock[16];
+    char clock[sizeof(s_clock_shown)];
     snprintf(clock, sizeof(clock), "%02d:%02d", hour, minute);
-    lv_label_set_text(s_clock_label, clock);
+    if (strcmp(clock, s_clock_shown) != 0) {
+        snprintf(s_clock_shown, sizeof(s_clock_shown), "%s", clock);
+        lv_label_set_text(s_clock_label, clock);
+    }
 
     lw_date_t today = lw_today();
     int weekday = (int)((lw_days_from_civil(today.year, today.month, today.day) % 7 + 11) % 7);
-    char date[48];
+    char date[sizeof(s_date_shown)];
     snprintf(date, sizeof(date), "%d月%d日 %s", today.month, today.day, s_weekdays[weekday]);
-    lv_label_set_text(s_date_label, date);
+    if (strcmp(date, s_date_shown) != 0) {
+        snprintf(s_date_shown, sizeof(s_date_shown), "%s", date);
+        lv_label_set_text(s_date_label, date);
+    }
 
     if (s_demo_pill != NULL) {
-        if (lw_time_is_demo()) {
-            lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+        int demo = lw_time_is_demo() ? 1 : 0;
+        if (demo != s_demo_shown) {
+            s_demo_shown = demo;
+            if (demo) {
+                lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            }
         }
     }
 }
