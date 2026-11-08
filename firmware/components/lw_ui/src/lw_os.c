@@ -778,8 +778,12 @@ static void refresh(void)
     }
     for (unsigned layer=0;layer<2;layer++) {
         lv_obj_t **controls=layer ? s->over_controls : s->base_controls;
-        if (controls[OC_BRIGHTNESS]) {lv_slider_set_value(controls[OC_BRIGHTNESS],s->system->prefs.brightness,LV_ANIM_OFF);lv_obj_send_event(controls[OC_BRIGHTNESS],LV_EVENT_REFRESH,NULL);}
-        if (controls[OC_VOLUME]) {lv_slider_set_value(controls[OC_VOLUME],s->system->prefs.volume,LV_ANIM_OFF);lv_obj_send_event(controls[OC_VOLUME],LV_EVENT_REFRESH,NULL);}
+        /* Only re-apply a slider (and fire the REFRESH that repositions its
+         * skin knob) when the value it shows is actually stale: refresh()
+         * runs every second, and every other item in this loop is already
+         * guarded on its last written value. */
+        if (controls[OC_BRIGHTNESS] && lv_slider_get_value(controls[OC_BRIGHTNESS])!=(int32_t)s->system->prefs.brightness) {lv_slider_set_value(controls[OC_BRIGHTNESS],s->system->prefs.brightness,LV_ANIM_OFF);lv_obj_send_event(controls[OC_BRIGHTNESS],LV_EVENT_REFRESH,NULL);}
+        if (controls[OC_VOLUME] && lv_slider_get_value(controls[OC_VOLUME])!=(int32_t)s->system->prefs.volume) {lv_slider_set_value(controls[OC_VOLUME],s->system->prefs.volume,LV_ANIM_OFF);lv_obj_send_event(controls[OC_VOLUME],LV_EVENT_REFRESH,NULL);}
         if (controls[OC_BRIGHT_VALUE] && s->system->prefs.brightness!=last_refresh_brightness) { last_refresh_brightness=s->system->prefs.brightness; if (available(OC_BRIGHTNESS)) lv_label_set_text_fmt(controls[OC_BRIGHT_VALUE],"%u%%",s->system->prefs.brightness); else lv_label_set_text(controls[OC_BRIGHT_VALUE],"不可用"); }
         if (controls[OC_VOLUME_VALUE] && s->system->prefs.volume!=last_refresh_volume) { last_refresh_volume=s->system->prefs.volume; if (available(OC_VOLUME)) lv_label_set_text_fmt(controls[OC_VOLUME_VALUE],"%u%%",s->system->prefs.volume); else lv_label_set_text(controls[OC_VOLUME_VALUE],"不可用"); }
         if (controls[OC_WIFI_STATUS] && s->overlay!=OS_OVER_PASSWORD) {
