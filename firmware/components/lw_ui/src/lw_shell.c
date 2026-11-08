@@ -31,6 +31,14 @@ static const char *const s_weekdays[7] = {"周日", "周一", "周二", "周三"
 
 /* --------------------------------------------------------------- top bar */
 
+/* Last values pushed to the top bar. lv_label_set_text() reallocates the
+ * text and re-runs layout on every call, so the 1 s clock timer only touches
+ * a label when its visible text would actually change: the clock once a
+ * minute, the date once a day, the DEMO pill when the clock source flips. */
+static int s_clock_minute = -1; /* hour * 60 + minute */
+static int s_clock_day = -1;    /* days from civil epoch */
+static int s_demo_shown = -1;   /* -1 = not applied yet */
+
 static void update_clock(void)
 {
     if (s_clock_label == NULL) {
@@ -41,21 +49,34 @@ static void update_clock(void)
     int hour = seconds_of_day / 3600;
     int minute = (seconds_of_day % 3600) / 60;
 
-    char clock[16];
-    snprintf(clock, sizeof(clock), "%02d:%02d", hour, minute);
-    lv_label_set_text(s_clock_label, clock);
+    int minute_of_day = hour * 60 + minute;
+    if (minute_of_day != s_clock_minute) {
+        s_clock_minute = minute_of_day;
+        char clock[16];
+        snprintf(clock, sizeof(clock), "%02d:%02d", hour, minute);
+        lv_label_set_text(s_clock_label, clock);
+    }
 
-    lw_date_t today = lw_today();
-    int weekday = (int)((lw_days_from_civil(today.year, today.month, today.day) % 7 + 11) % 7);
-    char date[48];
-    snprintf(date, sizeof(date), "%d月%d日 %s", today.month, today.day, s_weekdays[weekday]);
-    lv_label_set_text(s_date_label, date);
+    int days = (int)(now / 86400u);
+    if (days != s_clock_day) {
+        s_clock_day = days;
+        lw_date_t today;
+        lw_civil_from_days(days, &today);
+        int weekday = (int)((days % 7 + 11) % 7);
+        char date[48];
+        snprintf(date, sizeof(date), "%d月%d日 %s", today.month, today.day, s_weekdays[weekday]);
+        lv_label_set_text(s_date_label, date);
+    }
 
     if (s_demo_pill != NULL) {
-        if (lw_time_is_demo()) {
-            lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+        int demo = lw_time_is_demo() ? 1 : 0;
+        if (demo != s_demo_shown) {
+            s_demo_shown = demo;
+            if (demo) {
+                lv_obj_remove_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(s_demo_pill, LV_OBJ_FLAG_HIDDEN);
+            }
         }
     }
 }
@@ -70,16 +91,33 @@ static void dock_clicked(lv_event_t *event)
     }
 }
 
+/* Last active flag pushed to each dock item (-1 = not applied yet), and
+ * the palette it was applied with.  A page switch flips at most two
+ * items, but update_dock_styles() used to rewrite the badge and label
+ * colours of all eight on every switch.  The palette is part of the
+ * cache key because lw_shell_refresh_theme() relies on this function to
+ * repaint the dock in the new theme's colours. */
+static int s_dock_active_cache[8];
+static const lw_palette_t *s_dock_palette_cache;
+
 static void update_dock_styles(void)
 {
     const lw_palette_t *palette = lw_palette();
+    if (palette != s_dock_palette_cache) {
+        s_dock_palette_cache = palette;
+        for (int i = 0; i < 8; i++) {
+            s_dock_active_cache[i] = -1;
+        }
+    }
     for (int i = 0; i < s_dock_count; i++) {
         const lw_app_t *app = lw_dock_at(i);
         int active = (s_current != NULL) && (strcmp(app->id, s_current->id) == 0);
+        if (s_dock_active_cache[i] == active) {
+            continue;
+        }
+        s_dock_active_cache[i] = active;
         if (s_dock_badges[i] != NULL) {
             lv_obj_set_style_bg_color(s_dock_badges[i], lv_color_hex(active ? palette->accent : palette->card_soft), 0);
-            lv_obj_t *icon = lv_obj_get_child(s_dock_badges[i], 0);
-            (void)icon;
         }
         if (s_dock_labels[i] != NULL) {
             lv_obj_set_style_text_color(s_dock_labels[i], lv_color_hex(active ? palette->accent_deep : palette->dim), 0);
@@ -122,7 +160,9 @@ static void build_dock(lv_obj_t *parent)
 
         s_dock_badges[i] = badge;
         s_dock_labels[i] = label;
+        s_dock_active_cache[i] = 0; /* built with the inactive colours */
     }
+    s_dock_palette_cache = palette;
 }
 
 /* -------------------------------------------------------------- lifecycle */

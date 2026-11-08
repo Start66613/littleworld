@@ -4,6 +4,7 @@
  */
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -46,6 +47,12 @@ int lw_save_encode(const lw_state_t *state, uint8_t *out, size_t capacity);
 
 /** Parse a save blob; returns 0 on success, -1 for magic/size/version/crc errors. */
 int lw_save_decode(lw_state_t *state, const uint8_t *in, size_t length);
+
+/** True when two encoded blobs differ anywhere except the pet's
+ *  last_update field and the trailing CRC - i.e. persisting @p b after
+ *  @p a would store more than a refreshed timestamp.  Returns true for
+ *  NULL or wrongly sized inputs, where sameness cannot be proven. */
+bool lw_save_meaningful_diff(const uint8_t *a, const uint8_t *b, size_t length);
 
 uint32_t lw_crc32(const uint8_t *data, size_t length);
 

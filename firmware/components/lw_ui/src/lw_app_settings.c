@@ -73,6 +73,14 @@ static void reset_clicked(lv_event_t *event)
     lw_shell_refresh_theme();
 }
 
+/* Last values shown on the diagnostics label. The 2 s timer re-runs this,
+ * but while the settings page is open the numbers rarely move, and
+ * lv_label_set_text_fmt() reallocates + re-layouts the 4-line label on
+ * every call. Reset in create() because the label is rebuilt there. */
+static int s_diag_objects = -1;
+static uint32_t s_diag_interactions = 0xFFFFFFFFu; /* interactions is uint16_t */
+static int s_diag_demo = -1;
+
 static void timer_cb(lv_timer_t *timer)
 {
     (void)timer;
@@ -80,10 +88,18 @@ static void timer_cb(lv_timer_t *timer)
         return;
     }
     lw_state_t *state = lw_app_state();
+    int objects = count_objects(lv_screen_active());
+    int demo = lw_time_is_demo() ? 1 : 0;
+    if (objects == s_diag_objects && state->pet.interactions == s_diag_interactions && demo == s_diag_demo) {
+        return;
+    }
+    s_diag_objects = objects;
+    s_diag_interactions = state->pet.interactions;
+    s_diag_demo = demo;
     lv_label_set_text_fmt(s_diag_label,
                           "活动对象：%d\n宠物互动：%u 次\n时钟：%s\n版本：%s",
-                          count_objects(lv_screen_active()), (unsigned)state->pet.interactions,
-                          lw_time_is_demo() ? "DEMO（未接实时时钟）" : "系统时间", LW_VERSION);
+                          objects, (unsigned)state->pet.interactions,
+                          demo ? "DEMO（未接实时时钟）" : "系统时间", LW_VERSION);
 }
 
 static lv_obj_t *row_label(lv_obj_t *parent, const char *text, int y)
@@ -154,6 +170,10 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_pos(reset_target, 28, 330);
     lv_obj_add_event_cb(reset_target, reset_clicked, LV_EVENT_CLICKED, NULL);
 
+    /* the diag label above is a fresh object: forget what timer_cb last pushed */
+    s_diag_objects = -1;
+    s_diag_interactions = 0xFFFFFFFFu;
+    s_diag_demo = -1;
     timer_cb(NULL);
     s_timer = lv_timer_create(timer_cb, 2000, NULL);
 }

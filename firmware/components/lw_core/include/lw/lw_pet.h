@@ -45,6 +45,12 @@ typedef struct {
     uint32_t mood_until;  /* unix seconds until the temporary mood expires */
     uint32_t last_interaction;
     uint16_t interactions;
+    /* Sub-point decay remainders carried between lw_pet_tick() calls
+     * (see lw_pet.c).  Not written to the save record: they restart at
+     * 0 on load, losing less than one point of fractional progress. */
+    uint32_t decay_frac_fullness;  /* seconds * per-hour rate, mod 3600 */
+    uint32_t decay_frac_energy;    /* seconds * per-hour rate, mod 3600 */
+    uint32_t decay_frac_affection; /* seconds, mod 6 * 3600 */
 } lw_pet_t;
 
 /** Start a fresh pet (or restore fields manually and call lw_pet_retick). */

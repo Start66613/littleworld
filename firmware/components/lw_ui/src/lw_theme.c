@@ -33,11 +33,6 @@ static void anim_translate_cb(void *var, int32_t value)
     lv_obj_set_style_translate_y((lv_obj_t *)var, value, 0);
 }
 
-static void anim_opa_cb(void *var, int32_t value)
-{
-    lv_obj_set_style_opa((lv_obj_t *)var, (lv_opa_t)value, 0);
-}
-
 const lw_palette_t *lw_palette(void)
 {
     return &s_variants[s_variant];
@@ -59,16 +54,20 @@ void lw_theme_init(void)
     lv_style_set_bg_opa(&s_card, LV_OPA_COVER);
     lv_style_set_border_width(&s_card, 0);
     lv_style_set_pad_all(&s_card, 0);
-    lv_style_set_shadow_width(&s_card, 22);
+    /* Shadow blur is recomputed in software on every repaint and the
+     * blurred footprint grows with the width; 22 -> 14 (round-2 perf
+     * pass) cuts that area by roughly a third while the colour and
+     * opacity stay the same, so cards keep the same soft look. */
+    lv_style_set_shadow_width(&s_card, 14);
     lv_style_set_shadow_color(&s_card, lv_color_hex(s_variants[0].shadow));
     lv_style_set_shadow_opa(&s_card, LV_OPA_30);
-    lv_style_set_shadow_offset_y(&s_card, 8);
+    lv_style_set_shadow_offset_y(&s_card, 6);
     lv_style_set_text_font(&s_card, &lw_font_22);
     lv_style_set_text_color(&s_card, lv_color_hex(s_variants[0].text));
 
     lv_style_init(&s_card_pressed);
-    lv_style_set_shadow_width(&s_card_pressed, 6);
-    lv_style_set_shadow_offset_y(&s_card_pressed, 2);
+    lv_style_set_shadow_width(&s_card_pressed, 4);
+    lv_style_set_shadow_offset_y(&s_card_pressed, 1);
     lv_style_set_translate_y(&s_card_pressed, 2);
 
     lv_style_init(&s_soft);
@@ -127,7 +126,14 @@ void lw_style_label(lv_obj_t *obj, const lv_font_t *font, uint32_t color)
     lv_obj_remove_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 }
 
-/* Fade + rise transition used when a page is created. */
+/* Rise transition used when a page is created.
+ *
+ * This used to fade the content in as well, but an opacity animation on
+ * a container makes LVGL render the whole content subtree into a layer
+ * and blend it back on every frame — the most expensive part of a page
+ * switch.  Translating needs no layer: only the strip the content moves
+ * through is redrawn.  The rise alone still reads as an entrance, so
+ * the fade was dropped (round-2 perf pass, user-approved trade-off). */
 void lw_theme_enter_anim(lv_obj_t *obj)
 {
     if (obj == NULL) {
@@ -139,14 +145,6 @@ void lw_theme_enter_anim(lv_obj_t *obj)
         lv_obj_set_style_translate_y(obj, 0, 0);
         return;
     }
-    lv_anim_t fade;
-    lv_anim_init(&fade);
-    lv_anim_set_var(&fade, obj);
-    lv_anim_set_values(&fade, 0, 255);
-    lv_anim_set_duration(&fade, 180);
-    lv_anim_set_exec_cb(&fade, anim_opa_cb);
-    lv_anim_start(&fade);
-
     lv_obj_set_style_translate_y(obj, 14, 0);
     lv_anim_t rise;
     lv_anim_init(&rise);

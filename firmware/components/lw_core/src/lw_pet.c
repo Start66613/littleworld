@@ -8,9 +8,27 @@
 
 /* Gentle rates: a full bar lasts most of a day, sleep restores quickly. */
 #define FULLNESS_DECAY_PER_HOUR 6
+#define FULLNESS_DECAY_SLEEP_PER_HOUR 4
 #define ENERGY_DECAY_PER_HOUR 5
 #define ENERGY_REGEN_PER_HOUR 25
+#define AFFECTION_DECAY_PER_HOUR_SPAN (6u * HOUR) /* 1 point per 6 hours */
 #define AFFECTION_FLOOR 20
+
+/* Whole points earned by `delta` seconds at `feed` per `modulus`,
+ * keeping the sub-point remainder in *frac for the next call.
+ *
+ * lw_pet_tick() used to compute the points from each call's delta
+ * alone and still advance last_update to now, discarding the
+ * fraction.  The UI ticks every 10 s, where e.g. (10 * 6) / 3600 == 0,
+ * so the stats effectively never decayed while the device was
+ * running.  Carrying the remainder makes small steps accumulate to
+ * exactly the intended per-hour rates. */
+static int decay_points(uint32_t *frac, uint32_t delta, uint32_t feed, uint32_t modulus)
+{
+    uint32_t total = *frac + delta * feed;
+    *frac = total % modulus;
+    return (int)(total / modulus);
+}
 
 static uint8_t clamp_u8(int value)
 {
@@ -74,17 +92,30 @@ void lw_pet_tick(lw_pet_t *pet, uint32_t now)
         }
 
         if (pet->sleeping) {
-            pet->energy = clamp_u8(pet->energy + (int)((delta * ENERGY_REGEN_PER_HOUR) / HOUR));
-            pet->fullness = clamp_u8(pet->fullness - (int)((delta * 4u) / HOUR));
+            /* The energy remainder is shared between decay and sleep
+             * regen, so a sleep/wake switch can shift the next whole
+             * point by less than one point; everything else is exact. */
+            pet->energy = clamp_u8(pet->energy +
+                                   decay_points(&pet->decay_frac_energy, delta,
+                                                ENERGY_REGEN_PER_HOUR, HOUR));
+            pet->fullness = clamp_u8(pet->fullness -
+                                     decay_points(&pet->decay_frac_fullness, delta,
+                                                  FULLNESS_DECAY_SLEEP_PER_HOUR, HOUR));
             if (pet->energy >= 98) {
                 pet->sleeping = 0;
                 pet->last_interaction = now;
             }
         } else {
-            pet->fullness = clamp_u8(pet->fullness - (int)((delta * FULLNESS_DECAY_PER_HOUR) / HOUR));
-            pet->energy = clamp_u8(pet->energy - (int)((delta * ENERGY_DECAY_PER_HOUR) / HOUR));
+            pet->fullness = clamp_u8(pet->fullness -
+                                     decay_points(&pet->decay_frac_fullness, delta,
+                                                  FULLNESS_DECAY_PER_HOUR, HOUR));
+            pet->energy = clamp_u8(pet->energy -
+                                   decay_points(&pet->decay_frac_energy, delta,
+                                                ENERGY_DECAY_PER_HOUR, HOUR));
             if (pet->affection > AFFECTION_FLOOR) {
-                pet->affection = clamp_u8(pet->affection - (int)(delta / (6u * HOUR)));
+                pet->affection = clamp_u8(pet->affection -
+                                          decay_points(&pet->decay_frac_affection, delta, 1,
+                                                       AFFECTION_DECAY_PER_HOUR_SPAN));
             }
         }
         pet->last_update = now;

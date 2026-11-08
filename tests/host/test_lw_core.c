@@ -133,6 +133,36 @@ static void test_pet(void)
     CHECK(pet.energy < 68);
     CHECK_EQ(pet.last_update, 1000 + 3600);
 
+    /* small steps accumulate: 360 ticks of 10 s (the UI cadence) make
+     * a full hour, even though each step alone is below one point */
+    lw_pet_t stepper;
+    lw_pet_init(&stepper, 1000);
+    for (int i = 1; i <= 360; i++) {
+        lw_pet_tick(&stepper, 1000 + (uint32_t)i * 10u);
+    }
+    CHECK_EQ(stepper.fullness, 72 - 6);
+    CHECK_EQ(stepper.energy, 68 - 5);
+    CHECK_EQ(stepper.last_update, 1000 + 3600);
+
+    /* sleep regen accumulates the same way over small steps */
+    lw_pet_t dozer;
+    lw_pet_init(&dozer, 1000);
+    dozer.energy = 10;
+    (void)lw_pet_interact(&dozer, LW_PET_ACTION_SLEEP, 1000);
+    for (int i = 1; i <= 360; i++) {
+        lw_pet_tick(&dozer, 1000 + (uint32_t)i * 10u);
+    }
+    CHECK_EQ(dozer.energy, 10 + 25);
+    CHECK_EQ(dozer.sleeping, 1);
+
+    /* affection loses one point per 6 hours, also in small steps */
+    lw_pet_t loner;
+    lw_pet_init(&loner, 1000);
+    for (int i = 1; i <= 360; i++) {
+        lw_pet_tick(&loner, 1000 + (uint32_t)i * 60u);
+    }
+    CHECK_EQ(loner.affection, 60 - 1);
+
     /* feeding tops up but never above 100 */
     for (int i = 0; i < 10; i++) {
         (void)lw_pet_interact(&pet, LW_PET_ACTION_FEED, 1000 + 3600);
@@ -268,6 +298,44 @@ static void test_state(void)
     CHECK_EQ(decoded.anniversary.month, 10);
 }
 
+static void test_save_diff(void)
+{
+    lw_state_t state;
+    lw_state_defaults(&state, 100000);
+    uint8_t a[LW_SAVE_BYTES];
+    uint8_t b[LW_SAVE_BYTES];
+    CHECK_EQ(lw_save_encode(&state, a, sizeof(a)), LW_SAVE_BYTES);
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES)); /* identical */
+
+    /* only pet.last_update moved (its CRC changes along, also ignored) */
+    state.pet.last_update += 600;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* CRC-only difference */
+    memcpy(b, a, sizeof(b));
+    b[LW_SAVE_BYTES - 1] ^= 0xFF;
+    CHECK(!lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* a real change: one stat point */
+    state.pet.last_update -= 600;
+    state.pet.fullness -= 1;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* the byte right after last_update (born_at) does count */
+    state.pet.fullness += 1;
+    state.pet.born_at += 1;
+    CHECK_EQ(lw_save_encode(&state, b, sizeof(b)), LW_SAVE_BYTES);
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES));
+
+    /* unprovable sameness counts as meaningful */
+    CHECK(lw_save_meaningful_diff(NULL, b, LW_SAVE_BYTES));
+    CHECK(lw_save_meaningful_diff(a, NULL, LW_SAVE_BYTES));
+    CHECK(lw_save_meaningful_diff(a, b, LW_SAVE_BYTES - 1));
+}
+
 /* -------------------------------------------------------------- memories */
 
 static void test_memories(void)
@@ -298,6 +366,7 @@ int main(void)
     test_time();
     test_pet();
     test_state();
+    test_save_diff();
     test_memories();
 
     printf("\n%d checks, %d failure(s)\n", g_checks, g_failures);
