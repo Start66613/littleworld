@@ -35,35 +35,63 @@ static lv_obj_t *s_rows[TRACK_COUNT];
 static lv_obj_t *s_row_titles[TRACK_COUNT];
 static lv_obj_t *s_row_artists[TRACK_COUNT];
 static lv_timer_t *s_timer;
+/* Last values refresh() actually wrote. The 1 s timer calls refresh() for the
+ * whole page, but per second only the position (and the progress derived from
+ * it) changes; the track, playing state and volume change on user actions
+ * only. lv_label_set_text() re-allocates and re-lays out even for identical
+ * text, and the row styles below invalidate every row, so guard on the state,
+ * not on the widget - the same pattern lw_app_pet.c already uses. The caches
+ * are reset in destroy(), because create() builds fresh labels. */
+static int s_shown_track = -1;
+static int s_shown_playing = -1;
+static int s_shown_volume = -1;
+static int s_shown_position = -1;
+static int s_shown_percent = -1;
 void lw_music_shared_volume_changed(void)
-{ if (s_volume_label) lv_label_set_text_fmt(s_volume_label,"%u%%",(unsigned)lw_app_state()->music_volume); }
+{ if (s_volume_label) { lv_label_set_text_fmt(s_volume_label,"%u%%",(unsigned)lw_app_state()->music_volume); s_shown_volume = lw_app_state()->music_volume; } }
 
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
     const lw_palette_t *palette = lw_palette();
+    const bool track_changed = (s_track != s_shown_track);
 
-    if (s_title != NULL) {
-        lv_label_set_text(s_title, s_track_titles[s_track]);
-    }
-    if (s_artist != NULL) {
-        lv_label_set_text(s_artist, s_track_artist[s_track]);
+    if (track_changed) {
+        s_shown_track = s_track;
+        if (s_title != NULL) {
+            lv_label_set_text(s_title, s_track_titles[s_track]);
+        }
+        if (s_artist != NULL) {
+            lv_label_set_text(s_artist, s_track_artist[s_track]);
+        }
     }
     if (s_progress != NULL) {
-        lw_bar_set(s_progress, (s_position * 100) / s_track_seconds[s_track]);
+        int percent = (s_position * 100) / s_track_seconds[s_track];
+        if (percent != s_shown_percent) {
+            s_shown_percent = percent;
+            lw_bar_set(s_progress, percent);
+        }
     }
-    if (s_time_label != NULL) {
+    if (s_time_label != NULL && (s_position != s_shown_position || track_changed)) {
+        s_shown_position = s_position;
         lv_label_set_text_fmt(s_time_label, "%d:%02d / %d:%02d", s_position / 60, s_position % 60,
                               s_track_seconds[s_track] / 60, s_track_seconds[s_track] % 60);
     }
-    if (s_play_label != NULL) {
-        lv_label_set_text(s_play_label, s_playing ? "暂停" : "播放");
+    if (s_playing != s_shown_playing) {
+        s_shown_playing = s_playing;
+        if (s_play_label != NULL) {
+            lv_label_set_text(s_play_label, s_playing ? "暂停" : "播放");
+        }
+        if (s_status) lv_label_set_text(s_status,s_playing ? "模拟播放中 · 没有真实声音输出" : "已暂停 · 音频服务尚未接入");
     }
-    if (s_status) lv_label_set_text(s_status,s_playing ? "模拟播放中 · 没有真实声音输出" : "已暂停 · 音频服务尚未接入");
-    if (s_volume_label != NULL) {
+    if (s_volume_label != NULL && state->music_volume != s_shown_volume) {
+        s_shown_volume = state->music_volume;
         lv_label_set_text_fmt(s_volume_label, "%d%%", state->music_volume);
     }
 
+    if (!track_changed) {
+        return;
+    }
     for (int i = 0; i < TRACK_COUNT; i++) {
         int active = (i == s_track);
         if (s_rows[i] == NULL) {
@@ -269,6 +297,11 @@ static void destroy(void)
         s_row_artists[i] = NULL;
     }
     s_playing = 0;
+    s_shown_track = -1;
+    s_shown_playing = -1;
+    s_shown_volume = -1;
+    s_shown_position = -1;
+    s_shown_percent = -1;
 }
 
 const lw_app_t lw_app_music_def = {
