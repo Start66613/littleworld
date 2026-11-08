@@ -31,16 +31,30 @@ static lv_obj_t *s_row_titles[TRACK_COUNT];
 static lv_obj_t *s_row_artists[TRACK_COUNT];
 static lv_timer_t *s_timer;
 
+/* refresh() runs once a second while playing, but in that path only the
+ * progress bar and the time label change. lv_label_set_text() reallocates
+ * and re-layouts on every call and style writes invalidate their rows, so
+ * the track title/artist, the play caption, the volume and the playlist
+ * highlighting are only pushed when they actually change. The caches are
+ * reset in create() because the widgets are rebuilt there. */
+static int s_shown_track = -1;
+static int s_shown_playing = -1;
+static int s_shown_volume = -1;
+
 static void refresh(void)
 {
     lw_state_t *state = lw_app_state();
     const lw_palette_t *palette = lw_palette();
+    int track_changed = (s_track != s_shown_track);
 
-    if (s_title != NULL) {
-        lv_label_set_text(s_title, s_track_titles[s_track]);
-    }
-    if (s_artist != NULL) {
-        lv_label_set_text(s_artist, s_track_artist[s_track]);
+    if (track_changed) {
+        s_shown_track = s_track;
+        if (s_title != NULL) {
+            lv_label_set_text(s_title, s_track_titles[s_track]);
+        }
+        if (s_artist != NULL) {
+            lv_label_set_text(s_artist, s_track_artist[s_track]);
+        }
     }
     if (s_progress != NULL) {
         lw_bar_set(s_progress, (s_position * 100) / s_track_seconds[s_track]);
@@ -49,13 +63,18 @@ static void refresh(void)
         lv_label_set_text_fmt(s_time_label, "%d:%02d / %d:%02d", s_position / 60, s_position % 60,
                               s_track_seconds[s_track] / 60, s_track_seconds[s_track] % 60);
     }
-    if (s_play_label != NULL) {
+    if (s_play_label != NULL && s_playing != s_shown_playing) {
+        s_shown_playing = s_playing;
         lv_label_set_text(s_play_label, s_playing ? "暂停" : "播放");
     }
-    if (s_volume_label != NULL) {
+    if (s_volume_label != NULL && (int)state->music_volume != s_shown_volume) {
+        s_shown_volume = (int)state->music_volume;
         lv_label_set_text_fmt(s_volume_label, "%d%%", state->music_volume);
     }
 
+    if (!track_changed) {
+        return;
+    }
     for (int i = 0; i < TRACK_COUNT; i++) {
         int active = (i == s_track);
         if (s_rows[i] == NULL) {
@@ -152,6 +171,10 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     const lw_palette_t *palette = lw_palette();
     s_playing = 0;
     s_position = 0;
+    /* the widgets below are fresh objects: forget what refresh() last pushed */
+    s_shown_track = -1;
+    s_shown_playing = -1;
+    s_shown_volume = -1;
 
     lv_obj_t *player = lw_card(content, 32, 14, 470, 412);
     lw_text(player, "正在播放", &lw_font_18, palette->dim, 32, 26);
