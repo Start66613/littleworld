@@ -291,9 +291,6 @@ typedef struct {
     arcade_snake_t model;
     arcade_rng_t rng;
     lv_obj_t *playfield;
-    lv_obj_t *segments[ARCADE_SNAKE_MAX_LEN];
-    int segment_count;
-    lv_obj_t *food;
     lv_obj_t *score;
     lv_obj_t *extra;
     lv_obj_t *panel;
@@ -305,6 +302,17 @@ typedef struct {
      * snake eats, while snake_refresh() runs on every step. */
     uint32_t shown_score;
     int shown_length;
+    /* What is actually on screen.  The playfield draws the snake and
+     * the food itself (snake_draw_cb) from this snapshot; only
+     * snake_refresh() updates it.  That mirrors the per-segment
+     * objects this replaces, which also moved only when refresh ran —
+     * e.g. the step the snake dies on is never drawn.  Keeping the
+     * snapshot separate from the model preserves that exactly. */
+    arcade_point_t drawn_body[ARCADE_SNAKE_MAX_LEN];
+    int drawn_length;
+    arcade_point_t drawn_food;
+    uint32_t food_color;
+    int drawn_valid;
 } snake_ui_t;
 
 static snake_ui_t s_snake;
@@ -317,7 +325,7 @@ static void snake_teardown(void)
     }
     s_snake.panel = NULL;
     s_snake.playfield = NULL;
-    s_snake.segment_count = 0;
+    s_snake.drawn_valid = 0;
 }
 
 static uint32_t snake_color(int index, int head)
@@ -328,33 +336,112 @@ static uint32_t snake_color(int index, int head)
     return (index & 1) ? 0x8AD9B6 : 0xA9E6CC;
 }
 
+/* Grow `area` to include one grid cell's art, in absolute coords.
+ * `inset`/`size` match the old per-cell objects: segments were 32x32
+ * at +2, the food 28x28 at +4, on a 36 px grid. */
+static void snake_dirty_add_cell(lv_area_t *area, const lv_area_t *base, int cell_x, int cell_y,
+                                 int inset, int size, int *have)
+{
+    lv_area_t cell;
+    cell.x1 = base->x1 + cell_x * 36 + inset;
+    cell.y1 = base->y1 + cell_y * 36 + inset;
+    cell.x2 = cell.x1 + size - 1;
+    cell.y2 = cell.y1 + size - 1;
+    if (!*have) {
+        *area = cell;
+        *have = 1;
+        return;
+    }
+    if (cell.x1 < area->x1) {
+        area->x1 = cell.x1;
+    }
+    if (cell.y1 < area->y1) {
+        area->y1 = cell.y1;
+    }
+    if (cell.x2 > area->x2) {
+        area->x2 = cell.x2;
+    }
+    if (cell.y2 > area->y2) {
+        area->y2 = cell.y2;
+    }
+}
+
+/* Draw the snake and the food straight onto the playfield instead of
+ * keeping up to ARCADE_SNAKE_MAX_LEN (364) segment objects plus a food
+ * object alive.  Sizes, corner radii, colours and positions are the
+ * ones the objects used, so the picture is unchanged; the callback
+ * runs inside the playfield's DRAW_MAIN event, on top of its
+ * background, and LVGL clips it to whatever area is being redrawn. */
+static void snake_draw_cb(lv_event_t *event)
+{
+    if (!s_snake.drawn_valid || s_snake.playfield == NULL) {
+        return;
+    }
+    lv_layer_t *layer = lv_event_get_layer(event);
+    lv_area_t base;
+    lv_obj_get_coords(s_snake.playfield, &base);
+
+    lv_draw_rect_dsc_t dsc;
+    lv_draw_rect_dsc_init(&dsc);
+    dsc.bg_opa = LV_OPA_COVER;
+
+    lv_area_t area;
+    /* The food object was created before the segments, so it sits
+     * below them; cells never overlap (32 px art on a 36 px grid). */
+    dsc.radius = LV_RADIUS_CIRCLE;
+    dsc.bg_color = lv_color_hex(s_snake.food_color);
+    area.x1 = base.x1 + s_snake.drawn_food.x * 36 + 4;
+    area.y1 = base.y1 + s_snake.drawn_food.y * 36 + 4;
+    area.x2 = area.x1 + 28 - 1;
+    area.y2 = area.y1 + 28 - 1;
+    lv_draw_rect(layer, &dsc, &area);
+
+    dsc.radius = 9;
+    for (int i = 0; i < s_snake.drawn_length; i++) {
+        /* A slot's colour is a pure function of its index (head
+         * colour, then alternating), as with the objects before. */
+        dsc.bg_color = lv_color_hex(snake_color(i, i == 0));
+        area.x1 = base.x1 + s_snake.drawn_body[i].x * 36 + 2;
+        area.y1 = base.y1 + s_snake.drawn_body[i].y * 36 + 2;
+        area.x2 = area.x1 + 32 - 1;
+        area.y2 = area.y1 + 32 - 1;
+        lv_draw_rect(layer, &dsc, &area);
+    }
+}
+
 static void snake_refresh(void)
 {
     if (s_snake.playfield == NULL) {
         return;
     }
-    for (int i = 0; i < s_snake.model.length; i++) {
-        if (i >= s_snake.segment_count) {
-            lv_obj_t *seg = lv_obj_create(s_snake.playfield);
-            lv_obj_remove_style_all(seg);
-            lv_obj_set_size(seg, 32, 32);
-            lv_obj_set_style_radius(seg, 9, 0);
-            lv_obj_set_style_bg_opa(seg, LV_OPA_COVER, 0);
-            /* A slot's colour is a pure function of its index (head colour,
-             * then alternating), so set it once here instead of every step. */
-            lv_obj_set_style_bg_color(seg, lv_color_hex(snake_color(i, i == 0)), 0);
-            lv_obj_remove_flag(seg, LV_OBJ_FLAG_CLICKABLE);
-            lv_obj_remove_flag(seg, LV_OBJ_FLAG_SCROLLABLE);
-            s_snake.segments[i] = seg;
-            s_snake.segment_count = i + 1;
+    /* Repaint exactly what changes: the union of the cells the old
+     * snapshot occupies and the cells the new one will.  With no valid
+     * snapshot (game opened or restarted) the whole field is dirty. */
+    lv_area_t base;
+    lv_obj_get_coords(s_snake.playfield, &base);
+    lv_area_t dirty = base;
+    if (s_snake.drawn_valid) {
+        int have = 0;
+        for (int i = 0; i < s_snake.drawn_length; i++) {
+            snake_dirty_add_cell(&dirty, &base, s_snake.drawn_body[i].x,
+                                 s_snake.drawn_body[i].y, 2, 32, &have);
         }
-        lv_obj_set_pos(s_snake.segments[i], s_snake.model.body[i].x * 36 + 2, s_snake.model.body[i].y * 36 + 2);
-        lv_obj_remove_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
+        snake_dirty_add_cell(&dirty, &base, s_snake.drawn_food.x, s_snake.drawn_food.y,
+                             4, 28, &have);
+        for (int i = 0; i < s_snake.model.length; i++) {
+            snake_dirty_add_cell(&dirty, &base, s_snake.model.body[i].x,
+                                 s_snake.model.body[i].y, 2, 32, &have);
+        }
+        snake_dirty_add_cell(&dirty, &base, s_snake.model.food.x, s_snake.model.food.y,
+                             4, 28, &have);
     }
-    for (int i = s_snake.model.length; i < s_snake.segment_count; i++) {
-        lv_obj_add_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
+    for (int i = 0; i < s_snake.model.length; i++) {
+        s_snake.drawn_body[i] = s_snake.model.body[i];
     }
-    lv_obj_set_pos(s_snake.food, s_snake.model.food.x * 36 + 4, s_snake.model.food.y * 36 + 4);
+    s_snake.drawn_length = s_snake.model.length;
+    s_snake.drawn_food = s_snake.model.food;
+    s_snake.drawn_valid = 1;
+    lv_obj_invalidate_area(s_snake.playfield, &dirty);
     if (s_snake.model.score != s_snake.shown_score) {
         s_snake.shown_score = s_snake.model.score;
         lv_label_set_text_fmt(s_snake.score, "得分 %u", (unsigned)s_snake.model.score);
@@ -373,6 +460,7 @@ static void snake_restart(void)
     }
     s_snake.over = 0;
     arcade_snake_init(&s_snake.model, &s_snake.rng);
+    s_snake.drawn_valid = 0; /* force a full-field repaint */
     snake_refresh();
     if (s_snake.timer != NULL) {
         lv_timer_set_period(s_snake.timer, arcade_snake_step_ms(&s_snake.model));
@@ -486,7 +574,8 @@ static void open_game_snake(lv_event_t *event)
     arcade_snake_init(&s_snake.model, &s_snake.rng);
     s_snake.over = 0;
     s_snake.panel = NULL;
-    s_snake.segment_count = 0;
+    s_snake.drawn_valid = 0;
+    s_snake.food_color = palette->accent_deep;
 
     lv_obj_t *overlay = lv_obj_create(lv_screen_active());
     lv_obj_remove_style_all(overlay);
@@ -518,14 +607,8 @@ static void open_game_snake(lv_event_t *event)
     lv_obj_add_event_cb(field, snake_pressed, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(field, snake_released, LV_EVENT_RELEASED, NULL);
     s_snake.playfield = field;
-
-    s_snake.food = lv_obj_create(field);
-    lv_obj_remove_style_all(s_snake.food);
-    lv_obj_set_size(s_snake.food, 28, 28);
-    lv_obj_set_style_radius(s_snake.food, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(s_snake.food, lv_color_hex(palette->accent_deep), 0);
-    lv_obj_set_style_bg_opa(s_snake.food, LV_OPA_COVER, 0);
-    lv_obj_remove_flag(s_snake.food, LV_OBJ_FLAG_CLICKABLE);
+    /* The snake and food are drawn by the field itself, not objects. */
+    lv_obj_add_event_cb(field, snake_draw_cb, LV_EVENT_DRAW_MAIN, NULL);
 
     s_snake.shown_score = 0xFFFFFFFFu; /* fresh labels: force one update */
     s_snake.shown_length = -1;
