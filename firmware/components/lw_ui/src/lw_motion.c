@@ -54,7 +54,14 @@ void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
     lw_motion_mode_t mode=lw_os_motion_get(); if (kind==LW_MOVE_FLAP && mode!=LW_MOTION_FULL) { flap_height(o,0); return; } if (mode==LW_MOTION_OFF) return;
     if (mode==LW_MOTION_REDUCED) { animate(o,appear,220,255,90,false); return; }
     switch (kind) {
-    case LW_MOVE_PAGE:animate(o,move_x,36,0,260,false);animate(o,appear,195,255,180,false);break;
+    /* Only the slide, for the same reason as LW_MOVE_DIALOG below: the page
+     * object is the whole page container, so an opacity animation forces
+     * LVGL to draw its entire subtree into a layer and blend it back on
+     * every frame of the fade. The dialog case measured that at 765-810 ms
+     * per frame against 38-41 ms for the slide alone (board, per-frame
+     * timer); a page subtree is larger than a dialog's. The slide is
+     * unchanged, so the entrance still reads as an entrance. */
+    case LW_MOVE_PAGE:animate(o,move_x,36,0,260,false);break;
     case LW_MOVE_CONTROL:animate(o,move_x,42,0,290,true);break;
     /* Only the slide. Both scale and opacity on a container force LVGL to draw
      * the whole subtree into a layer and blend it back, and a dialog carries ~20
