@@ -803,7 +803,14 @@ static void open_game_breakout(lv_event_t *event)
     lv_obj_remove_flag(s_breakout.ball, LV_OBJ_FLAG_SCROLLABLE);
 
     breakout_refresh();
-    s_breakout.timer = lv_timer_create(breakout_tick_cb, ARCADE_BREAKOUT_TICK_MS / 2, NULL);
+    /* The callback accumulates real elapsed time and only steps the model
+     * in whole ARCADE_BREAKOUT_TICK_MS quanta (last_tick += steps*TICK),
+     * so running it at half the tick period only added a no-op wakeup
+     * between every pair of steps: 125 wakeups/s for 62.5 steps/s. At the
+     * full period the step cadence, ball speed and catch-up cap (3 steps)
+     * are unchanged; the paddle is driven by pointer events, not by this
+     * timer. */
+    s_breakout.timer = lv_timer_create(breakout_tick_cb, ARCADE_BREAKOUT_TICK_MS, NULL);
     s_game_timer=s_breakout.timer;
 
     lw_text(overlay, "在屏幕上拖动挡板，轻触发球；掉球会损失一条命", &lw_font_18, palette->dim, 20, 548);
