@@ -91,16 +91,33 @@ static void dock_clicked(lv_event_t *event)
     }
 }
 
+/* Last active flag pushed to each dock item (-1 = not applied yet), and
+ * the palette it was applied with.  A page switch flips at most two
+ * items, but update_dock_styles() used to rewrite the badge and label
+ * colours of all eight on every switch.  The palette is part of the
+ * cache key because lw_shell_refresh_theme() relies on this function to
+ * repaint the dock in the new theme's colours. */
+static int s_dock_active_cache[8];
+static const lw_palette_t *s_dock_palette_cache;
+
 static void update_dock_styles(void)
 {
     const lw_palette_t *palette = lw_palette();
+    if (palette != s_dock_palette_cache) {
+        s_dock_palette_cache = palette;
+        for (int i = 0; i < 8; i++) {
+            s_dock_active_cache[i] = -1;
+        }
+    }
     for (int i = 0; i < s_dock_count; i++) {
         const lw_app_t *app = lw_dock_at(i);
         int active = (s_current != NULL) && (strcmp(app->id, s_current->id) == 0);
+        if (s_dock_active_cache[i] == active) {
+            continue;
+        }
+        s_dock_active_cache[i] = active;
         if (s_dock_badges[i] != NULL) {
             lv_obj_set_style_bg_color(s_dock_badges[i], lv_color_hex(active ? palette->accent : palette->card_soft), 0);
-            lv_obj_t *icon = lv_obj_get_child(s_dock_badges[i], 0);
-            (void)icon;
         }
         if (s_dock_labels[i] != NULL) {
             lv_obj_set_style_text_color(s_dock_labels[i], lv_color_hex(active ? palette->accent_deep : palette->dim), 0);
@@ -143,7 +160,9 @@ static void build_dock(lv_obj_t *parent)
 
         s_dock_badges[i] = badge;
         s_dock_labels[i] = label;
+        s_dock_active_cache[i] = 0; /* built with the inactive colours */
     }
+    s_dock_palette_cache = palette;
 }
 
 /* -------------------------------------------------------------- lifecycle */
