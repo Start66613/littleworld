@@ -48,6 +48,11 @@ typedef struct {
     lv_obj_t *board;
     arcade_point_t press;
     int pressed;
+    /* Values currently on screen; refresh() skips cells that did not move.
+     * 0xFFFF / 0xFFFFFFFF are "nothing shown yet" sentinels (tile values
+     * are powers of two, so 0xFFFF can never be a real cell). */
+    uint16_t shown[16];
+    uint32_t shown_score;
 } game_2048_t;
 
 static game_2048_t s_2048;
@@ -76,8 +81,14 @@ static uint32_t tile_color(uint16_t value)
 
 static void game_2048_refresh(void)
 {
+    /* A move only changes some cells; rewriting every label (realloc +
+     * layout) and style on all 16 tiles per swipe is wasted work. */
     for (int i = 0; i < ARCADE_2048_CELLS; i++) {
         uint16_t value = s_2048.model.cells[i];
+        if (value == s_2048.shown[i]) {
+            continue;
+        }
+        s_2048.shown[i] = value;
         if (value == 0) {
             lv_obj_add_flag(s_2048.tiles[i], LV_OBJ_FLAG_HIDDEN);
             continue;
@@ -88,7 +99,10 @@ static void game_2048_refresh(void)
         lv_obj_set_style_text_font(s_2048.labels[i], value < 100 ? &lw_font_44 : &lw_font_28, 0);
         lv_obj_set_style_text_color(s_2048.labels[i], lv_color_hex(value <= 4 ? 0x8A5A2B : 0xFFFFFF), 0);
     }
-    lv_label_set_text_fmt(s_2048.score, "得分 %u", (unsigned)s_2048.model.score);
+    if (s_2048.model.score != s_2048.shown_score) {
+        s_2048.shown_score = s_2048.model.score;
+        lv_label_set_text_fmt(s_2048.score, "得分 %u", (unsigned)s_2048.model.score);
+    }
 }
 
 static void game_2048_swipe(int dx, int dy)
@@ -190,7 +204,9 @@ static void open_game_2048(void)
         lv_obj_center(label);
         s_2048.tiles[i] = tile;
         s_2048.labels[i] = label;
+        s_2048.shown[i] = 0xFFFF; /* fresh tile object: force one full draw */
     }
+    s_2048.shown_score = 0xFFFFFFFFu;
     game_2048_refresh();
 }
 
@@ -285,6 +301,10 @@ typedef struct {
     arcade_point_t press;
     int pressed;
     int over;
+    /* Score/length currently on the labels; they only change when the
+     * snake eats, while snake_refresh() runs on every step. */
+    uint32_t shown_score;
+    int shown_length;
 } snake_ui_t;
 
 static snake_ui_t s_snake;
@@ -320,12 +340,14 @@ static void snake_refresh(void)
             lv_obj_set_size(seg, 32, 32);
             lv_obj_set_style_radius(seg, 9, 0);
             lv_obj_set_style_bg_opa(seg, LV_OPA_COVER, 0);
+            /* A slot's colour is a pure function of its index (head colour,
+             * then alternating), so set it once here instead of every step. */
+            lv_obj_set_style_bg_color(seg, lv_color_hex(snake_color(i, i == 0)), 0);
             lv_obj_remove_flag(seg, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_remove_flag(seg, LV_OBJ_FLAG_SCROLLABLE);
             s_snake.segments[i] = seg;
             s_snake.segment_count = i + 1;
         }
-        lv_obj_set_style_bg_color(s_snake.segments[i], lv_color_hex(snake_color(i, i == 0)), 0);
         lv_obj_set_pos(s_snake.segments[i], s_snake.model.body[i].x * 36 + 2, s_snake.model.body[i].y * 36 + 2);
         lv_obj_remove_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
     }
@@ -333,8 +355,14 @@ static void snake_refresh(void)
         lv_obj_add_flag(s_snake.segments[i], LV_OBJ_FLAG_HIDDEN);
     }
     lv_obj_set_pos(s_snake.food, s_snake.model.food.x * 36 + 4, s_snake.model.food.y * 36 + 4);
-    lv_label_set_text_fmt(s_snake.score, "得分 %u", (unsigned)s_snake.model.score);
-    lv_label_set_text_fmt(s_snake.extra, "长度 %d", (int)s_snake.model.length);
+    if (s_snake.model.score != s_snake.shown_score) {
+        s_snake.shown_score = s_snake.model.score;
+        lv_label_set_text_fmt(s_snake.score, "得分 %u", (unsigned)s_snake.model.score);
+    }
+    if ((int)s_snake.model.length != s_snake.shown_length) {
+        s_snake.shown_length = (int)s_snake.model.length;
+        lv_label_set_text_fmt(s_snake.extra, "长度 %d", (int)s_snake.model.length);
+    }
 }
 
 static void snake_restart(void)
@@ -499,6 +527,8 @@ static void open_game_snake(lv_event_t *event)
     lv_obj_set_style_bg_opa(s_snake.food, LV_OPA_COVER, 0);
     lv_obj_remove_flag(s_snake.food, LV_OBJ_FLAG_CLICKABLE);
 
+    s_snake.shown_score = 0xFFFFFFFFu; /* fresh labels: force one update */
+    s_snake.shown_length = -1;
     snake_refresh();
     s_snake.timer = lv_timer_create(snake_tick_cb, arcade_snake_step_ms(&s_snake.model), NULL);
 
@@ -521,6 +551,9 @@ typedef struct {
     uint8_t last_lives;
     uint32_t last_score;
     int over;
+    /* Brick visibility currently applied to the objects; bricks only
+     * change when hit, while breakout_refresh() runs every 16 ms tick. */
+    uint8_t brick_shown[ARCADE_BREAKOUT_ROWS][ARCADE_BREAKOUT_COLS];
 } breakout_ui_t;
 
 static breakout_ui_t s_breakout;
@@ -549,7 +582,12 @@ static void breakout_refresh(void)
     }
     for (int row = 0; row < ARCADE_BREAKOUT_ROWS; row++) {
         for (int col = 0; col < ARCADE_BREAKOUT_COLS; col++) {
-            if (s_breakout.model.brick[row][col]) {
+            uint8_t alive = s_breakout.model.brick[row][col];
+            if (alive == s_breakout.brick_shown[row][col]) {
+                continue;
+            }
+            s_breakout.brick_shown[row][col] = alive;
+            if (alive) {
                 lv_obj_remove_flag(s_breakout.bricks[row][col], LV_OBJ_FLAG_HIDDEN);
             } else {
                 lv_obj_add_flag(s_breakout.bricks[row][col], LV_OBJ_FLAG_HIDDEN);
@@ -722,6 +760,7 @@ static void open_game_breakout(lv_event_t *event)
             lv_obj_remove_flag(brick, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_remove_flag(brick, LV_OBJ_FLAG_SCROLLABLE);
             s_breakout.bricks[row][col] = brick;
+            s_breakout.brick_shown[row][col] = 1; /* created visible, model starts full */
         }
     }
 
