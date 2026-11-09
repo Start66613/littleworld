@@ -40,3 +40,24 @@ Built `origin/agent/muse-ambient-home` + the diag-stub fix (`b0a3ed4`).
 - Ask: gate the auto-lock behind an explicit setting that defaults to off (and
   keep it off in host builds), then re-run. An automatic lock screen that
   nobody asked for should not be able to turn the suite red.
+
+## 2026-11-09 22:30 — the standby screen is kept and fixed
+
+The auto-lock was a user request, so it stays. What changed (`e2b4951`):
+
+- `lw_os_ambient_autolock(bool)` added. Firmware leaves it armed; the host
+  harness disarms it in `lw_os_host_run` and exercises the timer in one explicit
+  block (lock appears after 31 simulated seconds, the unlock control exists,
+  unlocking returns to the desktop). **749/28 -> 756/1** (same single
+  pre-existing failure).
+- Photo frame matte: black -> card colour. The scene thumbnails are 1024x600 and
+  the frame is 248x196, so a fitted image letterboxes ~25 px top and bottom; on
+  black that read as a broken picture.
+- Carousel: six photos over three scenes, so two of every three 8 s ticks now
+  reuse the picture already on screen instead of re-running the pool lookup.
+- `LW_MOVE_LOCK` no longer fades the whole lock container in (layer-per-frame
+  trap); slide only.
+
+Board (COM5, 4,135,184 B, hash verified): the standby screen arrives with a
+20 ms build and one 98 ms frame; in a 22 s window the carousel produced no frame
+over 25 ms; unlocking returns to the desktop with both sprites animating.
