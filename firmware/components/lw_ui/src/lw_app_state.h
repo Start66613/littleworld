@@ -33,6 +33,17 @@ lw_date_t lw_today(void);
 /** Force the demo clock (used by the screenshot/regression mode). */
 void lw_set_demo_clock(bool on);
 
+/* ------------------------------------------------------------------ story */
+/* 《拾取回忆》 first-boot story progress: 0 = not started, 1..6 = that many
+ * fragments collected, LW_STORY_DONE = finished. Stored under its own
+ * platform-storage key ("lwstory") with its own versioned record - the
+ * .lwr save format is deliberately not involved. */
+#define LW_STORY_FRAGMENTS 6u
+#define LW_STORY_DONE 7u
+unsigned lw_story_progress(void);
+/** Record progress; monotonic - a lower value never overwrites a higher one. */
+void lw_story_progress_set(unsigned progress);
+
 #ifdef __cplusplus
 }
 #endif
