@@ -83,7 +83,8 @@ static void fake_frames(uint32_t *failures, uint32_t *leases, size_t *bytes)
 static int fake_theme(void) { return 2; }
 
 static void fake_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32_t *evictions,
-                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget)
+                       uint32_t *queue_drops, size_t *resident, size_t *peak, size_t *budget,
+                       uint32_t *borrows, uint32_t *borrow_misses)
 {
     *available = true;
     *hits = 900;
@@ -93,6 +94,11 @@ static void fake_cache(bool *available, uint32_t *hits, uint32_t *misses, uint32
     *resident = 884736;
     *peak = 1048576;
     *budget = 1048576;
+    /* Zero-copy borrows were added to the cache after this test was written;
+     * the provider signature grew with them and this stub was not updated,
+     * which broke the diag suite with C4113 under /WX. */
+    *borrows = 12;
+    *borrow_misses = 3;
 }
 
 static void fake_clock(char *text, size_t len)
