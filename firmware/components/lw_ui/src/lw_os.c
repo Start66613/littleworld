@@ -38,6 +38,9 @@ typedef struct {
      * of rebuilding it after the page is ready. */
     lv_obj_t *boot_logo;
     lw_sprite_t *lock_sprites[2];
+    lw_sprite_t *lock_couple;
+    lv_obj_t *lock_photo_area,*lock_photo_caption;
+    unsigned lock_photo_idx; uint32_t lock_photo_ms,ambient_idle;
     lw_sprite_t *boot_sprites[2];
     int pull_last_y,pull_velocity; uint32_t pull_last_tick;
     int pull_start,pull_distance; bool pull_active,pull_opening,pull_moved,reverse_page;
@@ -178,6 +181,7 @@ static void clear_overlay(void)
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
     lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
@@ -196,6 +200,7 @@ static void dismiss_overlay(void)
     if (s->overlay==OS_OVER_LOCK) lw_os_motion_slide(s->over,lv_obj_get_style_translate_y(s->over,0),-600,240,0,false);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
     lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
@@ -510,7 +515,7 @@ static void render(void)
     freeze_begin();
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
     /* s->boot and its sprites are children of the top layer, not of s->root:
      * lv_obj_clean(s->root) cannot touch them, and on the first build the
      * splash is already on the panel while this runs. Clearing the pointers
@@ -649,9 +654,47 @@ static void build_password(void)
     lv_obj_set_style_bg_color(keyboard,lv_color_hex(c->surface),LV_PART_ITEMS); lv_obj_set_style_text_color(keyboard,lv_color_hex(c->text),LV_PART_ITEMS); lv_obj_set_style_radius(keyboard,8,LV_PART_ITEMS);
     lv_obj_add_event_cb(keyboard,keyboard_event,LV_EVENT_READY,NULL); lv_obj_add_event_cb(keyboard,keyboard_event,LV_EVENT_CANCEL,NULL); register_control(keyboard,OC_KEYBOARD);
 }
+/* Ambient photo carousel (standby home, 2026-11-09). Placeholder
+ * material for now: the same six sample scenes the album demo uses -
+ * host builds paint the real scene images - honestly labelled as
+ * examples. When her photos land, this frame is where the album
+ * source's pictures get swapped in; the frame, the 8 s cadence and
+ * the caption plumbing stay as they are. */
+static const char *const lock_photo_titles[]={"海边","生日","散步","旅行","厨房","夜晚"};
+static const uint32_t lock_photo_colors[]={0xf2d9d9,0xe9d9bc,0xd5e2d7,0xdad4e8,0xf0e4c9,0xd7deeb};
+#define LOCK_PHOTO_COUNT 6u
+#define LOCK_PHOTO_MS 8000u
+static void lock_photo_paint(void)
+{
+    if (!s->lock_photo_area) return;
+    lv_obj_clean(s->lock_photo_area);
+    unsigned i=s->lock_photo_idx%LOCK_PHOTO_COUNT;
+    bool painted=false;
+    { static const unsigned themes[]={0,2,1}; if (lw_visual_scene_image(s->lock_photo_area,themes[i%3],248,196,true)) painted=true; }
+    if (!painted) {
+        lv_obj_t *scene=lw_os_box(s->lock_photo_area,0,0,248,196,lock_photo_colors[i],8,255);
+        lw_os_box(scene,186,20,34,34,0xffefcb,LV_RADIUS_CIRCLE,255);
+        lw_os_box(scene,0,130,248,66,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
+        lw_os_icon(scene,OS_I_HEART,106,74,36,0xffffff);
+    }
+    if (s->lock_photo_caption) lv_label_set_text_fmt(s->lock_photo_caption,"%s · 示例照片 %u/%u",lock_photo_titles[i],i+1,LOCK_PHOTO_COUNT);
+    lw_os_motion(s->lock_photo_area,LW_MOVE_PHOTO);
+}
+static void lock_photo_build(void)
+{
+    const lw_os_palette_t *c=palette();
+    lv_obj_t *frame=lw_os_box(s->over,716,72,272,308,0xfffaf2,14,255);
+    lw_os_box(frame,105,0,62,10,0xe3b7c8,2,130);
+    s->lock_photo_area=lw_os_box(frame,12,18,248,196,0,8,255);
+    s->lock_photo_caption=lw_os_label(frame,"",&lw_font_18,16,228,240,c->text);
+    lw_os_label(frame,"我们的照片 · 慢慢轮播",&lw_font_18,16,262,240,c->muted);
+    s->lock_photo_idx=0; s->lock_photo_ms=0;
+    lock_photo_paint();
+}
 static void build_lock(void)
 {
-    const lw_os_palette_t *c=palette(); lw_os_wallpaper(s->over,s->painted_wallpaper,0,0,1024,600);
+    const lw_os_palette_t *c=palette();
+    if (!lw_visual_daily_image(s->over)) lw_os_wallpaper(s->over,s->painted_wallpaper,0,0,1024,600);
     lw_os_box(s->over,0,0,1024,600,s->system->screen_off ? 0x151822 : c->bg,0,s->system->screen_off ? 255 : 145);
     if (s->system->screen_off) { lw_os_icon(s->over,OS_I_MOON,482,198,60,0xd5c6dc); lw_os_label(s->over,"屏幕已熄灭 · Windows 模拟",&lw_font_22,310,292,600,0xe9dfea); button(s->over,"轻触唤醒",360,418,304,60,OC_UNLOCK,true); return; }
     unsigned hour=0, minute=0; char qualifier[24]; bool demo=false;
@@ -667,7 +710,20 @@ static void build_lock(void)
     lw_os_icon(s->over,OS_I_LOCK,54,103,28,c->muted);
     lw_os_label(s->over,"向上轻扫，或点下方回家",&lw_font_18,50,401,374,c->muted);
     button(s->over,"轻触，回到小世界",48,472,376,60,OC_UNLOCK,true);
-    if (s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,288); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
+    /* The sofa scene is the heart of this screen: one baked clip of the
+     * couple seated together - the same clip the pet room plays - at the
+     * anchor the pet page's board calibration puts on the cushions
+     * (516,368 in full-screen coordinates). The baked night variant wins
+     * after dark when it exists. Builds without the polish art keep the
+     * two standing sprites this screen used before. */
+    const lw_clip_t *couple_clip=lw_polish_clip("v42.couple.seated");
+    if (couple_clip && lw_ambience_phase()>=LW_NIGHT) { const lw_clip_t *night=lw_polish_clip("v42.couple.seated.night"); if (night) couple_clip=night; }
+    if (couple_clip) {
+        s->lock_couple=lw_sprite_create(s->over,516,368,282);
+        if (s->lock_couple) { lw_sprite_set_external_clock(s->lock_couple,true); lw_sprite_set_pixel_mode(s->lock_couple); lw_sprite_play(s->lock_couple,couple_clip); lw_os_motion(lw_sprite_object(s->lock_couple),LW_MOVE_LOCK); }
+    }
+    if (!s->lock_couple && s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,288); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
+    lock_photo_build();
     lw_os_motion(t,LW_MOVE_LOCK);
     if (s->over_controls[OC_LOCK_DATE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_DATE],2);
     if (s->over_controls[OC_LOCK_LOVE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_LOVE],3);
@@ -1068,6 +1124,12 @@ static void tick(lv_timer_t *timer)
         printf("frame: slow=%u last=%u ms\n",(unsigned)s_frames.frame_slow,(unsigned)s_frames.frame_last_ms);
     }
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
+    if (s->lock_couple) lw_sprite_seek(s->lock_couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
+    /* Ambient carousel: one small frame repaint every 8 s, nothing per frame. */
+    if (s->overlay==OS_OVER_LOCK && !s->system->screen_off && s->lock_photo_area) {
+        s->lock_photo_ms+=dt;
+        if (s->lock_photo_ms>=LOCK_PHOTO_MS) { s->lock_photo_ms=0; s->lock_photo_idx=(s->lock_photo_idx+1)%LOCK_PHOTO_COUNT; lock_photo_paint(); }
+    }
 #ifdef CONFIG_LW_DIAG_STATIC_UI
     /* Diagnostic build C: one render, then silence. No clock label update, no
      * toast animation, no Wi-Fi spinner, no sprite seek - a still frame. Any
@@ -1084,6 +1146,13 @@ static void tick(lv_timer_t *timer)
     lv_indev_t *pointer=lv_indev_get_next(NULL);bool touching=pointer && lv_indev_get_state(pointer)==LV_INDEV_STATE_PRESSED;
     if(touching || s->overlay!=OS_OVER_NONE || s->boot)s->dock_idle=0;else s->dock_idle+=dt;
     if(s->dock_idle>4500 && (s->page==OS_DESKTOP || s->page==OS_WORLD || s->page==OS_PET || s->page==OS_RPG))dock_set(false);
+    /* Ambient home (standby): a desk ornament falls back to its
+     * lock-screen face when left alone. 30 s without a touch, no
+     * overlay up and no boot in progress returns here - to the ambient
+     * screen, never to the screen-off state, which stays a manual
+     * choice from the control centre. */
+    if(touching || s->overlay!=OS_OVER_NONE || s->boot || s->system->locked)s->ambient_idle=0;else s->ambient_idle+=dt;
+    if(s->ambient_idle>=30000) { s->ambient_idle=0; s->system->locked=true; s->system->screen_off=false; show_overlay(OS_OVER_LOCK); }
     s->last_clock+=dt; if (s->last_clock>=1000) {
         s->last_clock=0; refresh();
         /* Repaint only when the band actually changes: a per-second render()
