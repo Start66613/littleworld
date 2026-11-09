@@ -28,6 +28,7 @@ $include = @(
     (Join-Path $root 'firmware/components/lw_storage/include'),
     (Join-Path $root 'firmware/components/lw_backend/include'),
     (Join-Path $root 'firmware/components/lw_system/include'),
+    (Join-Path $root 'firmware/components/lw_net/include'),
     (Join-Path $root 'rpg/include'),
     (Join-Path $root 'rpg/data')
 ) | ForEach-Object { '/I' + $_ }
@@ -41,6 +42,16 @@ foreach ($dir in @('lw_core', 'lw_duo', 'lw_storage', 'lw_backend', 'lw_system')
         Where-Object { $espOnly -notcontains $_.Name } |
         ForEach-Object { $_.FullName }
 }
+# lw_system now depends on lw_net (the Wi-Fi bridge), so the services and
+# their host adapter stub join the link; lw_net_esp.c itself stays out -
+# the stub provides its symbols on the host.
+$sources += @(
+    (Join-Path $root 'firmware/components/lw_net/src/lw_wifi_model.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_time_service.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_audio.c'),
+    (Join-Path $root 'firmware/components/lw_net/src/lw_services.c'),
+    (Join-Path $root 'tests/host/lw_net_esp_stub.c')
+)
 $sources += Get-ChildItem (Join-Path $root 'rpg/src') -Filter *.c | ForEach-Object { $_.FullName }
 $sources += Get-ChildItem (Join-Path $root 'rpg/data') -Filter *.c | ForEach-Object { $_.FullName }
 

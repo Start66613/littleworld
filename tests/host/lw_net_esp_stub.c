@@ -10,6 +10,8 @@
 #include "lw_net_esp.h"
 
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 bool lw_net_esp_wifi_available(void) { return false; }
 void lw_net_esp_wifi_probe_connected(void) { }
@@ -19,15 +21,31 @@ bool lw_net_esp_audio_available(void) { return false; }
 void lw_net_esp_wifi_attach(struct lw_services *services) { (void)services; }
 void lw_net_esp_time_attach(struct lw_services *services) { (void)services; }
 
-bool lw_net_esp_wifi_start_scan(void) { return false; }
+/* Recorded adapter calls, read by test_wifi_bridge.c. The services ignore
+ * the return values (results arrive as events), so the stub accepts every
+ * request and lets the test drive the outcome through the report API -
+ * the same shape as the real adapter, minus the radio. */
+int lw_net_esp_stub_scan_calls;
+int lw_net_esp_stub_connect_calls;
+int lw_net_esp_stub_stop_calls;
+char lw_net_esp_stub_last_ssid[33];
+char lw_net_esp_stub_last_password[65];
+
+bool lw_net_esp_wifi_start_scan(void)
+{
+    lw_net_esp_stub_scan_calls++;
+    return true;
+}
 bool lw_net_esp_wifi_start_connect(const char *ssid, const char *password)
 {
-    (void)ssid;
-    (void)password;
-    return false;
+    lw_net_esp_stub_connect_calls++;
+    snprintf(lw_net_esp_stub_last_ssid, sizeof(lw_net_esp_stub_last_ssid), "%s", ssid ? ssid : "");
+    snprintf(lw_net_esp_stub_last_password, sizeof(lw_net_esp_stub_last_password), "%s",
+             password ? password : "");
+    return true;
 }
 
-void lw_net_esp_wifi_stop(void) {}
+void lw_net_esp_wifi_stop(void) { lw_net_esp_stub_stop_calls++; }
 void lw_net_esp_time_request(void) {}
 
 void lw_net_esp_wifi_describe(char *buf, size_t len)

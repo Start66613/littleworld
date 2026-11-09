@@ -38,6 +38,7 @@
 #include "lvgl.h"
 #include "lw_art.h"
 #include "lw_os.h"
+#include "lw_system_wifi_bridge.h"
 #include "lw_resource_mount.h"
 #include "lw_store.h"
 #endif
@@ -220,6 +221,7 @@ static void rpg_reward(void *context, uint32_t id)
 
 static lw_system_t s_system;
 static lw_services_t s_services;
+static lw_system_wifi_bridge_t s_wifi_bridge;
 static esp_timer_handle_t s_net_timer;
 
 /* Connectivity poll: runs off the LVGL thread so a slow scan can never stall a
@@ -309,11 +311,21 @@ static void publish_time(void)
     lw_time_boot_update(&status, now_ms);
 }
 
+/* Mirror the connectivity services into the Wi-Fi facade: finished scans,
+ * connect outcomes and link changes the user did not start from the UI.
+ * Runs on the LVGL task, like publish_capabilities, because the facade is
+ * only mutated from this thread. */
+static void publish_wifi(void)
+{
+    lw_system_wifi_bridge_sync(&s_wifi_bridge, &s_system, &s_services, lw_services_now_ms());
+}
+
 static void caps_timer_cb(lv_timer_t *timer)
 {
     (void)timer;
     publish_capabilities();
     publish_time();
+    publish_wifi();
 }
 static bool hw_brightness(void *context, unsigned value)
 {
@@ -368,6 +380,14 @@ static void start_os(void)
     backend.volume = caps.audio ? hw_volume : NULL;
     backend.load = prefs_load;
     backend.store = prefs_store;
+    /* The other backend callbacks ignore their context, so the bridge can
+     * claim it for the services pointer. Installed unconditionally: the
+     * hardware caps never claim a radio (caps.wifi is always false), so
+     * availability is reconciled by the bridge sync from the services,
+     * which only start after this init. Without a backend the services
+     * refuse every request and the facade stays UNSUPPORTED. */
+    lw_system_wifi_bridge_init(&s_wifi_bridge);
+    lw_system_wifi_bridge_install(&backend, &s_services);
     lw_system_init(&s_system, &backend);
 
     start_connectivity((uint32_t)(esp_timer_get_time() / 1000), caps.audio);
