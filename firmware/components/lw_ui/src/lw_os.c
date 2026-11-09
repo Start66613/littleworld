@@ -698,8 +698,8 @@ static void lock_photo_paint(void)
      * (1.27), so a fitted image letterboxes by about 25 px top and bottom. The
      * matte has to be the card colour: with a black background those bars read
      * as a broken picture, which is exactly how the first board shot looked. */
-    lv_obj_set_style_bg_color(s->lock_photo_area,lv_color_hex(0xfffaf2),0);
-    lv_obj_set_style_bg_opa(s->lock_photo_area,LV_OPA_COVER,0);
+    lv_obj_set_style_bg_color(s->lock_photo_area,lv_color_hex(0x120e22),0);
+    lv_obj_set_style_bg_opa(s->lock_photo_area,LV_OPA_TRANSP,0);
     /* The carousel shows six photos over three scenes, so two of every three
      * ticks reuse the picture that is already there. Rebuilding the image for
      * those bought nothing and re-ran the pool lookup every 8 s. */
@@ -709,16 +709,19 @@ static void lock_photo_paint(void)
     bool reuse = (painted_scene == scene) && lv_obj_get_child_count(s->lock_photo_area) > 0u;
     if (!reuse) {
         painted_scene = scene;
-        const unsigned before=lv_obj_get_child_count(s->lock_photo_area);
-        bool painted=false;
-        if (lw_visual_scene_image(s->lock_photo_area,scene,248,150,true)) painted=true;
-        if (!painted) {
-            lv_obj_t *graphic=lw_os_box(s->lock_photo_area,0,0,248,150,lock_photo_colors[i],8,255);
-            lw_os_box(graphic,190,14,30,30,0xffefcb,LV_RADIUS_CIRCLE,255);
-            lw_os_box(graphic,0,96,248,54,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
-            lw_os_icon(graphic,OS_I_HEART,108,50,34,0xffffff);
+        /* Take the picture straight from the pool call. Reading it back as "the
+         * last child" was wrong: the image is moved to index 0 so the feathered
+         * border draws over it, which leaves the last child being a band - and
+         * the fade then deleted the photo it was supposed to keep. */
+        lv_obj_t *fresh=lw_visual_scene_image(s->lock_photo_area,scene,470,412,false);
+        if (fresh) {
+            lv_obj_move_to_index(fresh,0);
+        } else {
+            fresh=lw_os_box(s->lock_photo_area,0,0,470,412,lock_photo_colors[i],0,255);
+            lw_os_box(fresh,360,26,30,30,0xffefcb,LV_RADIUS_CIRCLE,255);
+            lw_os_box(fresh,0,250,470,120,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
+            lw_os_icon(fresh,OS_I_HEART,210,80,36,0xffffff);
         }
-        lv_obj_t *fresh=(lv_obj_get_child_count(s->lock_photo_area)>before) ? lv_obj_get_child(s->lock_photo_area,-1) : NULL;
         s->lock_photo_img=fresh;
         s_photo_keep=fresh;
         if (lw_os_motion_get()==LW_MOTION_OFF) {
@@ -731,7 +734,7 @@ static void lock_photo_paint(void)
              * meant to hide. A flat cover the colour of the card is a leaf, blends
              * in 248x150, and reads as the picture sinking into the paper and
              * coming back: one dip instead of a flash. */
-            lv_obj_t *cover=lw_os_box(s->lock_photo_area,0,0,248,150,0xfffaf2,6,255);
+            lv_obj_t *cover=lw_os_box(s->lock_photo_area,0,0,470,412,0x120e22,0,255);
             if (!cover) { photo_faded(NULL); }
             else {
                 lv_anim_t anim;
@@ -748,22 +751,30 @@ static void lock_photo_paint(void)
 static void lock_photo_build(void)
 {
     const lw_os_palette_t *c=palette();
-    /* One card in the lower right corner, sized to the picture instead of the
-     * other way round: 248x150 is 1.65 against the scene's 1.71, so the matte
-     * shows a few pixels rather than the 25 px bars the first cut had. The
-     * caption lives inside the card; the old frame stacked two lines of text
-     * under the picture and read as a settings row, not as a photo. */
-    lv_obj_t *frame=lw_os_box(s->over,700,296,272,252,0xfffaf2,16,255);
-    /* A hairline in the paper palette, because a pure white rectangle on a dark
-     * room reads as a UI dialog rather than as a photo someone left out. */
-    lv_obj_set_style_border_width(frame,2,0);
-    lv_obj_set_style_border_color(frame,lv_color_hex(0xe6d7c3),0);
-    lv_obj_set_style_border_opa(frame,LV_OPA_COVER,0);
-    s->lock_photo_area=lw_os_box(frame,12,12,248,150,0,8,255);
-    s->lock_photo_caption=lw_os_label(frame,"",&lw_font_22,16,172,200,c->text);
-    lw_os_label(frame,"我们的照片",&lw_font_18,16,208,200,c->muted);
+    /* Not a card any more. A print this size in a frame either sits on the wall
+     * like a sticker or hides half the room, so the picture becomes a soft block
+     * of memory on the left instead: the room still reads on the right, the
+     * couple still sits on the sofa, and the photo is the thing the clock is laid
+     * over. Its edges are feathered with translucent bands, because a hard edge
+     * is what made every earlier version look pasted on. */
+    const int px=0, py=52, pw=470, ph=412;
+    s->lock_photo_area=lw_os_box(s->over,px,py,pw,ph,0x120e22,0,255);
+    lv_obj_remove_flag(s->lock_photo_area,LV_OBJ_FLAG_CLICKABLE);
+    /* Feathered border: two rings, each in four bands, so the picture fades into
+     * the room instead of ending. All leaves - a band is one blend. */
+    const uint32_t edge=0x120e22;
+    for (int ring=0; ring<5; ring++) {
+        const lv_opa_t band=(lv_opa_t)(150-32*ring);
+        const int inset=ring*20;
+        lw_os_box(s->lock_photo_area,inset,inset,pw-2*inset,20,edge,0,band);
+        lw_os_box(s->lock_photo_area,inset,ph-inset-20,pw-2*inset,20,edge,0,band);
+        lw_os_box(s->lock_photo_area,inset,inset,20,ph-2*inset,edge,0,band);
+        lw_os_box(s->lock_photo_area,pw-inset-20,inset,20,ph-2*inset,edge,0,band);
+    }
+    s->lock_photo_caption=lw_os_label(s->over,"",&lw_font_18,64,478,300,0xe6d8cf);
     s->lock_photo_idx=0; s->lock_photo_ms=0;
     lock_photo_paint();
+    lv_obj_move_to_index(s->lock_photo_area,1);
 }
 static void build_lock(void)
 {
