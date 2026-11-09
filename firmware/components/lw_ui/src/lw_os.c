@@ -642,7 +642,7 @@ static void build_password(void)
     lw_os_label(p,"输入网络密码",&lw_font_18,28,82,550,c->muted);
     lv_obj_t *input=lv_textarea_create(p); lv_obj_set_pos(input,28,120); lv_obj_set_size(input,564,56); lv_textarea_set_one_line(input,true); lv_textarea_set_password_mode(input,true); lv_textarea_set_max_length(input,63);
     lv_textarea_set_placeholder_text(input,"至少 8 位密码"); lv_obj_set_style_text_font(input,&lw_font_22,0); lv_obj_set_style_radius(input,16,0); lv_obj_set_style_bg_color(input,lv_color_hex(c->surface),0); lv_obj_set_style_text_color(input,lv_color_hex(c->text),0); register_control(input,OC_PASSWORD);
-    register_control(lw_os_label(p,s->system->wifi==LW_WIFI_FAILED ? "连接失败，请重新输入密码。" : "本轮为模拟连接，密码不会写入存档或日志。",&lw_font_18,28,189,558,c->muted),OC_WIFI_STATUS);
+    register_control(lw_os_label(p,s->system->wifi==LW_WIFI_FAILED ? "连接失败，请重新输入密码。" : s->system->backend.simulated ? "本轮为模拟连接，密码不会写入存档或日志。" : "密码只保存在内存中用于本次连接，不会写入存档或日志。",&lw_font_18,28,189,558,c->muted),OC_WIFI_STATUS);
     button(p,"连接",400,230,192,50,OC_CONNECT,true); button(p,"返回网络列表",28,230,242,50,OC_BACK,false);
     lv_obj_t *keyboard=lv_keyboard_create(p); lv_obj_set_align(keyboard,LV_ALIGN_TOP_LEFT); lv_obj_set_pos(keyboard,16,300); lv_obj_set_size(keyboard,588,232); lv_keyboard_set_textarea(keyboard,input);
     lv_obj_set_style_bg_color(keyboard,lv_color_hex(c->soft),0); lv_obj_set_style_text_font(keyboard,&lv_font_montserrat_20,LV_PART_ITEMS);
