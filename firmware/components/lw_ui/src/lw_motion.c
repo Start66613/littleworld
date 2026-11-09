@@ -91,7 +91,12 @@ void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
      * restore the zoom-fade flip. */
     case LW_MOVE_PHOTO:animate(o,move,24,0,300,false);break;
     case LW_MOVE_CARD:animate(o,move,28,0,320,false);animate(o,scale,236,256,320,false);break;
-    case LW_MOVE_LOCK:animate(o,move,14,0,360,false);animate(o,appear,150,255,320,false);break;
+    /* Slide only. The lock screen is a full-page container, and an opacity
+     * animation on a container that owns children makes LVGL render the whole
+     * subtree into a layer and blend it back on every frame - the same trap
+     * LW_MOVE_DIALOG fell into in v4.15. Because the standby screen is entered
+     * on a timer, that hitch was being paid every time the desk went quiet. */
+    case LW_MOVE_LOCK:animate(o,move,14,0,360,false);break;
     case LW_MOVE_FLAP:animate(o,flap_height,80,0,280,false);break;
     case LW_MOVE_DISMISS:animate(o,move,0,18,180,false);animate(o,scale,256,246,180,false);break;
     }

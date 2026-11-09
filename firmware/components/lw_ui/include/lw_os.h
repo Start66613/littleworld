@@ -65,6 +65,12 @@ typedef struct {
     int invalidation_enabled;/* what the display itself thinks */
 } lw_os_gate_t;
 void lw_os_gates(lw_os_gate_t *out);
+/* Ambient standby: after 30 s without a touch the desk ornament turns into its
+ * lock-screen face. Armed by default. The host contract suite disarms it - it
+ * simulates far more than 30 s of idle time in most scenarios, so with the
+ * standby screen armed the harness kept landing behind the lock overlay. */
+void lw_os_ambient_autolock(bool on);
+bool lw_os_ambient_autolock_enabled(void);
 
 /* Boot-animation evidence (V4.4 P0-D). The boot overlay is the first thing the
  * user sees, and it is also the first frame the LVGL task has to produce while

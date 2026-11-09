@@ -56,6 +56,16 @@ static os_t *s;
 static lw_file_cache_t *s_cache;
 void lw_os_bind_cache(struct lw_file_cache *cache) { s_cache=cache; }
 
+/* Ambient standby: after 30 s without a touch the desk ornament turns into its
+ * lock-screen face. Armed by default; the host harness disarms it (it simulates
+ * thousands of idle seconds) and exercises the timer in one explicit check. */
+static bool s_autolock = true;
+void lw_os_ambient_autolock(bool on)
+{
+    s_autolock = on;
+    if (!on && s) s->ambient_idle = 0;
+}
+bool lw_os_ambient_autolock_enabled(void) { return s_autolock; }
 static lw_os_frame_stats_t s_frames;
 /* Tick at lw_os_start() entry; the first flush measures the black-screen wait
  * against it. */
@@ -667,15 +677,31 @@ static const uint32_t lock_photo_colors[]={0xf2d9d9,0xe9d9bc,0xd5e2d7,0xdad4e8,0
 static void lock_photo_paint(void)
 {
     if (!s->lock_photo_area) return;
-    lv_obj_clean(s->lock_photo_area);
     unsigned i=s->lock_photo_idx%LOCK_PHOTO_COUNT;
-    bool painted=false;
-    { static const unsigned themes[]={0,2,1}; if (lw_visual_scene_image(s->lock_photo_area,themes[i%3],248,196,true)) painted=true; }
-    if (!painted) {
-        lv_obj_t *scene=lw_os_box(s->lock_photo_area,0,0,248,196,lock_photo_colors[i],8,255);
-        lw_os_box(scene,186,20,34,34,0xffefcb,LV_RADIUS_CIRCLE,255);
-        lw_os_box(scene,0,130,248,66,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
-        lw_os_icon(scene,OS_I_HEART,106,74,36,0xffffff);
+    /* The scene thumbnails are 1024x600 (aspect 1.71) and the frame is 248x196
+     * (1.27), so a fitted image letterboxes by about 25 px top and bottom. The
+     * matte has to be the card colour: with a black background those bars read
+     * as a broken picture, which is exactly how the first board shot looked. */
+    lv_obj_set_style_bg_color(s->lock_photo_area,lv_color_hex(0xfffaf2),0);
+    lv_obj_set_style_bg_opa(s->lock_photo_area,LV_OPA_COVER,0);
+    /* The carousel shows six photos over three scenes, so two of every three
+     * ticks reuse the picture that is already there. Rebuilding the image for
+     * those bought nothing and re-ran the pool lookup every 8 s. */
+    static unsigned painted_scene = 99u;
+    static const unsigned themes[]={0,2,1};
+    unsigned scene = themes[i%3];
+    bool reuse = (painted_scene == scene) && lv_obj_get_child_count(s->lock_photo_area) > 0u;
+    if (!reuse) {
+        painted_scene = scene;
+        lv_obj_clean(s->lock_photo_area);
+        bool painted=false;
+        if (lw_visual_scene_image(s->lock_photo_area,scene,248,196,true)) painted=true;
+        if (!painted) {
+            lv_obj_t *graphic=lw_os_box(s->lock_photo_area,0,0,248,196,lock_photo_colors[i],8,255);
+            lw_os_box(graphic,186,20,34,34,0xffefcb,LV_RADIUS_CIRCLE,255);
+            lw_os_box(graphic,0,130,248,66,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
+            lw_os_icon(graphic,OS_I_HEART,106,74,36,0xffffff);
+        }
     }
     if (s->lock_photo_caption) lv_label_set_text_fmt(s->lock_photo_caption,"%s · 示例照片 %u/%u",lock_photo_titles[i],i+1,LOCK_PHOTO_COUNT);
     lw_os_motion(s->lock_photo_area,LW_MOVE_PHOTO);
@@ -1152,7 +1178,7 @@ static void tick(lv_timer_t *timer)
      * screen, never to the screen-off state, which stays a manual
      * choice from the control centre. */
     if(touching || s->overlay!=OS_OVER_NONE || s->boot || s->system->locked)s->ambient_idle=0;else s->ambient_idle+=dt;
-    if(s->ambient_idle>=30000) { s->ambient_idle=0; s->system->locked=true; s->system->screen_off=false; show_overlay(OS_OVER_LOCK); }
+    if(s_autolock && s->ambient_idle>=30000) { s->ambient_idle=0; s->system->locked=true; s->system->screen_off=false; show_overlay(OS_OVER_LOCK); }
     s->last_clock+=dt; if (s->last_clock>=1000) {
         s->last_clock=0; refresh();
         /* Repaint only when the band actually changes: a per-second render()
@@ -1327,7 +1353,12 @@ void lw_os_gates(lw_os_gate_t *out)
     lv_display_t *disp = lv_display_get_default();
     out->invalidation_enabled = disp ? (int)lv_display_is_invalidation_enabled(disp) : -1;
 }
-bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
+/* Ambient standby: after 30 s without a touch the desk ornament turns into its
+ * lock-screen face. The shutdown switch exists because the contract suite drives
+ * thousands of simulated seconds - it idles past 30 s in almost every scenario,
+ * so with the standby screen armed the harness kept finding itself behind a lock
+ * overlay (28 checks red) instead of testing what it meant to test. Firmware
+ * leaves it armed; the host harness disarms it and tests the timer explicitly. */bool lw_os_start(lw_system_t *system,const lw_actor_art_t art[2])
 {
     if (s || !system) return false;
     /* The legacy shell initialised the saved app state; the OS path never did,

@@ -371,6 +371,11 @@ int lw_os_host_run(const char *pack_path,const char *out)
 {
     const char *visual_path=getenv("LW_VISUAL_ASSETS"); lw_visual_assets_configure(visual_path ? visual_path : "assets/visual-v4/runtime"); lw_visual_aux_configure(getenv("LW_POLISH_ASSETS") ? getenv("LW_POLISH_ASSETS") : "assets/visual-v4-2/runtime");
     setvbuf(stdout,NULL,_IONBF,0); snprintf(settings_path,sizeof(settings_path),"%s\\os-settings.dat",host_platform_dir());
+    /* The ambient standby screen locks after 30 s without a touch. This suite
+     * simulates far more than that in most scenarios, so it is disarmed here and
+     * exercised explicitly by one check near the end - otherwise the harness
+     * keeps discovering itself behind the lock overlay. */
+    lw_os_ambient_autolock(false);
     snprintf(rpg_path,sizeof(rpg_path),"%s\\rpg-save.dat",host_platform_dir()); if (out) DeleteFileA(rpg_path);
     lw_rpg_view_host_t rpg_host={NULL,rpg_load,rpg_save,rpg_reward}; lw_os_rpg_storage(&rpg_host);
     lw_system_backend_t backend={0}; backend.simulated=true; backend.network_available=true; backend.brightness=brightness; backend.volume=volume; backend.load=out ? NULL : load; backend.store=store;
@@ -465,6 +470,17 @@ int lw_os_host_run(const char *pack_path,const char *out)
     CHECK("safe minimum",lw_system_brightness(&system,0) && system.prefs.brightness==10); lw_system_brightness(&system,70); lw_system_save(&system);
     backend.load=load; lw_system_t reloaded; lw_system_init(&reloaded,&backend); CHECK("restart restores independent OS preferences",reloaded.prefs.volume==system.prefs.volume && reloaded.prefs.brightness==70 && reloaded.prefs.theme==system.prefs.theme);
     uint8_t encoded[LW_SYS_PREF_BYTES]; lw_system_encode(&system.prefs,encoded); encoded[5]^=1; lw_preferences_t invalid; CHECK("corrupt preferences rejected",!lw_system_decode(&invalid,encoded));
+    /* Ambient standby, exercised instead of assumed: with the timer armed and no
+     * touch for 31 simulated seconds the idle screen must take over; tapping the
+     * unlock control must hand the desktop back and return the timer to zero. */
+    lw_os_open(OS_DESKTOP); advance(400);
+    lw_os_ambient_autolock(true);
+    advance(31000);
+    CHECK("30 s idle arms the ambient lock screen",lw_os_overlay()==OS_OVER_LOCK);
+    CHECK("ambient lock screen offers a way back",lw_os_control(OC_UNLOCK)!=NULL);
+    tap(OC_UNLOCK); advance(700);
+    CHECK("unlocking leaves the ambient screen",lw_os_overlay()==OS_OVER_NONE);
+    lw_os_ambient_autolock(false);
     size_t peak=lw_assets_stats().peak_bytes; lw_os_stop(); CHECK("OS stop releases frame memory",lw_assets_stats().live_bytes==base_bytes && lw_assets_stats().live_leases==0); CHECK("OS stop releases timers",timers()==base_timers); CHECK("stable shell restored",lw_shell_current() && !strcmp(lw_shell_current()->id,"home"));
     CHECK("all shared skin pieces release their single atlas lease",lw_skin_references()==0);(void)role_leases;
     CHECK("wallpaper animation context released",lw_os_scene_live_bytes()==0); CHECK("photo source released at OS stop",photo_live==0);
