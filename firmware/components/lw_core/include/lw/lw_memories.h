@@ -36,6 +36,11 @@ const char *lw_memories_welcome(void);
 const char *lw_surprise_message(void);
 const char *lw_surprise_hint(void);
 
+/* Short daily lines (pet / everyday flavour) for rotation displays.
+ * Pure data: no state, no save-format involvement. */
+int lw_daily_line_count(void);
+const char *lw_daily_line_get(int index);
+
 #ifdef __cplusplus
 }
 #endif

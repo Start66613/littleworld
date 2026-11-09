@@ -571,7 +571,13 @@ static void build_control(void)
     static const lw_os_control_t skinned[]={OC_WIFI,OC_DND,OC_LOCK,OC_MUSIC,OC_MUTE,OC_THEMES,OC_SETTINGS,OC_HOME};
     for(unsigned i=0;i<8;i++){lv_obj_t *o=s->over_controls[skinned[i]];if(o)lw_skin_button(o,SK_CC_TILE,SK_CC_SELECTED,SK_CC_PRESSED);}
     lw_skin_select(moon,s->system->prefs.dnd);lw_skin_select(s->over_controls[OC_MUTE],s->system->prefs.muted);
-    if (!s->pull_active) { lw_os_motion_slide(p,-542,0,320,0,true); lw_os_motion_dim(s->over,0,105,280); for (unsigned i=1;i<lv_obj_get_child_count(p);i++) lw_os_motion_stagger(lv_obj_get_child(p,i),i%5); }
+    /* A4 (CLOUD_AUDIT, FINAL §20.2/§20.3 route 1): the panel slides in as one
+     * batch; children appear with it, without individual stagger animations.
+     * Board measurement (measured-by-user, FINAL §20.2) traced the slow
+     * control-centre frames to the burst of ~17 entrance animations each
+     * invalidating its own area, not to any single draw. Dropping the
+     * per-child stagger keeps the panel slide and dim unchanged. static. */
+    if (!s->pull_active) { lw_os_motion_slide(p,-542,0,320,0,true); lw_os_motion_dim(s->over,0,105,280); }
 }
 static void pull_touch(lv_event_t *e)
 {
@@ -593,7 +599,7 @@ static void pull_touch(lv_event_t *e)
         bool open=s->pull_opening ? (s->pull_distance>112 || (s->pull_distance>44 && s->pull_velocity>650)) : !(s->pull_distance<-72 || (s->pull_distance<-28 && s->pull_velocity<-650));
         if (s->pull_moved) s->suppress_control_until=lv_tick_get()+180;
         s->pull_active=false;
-        if (s->pull_moved && s->control_panel) { if (open) { lw_os_motion_slide(s->control_panel,lv_obj_get_style_translate_y(s->control_panel,0),0,260,0,true); lw_os_motion_dim(s->over,lv_obj_get_style_bg_opa(s->over,0),105,260); for (unsigned i=1;i<lv_obj_get_child_count(s->control_panel);i++) lw_os_motion_stagger(lv_obj_get_child(s->control_panel,i),i%5); } else dismiss_overlay(); }
+        if (s->pull_moved && s->control_panel) { if (open) { lw_os_motion_slide(s->control_panel,lv_obj_get_style_translate_y(s->control_panel,0),0,260,0,true); lw_os_motion_dim(s->over,lv_obj_get_style_bg_opa(s->over,0),105,260); } else dismiss_overlay(); }
     }
 }
 static void build_wifi(void)
@@ -602,15 +608,28 @@ static void build_wifi(void)
     icon_button(p,OS_I_BACK,16,16,44,OC_BACK); lw_os_label(p,"Wi-Fi",&lw_font_28,76,23,300,c->text); icon_button(p,OS_I_CLOSE,426,16,44,OC_CLOSE);
     register_control(lw_os_label(p,wifi_text(),&lw_font_18,28,84,430,c->muted),OC_WIFI_STATUS);
     button(p,s->system->wifi_enabled ? "已开启" : "已关闭",330,77,130,44,OC_WIFI_TOGGLE,s->system->wifi_enabled);
-    lw_os_label(p,s->system->backend.simulated ? "模拟网络 · 不会连接你的真实路由器" : "附近的网络",&lw_font_18,28,137,430,c->muted);
+    if (s->system->backend.simulated) lw_os_label(p,"模拟网络 · 不会连接你的真实路由器",&lw_font_18,28,137,430,c->muted);
+    else if (s->system->wifi_enabled && s->system->network_count) { char count[48]; snprintf(count,sizeof(count),"附近的网络 · 共 %u 个",s->system->network_count); lw_os_label(p,count,&lw_font_18,28,137,430,c->muted); }
+    else lw_os_label(p,"附近的网络",&lw_font_18,28,137,430,c->muted);
     for (unsigned i=0;s->system->wifi_enabled && i<s->system->network_count && i<3;i++) {
         lv_obj_t *row=button(p,"",20,178+(int)i*67,448,58,(lw_os_control_t)(OC_AP0+i),false); lv_obj_set_style_bg_opa(row,0,0);
         lw_os_icon(row,OS_I_WIFI,12,14,28,c->accent); lw_os_label(row,s->system->networks[i].ssid,&lw_font_22,56,7,284,c->text);
-        char signal[40]; snprintf(signal,sizeof(signal),"%d dBm%s",s->system->networks[i].rssi,s->system->networks[i].secured ? "  ·  加密" : "  ·  开放");
+        bool connected=s->system->wifi==LW_WIFI_CONNECTED && !strcmp(s->system->ssid,s->system->networks[i].ssid);
+        const char *strength=s->system->networks[i].rssi>=-55 ? "强" : s->system->networks[i].rssi>=-70 ? "中" : "弱";
+        char signal[64]; snprintf(signal,sizeof(signal),"%s%d dBm · 信号%s%s",connected ? "已连接 · " : "",(int)s->system->networks[i].rssi,strength,s->system->networks[i].secured ? " · 加密" : " · 开放");
         lw_os_label(row,signal,&lw_font_18,56,34,290,c->muted);
-        if (s->system->wifi==LW_WIFI_CONNECTED && !strcmp(s->system->ssid,s->system->networks[i].ssid)) lw_os_icon(row,OS_I_CHECK,393,14,30,c->deep);
+        if (connected) lw_os_icon(row,OS_I_CHECK,393,14,30,c->deep);
         lw_os_box(row,56,57,376,1,c->line,0,255);
     }
+    /* Empty and transient states get words, not a blank panel. These are
+     * build-time labels: the panel is rebuilt on every wifi state change
+     * (see the tick handler), so they track scanning/connecting/failed
+     * without any per-second rewrite. */
+    if (!s->system->wifi_enabled) lw_os_label(p,"Wi-Fi 已关闭，开启后会扫描附近网络。",&lw_font_18,28,216,430,c->muted);
+    else if (s->system->network_count==0 && s->system->wifi==LW_WIFI_SCANNING) lw_os_label(p,"正在扫描附近网络…",&lw_font_18,28,216,430,c->muted);
+    else if (s->system->network_count==0) lw_os_label(p,"还没有发现网络，点下方「重新扫描」试试。",&lw_font_18,28,216,430,c->muted);
+    else if (s->system->wifi==LW_WIFI_CONNECTING) lw_os_label(p,"正在连接所选网络…",&lw_font_18,28,374,430,c->muted);
+    else if (s->system->wifi==LW_WIFI_FAILED) lw_os_label(p,"上次连接失败，点一个网络可以重试。",&lw_font_18,28,374,430,c->muted);
     if (s->system->wifi==LW_WIFI_CONNECTED) { button(p,"断开",20,398,133,48,OC_DISCONNECT,false); button(p,"忘记网络",169,398,149,48,OC_FORGET,false); button(p,"刷新",334,398,134,48,OC_SCAN,false); }
     else button(p,s->system->wifi==LW_WIFI_SCANNING ? "正在扫描…" : "重新扫描",20,398,448,48,OC_SCAN,false);
 }
@@ -1086,7 +1105,12 @@ static void tick(lv_timer_t *timer)
     }
     if (s->last_wifi!=s->system->wifi) {
         lw_wifi_status_t prior=s->last_wifi; s->last_wifi=s->system->wifi;
-        if (s->overlay==OS_OVER_WIFI && prior==LW_WIFI_SCANNING) show_overlay(OS_OVER_WIFI);
+        /* Rebuild the Wi-Fi panel on any state change, not only when a
+         * scan finishes: connecting -> connected/failed must refresh the
+         * rows (check mark, 已连接 wording, failure hint) while the panel
+         * is open. Wifi states change discretely, so this is not a
+         * per-tick rebuild. */
+        if (s->overlay==OS_OVER_WIFI && prior!=s->system->wifi) show_overlay(OS_OVER_WIFI);
         else if (s->overlay==OS_OVER_PASSWORD && s->system->wifi==LW_WIFI_CONNECTED) { show_overlay(OS_OVER_WIFI); lw_os_notify("已连接 · 模拟网络"); }
         else if (s->overlay==OS_OVER_PASSWORD && s->system->wifi==LW_WIFI_FAILED) lv_label_set_text(s->over_controls[OC_WIFI_STATUS],"连接失败，请重新输入密码。");
     }

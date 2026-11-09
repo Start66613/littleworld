@@ -11,6 +11,22 @@ static const lw_memory_t s_memories[] = {
     {{2025, 10, 25}, "一周年", "示例内容：蛋糕上的蜡烛点了一会儿就灭了，笑声比照片清楚。", ""},
     {{2026, 3, 8}, "春天的散步", "示例内容：公园里有一棵树，说好明年还要来看它。", ""},
     {{2026, 10, 25}, "两周年", "示例内容：小世界正式亮起来的一天。以后的回忆会继续加在这里。", ""},
+    {{2026, 11, 8}, "一起布置小世界", "示例内容：把日常的小物一件件摆好，小世界慢慢有了家的样子。", ""},
+    {{2026, 12, 25}, "冬天的热饮", "示例内容：两杯热饮冒着白气，窗外很冷，屋里很暖。", ""},
+};
+
+/* Daily short lines: one group of everyday / pet-flavoured sentences for
+ * rotation displays. DEMO content in the same spirit as the tables above;
+ * adding lines here changes no behaviour and no save format. */
+static const char *const s_daily_lines[] = {
+    "早安，今天也先伸个懒腰，再慢慢开始。",
+    "饭要好好吃，步要慢慢走，日子要好好过。",
+    "晒一会儿太阳，把心里的褶皱都晒平。",
+    "忙完这一阵，记得抬头看看窗外。",
+    "小家伙绕着脚边转了一圈，又乖乖趴好了。",
+    "晚饭后一起散散步，风会把疲惫吹轻一点。",
+    "今天的小愿望：早点休息，做个好梦。",
+    "普通的一天也值得收好，明天再一起翻。",
 };
 
 static const lw_place_t s_places[] = {
@@ -45,6 +61,19 @@ const lw_place_t *lw_places_get(int index)
         return 0;
     }
     return &s_places[index];
+}
+
+int lw_daily_line_count(void)
+{
+    return (int)(sizeof(s_daily_lines) / sizeof(s_daily_lines[0]));
+}
+
+const char *lw_daily_line_get(int index)
+{
+    if (index < 0 || index >= lw_daily_line_count()) {
+        return 0;
+    }
+    return s_daily_lines[index];
 }
 
 const char *lw_memories_welcome(void)

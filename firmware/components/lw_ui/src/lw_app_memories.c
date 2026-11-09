@@ -41,17 +41,17 @@ bool lw_memories_set_source(const lw_memory_t *items,unsigned count)
 
 static void build_tabs(lv_obj_t *content);
 static void build_page(void);
-static void book_fade(void *o,int32_t alpha){lv_obj_set_style_opa(o,(lv_opa_t)alpha,0);}
-static void book_closed(lv_anim_t *a){if(s_detail_overlay==a->var)s_detail_overlay=NULL;lv_obj_delete(a->var);lw_os_scene_focus(false);}
 
 static void close_overlay_cb(lv_event_t *event)
 {
     lv_obj_t *overlay = (lv_obj_t *)lv_event_get_user_data(event);
     if (overlay != NULL) {
-        if(lw_shell_host_active() && lw_os_motion_get()==LW_MOTION_FULL){
-            lv_obj_t *card=lv_obj_get_parent(lv_event_get_target_obj(event));lw_os_motion(card,LW_MOVE_DISMISS);
-            lv_anim_delete(overlay,book_fade);lv_anim_t a;lv_anim_init(&a);lv_anim_set_var(&a,overlay);lv_anim_set_exec_cb(&a,book_fade);lv_anim_set_values(&a,255,0);lv_anim_set_duration(&a,180);lv_anim_set_completed_cb(&a,book_closed);lv_anim_start(&a);return;
-        }
+        /* A5 (CLOUD_AUDIT): close directly, with no fade. The overlay is a
+         * full-screen (1024x600) object carrying the detail card subtree, so
+         * the old 255->0 opacity fade (book_fade, 180 ms) forced LVGL to
+         * blend the whole subtree through a layer on every frame of the
+         * fade -- the same mechanism as A1/A3. Visual change: the detail
+         * now closes at once instead of fading out. static. */
         lv_obj_delete(overlay);
         if (s_detail_overlay==overlay) s_detail_overlay=NULL;
         lw_os_scene_focus(false);

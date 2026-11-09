@@ -317,6 +317,7 @@ typedef struct {
     lv_obj_t *food;
     lv_obj_t *score;
     lv_obj_t *extra;
+    lv_obj_t *best;
     lv_obj_t *panel;
     lv_timer_t *timer;
     arcade_point_t press;
@@ -324,6 +325,11 @@ typedef struct {
     int over;
     uint32_t last_score;
     int last_length;
+    /* Best score of this overlay session only: kept in RAM, never written
+     * to the save (the persistent best stays arcade_best[]), and reset
+     * every time the game is opened. */
+    uint32_t session_best;
+    uint32_t last_session_best;
 } snake_ui_t;
 
 static snake_ui_t s_snake;
@@ -336,7 +342,23 @@ static void snake_teardown(void)
     }
     s_snake.panel = NULL;
     s_snake.playfield = NULL;
+    s_snake.best = NULL;
     s_snake.segment_count = 0;
+}
+
+/* Fold the current score into the session best and rewrite the "最高"
+ * pill only when that best actually changed - the same last-value guard
+ * the score/length pills below already use, so nothing is rewritten per
+ * step. */
+static void snake_sync_best(void)
+{
+    if (s_snake.model.score > s_snake.session_best) {
+        s_snake.session_best = s_snake.model.score;
+    }
+    if (s_snake.best != NULL && s_snake.session_best != s_snake.last_session_best) {
+        s_snake.last_session_best = s_snake.session_best;
+        lv_label_set_text_fmt(s_snake.best, "最高 %u", (unsigned)s_snake.session_best);
+    }
 }
 
 static uint32_t snake_color(int index, int head)
@@ -384,6 +406,7 @@ static void snake_refresh(void)
         s_snake.last_length = s_snake.model.length;
         lv_label_set_text_fmt(s_snake.extra, "长度 %d", (int)s_snake.model.length);
     }
+    snake_sync_best();
 }
 
 static void snake_restart(void)
@@ -410,11 +433,15 @@ static void snake_result_panel(void)
         lw_app_state_save();
     }
 
+    /* The death tick reaches this panel without a final snake_refresh(),
+     * so fold the last score into the session best here too. */
+    snake_sync_best();
     s_snake.panel = lw_card(s_overlay, 0, 0, 420, 260);
     lv_obj_center(s_snake.panel);
     lw_text(s_snake.panel, "游戏结束", &lw_font_28, palette->text, 32, 28);
     lv_obj_t *body = lw_text(s_snake.panel, "", &lw_font_22, palette->dim, 32, 78);
-    lv_label_set_text_fmt(body, "本局得分 %u\n最高分 %u", (unsigned)s_snake.model.score,
+    lv_label_set_text_fmt(body, "本局得分 %u\n本场最高 %u\n最高分 %u", (unsigned)s_snake.model.score,
+                          (unsigned)s_snake.session_best,
                           (unsigned)state->arcade_best[ARCADE_GAME_SNAKE]);
 
     lv_obj_t *again = lw_button(s_snake.panel, "再来一局", 150, 48, palette->accent, 0xFFFFFF, &lw_font_18);
@@ -523,14 +550,20 @@ static void open_game_snake(lv_event_t *event)
     lv_obj_set_pos(back, 20, 12);
     lv_obj_add_event_cb(back, close_clicked, LV_EVENT_CLICKED, NULL);
 
+    /* A fresh overlay is a fresh session: the in-RAM session best starts
+     * over, while the saved arcade_best[] is not touched here. */
+    s_snake.session_best = 0;
+    s_snake.last_session_best = 0;
     s_snake.score = lw_pill(overlay, "得分 0", palette->card_soft, palette->accent_deep);
-    lv_obj_set_pos(s_snake.score, 700, 20);
+    lv_obj_set_pos(s_snake.score, 540, 20);
+    s_snake.best = lw_pill(overlay, "最高 0", palette->card_soft, palette->accent_deep);
+    lv_obj_set_pos(s_snake.best, 680, 20);
     s_snake.extra = lw_pill(overlay, "长度 3", palette->card_soft, palette->lav_deep);
     /* The pills above already show the initial values, so the first
      * snake_refresh() must not rewrite them. */
     s_snake.last_score = s_snake.model.score;
     s_snake.last_length = s_snake.model.length;
-    lv_obj_set_pos(s_snake.extra, 850, 20);
+    lv_obj_set_pos(s_snake.extra, 830, 20);
 
     lv_obj_t *field = lv_obj_create(overlay);
     lv_obj_remove_style_all(field);
@@ -562,6 +595,13 @@ static void open_game_snake(lv_event_t *event)
 
 /* ---- breakout ---------------------------------------------------------- */
 
+/* Level progression lives entirely in this UI layer: the arcade_core
+ * model, its algorithm and the save format are untouched. Level 1 starts
+ * with 4 brick rows, each next level adds one row (6 rows = the full
+ * core board at level 3); clearing a level carries score and lives into
+ * the next one. See breakout_setup_level(). */
+#define BREAKOUT_MAX_LEVEL 3
+
 typedef struct {
     arcade_breakout_t model;
     lv_obj_t *playfield;
@@ -570,11 +610,14 @@ typedef struct {
     lv_obj_t *ball;
     lv_obj_t *score;
     lv_obj_t *extra;
+    lv_obj_t *level_label;
     lv_obj_t *panel;
     lv_timer_t *timer;
     uint32_t last_tick;
     uint8_t last_lives;
     uint32_t last_score;
+    int level;
+    int last_level;
     int over;
 } breakout_ui_t;
 
@@ -588,6 +631,39 @@ static void breakout_teardown(void)
     }
     s_breakout.panel = NULL;
     s_breakout.playfield = NULL;
+    s_breakout.level_label = NULL;
+}
+
+/* Set the model up for one level. Rows beyond this level's count start
+ * already cleared, with bricks_left adjusted to match, so the core's own
+ * win check (bricks_left == 0) still fires exactly when the visible
+ * bricks are gone. With keep_progress the score and remaining lives of
+ * the level just cleared carry over; without it a fresh game starts.
+ * Only model fields and the last-value guards are touched here - the
+ * pills themselves are rewritten by breakout_refresh(), whose guards are
+ * invalidated below (last_* set one past the real value, a value the
+ * model can never still hold when refresh() runs). */
+static void breakout_setup_level(int level, bool keep_progress)
+{
+    uint32_t score = keep_progress ? s_breakout.model.score : 0;
+    uint8_t lives = keep_progress ? s_breakout.model.lives : (uint8_t)ARCADE_BREAKOUT_LIVES;
+    s_breakout.level = level;
+    arcade_breakout_init(&s_breakout.model);
+    s_breakout.model.score = score;
+    s_breakout.model.lives = lives;
+    int rows = 3 + level; /* level 1: 4 rows ... level 3: all 6 rows */
+    for (int row = rows; row < ARCADE_BREAKOUT_ROWS; row++) {
+        for (int col = 0; col < ARCADE_BREAKOUT_COLS; col++) {
+            if (s_breakout.model.brick[row][col]) {
+                s_breakout.model.brick[row][col] = 0;
+                s_breakout.model.bricks_left--;
+            }
+        }
+    }
+    s_breakout.last_lives = (uint8_t)(lives + 1);
+    s_breakout.last_score = score + 1;
+    s_breakout.last_level = 0;
+    s_breakout.last_tick = lv_tick_get();
 }
 
 static uint32_t breakout_row_color(int row)
@@ -622,6 +698,10 @@ static void breakout_refresh(void)
         s_breakout.last_score = s_breakout.model.score;
         lv_label_set_text_fmt(s_breakout.score, "得分 %u", (unsigned)s_breakout.model.score);
     }
+    if (s_breakout.level_label != NULL && s_breakout.level != s_breakout.last_level) {
+        s_breakout.last_level = s_breakout.level;
+        lv_label_set_text_fmt(s_breakout.level_label, "关卡 %d/%d", s_breakout.level, BREAKOUT_MAX_LEVEL);
+    }
 }
 
 static void breakout_restart(void)
@@ -631,14 +711,45 @@ static void breakout_restart(void)
         s_breakout.panel = NULL;
     }
     s_breakout.over = 0;
-    arcade_breakout_init(&s_breakout.model);
-    s_breakout.last_lives = s_breakout.model.lives;
-    s_breakout.last_score = 0;
-    s_breakout.last_tick = lv_tick_get();
+    breakout_setup_level(1, false);
     breakout_refresh();
     if (s_breakout.timer != NULL) {
         lv_timer_resume(s_breakout.timer);
     }
+}
+
+static void breakout_next_level(void)
+{
+    if (s_breakout.panel != NULL) {
+        lv_obj_delete(s_breakout.panel);
+        s_breakout.panel = NULL;
+    }
+    s_breakout.over = 0;
+    breakout_setup_level(s_breakout.level + 1, true);
+    breakout_refresh();
+    if (s_breakout.timer != NULL) {
+        lv_timer_resume(s_breakout.timer);
+    }
+}
+
+/* Shown when a level is cleared but the game is not finished yet: the
+ * timer is already paused by breakout_tick_cb(), and play resumes (ball
+ * parked, tap to launch) only when the player taps into the next level. */
+static void breakout_level_panel(void)
+{
+    const lw_palette_t *palette = lw_palette();
+    s_breakout.panel = lw_card(s_overlay, 0, 0, 420, 260);
+    lv_obj_center(s_breakout.panel);
+    lw_text(s_breakout.panel, "过关啦", &lw_font_28, palette->text, 32, 28);
+    lv_obj_t *body = lw_text(s_breakout.panel, "", &lw_font_22, palette->dim, 32, 78);
+    lv_label_set_text_fmt(body, "第 %d 关完成\n得分 %u · 剩余生命 %u\n下一关砖块会多一排", s_breakout.level,
+                          (unsigned)s_breakout.model.score, (unsigned)s_breakout.model.lives);
+    lv_obj_t *again = lw_button(s_breakout.panel, "进入下一关", 150, 48, palette->accent, 0xFFFFFF, &lw_font_18);
+    lv_obj_set_pos(again, 32, 190);
+    lv_obj_add_event_cb(again, (lv_event_cb_t)breakout_next_level, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *back = lw_button(s_breakout.panel, "返回游戏中心", 170, 48, palette->card_soft, palette->text, &lw_font_18);
+    lv_obj_set_pos(back, 210, 190);
+    lv_obj_add_event_cb(back, close_clicked, LV_EVENT_CLICKED, NULL);
 }
 
 static void breakout_result_panel(int won)
@@ -653,7 +764,8 @@ static void breakout_result_panel(int won)
     lv_obj_center(s_breakout.panel);
     lw_text(s_breakout.panel, won ? "通关啦" : "游戏结束", &lw_font_28, palette->text, 32, 28);
     lv_obj_t *body = lw_text(s_breakout.panel, "", &lw_font_22, palette->dim, 32, 78);
-    lv_label_set_text_fmt(body, "本局得分 %u\n最高分 %u", (unsigned)s_breakout.model.score,
+    lv_label_set_text_fmt(body, "本局得分 %u\n到达关卡 %d/%d\n最高分 %u", (unsigned)s_breakout.model.score,
+                          s_breakout.level, BREAKOUT_MAX_LEVEL,
                           (unsigned)state->arcade_best[ARCADE_GAME_BREAKOUT]);
     lv_obj_t *again = lw_button(s_breakout.panel, "再来一局", 150, 48, palette->accent, 0xFFFFFF, &lw_font_18);
     lv_obj_set_pos(again, 32, 190);
@@ -690,7 +802,11 @@ static void breakout_tick_cb(lv_timer_t *timer)
         if (s_breakout.timer != NULL) {
             lv_timer_pause(s_breakout.timer);
         }
-        breakout_result_panel(s_breakout.model.state == ARCADE_STATE_WON);
+        if (s_breakout.model.state == ARCADE_STATE_WON && s_breakout.level < BREAKOUT_MAX_LEVEL) {
+            breakout_level_panel();
+        } else {
+            breakout_result_panel(s_breakout.model.state == ARCADE_STATE_WON);
+        }
     }
 }
 
@@ -726,12 +842,9 @@ static void open_game_breakout(lv_event_t *event)
 {
     (void)event;
     const lw_palette_t *palette = lw_palette();
-    arcade_breakout_init(&s_breakout.model);
     s_breakout.over = 0;
     s_breakout.panel = NULL;
-    s_breakout.last_lives = s_breakout.model.lives;
-    s_breakout.last_score = 0;
-    s_breakout.last_tick = lv_tick_get();
+    breakout_setup_level(1, false);
 
     lv_obj_t *overlay = lv_obj_create(lv_screen_active());
     lv_obj_remove_style_all(overlay);
@@ -748,9 +861,11 @@ static void open_game_breakout(lv_event_t *event)
     lv_obj_add_event_cb(back, close_clicked, LV_EVENT_CLICKED, NULL);
 
     s_breakout.score = lw_pill(overlay, "得分 0", palette->card_soft, palette->accent_deep);
-    lv_obj_set_pos(s_breakout.score, 700, 20);
+    lv_obj_set_pos(s_breakout.score, 630, 20);
+    s_breakout.level_label = lw_pill(overlay, "关卡 1/3", palette->card_soft, palette->accent_deep);
+    lv_obj_set_pos(s_breakout.level_label, 760, 20);
     s_breakout.extra = lw_pill(overlay, "生命 3", palette->card_soft, palette->lav_deep);
-    lv_obj_set_pos(s_breakout.extra, 850, 20);
+    lv_obj_set_pos(s_breakout.extra, 885, 20);
 
     lv_obj_t *field = lv_obj_create(overlay);
     lv_obj_remove_style_all(field);

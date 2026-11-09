@@ -75,8 +75,21 @@ void lw_os_motion(lv_obj_t *o,lw_motion_kind_t kind)
     case LW_MOVE_RETURN:animate(o,move_x,-36,0,240,false);break;
     case LW_MOVE_BOOT:lw_os_motion_slide(o,32,0,680,160,false);animate(o,appear,0,255,560,false);break;
     case LW_MOVE_ACTOR:lw_os_motion_slide(o,16,0,460,220,false);animate(o,appear,0,255,540,false);break;
-    case LW_MOVE_PAPER:lw_os_motion_slide(o,82,0,480,120,true);animate(o,appear,140,255,340,false);break;
-    case LW_MOVE_PHOTO:lv_obj_update_layout(o);lv_obj_set_style_transform_pivot_x(o,lv_obj_get_width(o)/2,0);lv_obj_set_style_transform_pivot_y(o,lv_obj_get_height(o)/2,0);animate(o,scale,104,256,300,false);animate(o,move,24,0,300,false);animate(o,appear,140,255,200,false);break;
+    /* Only the slide, for the same reason as LW_MOVE_PAGE/LW_MOVE_DIALOG
+     * above (CLOUD_AUDIT A3): PAPER runs on containers with children (the
+     * letter paper, the memory-detail card, the RPG dialog panel), so the
+     * appear fade forced the whole subtree through a layer on every frame.
+     * The 480 ms slide with its 120 ms delay is unchanged. Changed in the
+     * 2026-11-09 night round; revert this case to restore the fade-in. */
+    case LW_MOVE_PAPER:lw_os_motion_slide(o,82,0,480,120,true);break;
+    /* Only the slide, for the same reason as LW_MOVE_PAGE/LW_MOVE_DIALOG
+     * above: this runs on the album's stage container (944x400, holding the
+     * photo and its labels) on every page flip, and the scale + opacity it
+     * used to add forced the whole subtree through a layer on every frame
+     * of the flip. The 300 ms slide is unchanged. Changed in the
+     * 2026-11-09 night round at the user's request; revert this case to
+     * restore the zoom-fade flip. */
+    case LW_MOVE_PHOTO:animate(o,move,24,0,300,false);break;
     case LW_MOVE_CARD:animate(o,move,28,0,320,false);animate(o,scale,236,256,320,false);break;
     case LW_MOVE_LOCK:animate(o,move,14,0,360,false);animate(o,appear,150,255,320,false);break;
     case LW_MOVE_FLAP:animate(o,flap_height,80,0,280,false);break;

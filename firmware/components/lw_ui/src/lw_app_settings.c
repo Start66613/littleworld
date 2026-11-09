@@ -78,10 +78,18 @@ static void reset_clicked(lv_event_t *event)
  * truthful, but in a steady state none of its four fields change, while
  * lv_label_set_text_fmt() re-formats, re-allocates and re-lays out the label
  * on every call. Format into a buffer and only touch the label when the text
- * actually differs; the object count is still recomputed every tick, so a
- * page build or an overlay opening is picked up on the next tick as before.
+ * actually differs.
  * Reset in destroy(), because create() builds a fresh label. */
 static char s_diag_shown[128];
+
+/* Object count of the active screen, counted once in create() instead of
+ * by a full recursive walk on every 2 s tick. While this page is resident
+ * its tree is static: pages are rebuilt through destroy()/create() (which
+ * recounts), and an overlay opening over this page only ever hides the
+ * label behind the overlay and removes its own objects again on close,
+ * returning the count to the same value. The interactions/clock/version
+ * fields still refresh every tick as before. */
+static int s_object_count;
 
 static void timer_cb(lv_timer_t *timer)
 {
@@ -93,7 +101,7 @@ static void timer_cb(lv_timer_t *timer)
     char text[sizeof(s_diag_shown)];
     snprintf(text, sizeof(text),
              "活动对象：%d\n宠物互动：%u 次\n时钟：%s\n版本：%s",
-             count_objects(lv_screen_active()), (unsigned)state->pet.interactions,
+             s_object_count, (unsigned)state->pet.interactions,
              lw_time_is_demo() ? "DEMO（未接实时时钟）" : "系统时间", LW_VERSION);
     if (strcmp(text, s_diag_shown) != 0) {
         snprintf(s_diag_shown, sizeof(s_diag_shown), "%s", text);
@@ -169,6 +177,9 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_pos(reset_target, 28, 330);
     lv_obj_add_event_cb(reset_target, reset_clicked, LV_EVENT_CLICKED, NULL);
 
+    /* Count after the whole page is built (this create() is the recount
+     * point the cached count in timer_cb relies on). */
+    s_object_count = count_objects(lv_screen_active());
     timer_cb(NULL);
     s_timer = lv_timer_create(timer_cb, 2000, NULL);
 }
@@ -183,6 +194,7 @@ static void destroy(void)
     s_anim_toggle = NULL;
     s_diag_label = NULL;
     s_diag_shown[0] = '\0';
+    s_object_count = 0;
 }
 
 const lw_app_t lw_app_settings_def = {

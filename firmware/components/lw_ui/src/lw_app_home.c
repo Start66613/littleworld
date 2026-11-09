@@ -20,6 +20,21 @@ static lv_obj_t *s_mood_label;
 static lv_obj_t *s_days_label;
 static lv_obj_t *s_days_unit;
 static lv_obj_t *s_next_label;
+static lv_obj_t *s_tip_label;
+
+/* One short tip per day, rotated by calendar date in refresh() below.
+ * Kept short on purpose: the label sits in the pet card's right column
+ * (200 px wide) under the existing hint and above the button. */
+static const char *const s_daily_tips[] = {
+    "先伸个懒腰再开始",
+    "好好吃饭，慢慢走路",
+    "晒会儿太阳补补钙",
+    "抬头看看窗外吧",
+    "陪小家伙玩一会儿",
+    "晚饭后一起散散步",
+    "早点休息，做个好梦",
+    "普通日子也值得收好",
+};
 
 /* Implemented by the memories page so the home buttons can land on a tab. */
 void lw_memories_open_tab(int tab);
@@ -69,6 +84,7 @@ static const char *greeting_for_hour(int hour)
 static int s_mood_shown = -1;
 static int s_days_shown = -1;
 static int s_next_shown = -1;
+static int s_tip_shown = -1;
 
 static void refresh(void)
 {
@@ -112,6 +128,21 @@ static void refresh(void)
             }
         }
     }
+    if (s_tip_label != NULL) {
+        /* Date modulo picks the day's tip; no new timer - this rides the
+         * existing 1 s refresh, and the guard means the label is rewritten
+         * only when the date (and therefore the tip) actually rolls over. */
+        lw_date_t today = lw_today();
+        int count = (int)(sizeof(s_daily_tips) / sizeof(s_daily_tips[0]));
+        int index = lw_days_from_civil(today.year, today.month, today.day) % count;
+        if (index < 0) {
+            index += count;
+        }
+        if (index != s_tip_shown) {
+            s_tip_shown = index;
+            lv_label_set_text_fmt(s_tip_label, "今日小提示：%s", s_daily_tips[index]);
+        }
+    }
 }
 
 static void timer_cb(lv_timer_t *timer)
@@ -146,6 +177,9 @@ static void create(lv_obj_t *content, const struct lw_app *self)
     lv_obj_set_style_pad_ver(s_mood_label, 7, 0);
 
     lv_obj_t *tip = lw_text_wrap(pet_card, "点一点它，它会回应你。", &lw_font_18, palette->dim, 288, 210, 200);
+    (void)tip;
+
+    s_tip_label = lw_text_wrap(pet_card, "", &lw_font_18, palette->dim, 288, 244, 200);
 
     lv_obj_t *pet_btn = lw_button(pet_card, "去陪陪它", 190, 54, palette->accent, 0xFFFFFF, &lw_font_22);
     lv_obj_set_pos(pet_btn, 288, 300);
@@ -208,9 +242,11 @@ static void destroy(void)
     s_mood_label = NULL;
     s_days_label = NULL;
     s_next_label = NULL;
+    s_tip_label = NULL;
     s_mood_shown = -1;
     s_days_shown = -1;
     s_next_shown = -1;
+    s_tip_shown = -1;
 }
 
 const lw_app_t lw_app_home_def = {
