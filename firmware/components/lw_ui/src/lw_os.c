@@ -40,6 +40,7 @@ typedef struct {
     lw_sprite_t *lock_sprites[2];
     lw_sprite_t *lock_couple;
     lv_obj_t *lock_photo_area,*lock_photo_caption,*lock_hint;
+    lv_obj_t *lock_photo_img;
     unsigned lock_photo_idx; uint32_t lock_photo_ms,ambient_idle;
     lw_sprite_t *boot_sprites[2];
     int pull_last_y,pull_velocity; uint32_t pull_last_tick;
@@ -191,7 +192,7 @@ static void clear_overlay(void)
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
     lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
@@ -210,7 +211,7 @@ static void dismiss_overlay(void)
     if (s->overlay==OS_OVER_LOCK) lw_os_motion_slide(s->over,lv_obj_get_style_translate_y(s->over,0),-600,240,0,false);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
     lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
@@ -525,7 +526,7 @@ static void render(void)
     freeze_begin();
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
     /* s->boot and its sprites are children of the top layer, not of s->root:
      * lv_obj_clean(s->root) cannot touch them, and on the first build the
      * splash is already on the panel while this runs. Clearing the pointers
@@ -673,7 +674,22 @@ static void build_password(void)
 static const char *const lock_photo_titles[]={"海边","生日","散步","旅行","厨房","夜晚"};
 static const uint32_t lock_photo_colors[]={0xf2d9d9,0xe9d9bc,0xd5e2d7,0xdad4e8,0xf0e4c9,0xd7deeb};
 #define LOCK_PHOTO_COUNT 6u
-#define LOCK_PHOTO_MS 8000u
+#define LOCK_PHOTO_MS 10000u
+/* The card is the only bright thing on a dark screen, so swapping the picture
+ * in one frame reads as a flash. The new picture fades in on top of the old one
+ * and this callback drops the old one once it is fully covered; nothing is
+ * deleted before the fade ends, so there is never a hole. */
+static lv_obj_t *s_photo_keep;
+static void photo_faded(lv_anim_t *anim)
+{
+    (void)anim;
+    if (!s || !s->lock_photo_area) return;
+    for (int i=(int)lv_obj_get_child_count(s->lock_photo_area)-1; i>=0; i--) {
+        lv_obj_t *child=lv_obj_get_child(s->lock_photo_area,i);
+        if (child && child!=s_photo_keep) lv_obj_delete(child);
+    }
+    s_photo_keep=NULL;
+}
 static void lock_photo_paint(void)
 {
     if (!s->lock_photo_area) return;
@@ -693,7 +709,7 @@ static void lock_photo_paint(void)
     bool reuse = (painted_scene == scene) && lv_obj_get_child_count(s->lock_photo_area) > 0u;
     if (!reuse) {
         painted_scene = scene;
-        lv_obj_clean(s->lock_photo_area);
+        const unsigned before=lv_obj_get_child_count(s->lock_photo_area);
         bool painted=false;
         if (lw_visual_scene_image(s->lock_photo_area,scene,248,150,true)) painted=true;
         if (!painted) {
@@ -702,9 +718,32 @@ static void lock_photo_paint(void)
             lw_os_box(graphic,0,96,248,54,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
             lw_os_icon(graphic,OS_I_HEART,108,50,34,0xffffff);
         }
+        lv_obj_t *fresh=(lv_obj_get_child_count(s->lock_photo_area)>before) ? lv_obj_get_child(s->lock_photo_area,-1) : NULL;
+        s->lock_photo_img=fresh;
+        s_photo_keep=fresh;
+        if (lw_os_motion_get()==LW_MOTION_OFF) {
+            photo_faded(NULL);
+        } else {
+            /* Fading the picture itself is the expensive way to do this: an image
+             * under an opacity animation either re-runs the 1024x600 -> 248x150
+             * transform every frame or gets composited through a layer, and the
+             * board answers with 50-107 ms frames - worse than the hard cut it is
+             * meant to hide. A flat cover the colour of the card is a leaf, blends
+             * in 248x150, and reads as the picture sinking into the paper and
+             * coming back: one dip instead of a flash. */
+            lv_obj_t *cover=lw_os_box(s->lock_photo_area,0,0,248,150,0xfffaf2,6,255);
+            if (!cover) { photo_faded(NULL); }
+            else {
+                lv_anim_t anim;
+                lv_anim_init(&anim); lv_anim_set_var(&anim,cover); lv_anim_set_exec_cb(&anim,fade);
+                lv_anim_set_values(&anim,255,0); lv_anim_set_duration(&anim,460);
+                lv_anim_set_path_cb(&anim,lv_anim_path_ease_in_out);
+                lv_anim_set_completed_cb(&anim,photo_faded);
+                lv_anim_start(&anim);
+            }
+        }
     }
     if (s->lock_photo_caption) lv_label_set_text_fmt(s->lock_photo_caption,"%s  %u/%u",lock_photo_titles[i],i+1,LOCK_PHOTO_COUNT);
-    lw_os_motion(s->lock_photo_area,LW_MOVE_PHOTO);
 }
 static void lock_photo_build(void)
 {
