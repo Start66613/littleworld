@@ -39,7 +39,7 @@ typedef struct {
     lv_obj_t *boot_logo;
     lw_sprite_t *lock_sprites[2];
     lw_sprite_t *lock_couple;
-    lv_obj_t *lock_photo_area,*lock_photo_caption;
+    lv_obj_t *lock_photo_area,*lock_photo_caption,*lock_hint;
     unsigned lock_photo_idx; uint32_t lock_photo_ms,ambient_idle;
     lw_sprite_t *boot_sprites[2];
     int pull_last_y,pull_velocity; uint32_t pull_last_tick;
@@ -191,7 +191,7 @@ static void clear_overlay(void)
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
     lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
@@ -210,7 +210,7 @@ static void dismiss_overlay(void)
     if (s->overlay==OS_OVER_LOCK) lw_os_motion_slide(s->over,lv_obj_get_style_translate_y(s->over,0),-600,240,0,false);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
     lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
@@ -525,7 +525,7 @@ static void render(void)
     freeze_begin();
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=NULL;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=NULL;
     /* s->boot and its sprites are children of the top layer, not of s->root:
      * lv_obj_clean(s->root) cannot touch them, and on the first build the
      * splash is already on the panel while this runs. Clearing the pointers
@@ -695,47 +695,73 @@ static void lock_photo_paint(void)
         painted_scene = scene;
         lv_obj_clean(s->lock_photo_area);
         bool painted=false;
-        if (lw_visual_scene_image(s->lock_photo_area,scene,248,196,true)) painted=true;
+        if (lw_visual_scene_image(s->lock_photo_area,scene,248,150,true)) painted=true;
         if (!painted) {
-            lv_obj_t *graphic=lw_os_box(s->lock_photo_area,0,0,248,196,lock_photo_colors[i],8,255);
-            lw_os_box(graphic,186,20,34,34,0xffefcb,LV_RADIUS_CIRCLE,255);
-            lw_os_box(graphic,0,130,248,66,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
-            lw_os_icon(graphic,OS_I_HEART,106,74,36,0xffffff);
+            lv_obj_t *graphic=lw_os_box(s->lock_photo_area,0,0,248,150,lock_photo_colors[i],8,255);
+            lw_os_box(graphic,190,14,30,30,0xffefcb,LV_RADIUS_CIRCLE,255);
+            lw_os_box(graphic,0,96,248,54,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
+            lw_os_icon(graphic,OS_I_HEART,108,50,34,0xffffff);
         }
     }
-    if (s->lock_photo_caption) lv_label_set_text_fmt(s->lock_photo_caption,"%s · 示例照片 %u/%u",lock_photo_titles[i],i+1,LOCK_PHOTO_COUNT);
+    if (s->lock_photo_caption) lv_label_set_text_fmt(s->lock_photo_caption,"%s  %u/%u",lock_photo_titles[i],i+1,LOCK_PHOTO_COUNT);
     lw_os_motion(s->lock_photo_area,LW_MOVE_PHOTO);
 }
 static void lock_photo_build(void)
 {
     const lw_os_palette_t *c=palette();
-    lv_obj_t *frame=lw_os_box(s->over,716,72,272,308,0xfffaf2,14,255);
-    lw_os_box(frame,105,0,62,10,0xe3b7c8,2,130);
-    s->lock_photo_area=lw_os_box(frame,12,18,248,196,0,8,255);
-    s->lock_photo_caption=lw_os_label(frame,"",&lw_font_18,16,228,240,c->text);
-    lw_os_label(frame,"我们的照片 · 慢慢轮播",&lw_font_18,16,262,240,c->muted);
+    /* One card in the lower right corner, sized to the picture instead of the
+     * other way round: 248x150 is 1.65 against the scene's 1.71, so the matte
+     * shows a few pixels rather than the 25 px bars the first cut had. The
+     * caption lives inside the card; the old frame stacked two lines of text
+     * under the picture and read as a settings row, not as a photo. */
+    lv_obj_t *frame=lw_os_box(s->over,700,296,272,252,0xfffaf2,16,255);
+    /* A hairline in the paper palette, because a pure white rectangle on a dark
+     * room reads as a UI dialog rather than as a photo someone left out. */
+    lv_obj_set_style_border_width(frame,2,0);
+    lv_obj_set_style_border_color(frame,lv_color_hex(0xe6d7c3),0);
+    lv_obj_set_style_border_opa(frame,LV_OPA_COVER,0);
+    s->lock_photo_area=lw_os_box(frame,12,12,248,150,0,8,255);
+    s->lock_photo_caption=lw_os_label(frame,"",&lw_font_22,16,172,200,c->text);
+    lw_os_label(frame,"我们的照片",&lw_font_18,16,208,200,c->muted);
     s->lock_photo_idx=0; s->lock_photo_ms=0;
     lock_photo_paint();
 }
 static void build_lock(void)
 {
     const lw_os_palette_t *c=palette();
+    const bool night=lw_ambience_phase()>=LW_NIGHT;
     if (!lw_visual_daily_image(s->over)) lw_os_wallpaper(s->over,s->painted_wallpaper,0,0,1024,600);
-    lw_os_box(s->over,0,0,1024,600,s->system->screen_off ? 0x151822 : c->bg,0,s->system->screen_off ? 255 : 145);
-    if (s->system->screen_off) { lw_os_icon(s->over,OS_I_MOON,482,198,60,0xd5c6dc); lw_os_label(s->over,"屏幕已熄灭 · Windows 模拟",&lw_font_22,310,292,600,0xe9dfea); button(s->over,"轻触唤醒",360,418,304,60,OC_UNLOCK,true); return; }
+    if (s->system->screen_off) {
+        lw_os_box(s->over,0,0,1024,600,0x0e0b16,0,255);
+        lw_os_icon(s->over,OS_I_MOON,482,198,60,0xd5c6dc);
+        lw_os_label(s->over,"屏幕已熄灭 · Windows 模拟",&lw_font_22,310,292,600,0xe9dfea);
+        button(s->over,"轻触唤醒",360,418,304,60,OC_UNLOCK,true);
+        return;
+    }
+    /* Night glass. The room stays as the backdrop but sits back under a cool
+     * scrim, and two soft bands darken the top and bottom edges: one flat
+     * translucent rectangle over a bright room reads as a grey wash, while the
+     * bands give the clock something to sit against. */
+    lw_os_box(s->over,0,0,1024,600,night ? 0x1b1630 : 0x2a2438,0,night ? 150 : 110);
+    lw_os_box(s->over,0,0,1024,132,0x120e22,0,90);
+    lw_os_box(s->over,0,468,1024,132,0x120e22,0,110);
+    const uint32_t ink=night ? 0xfff4e6u : 0xfffaf2u;
+    const uint32_t soft=night ? 0xc9bcd8u : 0xe0d4e6u;
     unsigned hour=0, minute=0; char qualifier[24]; bool demo=false;
     clock_fields(&hour,&minute,qualifier,sizeof(qualifier),&demo);
     char clock[16]; snprintf(clock,sizeof(clock),"%02u:%02u",hour,minute);
-    /* Reserve the left column for text; the room remains a quiet right vignette. */
-    lw_os_box(s->over,24,96,424,340,c->bg,28,245);
-    lv_obj_t *t=lw_os_label(s->over,clock,&lw_font_88,48,146,376,c->text); register_control(t,OC_LOCK_CLOCK);
-    lw_date_t d=lw_today(); char date[80]; snprintf(date,sizeof(date),"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,demo ? " · 演示日期" : "");
-    t=lw_os_label(s->over,date,&lw_font_18,50,260,374,c->muted); register_control(t,OC_LOCK_DATE);
-    int days=lw_days_between(lw_app_state()->anniversary,d)+1; char love[96]; snprintf(love,sizeof(love),"在一起的第 %d 天，晚安也想对你说。",days<1 ? 1 : days);
-    t=lw_os_label(s->over,love,&lw_font_18,50,330,364,c->text); register_control(t,OC_LOCK_LOVE);
-    lw_os_icon(s->over,OS_I_LOCK,54,103,28,c->muted);
-    lw_os_label(s->over,"向上轻扫，或点下方回家",&lw_font_18,50,401,374,c->muted);
-    button(s->over,"轻触，回到小世界",48,472,376,60,OC_UNLOCK,true);
+    /* Left column: the clock is the one thing that has to read from across the
+     * room, so it gets the type size and everything else is support. */
+    lw_os_icon(s->over,OS_I_LOCK,64,84,26,soft);
+    lw_os_label(s->over,"待机中",&lw_font_18,102,87,200,soft);
+    lv_obj_t *t=lw_os_label(s->over,clock,&lw_font_88,62,122,392,ink); register_control(t,OC_LOCK_CLOCK);
+    lw_date_t d=lw_today(); char date[80];
+    snprintf(date,sizeof(date),"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,"");
+    t=lw_os_label(s->over,date,&lw_font_18,66,238,392,soft); register_control(t,OC_LOCK_DATE);
+    lw_os_box(s->over,64,280,288,1,night ? 0x6b6080 : 0xb9a9c4,0,140);
+    int days=lw_days_between(lw_app_state()->anniversary,d)+1;
+    char love[112]; snprintf(love,sizeof(love),"在一起的第 %d 天\n晚安也想对你说。",days<1 ? 1 : days);
+    t=lw_os_label(s->over,love,&lw_font_22,66,304,320,ink); register_control(t,OC_LOCK_LOVE);
     /* The sofa scene is the heart of this screen: one baked clip of the
      * couple seated together - the same clip the pet room plays - at the
      * anchor the pet page's board calibration puts on the cushions
@@ -743,13 +769,18 @@ static void build_lock(void)
      * after dark when it exists. Builds without the polish art keep the
      * two standing sprites this screen used before. */
     const lw_clip_t *couple_clip=lw_polish_clip("v42.couple.seated");
-    if (couple_clip && lw_ambience_phase()>=LW_NIGHT) { const lw_clip_t *night=lw_polish_clip("v42.couple.seated.night"); if (night) couple_clip=night; }
+    if (couple_clip && lw_ambience_phase()>=LW_NIGHT) { const lw_clip_t *night_clip=lw_polish_clip("v42.couple.seated.night"); if (night_clip) couple_clip=night_clip; }
     if (couple_clip) {
         s->lock_couple=lw_sprite_create(s->over,516,368,282);
         if (s->lock_couple) { lw_sprite_set_external_clock(s->lock_couple,true); lw_sprite_set_pixel_mode(s->lock_couple); lw_sprite_play(s->lock_couple,couple_clip); lw_os_motion(lw_sprite_object(s->lock_couple),LW_MOVE_LOCK); }
     }
     if (!s->lock_couple && s->art && lw_visual_assets_available()) for (unsigned i=0;i<2;i++) { s->lock_sprites[i]=lw_sprite_create(s->over,0,0,288); const lw_clip_t *clip=art_clip(i,"idle"); if (s->lock_sprites[i] && clip) { lw_sprite_set_external_clock(s->lock_sprites[i],true); lw_sprite_set_pixel_mode(s->lock_sprites[i]); lw_sprite_play(s->lock_sprites[i],clip); lw_sprite_set_anchor(s->lock_sprites[i],i ? 676 : 480,478); lw_os_motion(lw_sprite_object(s->lock_sprites[i]),LW_MOVE_LOCK); } }
     lock_photo_build();
+    /* The way back is a line of text, not a button: a full-width pill under a
+     * photo card was the loudest thing on a screen that is meant to be quiet.
+     * Tapping anywhere works (see lock_touch), the label is only the sign. */
+    s->lock_hint=lw_os_label(s->over,"轻触屏幕 · 回到小世界",&lw_font_18,404,556,240,soft);
+    register_control(s->lock_hint,OC_UNLOCK);
     lw_os_motion(t,LW_MOVE_LOCK);
     if (s->over_controls[OC_LOCK_DATE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_DATE],2);
     if (s->over_controls[OC_LOCK_LOVE]) lw_os_motion_stagger(s->over_controls[OC_LOCK_LOVE],3);
@@ -759,17 +790,21 @@ static void lock_touch(lv_event_t *e)
 {
     if (!s || s->overlay!=OS_OVER_LOCK) return;
     lv_indev_t *indev=lv_indev_active(); if (!indev) return; lv_point_t p; lv_indev_get_point(indev,&p);
-    lv_event_code_t code=lv_event_get_code(e); lv_obj_t *unlock=s->over_controls[OC_UNLOCK];
+    lv_event_code_t code=lv_event_get_code(e);
+    /* Any tap or swipe comes home. The line at the bottom promises exactly that,
+     * and a standby screen that ignores a tap because the gesture fell 20 px
+     * short of a threshold is the kind of thing that feels broken. */
     if (code==LV_EVENT_PRESSED) { s->lock_press_y=p.y; s->lock_dragging=true; }
     else if (code==LV_EVENT_PRESSING && s->lock_dragging) {
         int distance=s->lock_press_y-p.y; s->lock_ready=distance>=72;
-        if (unlock) {
-            lv_label_set_text(lv_obj_get_child(unlock,0),s->lock_ready ? "松开，回到小世界" : "轻触，回到小世界");
-            if (lw_os_motion_get()==LW_MOTION_FULL) lv_obj_set_style_translate_y(unlock,distance>0 ? -(distance>96 ? 96 : distance)/6 : 0,0);
-        }
+        if (s->lock_hint) lv_label_set_text(s->lock_hint,s->lock_ready ? "松开 · 回到小世界" : "轻触屏幕 · 回到小世界");
     } else if (code==LV_EVENT_RELEASED || code==LV_EVENT_PRESS_LOST) {
-        if (s->lock_ready && code==LV_EVENT_RELEASED) s->pending=OC_UNLOCK;
-        else if (unlock) { lv_label_set_text(lv_obj_get_child(unlock,0),"轻触，回到小世界"); lv_obj_set_style_translate_y(unlock,0,0); }
+        /* A tap comes home, and so does a real swipe. A short flick cancels on
+         * purpose: it is the gesture someone makes when they only meant to
+         * steady the screen, and unlocking there would feel jumpy. */
+        const int moved=s->lock_press_y-p.y;
+        if (code==LV_EVENT_RELEASED && (moved>=72 || (moved>-24 && moved<24))) s->pending=OC_UNLOCK;
+        if (s->lock_hint) lv_label_set_text(s->lock_hint,"轻触屏幕 · 回到小世界");
         s->lock_dragging=s->lock_ready=false;
     }
 }
@@ -911,11 +946,14 @@ static void refresh(void)
         snprintf(last_refresh_qualifier,sizeof(last_refresh_qualifier),"%s",qualifier);
         if (s->clock) lv_label_set_text_fmt(s->clock,"%02u:%02u   %d 月 %d 日%s",hour,minute,d.month,d.day,qualifier);
         if (s->over_controls[OC_LOCK_CLOCK]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_CLOCK],"%02u:%02u",hour,minute);
-        if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日%s",d.year,d.month,d.day,(demo || !have_clock) ? " · 演示日期" : "");
+        /* The standby screen is a decoration, not a data readout: the demo
+         * marker stays on the desktop top bar instead of following the date
+         * onto a screen whose whole job is to look calm. */
+        if (s->over_controls[OC_LOCK_DATE]) lv_label_set_text_fmt(s->over_controls[OC_LOCK_DATE],"%d 年 %d 月 %d 日",d.year,d.month,d.day);
     }
     if (s->over_controls[OC_LOCK_LOVE]) {
         int days=lw_days_between(lw_app_state()->anniversary,d)+1; if (days<1) days=1;
-        if ((unsigned)days!=last_refresh_days) { last_refresh_days=(unsigned)days; lv_label_set_text_fmt(s->over_controls[OC_LOCK_LOVE],"在一起的第 %d 天，晚安也想对你说。",days); }
+        if ((unsigned)days!=last_refresh_days) { last_refresh_days=(unsigned)days; lv_label_set_text_fmt(s->over_controls[OC_LOCK_LOVE],"在一起的第 %d 天\n晚安也想对你说。",days); }
     }
 }
 void lw_os_open(lw_os_page_t page)
