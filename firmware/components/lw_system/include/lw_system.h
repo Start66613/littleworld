@@ -44,6 +44,20 @@ void lw_system_wifi_disconnect(lw_system_t *,bool);
 /* Real adapters deliver asynchronous results on the UI thread. Never send credentials to logs. */
 void lw_system_scan_result(lw_system_t *,const lw_network_t *,unsigned);
 void lw_system_connection_result(lw_system_t *,bool);
+/* Link changes the user did not initiate here: the radio dropped a link
+ * that was up (link_lost) or finished associating on its own - the C6
+ * kept a link across a P4 reboot, or an automatic reconnect succeeded
+ * (link_up). Without these, the facade could only ever reflect actions
+ * taken through its own scan/connect calls. */
+void lw_system_link_lost(lw_system_t *);
+void lw_system_link_up(lw_system_t *,const char *ssid);
+/* Whether a radio backend exists at all. The hardware layer never
+ * claims one (the P4 has no radio; Wi-Fi arrives via the C6), and the
+ * connectivity services only know after they have started - which is
+ * after this facade is created. Whoever owns both (the boot bridge)
+ * pushes the answer in when it changes; until then the facade stays
+ * honestly UNSUPPORTED and refuses scan/connect. */
+void lw_system_set_network_available(lw_system_t *,bool);
 void lw_system_encode(const lw_preferences_t *,uint8_t [LW_SYS_PREF_BYTES]);
 bool lw_system_decode(lw_preferences_t *,const uint8_t [LW_SYS_PREF_BYTES]);
 #ifdef ESP_PLATFORM

@@ -219,7 +219,11 @@ unsigned lw_services_drain(lw_services_t *services, uint32_t now_ms)
 typedef struct {
     lw_wifi_action_t action;
     char ssid[LW_WIFI_SSID_MAX];
-    char password[LW_WIFI_SSID_MAX];
+    /* Passwords run to LW_WIFI_PASS_MAX (64), not the SSID length: this
+     * buffer used to be LW_WIFI_SSID_MAX (33), which silently truncated
+     * every password longer than 32 characters on its way to the adapter
+     * and made those networks unjoinable. */
+    char password[LW_WIFI_PASS_MAX];
 } pending_action_t;
 
 /* Must be called with the service lock held. */

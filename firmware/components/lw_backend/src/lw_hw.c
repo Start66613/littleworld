@@ -2,6 +2,7 @@
 #include "lw_hw.h"
 
 #ifdef ESP_PLATFORM
+#include "sdkconfig.h"
 #include "bsp/esp-bsp.h"
 #include "esp_codec_dev.h"
 #include "esp_log.h"
@@ -129,7 +130,11 @@ bool lw_hw_time_get(struct tm *out)
 
 const char *lw_hw_wifi_reason(void)
 {
+#if CONFIG_LW_NET_WIFI_ENABLE
+    return "ESP32-C6 hosted stack compiled in; radio state reported by the connectivity service";
+#else
     return "ESP32-C6 link is not integrated in this build; Wi-Fi reported Unsupported";
+#endif
 }
 
 const char *lw_hw_time_reason(void)

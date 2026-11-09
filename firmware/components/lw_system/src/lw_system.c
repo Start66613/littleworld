@@ -85,6 +85,34 @@ void lw_system_connection_result(lw_system_t *s,bool ok)
     if (s->wifi!=LW_WIFI_CONNECTING) return;
     s->wifi=ok ? LW_WIFI_CONNECTED : LW_WIFI_FAILED; if (!ok) s->ssid[0]=0; s->revision++;
 }
+void lw_system_set_network_available(lw_system_t *s,bool available)
+{
+    if (s->backend.network_available==available) return;
+    s->backend.network_available=available;
+    if (!available) {
+        s->ssid[0]=0;
+        s->wifi=s->wifi_enabled ? LW_WIFI_UNSUPPORTED : LW_WIFI_OFF;
+    } else if (s->wifi==LW_WIFI_UNSUPPORTED) {
+        s->wifi=s->wifi_enabled ? LW_WIFI_IDLE : LW_WIFI_OFF;
+    }
+    s->revision++;
+}
+void lw_system_link_lost(lw_system_t *s)
+{
+    if (s->wifi!=LW_WIFI_CONNECTED) return;
+    s->ssid[0]=0;
+    s->wifi=s->wifi_enabled ? LW_WIFI_IDLE : LW_WIFI_OFF;
+    s->revision++;
+}
+void lw_system_link_up(lw_system_t *s,const char *ssid)
+{
+    if (!s->wifi_enabled || !ssid || !ssid[0]) return;
+    if (s->wifi==LW_WIFI_CONNECTED && !strcmp(s->ssid,ssid)) return;
+    size_t len=strlen(ssid); if (len>=sizeof(s->ssid)) len=sizeof(s->ssid)-1;
+    memcpy(s->ssid,ssid,len); s->ssid[len]=0;
+    s->wifi=LW_WIFI_CONNECTED;
+    s->revision++;
+}
 void lw_system_wifi_disconnect(lw_system_t *s,bool forget)
 {
     if (!s->backend.simulated && s->backend.wifi_disconnect) (void)s->backend.wifi_disconnect(s->backend.context,forget);
