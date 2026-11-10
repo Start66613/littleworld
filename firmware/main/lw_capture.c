@@ -41,6 +41,7 @@
 #include "lw_content_boot.h"
 #include "lw_time_boot.h"
 #include "lw_os.h"
+#include "lw_bgm.h"
 #include "lw_os_design.h"
 #include "lw_visual_assets.h"
 #include "lw_skin.h"
@@ -395,6 +396,33 @@ static int cmd_clock(int argc, char **argv)
     (void)argc;
     (void)argv;
     printf("%s\n", lw_time_boot_report());
+    fflush(stdout);
+    return 0;
+}
+
+/* Speaker test: the board has shipped three audio chips' worth of silence. This
+ * command is the shortest path from "a BGM file landed in the repo" to "I can
+ * hear it", so it reports the codec state and the track geometry as well as
+ * starting and stopping the loop. */
+static int cmd_bgm(int argc, char **argv)
+{
+    const char *what = argc > 1 ? argv[1] : "status";
+    if (strcmp(what, "start") == 0) {
+        bool ok = lw_bgm_start();
+        printf("bgm: start %s\n", ok ? "requested" : "failed (no speaker path)");
+    } else if (strcmp(what, "stop") == 0) {
+        lw_bgm_stop();
+        printf("bgm: stop requested\n");
+    } else if (strcmp(what, "vol") == 0 && argc > 2) {
+        unsigned percent = (unsigned)atoi(argv[2]);
+        bool ok = lw_bgm_volume(percent);
+        printf("bgm: volume %u%% %s\n", percent, ok ? "set" : "rejected");
+    } else if (strcmp(what, "status") == 0) {
+        printf("bgm: running=%d bytes=%u rate=%u\n", lw_bgm_running() ? 1 : 0, lw_bgm_bytes(),
+               lw_bgm_rate());
+    } else {
+        printf("usage: bgm start|stop|status|vol N\n");
+    }
     fflush(stdout);
     return 0;
 }
@@ -974,6 +1002,11 @@ bool lw_capture_console_start(void)
     };
     esp_console_cmd_register(&c_hideall);
     esp_console_cmd_register(&c_anim);
+
+    const esp_console_cmd_t c_bgm = { .command = "bgm",
+                                      .help = "bgm: start|stop|status|vol N - speaker test",
+                                      .func = &cmd_bgm };
+    esp_console_cmd_register(&c_bgm);
 #endif
     /* A real restart, so "how long since boot" can be reproduced without
      * reflashing. esptool's --after hard_reset does not take on this CH343 link
