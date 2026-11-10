@@ -42,6 +42,8 @@ typedef struct {
     lv_obj_t *lock_photo_area,*lock_photo_caption,*lock_hint;
     lv_obj_t *lock_photo_img;
     unsigned lock_photo_idx; uint32_t lock_photo_ms,ambient_idle;
+    unsigned story_step; bool story_offered,story_replay;
+    lw_sprite_t *story_couple;
     lw_sprite_t *boot_sprites[2];
     int pull_last_y,pull_velocity; uint32_t pull_last_tick;
     int pull_start,pull_distance; bool pull_active,pull_opening,pull_moved,reverse_page;
@@ -192,7 +194,7 @@ static void clear_overlay(void)
     if (s->over) lv_obj_delete(s->over);
     s->over=NULL; s->overlay=OS_OVER_NONE;
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL; s->story_couple=NULL;
     lw_rpg_view_suspend(s->rpg,false);
     memset(s->over_controls,0,sizeof(s->over_controls)); s->building_overlay=false;
 }
@@ -211,7 +213,7 @@ static void dismiss_overlay(void)
     if (s->overlay==OS_OVER_LOCK) lw_os_motion_slide(s->over,lv_obj_get_style_translate_y(s->over,0),-600,240,0,false);
     s->over=NULL; s->overlay=OS_OVER_NONE; memset(s->over_controls,0,sizeof(s->over_controls));
     s->control_panel=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL;
-    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
+    s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL; s->story_couple=NULL;
     lw_rpg_view_suspend(s->rpg,false);
 }
 static void slider_event(lv_event_t *event)
@@ -277,7 +279,7 @@ static void build_dock(void)
     const lw_os_palette_t *c=palette(); lv_obj_t *dock=surface(s->root,256,515,512,75,0);s->dock=dock;s->dock_expanded=true;s->dock_idle=0;
     if(lw_skin_place(dock,SK_DOCK,0,0)){lv_obj_set_style_bg_opa(dock,0,0);lv_obj_set_style_border_width(dock,0,0);lv_obj_set_style_shadow_width(dock,0,0);}
     static const lw_os_icon_t icons[]={OS_I_HOME,OS_I_ALBUM,OS_I_HEART,OS_I_MUSIC,OS_I_GAME,OS_I_SETTINGS};
-    static const char *const names[]={"小世界","相册","回忆","音乐","游戏","设置"};
+    static const char *const names[]={"小世界","相册","回忆","音乐","一起玩","设置"};
     static const lw_os_control_t ids[]={OC_WORLD,OC_ALBUM,OC_MEMORIES,OC_MUSIC,OC_GAMES,OC_SETTINGS};
     for (int i=0;i<6;i++) {
         lv_obj_t *item=button(dock,"",14+i*82,0,76,52,ids[i],false);lv_obj_set_style_bg_opa(item,0,0);lv_obj_set_style_border_width(item,0,0);
@@ -370,6 +372,19 @@ static void update_actors_paint(uint32_t dt, bool paint)
 #endif /* CONFIG_LW_DIAG_STATIC_UI */
 }
 static void update_actors(uint32_t dt) { update_actors_paint(dt, true); }
+/* Gift-edition launcher row on the desktop: the five front doors of
+ * the little world - 回忆 / 陪伴 / 音乐 / 一起玩 / 设置. Pure
+ * addition: it reuses the existing page controls, so the dock, the
+ * control centre and every existing route stay exactly as they were
+ * (the dock remains the full navigation, 相册 included). */
+static void desktop_entries(void)
+{
+    static const lw_os_control_t ids[]={OC_MEMORIES,OC_PET,OC_MUSIC,OC_GAMES,OC_SETTINGS};
+    static const char *const names[]={"回忆","陪伴","音乐","一起玩","设置"};
+    lv_obj_t *bar=surface(s->content,107,462,810,64,26);
+    lv_obj_set_style_bg_opa(bar,170,0);
+    for (unsigned i=0;i<5;i++) button(bar,names[i],10+(int)i*160,8,148,48,ids[i],false);
+}
 static void build_desktop(bool world)
 {
     const lw_os_palette_t *c=palette();
@@ -389,6 +404,7 @@ static void build_desktop(bool world)
         furniture=button(s->content,"",700,80,90,100,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
         actors();
         if (!s->art) { lv_obj_t *empty=surface(s->content,360,400,340,72,16); lw_os_label(empty,"角色资源未安装 · 场景与应用可用",&lw_font_18,16,12,308,c->text); }
+        if (!world) desktop_entries();
         lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL); return;
     }
     lw_os_label(s->content,world ? "两个人的日常。" : "我们的小世界",&lw_font_28,48,world ? 76 : 86,280,c->text);
@@ -406,13 +422,14 @@ static void build_desktop(bool world)
         button(s->content,"见面打招呼",48,200,232,50,OC_GREET,true); button(s->content,"一起读封信",48,266,232,50,OC_LETTER,false); button(s->content,"一起休息",48,332,232,50,OC_REST,false);
         button(s->content,"照顾宠物",48,398,110,50,OC_PET,false); button(s->content,"小冒险",172,398,108,50,OC_RPG,true);
     }
-    lw_os_label(s->content,s->art ? "场景资源未安装 · 应用可用" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,466,420,c->muted);
+    lw_os_label(s->content,s->art ? "场景资源未安装 · 应用可用" : "角色资源未安装 · 场景与应用可用",&lw_font_18,565,424,420,c->muted);
     /* Furniture targets are created first so character hit areas stay above them. */
     lv_obj_t *furniture=button(s->content,"",518,106,224,184,OC_WINDOW,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     furniture=button(s->content,"",378,276,174,96,OC_SOFA,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     furniture=button(s->content,"",824,112,76,76,OC_ROOM_PHOTO,false); lv_obj_set_style_bg_opa(furniture,0,0); lv_obj_set_style_bg_opa(furniture,25,LV_STATE_PRESSED);
     actors();
     s->foreground=lw_os_foreground(s->content,s->system->prefs.wallpaper);
+    if (!world) desktop_entries();
     lv_obj_add_flag(s->content,LV_OBJ_FLAG_CLICKABLE); lv_obj_add_event_cb(s->content,gesture,LV_EVENT_LONG_PRESSED,NULL);
 }
 static void build_settings(void)
@@ -526,7 +543,7 @@ static void render(void)
     freeze_begin();
     if (s->legacy && s->legacy->destroy) s->legacy->destroy();
     s->legacy=NULL; s->mount=NULL; s->rpg=NULL; s->foreground=NULL; s->closing=NULL; s->pull_active=s->pull_moved=false;
-    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL;
+    s->sprites[0]=s->sprites[1]=NULL; s->clips[0]=s->clips[1]=NULL; s->toast=NULL; s->front_actor=2; s->control_panel=NULL;s->dock=s->dock_handle=s->light=NULL; s->lock_sprites[0]=s->lock_sprites[1]=NULL; s->lock_couple=NULL; s->lock_photo_area=s->lock_photo_caption=s->lock_hint=s->lock_photo_img=NULL; s->story_couple=NULL;
     /* s->boot and its sprites are children of the top layer, not of s->root:
      * lv_obj_clean(s->root) cannot touch them, and on the first build the
      * splash is already on the panel while this runs. Clearing the pointers
@@ -776,6 +793,109 @@ static void lock_photo_build(void)
     lock_photo_paint();
     lv_obj_move_to_index(s->lock_photo_area,1);
 }
+/* ------------------------------------------------------------ story */
+/* 《拾取回忆》 - the first-boot story (gift edition). Script v1 was
+ * drafted with WQQ on 2026-11-09 for him to edit against the real
+ * photos; all texts live in this one table. The six scenes are the
+ * album demo's samples for now, labelled as examples - when her
+ * photos land they swap in here, and the standby carousel uses the
+ * same source. Progress persists via lw_story_progress() (its own
+ * storage key; the .lwr save is not involved), so a power cut
+ * mid-story resumes at the next fragment. */
+static const struct { const char *title; const char *line; } story_fragments[6]={
+    {"相遇","故事的第一页，是遇见你的那一天。\n那时候我还不知道，后来的每一页，都会有你。"},
+    {"留给你的位置","他先到了，在沙发上坐好。\n旁边的位置，从那天起就只留给你。"},
+    {"普通日子","后来才发现，最珍贵的不是哪个特别的日子，\n是每一个有你的普通日子。"},
+    {"一起去过的地方","我们一起去过的地方还不多，\n但每一个，我都悄悄收进了这间屋子。"},
+    {"还好有你","也有过不开心的日子。\n还好，每次回头，你都在。"},
+    {"坐过来吧","倩倩，坐过来吧。\n这个位置，空了整整一个故事，就等你。"},
+};
+static void story_photo_paint(lv_obj_t *area,unsigned i)
+{
+    bool painted=false;
+    { static const unsigned themes[]={0,2,1,0,2,1}; if (lw_visual_scene_image(area,themes[i%6],376,240,true)) painted=true; }
+    if (!painted) {
+        lv_obj_t *scene=lw_os_box(area,0,0,376,240,lock_photo_colors[i%6],8,255);
+        lw_os_box(scene,300,26,44,44,0xffefcb,LV_RADIUS_CIRCLE,255);
+        lw_os_box(scene,0,164,376,76,i==5 ? 0x8999b6 : 0x9db9b4,0,255);
+        lw_os_icon(scene,OS_I_HEART,164,92,48,0xffffff);
+    }
+}
+static void story_stars(int x,int y,unsigned filled)
+{
+    for (unsigned i=0;i<6;i++) lw_os_box(s->over,x+(int)i*30,y,18,18,i<filled ? palette()->accent : palette()->soft,LV_RADIUS_CIRCLE,255);
+}
+static void story_couple_show(void)
+{
+    const lw_clip_t *clip=lw_polish_clip("v42.couple.seated");
+    if (clip && lw_ambience_phase()>=LW_NIGHT) { const lw_clip_t *night=lw_polish_clip("v42.couple.seated.night"); if (night) clip=night; }
+    if (!clip) return;
+    s->story_couple=lw_sprite_create(s->over,516,368,282);
+    if (s->story_couple) { lw_sprite_set_external_clock(s->story_couple,true); lw_sprite_set_pixel_mode(s->story_couple); lw_sprite_play(s->story_couple,clip); lw_os_motion(lw_sprite_object(s->story_couple),LW_MOVE_LOCK); }
+}
+static void build_story(void)
+{
+    const lw_os_palette_t *c=palette();
+    unsigned step=s->story_step;
+    if (step==0) {
+        lw_os_box(s->over,0,0,1024,600,0x17121f,0,255);
+        lv_obj_t *badge=lw_os_box(s->over,472,148,80,80,0x2c2137,LV_RADIUS_CIRCLE,255);
+        lw_os_icon(badge,OS_I_HEART,20,20,40,0xe8a2b8);
+        lv_obj_t *t=lw_os_label(s->over,"倩倩，这份礼物，要你亲手打开。",&lw_font_28,212,266,600,0xf3e9ee);
+        lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+        t=lw_os_label(s->over,"我们的小世界刚刚醒来，可是回忆散落了一地。\n陪我把它们一片一片拾回来，好不好？",&lw_font_18,212,320,600,0xb9a8bd);
+        lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+        button(s->over,"开始拾取",412,418,200,54,OC_STORY_NEXT,true);
+        button(s->over,"跳过",892,24,108,40,OC_STORY_SKIP,false);
+        return;
+    }
+    if (!lw_visual_daily_image(s->over)) lw_os_wallpaper(s->over,s->painted_wallpaper,0,0,1024,600);
+    /* The room lights up fragment by fragment: the scrim thins as the
+     * memories come back, and is thinnest on the finale. */
+    lw_os_box(s->over,0,0,1024,600,0x241a2e,0,step>=7 ? 55 : 225-(int)(step-1)*26);
+    if (step>=7) {
+        story_couple_show();
+        lv_obj_t *t=lw_os_label(s->over,"两周年快乐",&lw_font_44,312,72,400,c->deep);
+        lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+        t=lw_os_label(s->over,"这间小屋子装不下全世界，但装得下我们两个。",&lw_font_22,212,146,600,c->text);
+        lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+        t=lw_os_label(s->over,"送给倩倩 · 2026.12.08",&lw_font_18,212,186,600,c->muted);
+        lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
+        story_stars(427,238,6);
+        button(s->over,"进入小世界",362,486,300,56,OC_STORY_ENTER,true);
+        return;
+    }
+    unsigned i=step-1;
+    button(s->over,"跳过",892,24,108,40,OC_STORY_SKIP,false);
+    if (step<6) {
+        lv_obj_t *frame=lw_os_box(s->over,72,96,400,344,0xfffaf2,14,255);
+        lw_os_box(frame,169,0,62,10,0xe3b7c8,2,130);
+        lv_obj_t *area=lw_os_box(frame,12,14,376,240,0,8,255);
+        story_photo_paint(area,i);
+        lw_os_label(frame,story_fragments[i].title,&lw_font_22,16,272,368,c->text);
+        lw_os_label(frame,"示例照片 · 之后换成我们的照片",&lw_font_18,16,306,368,c->muted);
+    } else {
+        story_couple_show();
+    }
+    char kicker[40]; snprintf(kicker,sizeof(kicker),"第 %u 片 · 一共六片",step);
+    lw_os_label(s->over,kicker,&lw_font_18,536,120,424,c->muted);
+    lw_os_label(s->over,story_fragments[i].title,&lw_font_28,536,152,424,c->text);
+    lw_os_label(s->over,story_fragments[i].line,&lw_font_22,536,214,424,c->text);
+    story_stars(536,430,step);
+    button(s->over,step==6 ? "拾起最后一片" : "拾起这一片",536,478,264,56,OC_STORY_NEXT,true);
+}
+static void story_advance(void)
+{
+    if (s->story_step==0) s->story_step=1;
+    else if (s->story_step>=1 && s->story_step<=6) { lw_story_progress_set(s->story_step); s->story_step++; }
+    show_overlay(OS_OVER_STORY);
+}
+void lw_os_story_replay(void)
+{
+    if (!s) return;
+    s->story_replay=true; s->story_step=0;
+    show_overlay(OS_OVER_STORY);
+}
 static void build_lock(void)
 {
     const lw_os_palette_t *c=palette();
@@ -874,15 +994,25 @@ static void show_overlay(lw_os_overlay_t kind)
     if (kind!=OS_OVER_CONTROL) s->pull_active=s->pull_moved=false;
     if (kind==OS_OVER_LOCK && s->navigation>=0) {s->navigation=-1;s->navigation_ms=0;lw_os_motion_settle(s->content);}
     if (kind==OS_OVER_LOCK && s->overlay==kind && s->over) { refresh(); return; }
+    if (kind==OS_OVER_STORY && s->overlay!=OS_OVER_STORY) {
+        /* Fresh open (autostart or lw_os_show): resume where the stored
+         * progress left off - progress k means k fragments are already
+         * home, so the next one is k+1; done means the finale. A replay
+         * (story_replay set) keeps the step lw_os_story_replay() chose.
+         * Step rebuilds from story_advance() see overlay==STORY and skip
+         * this entirely. */
+        if (!s->story_replay) { unsigned p=lw_story_progress(); s->story_step = p==0 ? 0 : (p>=LW_STORY_DONE ? 7 : p+1); }
+        s->story_replay=false;
+    }
     clear_overlay(); if (kind==OS_OVER_NONE) return;
     s->overlay=kind; s->building_overlay=true;
     const uint32_t overlay_started=lv_tick_get();
     freeze_begin();
-    if(kind==OS_OVER_LETTER || kind==OS_OVER_LOCK)dock_set(false);
+    if(kind==OS_OVER_LETTER || kind==OS_OVER_LOCK || kind==OS_OVER_STORY)dock_set(false);
     lw_rpg_view_suspend(s->rpg,true);
     s->over=lw_os_box(s->root,0,0,1024,600,0x493e43,0,72); lv_obj_add_flag(s->over,LV_OBJ_FLAG_CLICKABLE);
     if (kind==OS_OVER_LOCK) { lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESSED,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESSING,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_RELEASED,NULL); lv_obj_add_event_cb(s->over,lock_touch,LV_EVENT_PRESS_LOST,NULL); }
-    if (kind==OS_OVER_CONTROL) build_control(); else if (kind==OS_OVER_WIFI) build_wifi(); else if (kind==OS_OVER_PASSWORD) build_password(); else if (kind==OS_OVER_LOCK) build_lock();
+    if (kind==OS_OVER_CONTROL) build_control(); else if (kind==OS_OVER_WIFI) build_wifi(); else if (kind==OS_OVER_PASSWORD) build_password(); else if (kind==OS_OVER_LOCK) build_lock(); else if (kind==OS_OVER_STORY) build_story();
     else {
         lv_obj_t *p=surface(s->over,270,kind==OS_OVER_LETTER ? 80 : 117,484,kind==OS_OVER_LETTER ? 420 : 354,32); icon_button(p,OS_I_CLOSE,420,16,44,OC_CLOSE);
         if (kind==OS_OVER_EDIT) {
@@ -1065,6 +1195,9 @@ static void act(int id)
     case OC_CANCEL:lw_os_open(s->theme_return);break;
     case OC_LOCK:case OC_SCREEN_OFF:s->system->locked=true; s->system->screen_off=id==OC_SCREEN_OFF; show_overlay(OS_OVER_LOCK);break;
     case OC_UNLOCK:s->system->locked=false; s->system->screen_off=false; dismiss_overlay(); if (s->caps_refresh_on_unlock) { s->caps_refresh_on_unlock=false; render(); } break;
+    case OC_STORY_NEXT:story_advance();break;
+    case OC_STORY_SKIP:s->story_step=7; show_overlay(OS_OVER_STORY);break;
+    case OC_STORY_ENTER:lw_story_progress_set(LW_STORY_DONE); dismiss_overlay(); break;
     case OC_EDITOR:show_overlay(OS_OVER_EDIT);break;
     case OC_ENVELOPE:show_overlay(OS_OVER_LETTER);break;
     case OC_WIDGETS:lw_system_widgets(s->system,!s->system->prefs.widgets); lw_system_save(s->system); render();break;
@@ -1239,6 +1372,7 @@ static void tick(lv_timer_t *timer)
     }
     s->lock_ms+=dt; for (unsigned i=0;i<2;i++) if (s->lock_sprites[i]) lw_sprite_seek(s->lock_sprites[i],lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
     if (s->lock_couple) lw_sprite_seek(s->lock_couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
+    if (s->story_couple) lw_sprite_seek(s->story_couple,lw_os_motion_get()==LW_MOTION_OFF ? 0 : s->lock_ms);
     /* Ambient carousel: one small frame repaint every 8 s, nothing per frame. */
     if (s->overlay==OS_OVER_LOCK && !s->system->screen_off && s->lock_photo_area) {
         s->lock_photo_ms+=dt;
@@ -1267,6 +1401,14 @@ static void tick(lv_timer_t *timer)
      * choice from the control centre. */
     if(touching || s->overlay!=OS_OVER_NONE || s->boot || s->system->locked)s->ambient_idle=0;else s->ambient_idle+=dt;
     if(s_autolock && s->ambient_idle>=30000) { s->ambient_idle=0; s->system->locked=true; s->system->screen_off=false; show_overlay(OS_OVER_LOCK); }
+#ifdef ESP_PLATFORM
+    /* First-boot story (device builds only, like LW_VISUAL_WARM): once
+     * per power-up, after the splash is gone and nothing else is up, an
+     * unfinished story offers itself. Host builds never auto-open it -
+     * screenshot baselines and the UI suite drive overlays explicitly -
+     * and the memories page can replay it any time. */
+    if (!s->story_offered && !s->boot && s->overlay==OS_OVER_NONE && lw_story_progress()<LW_STORY_DONE) { s->story_offered=true; show_overlay(OS_OVER_STORY); }
+#endif
     s->last_clock+=dt; if (s->last_clock>=1000) {
         s->last_clock=0; refresh();
         /* Repaint only when the band actually changes: a per-second render()

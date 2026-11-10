@@ -142,3 +142,61 @@ lw_date_t lw_ui_anniversary(void)
 {
     return lw_app_state()->anniversary;
 }
+
+/* ------------------------------------------------------------------ story */
+/* Own tiny record, own key, own version: 'LWST' v1, 16 bytes.
+ *   [0..3] magic, [4] version, [5] progress 0..7, [6..11] zero,
+ *   [12..15] crc32 of [0..11], little-endian (memcpy, so endian-safe).
+ * A corrupt or missing record simply means "story not played yet",
+ * which is the safe failure direction for a gift. */
+#define LW_STORY_KEY "lwstory"
+#define LW_STORY_BYTES 16
+static uint8_t s_story_progress;
+static bool s_story_loaded;
+
+static void story_save(void)
+{
+    uint8_t blob[LW_STORY_BYTES];
+    memset(blob, 0, sizeof(blob));
+    memcpy(blob, "LWST", 4);
+    blob[4] = 1;
+    blob[5] = s_story_progress;
+    uint32_t crc = lw_crc32(blob, 12);
+    memcpy(blob + 12, &crc, 4);
+    const lw_platform_t *platform = lw_platform_get();
+    if (platform != NULL && platform->storage_write != NULL) {
+        platform->storage_write(LW_STORY_KEY, blob, sizeof(blob));
+    }
+}
+
+unsigned lw_story_progress(void)
+{
+    if (!s_story_loaded) {
+        s_story_loaded = true;
+        uint8_t blob[LW_STORY_BYTES];
+        size_t length = sizeof(blob);
+        const lw_platform_t *platform = lw_platform_get();
+        if (platform != NULL && platform->storage_read != NULL &&
+            platform->storage_read(LW_STORY_KEY, blob, &length) && length == LW_STORY_BYTES &&
+            memcmp(blob, "LWST", 4) == 0 && blob[4] == 1 && blob[5] <= LW_STORY_DONE) {
+            uint32_t crc;
+            memcpy(&crc, blob + 12, 4);
+            if (crc == lw_crc32(blob, 12)) {
+                s_story_progress = blob[5];
+            }
+        }
+    }
+    return s_story_progress;
+}
+
+void lw_story_progress_set(unsigned progress)
+{
+    if (progress > LW_STORY_DONE) {
+        progress = LW_STORY_DONE;
+    }
+    if (progress <= lw_story_progress()) {
+        return;
+    }
+    s_story_progress = (uint8_t)progress;
+    story_save();
+}

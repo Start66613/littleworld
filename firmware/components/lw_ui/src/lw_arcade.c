@@ -10,6 +10,7 @@
 #include "lw_theme.h"
 #include "lw_widgets.h"
 #include "lw_os_design.h"
+#include "lw_os.h"
 #include "lw_ui_content.h"
 #include "lw_polish.h"
 #include "arcade/arcade_2048.h"
@@ -245,24 +246,33 @@ static void play_2048(lv_event_t *event)
     open_game_2048();
 }
 
+static void play_rpg(lv_event_t *event)
+{
+    (void)event;
+    /* The RPG is an OS page, not an in-app game: hand over to the
+     * shell. In a context without the OS running this is a no-op. */
+    lw_os_open(OS_RPG);
+}
+
 static void create(lv_obj_t *content, const struct lw_app *self)
 {
     (void)self;
     const lw_palette_t *palette = lw_palette();
     lw_state_t *state = lw_app_state();
 
-    static const hub_card_t cards[3] = {
+    static const hub_card_t cards[4] = {
         {"2048", "滑动合并数字", "已接入", 0xF6BE6B, play_2048},
         {"贪吃蛇", "越吃越快的小蛇", "已接入", 0x7FD3B4, open_game_snake},
         {"打砖块", "接住小球打光砖块", "已接入", 0xF58FAE, open_game_breakout},
+        {"小冒险", "两个人一起走的故事", "已接入", 0xE8A2B8, play_rpg},
     };
 
-    lw_text(content, "小游戏", &lw_font_28, palette->text, 36, 18);
-    lw_text_wrap(content, "挑一个小游戏，给今天留一点轻松。全屏游戏可暂停，也能随时回家。", &lw_font_18,
+    lw_text(content, "一起玩", &lw_font_28, palette->text, 36, 18);
+    lw_text_wrap(content, "挑一个玩的，给今天留一点轻松。小游戏和两个人的小冒险都在这里，全屏游戏可暂停，也能随时回家。", &lw_font_18,
             palette->dim, 36, 56,940);
 
-    for (int i = 0; i < 3; i++) {
-        lv_obj_t *card = lw_card(content, 36 + i * 324, 96, 300, 300);
+    for (int i = 0; i < 4; i++) {
+        lv_obj_t *card = lw_card(content, 36 + i * 240, 96, 224, 300);
         lv_obj_set_style_bg_color(card, lv_color_hex(palette->card), 0);
         if (cards[i].open != NULL) {
             lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
@@ -279,7 +289,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
         lv_obj_set_style_bg_color(dot, lv_color_hex(0xFFFFFF), 0);
         lv_obj_set_style_bg_opa(dot, LV_OPA_80, 0);
         lv_obj_remove_flag(dot, LV_OBJ_FLAG_CLICKABLE);
-        if (lw_shell_host_active()) {lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);lw_polish_game_badge(card,(unsigned)i,24,18);lw_polish_paper(card,false);}
+        if (lw_shell_host_active()) {if (i<3) {lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);lw_polish_game_badge(card,(unsigned)i,24,18);} lw_polish_paper(card,false);}
 
         lw_text(card, cards[i].title, &lw_font_28, palette->text, 24, 108);
         lw_text(card, cards[i].subtitle, &lw_font_18, palette->dim, 24, 150);
@@ -301,7 +311,7 @@ static void destroy(void)
 
 const lw_app_t lw_app_arcade_def = {
     .id = "arcade",
-    .name = "游戏",
+    .name = "一起玩",
     .create = create,
     .destroy = destroy,
 };

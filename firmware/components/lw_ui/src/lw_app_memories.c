@@ -174,6 +174,16 @@ static lv_obj_t *date_adjust_button(lv_obj_t *parent, int x, int y, int field, i
     return btn;
 }
 
+static void story_entry_clicked(lv_event_t *event)
+{
+    (void)event;
+    if (lw_story_progress() >= LW_STORY_DONE) {
+        lw_os_story_replay();
+    } else {
+        lw_os_show(OS_OVER_STORY);
+    }
+}
+
 static void build_tab_today(lv_obj_t *page)
 {
     const lw_palette_t *palette = lw_palette();
@@ -213,6 +223,22 @@ static void build_tab_today(lv_obj_t *page)
     lv_obj_set_pos(open_btn, 300, 58);
     /* clicking the button switches to the timeline tab */
     lv_obj_add_event_cb(open_btn, tab_clicked, LV_EVENT_CLICKED, (void *)(intptr_t)1);
+
+    /* The first-boot story lives here once it has played: a finished
+     * story replays from the top, an unfinished one resumes where the
+     * stored progress left off (see lw_story_progress()). */
+    lv_obj_t *story_card = lw_card(page, 32, 372, 960, 140);
+    lw_os_icon(story_card, OS_I_HEART, 872, 24, 44, palette->accent);
+    lw_text(story_card, "我们的故事 · 拾取回忆", &lw_font_22, palette->text, 28, 22);
+    unsigned progress = lw_story_progress();
+    lw_text(story_card, progress >= LW_STORY_DONE ? "第一次打开小世界时，一片一片拾回来的那个故事。"
+              : progress == 0 ? "第一次打开小世界时要讲的故事，从这里开始。"
+                              : "那个故事还没讲完，从这里接着听。",
+            &lw_font_18, palette->dim, 28, 60);
+    lv_obj_t *story_btn = lw_button(story_card, progress >= LW_STORY_DONE ? "重看故事" : progress == 0 ? "开始故事" : "继续故事",
+                                    150, 46, palette->accent_deep, 0xFFFFFF, &lw_font_18);
+    lv_obj_set_pos(story_btn, 782, 76);
+    lv_obj_add_event_cb(story_btn, story_entry_clicked, LV_EVENT_CLICKED, NULL);
 }
 
 /* Last values refresh_today() actually wrote, plus the label objects they
