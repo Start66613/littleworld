@@ -855,11 +855,15 @@ static void build_story(void)
     lw_os_box(s->over,0,0,1024,600,0x241a2e,0,step>=7 ? 55 : 225-(int)(step-1)*26);
     if (step>=7) {
         story_couple_show();
-        lv_obj_t *t=lw_os_label(s->over,"两周年快乐",&lw_font_44,312,72,400,c->deep);
+        /* The finale is the brightest frame of the story (scrim 55), so the
+         * closing words need their own plate for the same reason the fragment
+         * column does: pale text on a lit sofa is unreadable. */
+        lw_os_box(s->over,296,60,432,150,0x1b1526,18,150);
+        lv_obj_t *t=lw_os_label(s->over,"两周年快乐",&lw_font_44,312,72,400,0xfff4ee);
         lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
-        t=lw_os_label(s->over,"这间小屋子装不下全世界，但装得下我们两个。",&lw_font_22,212,146,600,c->text);
+        t=lw_os_label(s->over,"这间小屋子装不下全世界，但装得下我们两个。",&lw_font_22,212,146,600,0xf2e7ea);
         lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
-        t=lw_os_label(s->over,"送给倩倩 · 2026.12.08",&lw_font_18,212,186,600,c->muted);
+        t=lw_os_label(s->over,"送给倩倩 · 2026.12.08",&lw_font_18,212,186,600,0xd9c8d6);
         lv_obj_set_style_text_align(t,LV_TEXT_ALIGN_CENTER,0);
         story_stars(427,238,6);
         button(s->over,"进入小世界",362,486,300,56,OC_STORY_ENTER,true);
@@ -870,17 +874,25 @@ static void build_story(void)
     if (step<6) {
         lv_obj_t *frame=lw_os_box(s->over,72,96,400,344,0xfffaf2,14,255);
         lw_os_box(frame,169,0,62,10,0xe3b7c8,2,130);
-        lv_obj_t *area=lw_os_box(frame,12,14,376,240,0,8,255);
+        lv_obj_t *area=lw_os_box(frame,12,14,376,240,0xfffaf2,8,255);
         story_photo_paint(area,i);
         lw_os_label(frame,story_fragments[i].title,&lw_font_22,16,272,368,c->text);
         lw_os_label(frame,"示例照片 · 之后换成我们的照片",&lw_font_18,16,306,368,c->muted);
     } else {
         story_couple_show();
     }
+    /* The room lights up as the fragments come back, so by the sixth one the
+     * scrim is thin enough that light text would sit on a bright sofa. A soft
+     * plate behind the column keeps the words readable without dimming the
+     * picture again - the reveal is the point of this screen. */
+    lw_os_box(s->over,520,104,464,336,0x1b1526,18,132);
     char kicker[40]; snprintf(kicker,sizeof(kicker),"第 %u 片 · 一共六片",step);
-    lw_os_label(s->over,kicker,&lw_font_18,536,120,424,c->muted);
-    lw_os_label(s->over,story_fragments[i].title,&lw_font_28,536,152,424,c->text);
-    lw_os_label(s->over,story_fragments[i].line,&lw_font_22,536,214,424,c->text);
+    /* Fixed colours, not palette ones: this column sits on a dark plate over a
+     * room that is deliberately being lit back up, so the palette's night text
+     * colour is far too dim here (it read as brown smudge on the board). */
+    lw_os_label(s->over,kicker,&lw_font_18,536,120,424,0xd9c6cc);
+    lw_os_label(s->over,story_fragments[i].title,&lw_font_28,536,152,424,0xfff4ee);
+    lw_os_label(s->over,story_fragments[i].line,&lw_font_22,536,214,424,0xf3e8ec);
     story_stars(536,430,step);
     button(s->over,step==6 ? "拾起最后一片" : "拾起这一片",536,478,264,56,OC_STORY_NEXT,true);
 }

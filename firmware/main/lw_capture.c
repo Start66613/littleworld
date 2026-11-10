@@ -427,6 +427,27 @@ static int cmd_bgm(int argc, char **argv)
     return 0;
 }
 
+/* The first-boot story only opens by itself once per power-up, so without a
+ * command the only way to look at it twice is to flash twice. "story" prints
+ * the stored progress, "story replay" plays it again from the opening (without
+ * lowering the stored progress on a device that already finished it). */
+static int cmd_story(int argc, char **argv)
+{
+    const char *what = argc > 1 ? argv[1] : "status";
+    if (strcmp(what, "replay") == 0) {
+        lw_os_story_replay();
+        printf("story: replaying from the opening\n");
+    } else if (strcmp(what, "done") == 0) {
+        lw_story_progress_set(LW_STORY_DONE);
+        printf("story: marked finished\n");
+    } else {
+        printf("story: progress=%u (0 not started, 1..%u fragments, %u finished)\n",
+               lw_story_progress(), LW_STORY_FRAGMENTS, LW_STORY_DONE);
+    }
+    fflush(stdout);
+    return 0;
+}
+
 static int cmd_anim(int argc, char **argv)
 {
     /* Actor animation truth: which clip is playing, which frame index is
@@ -1007,6 +1028,11 @@ bool lw_capture_console_start(void)
                                       .help = "bgm: start|stop|status|vol N - speaker test",
                                       .func = &cmd_bgm };
     esp_console_cmd_register(&c_bgm);
+
+    const esp_console_cmd_t c_story = { .command = "story",
+                                        .help = "story: status|replay|done - first-boot story",
+                                        .func = &cmd_story };
+    esp_console_cmd_register(&c_story);
 #endif
     /* A real restart, so "how long since boot" can be reproduced without
      * reflashing. esptool's --after hard_reset does not take on this CH343 link

@@ -21,6 +21,15 @@ void lw_os_show(lw_os_overlay_t);
 /* Replay the 《拾取回忆》 story from the start (memories page entry);
  * never lowers the stored progress. */
 void lw_os_story_replay(void);
+/* 《拾取回忆》 progress: 0 = not started, 1..LW_STORY_FRAGMENTS = that many
+ * fragments collected, LW_STORY_DONE = finished.  Kept in its own versioned
+ * record ("lwstory"), so the .lwr save format is not involved.  Declared here
+ * as well as in lw_ui/src/lw_app_state.h because the console command lives in
+ * the main component, which cannot see that private header. */
+#define LW_STORY_FRAGMENTS 6u
+#define LW_STORY_DONE 7u
+unsigned lw_story_progress(void);
+void lw_story_progress_set(unsigned progress);
 lv_obj_t *lw_os_control(lw_os_control_t);
 lv_obj_t *lw_os_root(void);
 lw_os_page_t lw_os_page(void);
