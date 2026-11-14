@@ -1,12 +1,20 @@
-CONFIG_LW_NET_WIFI_ENABLE=y
+﻿CONFIG_LW_NET_WIFI_ENABLE=y
 CONFIG_LW_NET_SNTP_ENABLE=y
 
 # The C6 link and the I2S DMA pool both live in internal RAM. Six entries per
 # direction still moves audio and control traffic comfortably; twenty each ate
 # about 14 KB that the speaker needed back.
-CONFIG_ESP_HOSTED_SDIO_TX_Q_SIZE=6
-CONFIG_ESP_HOSTED_SDIO_RX_Q_SIZE=6
+CONFIG_ESP_HOSTED_SDIO_TX_Q_SIZE=20
+CONFIG_ESP_HOSTED_SDIO_RX_Q_SIZE=20
 
 # app_main measures at ~3.8 KB of stack; the default 32 KB was the largest single
 # internal-RAM reservation left, and the C6 link plus I2S DMA both need that pool.
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=10240
+
+# A fresh sdkconfig defaults to FATFS_LFN_NONE, and the card's files are named
+# littleworld-v4.json / qianqian-base.lwp - without long names the mount succeeds
+# but the manifest can never be opened, so the device reports no card and falls
+# back to the embedded pack. The shipping sdkconfig has had these on all along.
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_API_ENCODING_UTF_8=y

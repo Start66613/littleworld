@@ -193,11 +193,14 @@ void lw_net_esp_wifi_preinit(void)
 void lw_net_esp_wifi_attach(struct lw_services *services)
 {
     s_services = services;
+    /* Attaching must not power the radio: this runs while the boot is still
+     * publishing capabilities, and the C6 link takes the SDMMC host and its DMA
+     * buffers with it. If it starts here, the TF card mount a few hundred
+     * milliseconds later fails ("allocate_dma_buf: not enough mem") and the
+     * device loses every art pack. lw_net_esp_wifi_preinit(), called once the
+     * card is mounted, is the only place that brings the link up. */
     if (!s_started) {
-        log_transport();
-        if (!wifi_bring_up()) {
-            return;
-        }
+        ESP_LOGI(TAG, "adapter attached; the link starts after the card is mounted");
     }
     if (!s_handlers) {
         s_handlers = true;

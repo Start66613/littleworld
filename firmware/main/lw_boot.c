@@ -37,6 +37,7 @@
 #include "lw_diag_board.h"
 #include "lvgl.h"
 #include "lw_art.h"
+#include "lw_net_esp.h"
 #include "lw_os.h"
 #include "lw_system_wifi_bridge.h"
 #include "lw_resource_mount.h"
@@ -446,6 +447,18 @@ static void start_os(void)
     if (!art) {
         ESP_LOGW(TAG, "art: %s", "no character source loaded, using the labelled fallback");
     }
+
+    /* The C6 link is brought up here, not in app_main: it and the TF card draw
+     * from the same internal DMA pool, and whoever goes second gets the
+     * leftovers. Mounting the card first keeps the art packs - without it the
+     * mount fails with "sdmmc_cmd: allocate_dma_buf: not enough mem" and the
+     * whole device falls back to the procedural placeholder rooms. The link
+     * still comes up before the UI build, which needs far more RAM than the
+     * card ever did. */
+    lw_net_esp_wifi_preinit();
+    ESP_LOGI(TAG, "internal heap after wifi bring-up: free %u B, largest block %u B",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
     /* Read the user's content file from the same verified root the art came
      * from. This has to happen after lw_art_boot() (which resolves the root)

@@ -111,15 +111,10 @@ void app_main(void)
         ESP_LOGW(TAG, "no stack for the console task; the REPL stays off");
     }
 
-    /* The ESP32-C6 link is brought up here, before the first screen: the SDIO
-     * master allocates DMA-capable internal buffers, and after the art/UI build
-     * there are only a few KB of that pool left ("sdmmc_allocate_aligned_buf:
-     * not enough mem" then a fault in the card init path). Ordering is the whole
-     * fix - the same buffers, taken while the pool is still ~97 KB. */
-    lw_net_esp_wifi_preinit();
-    ESP_LOGI(TAG, "internal heap after wifi bring-up: free %u B, largest block %u B",
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+    /* The C6 link is brought up from lw_boot_start(), right after the TF card is
+     * mounted: both want the internal DMA pool, and the card has to win - if the
+     * radio goes first the mount dies with "allocate_dma_buf: not enough mem"
+     * and the device loses every art pack. See the comment there. */
 
     if (!bsp_display_lock(-1)) {
         ESP_LOGE(TAG, "cannot take the LVGL lock");
