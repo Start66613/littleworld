@@ -6,6 +6,7 @@
 #include "bsp/esp-bsp.h"
 #include "esp_codec_dev.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 
 static const char *TAG = "lw_hw";
 
@@ -42,6 +43,12 @@ static esp_codec_dev_handle_t s_speaker;
 #else
 #define LW_BACKLIGHT_BOOT_LEVEL 100
 #endif
+
+/* Largest internal DMA block the speaker may start on. The BSP builds two
+ * channels of six 240-frame descriptors (about 11.5 KB) plus its own
+ * bookkeeping, so anything below this reserve is a coin flip that ends in
+ * ESP_ERROR_CHECK - and the C6 link draws from the same pool. */
+#define LW_AUDIO_MIN_DMA_BLOCK (16u * 1024u)
 lw_hw_caps_t lw_hw_begin(bool enable_audio)
 {
     lw_hw_caps_t caps = {0};
@@ -68,7 +75,19 @@ lw_hw_caps_t lw_hw_begin(bool enable_audio)
 #endif
 
     if (enable_audio) {
-        s_speaker = bsp_audio_codec_speaker_init();
+        /* bsp_audio_codec_speaker_init() builds the I2S channel with its own
+         * DMA depth and wraps every failure in ESP_ERROR_CHECK, so a short
+         * internal pool does not degrade the speaker - it reboots the board.
+         * With the ESP32-C6 link up that pool is thin, so the speaker is only
+         * started when a DMA block of a sensible size is actually there.
+         * Losing the speaker must cost the volume slider, never the boot. */
+        const size_t dma_block = heap_caps_get_largest_free_block(MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        if (dma_block >= LW_AUDIO_MIN_DMA_BLOCK) {
+            s_speaker = bsp_audio_codec_speaker_init();
+        } else {
+            ESP_LOGW(TAG, "speaker skipped: largest internal DMA block is %u B (needs %u)",
+                     (unsigned)dma_block, (unsigned)LW_AUDIO_MIN_DMA_BLOCK);
+        }
         if (s_speaker != NULL && esp_codec_dev_set_out_vol(s_speaker, 40) == ESP_OK) {
             s_audio = true;
         } else {

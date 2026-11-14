@@ -1,2 +1,8 @@
 CONFIG_LW_NET_WIFI_ENABLE=y
 CONFIG_LW_NET_SNTP_ENABLE=y
+
+# The C6 link and the I2S DMA pool both live in internal RAM. Six entries per
+# direction still moves audio and control traffic comfortably; twenty each ate
+# about 14 KB that the speaker needed back.
+CONFIG_ESP_HOSTED_SDIO_TX_Q_SIZE=6
+CONFIG_ESP_HOSTED_SDIO_RX_Q_SIZE=6
