@@ -372,18 +372,49 @@ static void update_actors_paint(uint32_t dt, bool paint)
 #endif /* CONFIG_LW_DIAG_STATIC_UI */
 }
 static void update_actors(uint32_t dt) { update_actors_paint(dt, true); }
-/* Gift-edition launcher row on the desktop: the five front doors of
- * the little world - 回忆 / 陪伴 / 音乐 / 一起玩 / 设置. Pure
- * addition: it reuses the existing page controls, so the dock, the
- * control centre and every existing route stay exactly as they were
- * (the dock remains the full navigation, 相册 included). */
+/* One small chip: icon on the left, word on the right, no border box around
+ * the whole row.  Built by hand instead of through button() because that
+ * helper centres its label across the full width, which leaves no room for an
+ * icon. */
+static lv_obj_t *entry_chip(lv_obj_t *parent,int x,int y,int w,int h,const char *name,
+                            lw_os_icon_t icon,lw_os_control_t id)
+{
+    const lw_os_palette_t *c=palette();
+    lv_obj_t *o=lw_os_box(parent,x,y,w,h,0xf0dec5,20,168);
+    lv_obj_set_style_border_width(o,1,0);lv_obj_set_style_border_color(o,lv_color_hex(0xc3a28c),0);lv_obj_set_style_border_opa(o,80,0);
+    lv_obj_add_flag(o,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_opa(o,220,LV_STATE_PRESSED);
+    lw_os_icon(o,icon,12,y<0 ? 0 : 20,24,c->deep);
+    lw_os_label(o,name,&lw_font_18,44,21,w-52,c->text);
+    lw_os_motion_touch(o);
+    lv_obj_add_event_cb(o,event_action,LV_EVENT_CLICKED,(void *)(intptr_t)id);
+    register_control(o,id);
+    return o;
+}
+/* Gift-edition launcher row on the desktop.  It used to be a bar of five
+ * identical pills that sat right on the couple's feet and gave the room's
+ * most interesting door - 小冒险, the RPG - the same weight as 设置.  Now the
+ * four everyday doors are small chips on the left and 小冒险 gets its own
+ * accent card on the right, with the icon and a line that says what it is.
+ * The row also moved down to y=486 so it clears the feet; the dock handle at
+ * the bottom is untouched. */
 static void desktop_entries(void)
 {
-    static const lw_os_control_t ids[]={OC_MEMORIES,OC_PET,OC_MUSIC,OC_GAMES,OC_SETTINGS};
-    static const char *const names[]={"回忆","陪伴","音乐","一起玩","设置"};
-    lv_obj_t *bar=surface(s->content,107,462,810,64,26);
-    lv_obj_set_style_bg_opa(bar,170,0);
-    for (unsigned i=0;i<5;i++) button(bar,names[i],10+(int)i*160,8,148,48,ids[i],false);
+    static const lw_os_control_t ids[]={OC_MEMORIES,OC_PET,OC_MUSIC,OC_GAMES};
+    static const char *const names[]={"回忆","陪伴","音乐","一起玩"};
+    static const lw_os_icon_t icons[]={OS_I_ALBUM,OS_I_HEART,OS_I_MUSIC,OS_I_GAME};
+    const int y=486, h=64;
+    for (unsigned i=0;i<4;i++) entry_chip(s->content,96+(int)i*124,y,116,h,names[i],icons[i],ids[i]);
+    lv_obj_t *hero=lw_os_box(s->content,604,y,320,h,0xb87686,20,220);
+    lv_obj_set_style_border_width(hero,1,0);lv_obj_set_style_border_color(hero,lv_color_hex(0xd9a0ad),0);lv_obj_set_style_border_opa(hero,140,0);
+    lv_obj_add_flag(hero,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_opa(hero,255,LV_STATE_PRESSED);
+    lw_os_icon(hero,OS_I_PLAY,262,20,24,0xfff4f6);
+    lw_os_label(hero,"小冒险",&lw_font_22,20,8,200,0xfff7f8);
+    lw_os_label(hero,"和倩倩一起出门",&lw_font_18,22,36,210,0xf7dbe1);
+    lw_os_motion_touch(hero);
+    lv_obj_add_event_cb(hero,event_action,LV_EVENT_CLICKED,(void *)(intptr_t)OC_RPG);
+    register_control(hero,OC_RPG);
 }
 static void build_desktop(bool world)
 {
