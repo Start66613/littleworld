@@ -22,6 +22,13 @@ extern "C" {
 
 struct lw_services;
 
+/* Whether a Wi-Fi adapter was compiled into this image at all. Kept apart from
+ * lw_net_esp_wifi_available() on purpose: availability only turns true after the
+ * station came up, and coming up is exactly what attaching does, so using
+ * availability as the gate for attaching would never open (the radio stays
+ * "no-backend" on a build that has one). */
+bool lw_net_esp_wifi_built(void);
+
 bool lw_net_esp_wifi_available(void);
 bool lw_net_esp_time_available(void);
 bool lw_net_esp_audio_available(void);
@@ -39,6 +46,12 @@ void lw_net_esp_wifi_describe(char *buf, size_t len);
 bool lw_net_esp_wifi_coprocessor_version(char *buf, size_t len);
 
 void lw_net_esp_wifi_attach(struct lw_services *services);
+
+/* Brings the C6 link up early (called from app_main before the first screen).
+ * The SDIO master needs DMA-capable internal buffers; taking them after the UI
+ * build fails with "not enough mem" and faults in the card init path. Idempotent,
+ * and a no-op in builds without a Wi-Fi adapter. */
+void lw_net_esp_wifi_preinit(void);
 
 /* Asks the station whether it is already associated (a hosted slave can keep a
  * credential across reboots). Reports the link as an unsolicited event, so the

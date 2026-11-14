@@ -48,6 +48,8 @@
 static const char *TAG = "lw_net_wifi";
 static struct lw_services *s_services;
 static bool s_started;
+/* Event handlers must not run before attach() hands them a services pointer. */
+static bool s_handlers;
 /* Generation captured when the request was issued. The event handler returns
  * it with the result so the model can drop results of a superseded request. */
 static uint32_t s_request_generation;
@@ -140,39 +142,68 @@ static void log_transport(void)
     ESP_LOGI(TAG, "transport: %s", line);
 }
 
-void lw_net_esp_wifi_attach(struct lw_services *services)
+/* Netif, event loop, station and start. Split out of attach() so it can run
+ * before the UI claims the internal RAM: the SDIO master needs DMA-capable
+ * internal buffers, and after the art/UI build there are only a few KB left
+ * ("sdmmc_allocate_aligned_buf: not enough mem"), which fails the card init and
+ * then faults. Doing it early costs the same RAM but takes it while it is free. */
+static bool wifi_bring_up(void)
 {
-    s_services = services;
     if (s_started) {
-        return;
+        return true;
     }
-    log_transport();
     if (esp_netif_init() != ESP_OK) {
         ESP_LOGE(TAG, "esp_netif_init failed");
-        return;
+        return false;
     }
     esp_err_t err = esp_event_loop_create_default();
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
         ESP_LOGE(TAG, "event loop: %s", esp_err_to_name(err));
-        return;
+        return false;
     }
     if (esp_netif_create_default_wifi_sta() == NULL) {
         ESP_LOGE(TAG, "netif station create failed");
-        return;
+        return false;
     }
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     if (esp_wifi_init(&cfg) != ESP_OK) {
         ESP_LOGE(TAG, "esp_wifi_init failed (no ESP32-C6 responder on SDIO?)");
-        return;
+        return false;
     }
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
-    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL);
     if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK || esp_wifi_start() != ESP_OK) {
         ESP_LOGE(TAG, "station start failed");
-        return;
+        return false;
     }
     s_started = true;
     ESP_LOGI(TAG, "station ready");
+    return true;
+}
+
+/* Called from app_main before the UI is built. Idempotent and safe to skip: a
+ * board without a C6 simply logs the failure and the UI stays Unsupported. */
+void lw_net_esp_wifi_preinit(void)
+{
+    if (s_started) {
+        return;
+    }
+    log_transport();
+    (void)wifi_bring_up();
+}
+
+void lw_net_esp_wifi_attach(struct lw_services *services)
+{
+    s_services = services;
+    if (!s_started) {
+        log_transport();
+        if (!wifi_bring_up()) {
+            return;
+        }
+    }
+    if (!s_handlers) {
+        s_handlers = true;
+        esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
+        esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL);
+    }
 #if CONFIG_ESP_HOSTED_ENABLED
     /* Report the slave firmware instead of assuming it matches the host stack.
      * A mismatch is the most common cause of "Wi-Fi compiles but never scans",
@@ -356,6 +387,10 @@ void lw_net_esp_wifi_attach(struct lw_services *services)
     (void)services;
 }
 
+void lw_net_esp_wifi_preinit(void)
+{
+}
+
 bool lw_net_esp_wifi_start_scan(void)
 {
     return false;
@@ -373,6 +408,17 @@ void lw_net_esp_wifi_stop(void)
 }
 
 #endif /* LW_NET_HAVE_WIFI */
+
+/* Compile-time answer, valid in both branches: a hosted build has esp_wifi.h,
+ * the fallback build does not. */
+bool lw_net_esp_wifi_built(void)
+{
+#if CONFIG_LW_NET_WIFI_ENABLE && __has_include("esp_wifi.h")
+    return true;
+#else
+    return false;
+#endif
+}
 
 #ifdef LW_NET_HAVE_SNTP
 

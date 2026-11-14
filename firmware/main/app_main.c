@@ -18,6 +18,7 @@
 
 void lw_boot_start(void);
 #include "lw_capture.h"
+#include "lw_net_esp.h"
 
 static const char *TAG = "littleworld";
 
@@ -102,6 +103,16 @@ void app_main(void)
     if (xTaskCreate(console_task, "lw_console", 12288, NULL, 5, NULL) != pdPASS) {
         ESP_LOGW(TAG, "no stack for the console task; the REPL stays off");
     }
+
+    /* The ESP32-C6 link is brought up here, before the first screen: the SDIO
+     * master allocates DMA-capable internal buffers, and after the art/UI build
+     * there are only a few KB of that pool left ("sdmmc_allocate_aligned_buf:
+     * not enough mem" then a fault in the card init path). Ordering is the whole
+     * fix - the same buffers, taken while the pool is still ~97 KB. */
+    lw_net_esp_wifi_preinit();
+    ESP_LOGI(TAG, "internal heap after wifi bring-up: free %u B, largest block %u B",
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
     if (!bsp_display_lock(-1)) {
         ESP_LOGE(TAG, "cannot take the LVGL lock");

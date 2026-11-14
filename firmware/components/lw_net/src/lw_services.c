@@ -294,7 +294,9 @@ void lw_services_start(lw_services_t *services, uint32_t now_ms)
     services->started = true;
     services->last_poll_ms = now_ms;
     s_now_ms = now_ms;
-    if (services->caps.wifi_backend) {
+    /* Gate on "was an adapter compiled in", not on availability: availability is
+     * what attaching proves, so gating on it would never let the radio start. */
+    if (lw_net_esp_wifi_built()) {
         lw_net_esp_wifi_attach(services);
         /* Attaching the adapter is what actually proves the radio is usable:
          * a build can have CONFIG_LW_NET_WIFI_ENABLE=y and still fail here
