@@ -44,11 +44,12 @@ static esp_codec_dev_handle_t s_speaker;
 #define LW_BACKLIGHT_BOOT_LEVEL 100
 #endif
 
-/* Largest internal DMA block the speaker may start on. The BSP builds two
- * channels of six 240-frame descriptors (about 11.5 KB) plus its own
- * bookkeeping, so anything below this reserve is a coin flip that ends in
- * ESP_ERROR_CHECK - and the C6 link draws from the same pool. */
-#define LW_AUDIO_MIN_DMA_BLOCK (16u * 1024u)
+/* Largest internal DMA block the speaker may start on. Each I2S channel takes
+ * one contiguous run for its six default descriptors - 256 frames of 32-bit
+ * slots, about 6 KB - so 8 KB is the measured floor that still lets both
+ * channels come up. Below this the BSP's ESP_ERROR_CHECK would reboot the
+ * board instead of just muting it. */
+#define LW_AUDIO_MIN_DMA_BLOCK (8u * 1024u)
 lw_hw_caps_t lw_hw_begin(bool enable_audio)
 {
     lw_hw_caps_t caps = {0};

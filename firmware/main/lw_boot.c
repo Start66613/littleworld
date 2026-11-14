@@ -275,7 +275,10 @@ static lw_os_capabilities_t build_capabilities(void)
     caps.brightness = s_hw_caps.brightness ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
     caps.volume = s_hw_caps.audio ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
     caps.wifi = s_services.caps.wifi_backend ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
-    caps.audio = LW_SERVICE_UNAVAILABLE;   /* no PCM source or decoder in this round */
+    /* audio means "there is a PCM path out of the speaker", which is now true:
+     * lw_bgm streams a WAV blob through the ES8311. It used to be hardcoded
+     * unavailable from the round where nothing could decode audio at all. */
+    caps.audio = s_hw_caps.audio ? LW_SERVICE_READY : LW_SERVICE_UNAVAILABLE;
     caps.storage = LW_SERVICE_UNAVAILABLE; /* the TF card is out of scope */
     return caps;
 }

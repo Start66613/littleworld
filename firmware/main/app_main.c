@@ -13,6 +13,7 @@
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/idf_additions.h"
 
 #include "lvgl.h"
 
@@ -39,7 +40,9 @@ static void console_task(void *arg)
     if (!lw_capture_console_start()) {
         ESP_LOGW(TAG, "console REPL unavailable");
     }
-    vTaskDelete(NULL);
+    /* The stack of this task came from PSRAM (see the create call), so it has to
+     * go back there rather than through the internal-RAM free path. */
+    vTaskDeleteWithCaps(NULL);
 }
 
 /* V4.4 display benchmark: the tear-avoid mode is a build-time choice so two
@@ -100,7 +103,11 @@ void app_main(void)
     ESP_LOGI(TAG, "internal heap before console: free %u B, largest block %u B",
              (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
              (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-    if (xTaskCreate(console_task, "lw_console", 12288, NULL, 5, NULL) != pdPASS) {
+    /* The REPL never touches DMA and runs at a leisurely pace, so its 12 KB
+     * stack lives in PSRAM and leaves the internal pool to the things that
+     * cannot use it: the C6 link's SDIO buffers and the I2S descriptors. */
+    if (xTaskCreateWithCaps(console_task, "lw_console", 12288, NULL, 5, NULL,
+                            MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) != pdPASS) {
         ESP_LOGW(TAG, "no stack for the console task; the REPL stays off");
     }
 
