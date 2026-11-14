@@ -289,7 +289,7 @@ static void create(lv_obj_t *content, const struct lw_app *self)
         lv_obj_set_style_bg_color(dot, lv_color_hex(0xFFFFFF), 0);
         lv_obj_set_style_bg_opa(dot, LV_OPA_80, 0);
         lv_obj_remove_flag(dot, LV_OBJ_FLAG_CLICKABLE);
-        if (lw_shell_host_active()) {if (i<3) {lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);lw_polish_game_badge(card,(unsigned)i,24,18);} lw_polish_paper(card,false);}
+        if (lw_shell_host_active()) {if (i<4) {lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);lw_polish_game_badge(card,(unsigned)i,24,18);} lw_polish_paper(card,false);}
 
         lw_text(card, cards[i].title, &lw_font_28, palette->text, 24, 108);
         lw_text(card, cards[i].subtitle, &lw_font_18, palette->dim, 24, 150);

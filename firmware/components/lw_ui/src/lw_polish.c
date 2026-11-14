@@ -79,5 +79,16 @@ void lw_polish_game_badge(lv_obj_t *p,unsigned game,int x,int y)
     const lw_palette_t *c=lw_palette();lv_obj_t *o=lw_os_box(p,x,y,252,76,c->card_soft,12,255);
     if (game==0) for (unsigned i=0;i<4;i++) {lv_obj_t *t=lw_os_box(o,12+(int)(i%2)*40,4+(int)(i/2)*34,36,30,i==3 ? c->accent : c->gold,6,255);lw_os_label(t,i==3 ? "8" : i ? "4" : "2",&lw_font_22,8,1,30,c->text);}
     else if (game==1) {for (unsigned i=0;i<6;i++) lw_os_box(o,16+(int)i*22,48-(i>2 ? 22 : 0),20,20,c->mint,5,255);lw_os_box(o,192,20,16,16,c->accent,8,255);}
+    else if (game==3) {
+        /* 小冒险: the room the RPG page opens, in miniature - floor, rug and
+         * the two of them on it. The card used to show a plain accent circle
+         * next to three painted games, which read as "not finished yet". */
+        lw_os_box(o,0,46,252,30,0xc7a079,0,255);
+        lw_os_box(o,74,40,104,26,0xf0e0ce,LV_RADIUS_CIRCLE,255);
+        lw_os_box(o,96,18,16,28,0x4c4a56,4,255);
+        lw_os_box(o,124,18,16,28,0xb87686,4,255);
+        lw_os_box(o,16,10,40,30,0x7e9bc0,6,255);
+        lw_os_box(o,212,14,24,20,0xd9a0a8,4,255);
+    }
     else {for (int r=0;r<3;r++) for (int k=0;k<7;k++) lw_os_box(o,14+k*32,6+r*13,28,10,r==1 ? c->gold : c->accent,3,255);lw_os_box(o,94,66,64,6,c->lav,3,255);lw_os_box(o,166,50,10,10,c->text,5,255);}
 }
