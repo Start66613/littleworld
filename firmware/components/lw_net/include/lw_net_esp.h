@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,17 @@ void lw_net_esp_wifi_attach(struct lw_services *services);
  * build fails with "not enough mem" and faults in the card init path. Idempotent,
  * and a no-op in builds without a Wi-Fi adapter. */
 void lw_net_esp_wifi_preinit(void);
+
+/* Same bring-up, but the C6 handshake runs on its own task so it can overlap the
+ * boot animation and the page build. The caller gives the task settle_ms to take
+ * its SDIO DMA out of the internal pool - that is the only part the UI build
+ * competes for - and the rest finishes in the background. Returns true if the
+ * link was already up when the call returned. */
+bool lw_net_esp_wifi_start_async(uint32_t settle_ms);
+
+/* Waits for the background bring-up, so the caller can publish "wifi ready"
+ * once it is actually true instead of guessing at boot. */
+bool lw_net_esp_wifi_wait(uint32_t timeout_ms);
 
 /* Asks the station whether it is already associated (a hosted slave can keep a
  * credential across reboots). Reports the link as an unsolicited event, so the

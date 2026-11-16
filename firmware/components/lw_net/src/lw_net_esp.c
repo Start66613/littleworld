@@ -41,6 +41,9 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/idf_additions.h"
+#include "esp_heap_caps.h"
 #if CONFIG_ESP_HOSTED_ENABLED
 #include "esp_hosted.h"
 #endif
@@ -166,14 +169,20 @@ static bool wifi_bring_up(void)
         return false;
     }
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    const uint32_t mark_init = esp_log_timestamp();
     if (esp_wifi_init(&cfg) != ESP_OK) {
         ESP_LOGE(TAG, "esp_wifi_init failed (no ESP32-C6 responder on SDIO?)");
         return false;
     }
+    const uint32_t mark_start = esp_log_timestamp();
     if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK || esp_wifi_start() != ESP_OK) {
         ESP_LOGE(TAG, "station start failed");
         return false;
     }
+    /* Which of the two calls waits on the C6 decides whether the link can come
+     * up behind the boot animation instead of in front of the UI build. */
+    ESP_LOGI(TAG, "bring-up: wifi_init %u ms, wifi_start %u ms",
+             (unsigned)(mark_start - mark_init), (unsigned)(esp_log_timestamp() - mark_start));
     s_started = true;
     ESP_LOGI(TAG, "station ready");
     return true;
@@ -188,6 +197,66 @@ void lw_net_esp_wifi_preinit(void)
     }
     log_transport();
     (void)wifi_bring_up();
+}
+
+static SemaphoreHandle_t s_link_done;
+
+static void wifi_task(void *arg)
+{
+    (void)arg;
+    (void)wifi_bring_up();
+    if (s_link_done != NULL) {
+        xSemaphoreGive(s_link_done);
+    }
+    vTaskDeleteWithCaps(NULL);
+}
+
+/* Bring the link up behind the boot instead of in front of it.
+ *
+ * esp_wifi_init() is where the C6 handshake happens, and it blocks for about
+ * 2.2 s - measured, wifi_start adds only 99 ms. Waiting for it inline pushed
+ * the whole boot from 2.6 s to 3.9 s, which the user sees as a slower device.
+ *
+ * So the handshake runs on its own task and the boot only waits for the part it
+ * actually needs: hosted takes its SDIO DMA out of the internal pool early in
+ * esp_wifi_init, and the UI build wants that same pool afterwards. settle_ms is
+ * how long we give the task to claim it; the rest of the handshake overlaps the
+ * boot animation and the page build. Pass 0 to fire and forget. */
+bool lw_net_esp_wifi_start_async(uint32_t settle_ms)
+{
+    if (s_started) {
+        return true;
+    }
+    if (s_link_done == NULL) {
+        s_link_done = xSemaphoreCreateBinary();
+    }
+    log_transport();
+    if (s_link_done == NULL ||
+        xTaskCreateWithCaps(wifi_task, "lw_wifi", 4096, NULL, 5, NULL,
+                            MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) != pdPASS) {
+        /* No PSRAM stack to run on: the blocking path is still correct, just
+         * slower. */
+        ESP_LOGW(TAG, "no task for the link; bringing it up inline");
+        (void)wifi_bring_up();
+        return s_started;
+    }
+    if (settle_ms > 0) {
+        (void)xSemaphoreTake(s_link_done, pdMS_TO_TICKS(settle_ms));
+    }
+    return s_started;
+}
+
+/* Waits for the link after the UI is up, so callers can publish the capability
+ * once it is actually true. */
+bool lw_net_esp_wifi_wait(uint32_t timeout_ms)
+{
+    if (s_started) {
+        return true;
+    }
+    if (s_link_done != NULL && timeout_ms > 0) {
+        (void)xSemaphoreTake(s_link_done, pdMS_TO_TICKS(timeout_ms));
+    }
+    return s_started;
 }
 
 void lw_net_esp_wifi_attach(struct lw_services *services)

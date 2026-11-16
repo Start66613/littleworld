@@ -1,4 +1,4 @@
-﻿CONFIG_LW_NET_WIFI_ENABLE=y
+CONFIG_LW_NET_WIFI_ENABLE=y
 CONFIG_LW_NET_SNTP_ENABLE=y
 
 # The C6 link and the I2S DMA pool both live in internal RAM. Six entries per
@@ -6,6 +6,14 @@ CONFIG_LW_NET_SNTP_ENABLE=y
 # about 14 KB that the speaker needed back.
 CONFIG_ESP_HOSTED_SDIO_TX_Q_SIZE=20
 CONFIG_ESP_HOSTED_SDIO_RX_Q_SIZE=20
+
+# Streaming mode keeps the SDIO receive task busy enough that LVGL fell to about
+# 113 ms per frame on the board (every frame logged as slow), so the receive path
+# goes back to "no optimization". The packet path asserts instead when its receive
+# pool runs dry (sdio_push_data_to_queue ... pkt_rxbuff); that pool is sized by the
+# Q_SIZE settings above, which is why they stay at twenty.
+CONFIG_ESP_HOSTED_SDIO_OPTIMIZATION_RX_NONE=y
+CONFIG_ESP_HOSTED_USE_MEMPOOL=y
 
 # app_main measures at ~3.8 KB of stack; the default 32 KB was the largest single
 # internal-RAM reservation left, and the C6 link plus I2S DMA both need that pool.

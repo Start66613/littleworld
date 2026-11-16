@@ -4,7 +4,10 @@
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
 #include "bsp/esp-bsp.h"
+#include "driver/i2s_std.h"
 #include "esp_codec_dev.h"
+#include "esp_codec_dev_defaults.h"
+#include "es8311_codec.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 
@@ -44,12 +47,118 @@ static esp_codec_dev_handle_t s_speaker;
 #define LW_BACKLIGHT_BOOT_LEVEL 100
 #endif
 
-/* Largest internal DMA block the speaker may start on. Each I2S channel takes
- * one contiguous run for its six default descriptors - 256 frames of 32-bit
- * slots, about 6 KB - so 8 KB is the measured floor that still lets both
- * channels come up. Below this the BSP's ESP_ERROR_CHECK would reboot the
- * board instead of just muting it. */
+/* Largest internal DMA block the BSP path may start on. bsp_audio_init() builds
+ * a duplex channel with six descriptors of 256 frames each, about 6 KB, and
+ * wraps every failure in ESP_ERROR_CHECK - below this the board reboots instead
+ * of just muting. lw_speaker_small() needs a fraction of that, so it runs first
+ * and this floor only decides whether the BSP fallback is worth trying. */
 #define LW_AUDIO_MIN_DMA_BLOCK (8u * 1024u)
+
+/* Descriptors the small path asks for. 96 frames at 22050 Hz is 4.3 ms a
+ * buffer, which is short enough to stay inside one PSRAM block but long enough
+ * that the player task does not have to wake up every millisecond. */
+#define LW_AUDIO_DESC 3
+#define LW_AUDIO_FRAMES 96
+
+/* Speaker, transmit only.
+ *
+ * The same codec and the same pins as bsp_audio_codec_speaker_init(), minus the
+ * microphone half of the duplex channel. The board only ever plays, and the
+ * captured mic channel was costing an I2S channel's worth of internal DMA
+ * memory that the ESP32-C6 link now wants: with hosted running, the duplex
+ * allocation failed and bsp_audio_init()'s ESP_ERROR_CHECK turned "no speaker"
+ * into a boot loop. Shrinking the depth and dropping the unused direction puts
+ * the speaker back inside what is left. */
+static esp_codec_dev_handle_t lw_speaker_small(void)
+{
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(CONFIG_BSP_I2S_NUM, I2S_ROLE_MASTER);
+    chan_cfg.auto_clear = true;
+    chan_cfg.dma_desc_num = LW_AUDIO_DESC;
+    chan_cfg.dma_frame_num = LW_AUDIO_FRAMES;
+
+    i2s_chan_handle_t tx = NULL;
+    esp_err_t err = i2s_new_channel(&chan_cfg, &tx, NULL);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "speaker small: i2s_new_channel failed (%s)", esp_err_to_name(err));
+        return NULL;
+    }
+
+    const i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(22050),
+        .slot_cfg = I2S_STD_PHILIP_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
+        .gpio_cfg = {
+            .mclk = BSP_I2S_MCLK,
+            .bclk = BSP_I2S_SCLK,
+            .ws = BSP_I2S_LCLK,
+            .dout = BSP_I2S_DOUT,
+            .din = I2S_GPIO_UNUSED,
+            .invert_flags = { .mclk_inv = false, .bclk_inv = false, .ws_inv = false },
+        },
+    };
+    err = i2s_channel_init_std_mode(tx, &std_cfg);
+    if (err == ESP_OK) {
+        err = i2s_channel_enable(tx);
+    }
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "speaker small: channel setup failed (%s)", esp_err_to_name(err));
+        i2s_del_channel(tx);
+        return NULL;
+    }
+
+    audio_codec_i2s_cfg_t i2s_cfg = {
+        .port = CONFIG_BSP_I2S_NUM,
+        .rx_handle = NULL,
+        .tx_handle = tx,
+    };
+    const audio_codec_data_if_t *data_if = audio_codec_new_i2s_data(&i2s_cfg);
+    if (data_if == NULL) {
+        i2s_del_channel(tx);
+        return NULL;
+    }
+
+    if (bsp_i2c_init() != ESP_OK) {
+        return NULL;
+    }
+    audio_codec_i2c_cfg_t i2c_cfg = {
+        .port = BSP_I2C_NUM,
+        .addr = ES8311_CODEC_DEFAULT_ADDR,
+        .bus_handle = bsp_i2c_get_handle(),
+    };
+    const audio_codec_ctrl_if_t *ctrl_if = audio_codec_new_i2c_ctrl(&i2c_cfg);
+    if (ctrl_if == NULL) {
+        return NULL;
+    }
+    const audio_codec_gpio_if_t *gpio_if = audio_codec_new_gpio();
+    if (gpio_if == NULL) {
+        return NULL;
+    }
+
+    const esp_codec_dev_hw_gain_t gain = { .pa_voltage = 5.0, .codec_dac_voltage = 3.3 };
+    const es8311_codec_cfg_t es8311_cfg = {
+        .ctrl_if = ctrl_if,
+        .gpio_if = gpio_if,
+        .codec_mode = ESP_CODEC_DEV_WORK_MODE_DAC,
+        .pa_pin = BSP_POWER_AMP_IO,
+        .pa_reverted = false,
+        .master_mode = false,
+        .use_mclk = true,
+        .digital_mic = false,
+        .invert_mclk = false,
+        .invert_sclk = false,
+        .hw_gain = gain,
+    };
+    const audio_codec_if_t *dev = es8311_codec_new(&es8311_cfg);
+    if (dev == NULL) {
+        return NULL;
+    }
+    const esp_codec_dev_cfg_t dev_cfg = {
+        .dev_type = ESP_CODEC_DEV_TYPE_OUT,
+        .codec_if = dev,
+        .data_if = data_if,
+    };
+    return esp_codec_dev_new(&dev_cfg);
+}
+
 lw_hw_caps_t lw_hw_begin(bool enable_audio)
 {
     lw_hw_caps_t caps = {0};
@@ -76,18 +185,20 @@ lw_hw_caps_t lw_hw_begin(bool enable_audio)
 #endif
 
     if (enable_audio) {
-        /* bsp_audio_codec_speaker_init() builds the I2S channel with its own
-         * DMA depth and wraps every failure in ESP_ERROR_CHECK, so a short
-         * internal pool does not degrade the speaker - it reboots the board.
-         * With the ESP32-C6 link up that pool is thin, so the speaker is only
-         * started when a DMA block of a sensible size is actually there.
-         * Losing the speaker must cost the volume slider, never the boot. */
-        const size_t dma_block = heap_caps_get_largest_free_block(MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-        if (dma_block >= LW_AUDIO_MIN_DMA_BLOCK) {
-            s_speaker = bsp_audio_codec_speaker_init();
-        } else {
-            ESP_LOGW(TAG, "speaker skipped: largest internal DMA block is %u B (needs %u)",
-                     (unsigned)dma_block, (unsigned)LW_AUDIO_MIN_DMA_BLOCK);
+        /* Small transmit-only channel first: it needs a few hundred bytes of
+         * internal DMA memory instead of the BSP's ~6 KB duplex pair, so it
+         * survives next to the ESP32-C6 link. Only if that fails and the pool
+         * is roomy do we fall back to the BSP, which aborts the board rather
+         * than returning NULL when memory runs out. */
+        s_speaker = lw_speaker_small();
+        if (s_speaker == NULL) {
+            const size_t dma_block = heap_caps_get_largest_free_block(MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+            if (dma_block >= LW_AUDIO_MIN_DMA_BLOCK) {
+                s_speaker = bsp_audio_codec_speaker_init();
+            } else {
+                ESP_LOGW(TAG, "speaker skipped: largest internal DMA block is %u B (needs %u)",
+                         (unsigned)dma_block, (unsigned)LW_AUDIO_MIN_DMA_BLOCK);
+            }
         }
         if (s_speaker != NULL && esp_codec_dev_set_out_vol(s_speaker, 40) == ESP_OK) {
             s_audio = true;

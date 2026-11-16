@@ -327,6 +327,14 @@ static void publish_wifi(void)
 static void caps_timer_cb(lv_timer_t *timer)
 {
     (void)timer;
+    /* The link comes up on its own task a couple of seconds after the first
+     * screen, so the capability has to be picked up here rather than assumed at
+     * boot: until this flips, the control centre honestly shows Wi-Fi as
+     * unavailable and the tile stays inert. */
+    if (!s_services.caps.wifi_backend && lw_net_esp_wifi_available()) {
+        s_services.caps.wifi_backend = true;
+        ESP_LOGI(TAG, "wifi: link is up; reporting the radio as ready");
+    }
     publish_capabilities();
     publish_time();
     publish_wifi();
@@ -452,10 +460,24 @@ static void start_os(void)
      * from the same internal DMA pool, and whoever goes second gets the
      * leftovers. Mounting the card first keeps the art packs - without it the
      * mount fails with "sdmmc_cmd: allocate_dma_buf: not enough mem" and the
-     * whole device falls back to the procedural placeholder rooms. The link
-     * still comes up before the UI build, which needs far more RAM than the
-     * card ever did. */
-    lw_net_esp_wifi_preinit();
+     * whole device falls back to the procedural placeholder rooms.
+     *
+     * It runs on its own task: the handshake with the C6 blocks for about 2.2 s
+     * inside esp_wifi_init(), and waiting here moved the whole boot from 2.6 s
+     * to 3.9 s. The boot waits only for the part that competes with the UI build
+     * (hosted taking its SDIO DMA out of the internal pool), and the rest of the
+     * handshake overlaps the splash and the page build. */
+    const unsigned before_link = (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+    /* settle_ms is deliberately generous here: overlapping the handshake with
+     * the page build made the SDIO receive path starve and trip hosted's
+     * "pkt_rxbuff" assert (reboot loop), so the link is brought up to the point
+     * where it answers before the UI starts. The 2.2 s it costs is the price of
+     * a stable radio; getting it back needs a flow-control fix inside hosted,
+     * not a shorter timeout here. */
+    if (!lw_net_esp_wifi_start_async(4000)) {
+        ESP_LOGI(TAG, "wifi: link did not answer within the boot window (internal free %u -> %u B)",
+                 before_link, (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    }
     ESP_LOGI(TAG, "internal heap after wifi bring-up: free %u B, largest block %u B",
              (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
              (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
