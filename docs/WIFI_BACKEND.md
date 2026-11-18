@@ -89,3 +89,64 @@ scan and connect timeouts, event overflow and disable. Run it with
 
 Not covered, because it needs hardware: actual C6 association, DHCP timing,
 regulatory domain, and the real reason codes the C6 emits.
+
+## It runs on the board now (2026-11-18)
+
+The link is up: `transport: capabilities: 0xd`, `station ready`, and the Wi-Fi
+page lists real access points. Three things had to be true at once, and each of
+them was found in a boot log rather than by reading code:
+
+1. **`sdkconfig.extra.wifi` must not start with a BOM.** PowerShell's
+   `Set-Content -Encoding utf8` writes one, Kconfig then ignores the *first*
+   line — which is `CONFIG_LW_NET_WIFI_ENABLE=y` — and the adapter compiles as a
+   stub while the log shows no `lw_net` line at all. After editing that file by
+   script, check the first bytes are `43 4f 4e 46` (`CONF`).
+
+2. **Long file names are mandatory.** A freshly generated `sdkconfig` defaults
+   to `CONFIG_FATFS_LFN_NONE`. The card still mounts, but `littleworld-v4.json`
+   and every `.lwp` are long names, so the manifest cannot be opened and the
+   device reports no card while the medium is clearly mounted. Keep
+   `CONFIG_FATFS_LFN_HEAP=y`, `CONFIG_FATFS_MAX_LFN=255`,
+   `CONFIG_FATFS_API_ENCODING_UTF_8=y`.
+
+3. **The radio must come up after the card, not before.** `esp_wifi_init()`
+   makes hosted take SDIO DMA out of internal RAM; if that happens first,
+   `sdmmc_cmd: allocate_dma_buf` fails and the card never mounts. `lw_art_boot()`
+   owns the mount, so the link is started strictly afterwards.
+
+### The link starts on demand
+
+Bringing the radio up during boot also raced `main_task`'s first stdio
+allocation: newlib grew a `FILE` lock from the same internal pool, and losing
+that race called `abort()` inside `lock_init_generic` (`locks.c:77`). That is why
+the board sometimes needed two resets before it stayed up.
+
+Boot therefore does not touch the radio. `lw_system_backend_t.wifi_wake` points
+at `wifi_wake_hook()` in `firmware/main/lw_boot.c`, which calls
+`lw_net_esp_wifi_start_async(4000)`; `lw_system_wifi_enable()` and
+`lw_system_wifi_scan()` call it while `network_available` is still false, and the
+capability flips once the C6 answers. Cost: the first Wi-Fi interaction blocks
+~2.2 s (`bring-up: wifi_init 2220 ms, wifi_start 99 ms`), boot drops from 3.9 s
+to 1.6 s, and a boot can no longer abort.
+
+### Queue sizes are not free money
+
+`CONFIG_ESP_HOSTED_SDIO_TX_Q_SIZE` / `RX_Q_SIZE` default to 20. Trimming them to
+10 (or turning on `..._OPTIMIZATION_RX_STREAMING_MODE`) makes the receive task
+assert on an empty buffer pool — `sdio_drv.c:878 (rxbuff)` or
+`sdio_push_data_to_queue ... (pkt_rxbuff)` — and the board reset-loops. Between
+20/20 with `..._OPTIMIZATION_RX_NONE` and a dead board, take the queues.
+
+### Internal RAM budget (measured, board, one boot)
+
+| stage | free | largest block |
+|---|---|---|
+| after `hw` | ~97 KB | 32 KB |
+| after `art` (card mounted) | ~58 KB | 30 KB |
+| after `ui` | ~26 KB | 12 KB |
+| after radio on demand | ~10 KB | 6 KB |
+
+The speaker needs one contiguous internal DMA block of at least 8 KB
+(`lw_hw.c` guards on this and skips the speaker instead of letting
+`bsp_audio_codec_speaker_init()` panic). Anything added to boot that takes
+internal RAM has to be measured against this table.
