@@ -28,6 +28,9 @@ typedef struct {
     lw_network_t networks[8]; unsigned network_count;
     lw_wifi_status_t wifi;
     char ssid[33];
+    /* The lease arrives after the association; the Wi-Fi page shows it as
+     * proof the link is actually usable, not just associated. */
+    char ip[16];
     bool wifi_enabled,locked,screen_off,playing,dirty,store_failed;
     uint32_t revision,network_ms;
     bool mock_reject;

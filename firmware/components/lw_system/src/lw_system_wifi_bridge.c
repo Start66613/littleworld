@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 #include "lw_system_wifi_bridge.h"
 
+#include <stdio.h>
 #include <string.h>
 
 void lw_system_wifi_bridge_init(lw_system_wifi_bridge_t *bridge)
@@ -119,5 +120,18 @@ void lw_system_wifi_bridge_sync(lw_system_wifi_bridge_t *bridge, lw_system_t *sy
     if (system->wifi == LW_WIFI_IDLE && model == LW_WIFI_ST_CONNECTED &&
         services->wifi.target[0]) {
         lw_system_link_up(system, services->wifi.target);
+    }
+
+    /* Mirror the lease. It shows up one event later than the association,
+     * so this cannot hang off lw_system_connection_result(). */
+    if (system->wifi == LW_WIFI_CONNECTED) {
+        const char *ip = services->wifi.ip;
+        if (ip[0] && strncmp(system->ip, ip, sizeof(system->ip) - 1) != 0) {
+            snprintf(system->ip, sizeof(system->ip), "%s", ip);
+            system->revision++;
+        }
+    } else if (system->ip[0]) {
+        system->ip[0] = 0;
+        system->revision++;
     }
 }

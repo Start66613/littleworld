@@ -182,7 +182,13 @@ static const char *wifi_text(void)
     case LW_WIFI_OFF:return "无线网络已关闭";
     case LW_WIFI_SCANNING:return "正在寻找附近网络…";
     case LW_WIFI_CONNECTING:return "正在连接…";
-    case LW_WIFI_CONNECTED:return s->system->ssid;
+    case LW_WIFI_CONNECTED:
+        if (s->system->ip[0]) {
+            static char lease[56];
+            snprintf(lease, sizeof(lease), "%s \u00b7 %s", s->system->ssid, s->system->ip);
+            return lease;
+        }
+        return s->system->ssid;
     case LW_WIFI_FAILED:return "连接失败，请检查密码";
     case LW_WIFI_UNSUPPORTED:return "无线驱动尚未接入";
     default:return "选择一个网络";
