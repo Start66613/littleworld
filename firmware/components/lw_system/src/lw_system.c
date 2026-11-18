@@ -56,12 +56,26 @@ bool lw_system_save(lw_system_t *s)
 void lw_system_wifi_enable(lw_system_t *s,bool on)
 {
     if (!on) lw_system_wifi_disconnect(s,false);
+    if (on && !s->backend.network_available && s->backend.wifi_wake &&
+        s->backend.wifi_wake(s->backend.context)) {
+        s->backend.network_available = true;
+        s->revision++;
+    }
     s->wifi_enabled=on; s->wifi=!on ? LW_WIFI_OFF : s->backend.network_available ? LW_WIFI_IDLE : LW_WIFI_UNSUPPORTED;
     s->revision++;
 }
 bool lw_system_wifi_scan(lw_system_t *s)
 {
-    if (!s->wifi_enabled || !s->backend.network_available || s->wifi==LW_WIFI_CONNECTING) return false;
+    if (!s->wifi_enabled) return false;
+    if (!s->backend.network_available && s->backend.wifi_wake) {
+        /* First ask from the user switches the link on; the call blocks while
+         * the C6 answers, which is why it is not done during boot. */
+        if (!s->backend.wifi_wake(s->backend.context)) return false;
+        s->backend.network_available = true;
+        if (s->wifi==LW_WIFI_UNSUPPORTED || s->wifi==LW_WIFI_OFF) s->wifi=LW_WIFI_IDLE;
+        s->revision++;
+    }
+    if (!s->backend.network_available || s->wifi==LW_WIFI_CONNECTING) return false;
     if (!s->backend.simulated && (!s->backend.wifi_scan || !s->backend.wifi_scan(s->backend.context))) return false;
     s->wifi=LW_WIFI_SCANNING; s->network_ms=0; s->revision++; return true;
 }

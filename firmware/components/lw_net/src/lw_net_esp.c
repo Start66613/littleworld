@@ -481,6 +481,23 @@ void lw_net_esp_wifi_stop(void)
 
 #endif /* LW_NET_HAVE_WIFI */
 
+#ifndef LW_NET_HAVE_WIFI
+/* Images built without the radio still run the same boot sequence; these two
+ * calls exist so lw_boot.c does not need a #if around them. They report "there
+ * is no link", which is exactly true here. */
+bool lw_net_esp_wifi_start_async(uint32_t settle_ms)
+{
+    (void)settle_ms;
+    return false;
+}
+
+bool lw_net_esp_wifi_wait(uint32_t timeout_ms)
+{
+    (void)timeout_ms;
+    return false;
+}
+#endif
+
 /* Compile-time answer, valid in both branches: a hosted build has esp_wifi.h,
  * the fallback build does not. */
 bool lw_net_esp_wifi_built(void)

@@ -431,6 +431,46 @@ static int cmd_bgm(int argc, char **argv)
  * command the only way to look at it twice is to flash twice. "story" prints
  * the stored progress, "story replay" plays it again from the opening (without
  * lowering the stored progress on a device that already finished it). */
+/* Tapping is unreliable for these pages: the status icons sit on top of the
+ * control-centre button, so a tap lands on an icon and the overlay never opens.
+ * These two verbs just queue the same control id a tap would, which the OS tick
+ * applies on its own thread. */
+static int cmd_overlay(int argc, char **argv)
+{
+    if (argc < 2) {
+        printf("overlay control|wifi\n");
+        return 0;
+    }
+    if (strcmp(argv[1], "control") == 0) {
+        lw_os_activate(OC_CONTROL);
+    } else if (strcmp(argv[1], "wifi") == 0) {
+        lw_os_activate(OC_WIFI);
+    } else {
+        printf("overlay: unknown page '%s'\n", argv[1]);
+        return 1;
+    }
+    printf("overlay: %s queued\n", argv[1]);
+    return 0;
+}
+
+static int cmd_wifi(int argc, char **argv)
+{
+    if (argc < 2) {
+        printf("wifi scan|on\n");
+        return 0;
+    }
+    if (strcmp(argv[1], "scan") == 0) {
+        lw_os_activate(OC_SCAN);
+    } else if (strcmp(argv[1], "on") == 0) {
+        lw_os_activate(OC_WIFI_TOGGLE);
+    } else {
+        printf("wifi: unknown verb '%s'\n", argv[1]);
+        return 1;
+    }
+    printf("wifi %s: queued\n", argv[1]);
+    return 0;
+}
+
 static int cmd_story(int argc, char **argv)
 {
     const char *what = argc > 1 ? argv[1] : "status";
@@ -1028,6 +1068,16 @@ bool lw_capture_console_start(void)
                                       .help = "bgm: start|stop|status|vol N - speaker test",
                                       .func = &cmd_bgm };
     esp_console_cmd_register(&c_bgm);
+
+    const esp_console_cmd_t c_overlay = { .command = "overlay",
+                                         .help = "overlay: control|wifi|lock - open a page without tapping",
+                                         .func = &cmd_overlay };
+    esp_console_cmd_register(&c_overlay);
+
+    const esp_console_cmd_t c_wifi = { .command = "wifi",
+                                       .help = "wifi: scan|enable|disable - drive the radio",
+                                       .func = &cmd_wifi };
+    esp_console_cmd_register(&c_wifi);
 
     const esp_console_cmd_t c_story = { .command = "story",
                                         .help = "story: status|replay|done - first-boot story",

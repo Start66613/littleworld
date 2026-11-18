@@ -252,6 +252,14 @@ static void run_action(pending_action_t *pending)
 {
     switch (pending->action) {
     case LW_WIFI_ACTION_SCAN:
+        /* Scanning is the first thing the user asks for, so it is also the
+         * moment the radio is worth switching on. Doing it here rather than in
+         * the boot path keeps the C6's SDIO DMA from competing with the console
+         * and the first logs, which at least once made newlib abort on a failed
+         * lock allocation (reboot). wlan_start is idempotent. */
+        if (!lw_net_esp_wifi_available()) {
+            (void)lw_net_esp_wifi_start_async(0);
+        }
         lw_net_esp_wifi_start_scan();
         break;
     case LW_WIFI_ACTION_CONNECT:
@@ -432,6 +440,19 @@ bool lw_services_wifi_enable(lw_services_t *services, bool enabled, uint32_t now
 
 bool lw_services_scan(lw_services_t *services, uint32_t now_ms)
 {
+    /* First scan is what switches the radio on. Doing it here - on the user's
+     * first tap - costs one visible pause but keeps the boot deterministic; it
+     * used to run during the boot screen and newlib aborted on a failed lock
+     * allocation whenever the C6's SDIO DMA won the race for internal RAM. */
+    if (!lw_net_esp_wifi_available() && lw_net_esp_wifi_built()) {
+        /* No ESP_LOG here on purpose: this file does not include esp_log.h,
+         * and the printf path is what caused trouble in the first place. */
+        (void)lw_net_esp_wifi_start_async(4000);
+        LW_SERVICES_LOCK();
+        services->caps.wifi_backend = lw_net_esp_wifi_available();
+        lw_wifi_init(&services->wifi, services->caps.wifi_backend);
+        LW_SERVICES_UNLOCK();
+    }
     LW_SERVICES_LOCK();
     bool ok = lw_wifi_scan(&services->wifi, now_ms);
     pending_action_t pending = ok ? take_action(services) : take_action_empty();

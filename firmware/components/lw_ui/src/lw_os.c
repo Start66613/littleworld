@@ -1189,6 +1189,11 @@ void lw_os_open(lw_os_page_t page)
     s->duo.autonomous=page==OS_WORLD && lw_ambience_phase()<LW_NIGHT;
     render();
 }
+void lw_os_activate(lw_os_control_t id)
+{
+    if (s) s->pending = id;
+}
+
 void lw_os_show(lw_os_overlay_t overlay) { if (s) show_overlay(overlay); }
 static void navigate(lw_os_page_t page)
 {

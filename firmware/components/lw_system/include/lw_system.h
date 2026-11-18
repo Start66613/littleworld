@@ -12,6 +12,10 @@ typedef struct {
     bool simulated,network_available;
     bool (*brightness)(void *,unsigned);
     bool (*volume)(void *,unsigned,bool);
+    /* Switch the radio on if it is not up yet. The C6 link is started on the
+     * first Wi-Fi interaction rather than during boot, so this is the hook that
+     * turns "no backend" into "ready" the first time the user asks. */
+    bool (*wifi_wake)(void *);
     bool (*wifi_scan)(void *);
     bool (*wifi_connect)(void *,const char *,const char *);
     bool (*wifi_disconnect)(void *,bool);

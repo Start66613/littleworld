@@ -1,5 +1,7 @@
 CONFIG_LW_NET_WIFI_ENABLE=y
-CONFIG_LW_NET_SNTP_ENABLE=y
+# SNTP is off for this experiment: its netif/lwIP setup is the other candidate for
+# the lock_init_generic abort right after "lw_net_sntp: service ready".
+# CONFIG_LW_NET_SNTP_ENABLE is not set
 
 # The C6 link and the I2S DMA pool both live in internal RAM. Six entries per
 # direction still moves audio and control traffic comfortably; twenty each ate

@@ -18,6 +18,11 @@ bool lw_os_start(lw_system_t *,const lw_actor_art_t [2]);
 void lw_os_stop(void);
 void lw_os_open(lw_os_page_t);
 void lw_os_show(lw_os_overlay_t);
+
+/* Ask the OS to run a control as if it had been tapped. The click handlers only
+ * queue the id and the tick applies it, so this is safe to call from another
+ * task (for example the console), unlike sending an LVGL event by hand. */
+void lw_os_activate(lw_os_control_t id);
 /* Replay the 《拾取回忆》 story from the start (memories page entry);
  * never lowers the stored progress. */
 void lw_os_story_replay(void);

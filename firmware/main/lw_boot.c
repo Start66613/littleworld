@@ -291,6 +291,22 @@ static bool caps_differ(const lw_os_capabilities_t *a, const lw_os_capabilities_
 
 /* LVGL task boundary: the timer below is the only place that publishes a change
  * after the UI is running. */
+/* The radio is switched on by the first Wi-Fi interaction, not by boot: hosted
+ * takes its SDIO DMA out of the internal pool and that once cost us a newlib
+ * abort during start-up. Blocking here is fine - the user just tapped. */
+static bool wifi_wake_hook(void *context)
+{
+    (void)context;
+    if (lw_net_esp_wifi_available()) {
+        return true;
+    }
+    if (!lw_net_esp_wifi_start_async(4000)) {
+        ESP_LOGW(TAG, "wifi: link did not answer within 4 s");
+        return false;
+    }
+    return lw_net_esp_wifi_available();
+}
+
 static void publish_capabilities(void)
 {
     lw_os_capabilities_t caps = build_capabilities();
@@ -388,6 +404,7 @@ static void start_os(void)
     lw_system_backend_t backend = {0};
     backend.simulated = false;
     backend.network_available = caps.wifi;
+    backend.wifi_wake = wifi_wake_hook;
     backend.brightness = caps.brightness ? hw_brightness : NULL;
     backend.volume = caps.audio ? hw_volume : NULL;
     backend.load = prefs_load;
@@ -468,18 +485,17 @@ static void start_os(void)
      * (hosted taking its SDIO DMA out of the internal pool), and the rest of the
      * handshake overlaps the splash and the page build. */
     const unsigned before_link = (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
-    /* settle_ms is deliberately generous here: overlapping the handshake with
-     * the page build made the SDIO receive path starve and trip hosted's
-     * "pkt_rxbuff" assert (reboot loop), so the link is brought up to the point
-     * where it answers before the UI starts. The 2.2 s it costs is the price of
-     * a stable radio; getting it back needs a flow-control fix inside hosted,
-     * not a shorter timeout here. */
-    if (!lw_net_esp_wifi_start_async(4000)) {
-        ESP_LOGI(TAG, "wifi: link did not answer within the boot window (internal free %u -> %u B)",
-                 before_link, (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    }
-    ESP_LOGI(TAG, "internal heap after wifi bring-up: free %u B, largest block %u B",
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+    /* The radio is started on demand, not here. Booting it during the splash
+     * looked harmless until it wasn't: hosted takes its SDIO DMA out of the
+     * internal pool while main_task is still allocating (console, first logs),
+     * and newlib answers a failed lock allocation with abort(). That showed up
+     * as two resets before a boot that survived, i.e. it depended on timing,
+     * which is the worst kind of bug to leave in a boot path. Starting the link
+     * from the Wi-Fi page keeps the boot deterministic and costs the user
+     * nothing - by the time they open that page there is nothing else to race.
+     * The radio is still recorded as "built" here so the UI knows it may ask. */
+    ESP_LOGI(TAG, "wifi: link starts on demand (internal free %u B, largest block %u B)",
+             before_link,
              (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
     /* Read the user's content file from the same verified root the art came
