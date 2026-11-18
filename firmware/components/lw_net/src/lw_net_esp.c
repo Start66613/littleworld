@@ -51,6 +51,10 @@
 static const char *TAG = "lw_net_wifi";
 static struct lw_services *s_services;
 static bool s_started;
+/* esp_wifi_start() returns before the station is really up; a scan issued in
+ * that gap is accepted and then never answered, which looked exactly like a
+ * dead radio on the Wi-Fi page. */
+static SemaphoreHandle_t s_sta_ready;
 /* Event handlers must not run before attach() hands them a services pointer. */
 static bool s_handlers;
 /* Generation captured when the request was issued. The event handler returns
@@ -84,9 +88,17 @@ static lw_wifi_error_t map_reason(uint8_t reason)
 static void wifi_event_handler(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     (void)arg;
+    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
+        if (s_sta_ready) {
+            xSemaphoreGive(s_sta_ready);
+        }
+        return;
+    }
     if (base == WIFI_EVENT && id == WIFI_EVENT_SCAN_DONE) {
         uint16_t count = 0;
         esp_wifi_scan_get_ap_num(&count);
+        ESP_LOGI(TAG, "scan done: %u access point(s), generation %u", (unsigned)count,
+                 (unsigned)s_scan_generation);
         if (count > LW_WIFI_MAX_APS) {
             count = LW_WIFI_MAX_APS;
         }
@@ -164,6 +176,12 @@ static bool wifi_bring_up(void)
         ESP_LOGE(TAG, "event loop: %s", esp_err_to_name(err));
         return false;
     }
+    if (!s_handlers) {
+        s_handlers = true;
+        esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
+        esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL);
+        ESP_LOGI(TAG, "event handlers registered");
+    }
     if (esp_netif_create_default_wifi_sta() == NULL) {
         ESP_LOGE(TAG, "netif station create failed");
         return false;
@@ -175,6 +193,9 @@ static bool wifi_bring_up(void)
         return false;
     }
     const uint32_t mark_start = esp_log_timestamp();
+    if (!s_sta_ready) {
+        s_sta_ready = xSemaphoreCreateBinary();
+    }
     if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK || esp_wifi_start() != ESP_OK) {
         ESP_LOGE(TAG, "station start failed");
         return false;
@@ -183,6 +204,9 @@ static bool wifi_bring_up(void)
      * up behind the boot animation instead of in front of the UI build. */
     ESP_LOGI(TAG, "bring-up: wifi_init %u ms, wifi_start %u ms",
              (unsigned)(mark_start - mark_init), (unsigned)(esp_log_timestamp() - mark_start));
+    if (s_sta_ready && xSemaphoreTake(s_sta_ready, pdMS_TO_TICKS(5000)) != pdTRUE) {
+        ESP_LOGW(TAG, "the station did not report itself up; scans may be dropped");
+    }
     s_started = true;
     ESP_LOGI(TAG, "station ready");
     return true;
@@ -272,9 +296,10 @@ void lw_net_esp_wifi_attach(struct lw_services *services)
         ESP_LOGI(TAG, "adapter attached; the link starts after the card is mounted");
     }
     if (!s_handlers) {
-        s_handlers = true;
-        esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL, NULL);
-        esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL);
+        /* Registration lives in wifi_bring_up(): doing it here ran before the
+         * default event loop existed, so every call failed and s_handlers then
+         * blocked the retry - which is why no WIFI_EVENT was ever delivered. */
+        ESP_LOGW(TAG, "attach: event handlers are registered once the link comes up");
     }
 #if CONFIG_ESP_HOSTED_ENABLED
     /* Report the slave firmware instead of assuming it matches the host stack.
@@ -399,7 +424,13 @@ bool lw_net_esp_wifi_start_scan(void)
     }
     s_scan_generation = lw_services_scan_generation(s_services);
     wifi_scan_config_t scan = {0};
-    return esp_wifi_scan_start(&scan, false) == ESP_OK;
+    const esp_err_t err = esp_wifi_scan_start(&scan, false);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "scan start refused: %s", esp_err_to_name(err));
+        return false;
+    }
+    ESP_LOGI(TAG, "scan started (generation %u)", (unsigned)s_scan_generation);
+    return true;
 }
 
 bool lw_net_esp_wifi_start_connect(const char *ssid, const char *password)

@@ -448,11 +448,39 @@ bool lw_services_scan(lw_services_t *services, uint32_t now_ms)
         /* No ESP_LOG here on purpose: this file does not include esp_log.h,
          * and the printf path is what caused trouble in the first place. */
         (void)lw_net_esp_wifi_start_async(4000);
+        /* The first scan is what switches the radio on, so this call has to wait
+         * for it: without the wait the capability below is read before the C6
+         * has answered, the model is initialised as UNSUPPORTED, and the scan is
+         * refused for the rest of the session - the page then says "no networks"
+         * while the link is fine. The wait is bounded and the UI is showing the
+         * "opening wireless" state at this point. */
+        (void)lw_net_esp_wifi_wait(6000);
         LW_SERVICES_LOCK();
         services->caps.wifi_backend = lw_net_esp_wifi_available();
         lw_wifi_init(&services->wifi, services->caps.wifi_backend);
         LW_SERVICES_UNLOCK();
     }
+    /* The model is created during boot, when the radio is deliberately still
+     * off, so it starts life as UNSUPPORTED. The link may have come up since -
+     * on the previous attempt, or through the wake hook - and re-initialising
+     * only inside the "not available" branch above left it refusing scans for
+     * the rest of the session. Track the capability on every request. */
+    {
+        const bool avail = lw_net_esp_wifi_built() && lw_net_esp_wifi_available();
+        if (services->caps.wifi_backend != avail) {
+            LW_SERVICES_LOCK();
+            services->caps.wifi_backend = avail;
+            lw_wifi_init(&services->wifi, avail);
+            LW_SERVICES_UNLOCK();
+        }
+    }
+
+    /* The first scan is also the first time the user has asked for Wi-Fi at
+     * all, so the model has to be told the radio is on before it will scan;
+     * otherwise it sits in OFF and refuses, and the page reports "no networks"
+     * over a perfectly healthy link. */
+    (void)lw_services_wifi_enable(services, true, now_ms);
+
     LW_SERVICES_LOCK();
     bool ok = lw_wifi_scan(&services->wifi, now_ms);
     pending_action_t pending = ok ? take_action(services) : take_action_empty();
