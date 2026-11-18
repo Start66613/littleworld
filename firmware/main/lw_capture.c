@@ -117,6 +117,22 @@ void lw_capture_attach_input(void)
 
 static unsigned s_line;   /* index of the next LCAP line of the current shot */
 
+/* The host reader drops a line now and then when the whole frame arrives as
+ * fast as the UART can push it; the losses are deterministic (always the same
+ * indices) which is the signature of a full receive queue rather than a noisy
+ * cable. A tick of pacing every 64 lines costs about 100 ms for a frame and
+ * makes the capture reliable. Dropped lines are still recoverable by index, so
+ * this is only about not needing a dozen passes. */
+#define CAP_PACE_LINES 64u
+
+static void pace_capture(void)
+{
+    if ((s_line % CAP_PACE_LINES) == 0u) {
+        fflush(stdout);
+        vTaskDelay(1);
+    }
+}
+
 static void emit_base64(const uint8_t *src, size_t len)
 {
     char line[CAP_B64_PER_LINE + 4];
@@ -132,6 +148,7 @@ static void emit_base64(const uint8_t *src, size_t len)
         if (col >= CAP_B64_PER_LINE) {
             line[col] = '\0';
             printf("LCAP %u %s\n", s_line++, line);
+            pace_capture();
             col = 0;
         }
     }
@@ -146,12 +163,14 @@ static void emit_base64(const uint8_t *src, size_t len)
         line[col++] = '=';
         line[col] = '\0';
         printf("LCAP %u %s\n", s_line++, line);
+        pace_capture();
     } else if (col > 0) {
         /* Flush the tail of a block whose length is a multiple of 3: without
            this the last 24 bytes of every 1536-byte row silently vanished and
            the emitted BMP was 7 KB shorter than the header claimed. */
         line[col] = '\0';
         printf("LCAP %u %s\n", s_line++, line);
+        pace_capture();
     }
     fflush(stdout);
 }
