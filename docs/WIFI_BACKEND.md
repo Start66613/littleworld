@@ -150,3 +150,44 @@ The speaker needs one contiguous internal DMA block of at least 8 KB
 (`lw_hw.c` guards on this and skips the speaker instead of letting
 `bsp_audio_codec_speaker_init()` panic). Anything added to boot that takes
 internal RAM has to be measured against this table.
+
+### The first end-to-end connection (2026-11-18, evening)
+
+An open network was joined from the Wi-Fi page and the device got a lease:
+
+```
+I (2651821) H_API: esp_wifi_remote_connect
+I (2656995) esp_netif_handlers: sta ip: 172.25.35.224, mask: 255.255.192.0, gw: 172.25.0.1
+```
+
+The page then showed `XTU-STUDENT · 已连接 · 50 dBm · 信号强 · 开放` with a check
+mark, offered 断开 / 忘记网络 / 刷新, and the control centre's Wi-Fi tile
+switched from `无线驱动尚未接入` to the real SSID.
+
+Four separate faults had to be fixed before the first `scan done`, and each one
+looked like "the radio is dead" from the outside:
+
+1. **The hosted receive pool only used internal RAM.** `os_wrapper.h` defines
+   `MEM_ALLOC(x)` as `heap_caps_aligned_alloc(..., MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA)`;
+   the pool grows on demand and never returns blocks, so a busy scan hit NULL and
+   asserted in `sdio_read_task`. The local patch lets it fall back to PSRAM
+   (`SOC_PSRAM_DMA_CAPABLE` and `SOC_SDMMC_PSRAM_DMA_CAPABLE` are both set) — see
+   `tools/patches/esp_hosted-psram-mempool.md`, which is the record because
+   `managed_components/` is git-ignored and the patch must be re-applied after a
+   dependency update.
+2. **Event handlers were registered too early.** `attach()` runs before
+   `esp_event_loop_create_default()`, so every registration failed and
+   `s_handlers` blocked the retry: no `WIFI_EVENT` was ever delivered, scans
+   started and were never answered. Registration moved into `wifi_bring_up()`.
+3. **The model was born UNSUPPORTED.** It is created during boot, when the radio
+   is deliberately off, and never re-evaluated the capability. It now re-syncs on
+   every request before deciding the radio cannot scan.
+4. **`esp_wifi_start()` returns early.** A scan issued in that gap is accepted and
+   dropped; a binary semaphore given from `WIFI_EVENT_STA_START` makes
+   `station ready` mean ready.
+
+`CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=6144` is also needed: the hosted receive
+path runs on `sys_evt`, and 2304 bytes overflowed (`Stack protection fault` in
+task `sys_evt`) once a scan really happened. Remember that an existing
+`build/<cfg>/sdkconfig` keeps old values — the tree has to be regenerated for a
+changed default to take effect.
